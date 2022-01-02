@@ -77,9 +77,11 @@ char *pax_desc_err(pax_err_t error) {
 		"No framebuffer",
 		"No memory",
 		"Invalid parameters",
-		"Infinite parameters"
+		"Infinite parameters",
+		"Out of bounds",
+		"Matrix stack underflow"
 	};
-	if (error > 0 || error < -4) return unknown;
+	if (error > 0 || error < -6) return unknown;
 	else return desc[-error];
 }
 
@@ -98,11 +100,15 @@ void pax_buf_init(pax_buf_t *buf, void *mem, int width, int height, pax_buf_type
 		if (!mem) PAX_ERROR(PAX_ERR_NOMEM);
 	}
 	*buf = (pax_buf_t) {
-		.type   = type,
-		.buf    = mem,
-		.width  = width,
-		.height = height,
-		.bpp    = PAX_GET_BPP(type)
+		.type       = type,
+		.buf        = mem,
+		.width      = width,
+		.height     = height,
+		.bpp        = PAX_GET_BPP(type),
+		.stack_2d   = {
+			.parent = NULL,
+			.value  = matrix_2d_identity()
+		}
 	};
 	pax_mark_clean(buf);
 	PAX_SUCCESS();
@@ -112,6 +118,12 @@ void pax_buf_init(pax_buf_t *buf, void *mem, int width, int height, pax_buf_type
 void pax_buf_destroy(pax_buf_t *buf) {
 	PAX_BUF_CHECK();
 	
+	matrix_stack_2d_t *current = buf->stack_2d.parent;
+	while (current) {
+		matrix_stack_2d_t *next = current->parent;
+		free(current);
+		current = next;
+	}
 	free(buf->buf);
 	
 	PAX_SUCCESS();
@@ -230,6 +242,68 @@ pax_col_t pax_col_lerp(uint8_t part, pax_col_t from, pax_col_t to) {
 
 /* ============ MATRIX =========== */
 
+// 2D rotation matrix: represents a 2D shearing.
+matrix_2d_t matrix_2d_rotate(float angle) {
+	float _cos = cosf(-angle);
+	float _sin = sinf(-angle);
+	// return (matrix_2d_t) { .arr = {
+	// 	_cos, -_sin, 0,
+	// 	_sin,  _cos, 0
+	// }};
+	return (matrix_2d_t) { .arr = {
+		_cos, -_sin, 0,
+		_sin,  _cos, 0
+	}};
+}
+
+// 2D matrix: applies the transformation that b represents on to a.
+matrix_2d_t matrix_2d_multiply(matrix_2d_t a, matrix_2d_t b) {
+	// [a b c] [p q r] [ap+bs aq+bt ar+bu+c]
+	// [d e f]*[s t u]=[dp+es dq+et dr+eu+f]
+	// [0 0 1] [0 0 1] [0     0     1      ]
+	return (matrix_2d_t) { .arr = {
+		a.a0*b.a0 + a.a1*b.b0,   a.a0*b.a1 + a.a1*b.b1,  a.a0*b.a2 + a.a1*b.b2 + a.a2,
+		a.b0*b.a0 + a.b1*b.b0,   a.b0*b.a1 + a.b1*b.b1,  a.b0*b.a2 + a.b1*b.b2 + a.b2
+	}};
+}
+
+// 2D matrix: applies the transformation that a represents on to a point.
+void matrix_2d_transform(matrix_2d_t a, float *x, float *y) {
+	// [a b c] [x]  [a]  [b] [c] [ax+by+c]
+	// [d e f]*[y]=x[d]+y[e]+[f]=[dx+ey+f]
+	// [0 0 1] [1]  [0]  [0] [1] [1      ]
+	float _x = *x, _y = *y;
+	*x = a.a0*_x + a.a1*_y + a.a2;
+	*y = a.b0*_x + a.b1*_y + a.b2;
+}
+
+// Apply the given matrix to the stack.
+void pax_apply_2d(pax_buf_t *buf, matrix_2d_t a) {
+	PAX_BUF_CHECK();
+	buf->stack_2d.value = matrix_2d_multiply(buf->stack_2d.value, a);
+	PAX_SUCCESS();
+}
+
+// Push the current matrix up the stack.
+void pax_push_2d(pax_buf_t *buf) {
+	PAX_BUF_CHECK();
+	matrix_stack_2d_t *parent = malloc(sizeof(matrix_stack_2d_t));
+	if (!parent) PAX_ERROR(PAX_ERR_NOMEM);
+	*parent = buf->stack_2d;
+	buf->stack_2d.parent = parent;
+	PAX_SUCCESS();
+}
+
+// Pop the top matrix off the stack.
+void pax_pop_2d(pax_buf_t *buf) {
+	PAX_BUF_CHECK();
+	matrix_stack_2d_t *parent = buf->stack_2d.parent;
+	if (!parent) PAX_ERROR(PAX_ERR_UNDERFLOW);
+	buf->stack_2d = *parent;
+	free(parent);
+	PAX_SUCCESS();
+}
+
 
 
 /* ======== DRAWING: PIXEL ======= */
@@ -313,6 +387,96 @@ pax_col_t pax_get_pixel(pax_buf_t *buf, int x, int y) {
 
 
 /* ========= DRAWING: 2D ========= */
+
+// Draw a rectangle.
+void pax_draw_rect(pax_buf_t *buf, pax_col_t color, float x, float y, float width, float height) {
+	PAX_BUF_CHECK();
+	if (matrix_2d_is_identity2(buf->stack_2d.value)) {
+		// This can be simplified significantly.
+		matrix_2d_transform(buf->stack_2d.value, &x, &y);
+		width  *= buf->stack_2d.value.a0;
+		height *= buf->stack_2d.value.b1;
+		pax_simple_rect(buf, color, x, y, width, height);
+	} else {
+		// We need to go full quad.
+		float x0 = x,         y0 = y;
+		float x1 = x + width, y1 = y;
+		float x2 = x + width, y2 = y + height;
+		float x3 = x,         y3 = y + height;
+		matrix_2d_transform(buf->stack_2d.value, &x0, &y0);
+		matrix_2d_transform(buf->stack_2d.value, &x1, &y1);
+		matrix_2d_transform(buf->stack_2d.value, &x2, &y2);
+		matrix_2d_transform(buf->stack_2d.value, &x3, &y3);
+		pax_simple_tri(buf, color, x0, y0, x1, y1, x2, y2);
+		pax_simple_tri(buf, color, x0, y0, x3, y3, x2, y2);
+	}
+}
+
+// Draw a line.
+void pax_draw_line(pax_buf_t *buf, pax_col_t color, float x0, float y0, float x1, float y1) {
+	PAX_BUF_CHECK();
+	matrix_2d_transform(buf->stack_2d.value, &x0, &y0);
+	matrix_2d_transform(buf->stack_2d.value, &x1, &y1);
+	pax_simple_line(buf, color, x0, y0, x1, y1);
+}
+
+// Draw a triangle.
+void pax_draw_tri(pax_buf_t *buf, pax_col_t color, float x0, float y0, float x1, float y1, float x2, float y2) {
+	PAX_BUF_CHECK();
+	matrix_2d_transform(buf->stack_2d.value, &x0, &y0);
+	matrix_2d_transform(buf->stack_2d.value, &x1, &y1);
+	matrix_2d_transform(buf->stack_2d.value, &x2, &y2);
+	pax_simple_tri(buf, color, x0, y0, x1, y1, x2, y2);
+}
+
+// Draw na arc, angles in radians.
+void pax_draw_arc(pax_buf_t *buf, pax_col_t color, float x,  float y,  float r,  float a0, float a1) {
+	PAX_BUF_CHECK();
+	
+	// Simplify the angles slightly.
+	float a2 = fmodf(a0, M_PI * 2);
+	a1 += a2 - a0;
+	a0 = a2;
+	if (a1 < a0) PAX_SWAP(float, a0, a1);
+	if (a1 - a0 > M_PI * 2) {
+		a1 = M_PI * 2;
+		a0 = 0;
+	}
+	
+	// Pick an appropriate number of divisions.
+	int n_div;
+	if (r > 30) n_div = (a1 - a0) / M_PI * 32 + 1;
+	if (r > 20) n_div = (a1 - a0) / M_PI * 16 + 1;
+	else n_div = (a1 - a0) / M_PI * 8 + 1;
+	
+	// Get the sine and cosine of one division, used for rotation in the loop.
+	float div_angle = (a1 - a0) / n_div;
+	float _sin = sinf(div_angle);
+	float _cos = cosf(div_angle);
+	
+	// Start with a unit vector matrix according to a0.
+	float x0 = cosf(a0);
+	float y0 = sinf(a0);
+	
+	// Draw it as a series of triangles, rotating with what is essentially matrix multiplication.
+	for (int i = 0; i < n_div; i++) {
+		// Perform the rotation.
+		float x1 = x0 * _cos - y0 * _sin;
+		float y1 = x0 * _sin + y0 * _cos;
+		// We subtract y0 and y1 from y because our up is -y.
+		pax_draw_tri(buf, color, x, y, x + x0 * r, y - y0 * r, x + x1 * r, y - y1 * r);
+		// Assign them yes.
+		x0 = x1;
+		y0 = y1;
+	}
+	
+	PAX_SUCCESS();
+}
+
+// Draw a circle.
+void pax_draw_circle(pax_buf_t *buf, pax_col_t color, float x,  float y,  float r) {
+	pax_draw_arc(buf, color, x, y, r, 0, M_PI * 2);
+}
 
 
 

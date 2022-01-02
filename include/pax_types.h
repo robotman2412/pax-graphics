@@ -37,30 +37,49 @@ extern "C" {
 /* ====== ERROR DEFS ===== */
 
 // Unknown error.
-#define PAX_ERR_UNKNOWN 1
+#define PAX_ERR_UNKNOWN    1
 // All is good.
-#define PAX_OK          0
+#define PAX_OK             0
 // Buffer pointer is null.
-#define PAX_ERR_NOBUF  -1
+#define PAX_ERR_NOBUF     -1
 // Out of memory.
-#define PAX_ERR_NOMEM  -2
+#define PAX_ERR_NOMEM     -2
 // Invalid parameters.
-#define PAX_ERR_PARAM  -3
+#define PAX_ERR_PARAM     -3
 // Infinite parameters.
-#define PAX_ERR_INF    -4
+#define PAX_ERR_INF       -4
 // Out of bounds parameters.
-#define PAX_ERR_BOUNDS -5
+#define PAX_ERR_BOUNDS    -5
+// Matrix stack underflow.
+#define PAX_ERR_UNDERFLOW -6
 
 /* ============ TYPES ============ */
 
+union  matrix_2d;
+struct matrix_stack_2d;
 enum   pax_buf_type;
 struct pax_buf;
 
-typedef enum     pax_buf_type pax_buf_type_t;
-typedef struct   pax_buf      pax_buf_t;
+typedef union  matrix_2d       matrix_2d_t;
+typedef struct matrix_stack_2d matrix_stack_2d_t;
+typedef enum   pax_buf_type    pax_buf_type_t;
+typedef struct pax_buf         pax_buf_t;
 
 typedef int32_t               pax_err_t;
 typedef uint32_t              pax_col_t;
+
+union matrix_2d {
+	struct {
+		float a0, a1, a2;
+		float b0, b1, b2;
+	};
+	float arr[6];
+};
+
+struct matrix_stack_2d {
+	matrix_stack_2d_t *parent;
+	matrix_2d_t        value;
+};
 
 enum pax_buf_type {
 	PAX_BUF_16_565RGB   = 0x00056510,
@@ -69,31 +88,33 @@ enum pax_buf_type {
 
 struct pax_buf {
 	// Buffer type, color modes, etc.
-	pax_buf_type_t type;
+	pax_buf_type_t    type;
 	union {
 		// Shorthand for 8bpp buffer.
-		uint8_t   *buf_8bpp;
+		uint8_t      *buf_8bpp;
 		// Shorthand for 16bpp buffer.
-		uint16_t  *buf_16bpp;
+		uint16_t     *buf_16bpp;
 		// Shorthand for 32bpp buffer.
-		uint32_t  *buf_32bpp;
+		uint32_t     *buf_32bpp;
 		// Buffer pointer.
-		void      *buf;
+		void         *buf;
 	};
 	// Width in pixels.
 	int            width;
-	// Height in pixels.
-	int            height;
+	// Height    in pixels.
+	int               height;
 	// Bits per pixel.
-	int            bpp;
+	int               bpp;
 	// Dirty x (top left).
-	int            dirty_x0;
+	int               dirty_x0;
 	// Dirty y (top left).
-	int            dirty_y0;
+	int               dirty_y0;
 	// Dirty x (bottom right).
-	int            dirty_x1;
+	int               dirty_x1;
 	// Dirty y (bottom right).
-	int            dirty_y1;
+	int               dirty_y1;
+	// Matrix stack.
+	matrix_stack_2d_t stack_2d;
 };
 
 #ifdef __cplusplus
