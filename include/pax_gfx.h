@@ -63,6 +63,8 @@ void      pax_mark_dirty2         (pax_buf_t *buf, int x, int y, int width, int 
 pax_col_t pax_col_hsv             (uint8_t h, uint8_t s, uint8_t v);
 // Linearly interpolates between from and to, including alpha.
 pax_col_t pax_col_lerp            (uint8_t part, pax_col_t from, pax_col_t to);
+// Merges the two colors, based on alpha.
+pax_col_t pax_col_merge           (pax_col_t base, pax_col_t top);
 
 /* ============ MATRIX =========== */
 
@@ -98,6 +100,8 @@ void        pax_pop_2d            (pax_buf_t *buf);
 
 /* ======== DRAWING: PIXEL ======= */
 
+// Set a pixel, merging with alpha.
+void        pax_merge_pixel         (pax_buf_t *buf, pax_col_t color, int x, int y);
 // Set a pixel.
 void        pax_set_pixel           (pax_buf_t *buf, pax_col_t color, int x, int y);
 // Get a pixel.

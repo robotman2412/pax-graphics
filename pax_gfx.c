@@ -238,6 +238,17 @@ pax_col_t pax_col_lerp(uint8_t part, pax_col_t from, pax_col_t to) {
 		 |  pax_lerp(part, from,       to);
 }
 
+// Merges the two colors, based on alpha.
+pax_col_t pax_col_merge(pax_col_t base, pax_col_t top) {
+	if (!(top >> 24)) return base;
+	if ((top >> 24) == 255) return top;
+	uint8_t part = top >> 24;
+	return (pax_lerp(part, base >> 24, 255)       << 24)
+		 | (pax_lerp(part, base >> 16, top >> 16) << 16)
+		 | (pax_lerp(part, base >>  8, top >>  8) <<  8)
+		 |  pax_lerp(part, base,       top);
+}
+
 
 
 /* ============ MATRIX =========== */
@@ -331,7 +342,7 @@ static inline uint32_t pax_buf2col(pax_buf_t *buf, uint32_t value) {
 		pax_col_t color = ((value << 8) & 0x00f80000) | ((value << 5) | 0x0000fc00) | ((value << 3) & 0x000000f8);
 		// Now, fill in some missing bits.
 		color |= ((value << 3) & 0x00070000) | ((value >> 1) & 0x00000300) | ((value >> 2) & 0x00000007);
-		return color;
+		return color | 0xff000000;
 	} else if (buf->type == PAX_BUF_32_8888ARGB) {
 		return value;
 	}
@@ -358,6 +369,19 @@ static inline uint32_t pax_get_pixel_u(pax_buf_t *buf, int x, int y) {
 	} else {
 		PAX_ERROR1(PAX_ERR_PARAM, 0);
 	}
+}
+
+// Set a pixel, merging with alpha.
+void pax_merge_pixel(pax_buf_t *buf, pax_col_t color, int x, int y) {
+	PAX_BUF_CHECK();
+	if (x < 0 || x >= buf->width || y < 0 || y >= buf->height) {
+		// This won't do.
+		pax_last_error = PAX_ERR_BOUNDS;
+		return;
+	}
+	PAX_SUCCESS();
+	pax_col_t base = pax_buf2col(buf, pax_get_pixel_u(buf, x, y));
+	pax_set_pixel_u(buf, pax_col2buf(buf, pax_col_merge(base, color)), x, y);
 }
 
 // Set a pixel.
@@ -445,9 +469,10 @@ void pax_draw_arc(pax_buf_t *buf, pax_col_t color, float x,  float y,  float r, 
 	
 	// Pick an appropriate number of divisions.
 	int n_div;
-	if (r > 30) n_div = (a1 - a0) / M_PI * 32 + 1;
-	if (r > 20) n_div = (a1 - a0) / M_PI * 16 + 1;
-	else n_div = (a1 - a0) / M_PI * 8 + 1;
+	matrix_2d_t matrix = buf->stack_2d.value;
+	float _r = r * sqrtf(matrix.a0*matrix.a0 + matrix.b0*matrix.b0) * sqrtf(matrix.a1*matrix.a1 + matrix.b1*matrix.b1);
+	if (_r > 30) n_div = (a1 - a0) / M_PI * 32 + 1;
+	else n_div = (a1 - a0) / M_PI * 16 + 1;
 	
 	// Get the sine and cosine of one division, used for rotation in the loop.
 	float div_angle = (a1 - a0) / n_div;
@@ -537,7 +562,7 @@ void pax_simple_rect(pax_buf_t *buf, pax_col_t color, float x, float y, float wi
 	// Pixel time.
 	for (int _y = y + 0.5; _y < y + height + 0.5; _y ++) {
 		for (int _x = x + 0.5; _x < x + width + 0.5; _x ++) {
-			pax_set_pixel_u(buf, value, _x, _y);
+			pax_merge_pixel(buf, value, _x, _y);
 		}
 	}
 	
@@ -566,10 +591,74 @@ void pax_simple_line(pax_buf_t *buf, pax_col_t color, float x0, float y0, float 
 		float lerp = i / nIter;
 		float x = x0 + dx * lerp;
 		float y = y0 + dy * lerp;
-		pax_set_pixel(buf, color, x + 0.5, y + 0.5);
+		pax_merge_pixel(buf, color, x + 0.5, y + 0.5);
 	}
 	
 	PAX_SUCCESS();
+}
+
+// Segmented rendering approach.
+// No shading.
+static inline void pax_tri_unshaded(pax_buf_t *buf, pax_col_t color, float x0, float y0, float x1, float y1, float x2, float y2) {
+	// Find the appropriate Y for y0, y1 and y2 inside the triangle.
+	float y_post_0 = (int) (y0 + 0.5) + 0.5;
+	float y_post_1 = (int) (y1 + 0.5) + 0.5;
+	float y_pre_2  = (int) (y2 - 0.5) + 0.5;
+	// And the coefficients for x0->x1, x1->x2 and x0->x2.
+	float x0_x1_dx = (x1 - x0) / (y1 - y0);
+	float x1_x2_dx = (x2 - x1) / (y2 - y1);
+	float x0_x2_dx = (x2 - x0) / (y2 - y0);
+	
+	// Draw top half.
+	// This condition is false if no one point is inside the triangle and above y1.
+	if (y_post_0 < y_post_1) {
+		// Find the X counterparts to the other points we found.
+		float x_a = x0 + x0_x1_dx * (y_post_0 - y0);
+		float x_b = x0 + x0_x2_dx * (y_post_0 - y0);
+		for (int y = y_post_0; y < (int) y_post_1; y++) {
+			// Plot the horizontal line.
+			float x_left, x_right;
+			if (x_a < x_b) {
+				x_left  = x_a;
+				x_right = x_b;
+			} else {
+				x_left  = x_b;
+				x_right = x_a;
+			}
+			for (int x = x_left + 0.5; x < x_right; x ++) {
+				// And simply merge colors accordingly.
+				pax_merge_pixel(buf, color, x, y);
+			}
+			// Move X.
+			x_a += x0_x1_dx;
+			x_b += x0_x2_dx;
+		}
+	}
+	// Draw bottom half.
+	// This condition might be confusing, but it's false if no point at all is inside the triangle.
+	if (y_post_0 <= y_pre_2) {
+		// Find the X counterparts to the other points we found.
+		float x_a = x1 + x1_x2_dx * (y_post_1 - y1);
+		float x_b = x0 + x0_x2_dx * (y_post_1 - y0);
+		for (int y = y_post_1; y <= (int) y_pre_2; y++) {
+			// Plot the horizontal line.
+			float x_left, x_right;
+			if (x_a < x_b) {
+				x_left  = x_a;
+				x_right = x_b;
+			} else {
+				x_left  = x_b;
+				x_right = x_a;
+			}
+			for (int x = x_left + 0.5; x < x_right; x ++) {
+				// And simply merge colors accordingly.
+				pax_merge_pixel(buf, color, x, y);
+			}
+			// Move X.
+			x_a += x1_x2_dx;
+			x_b += x0_x2_dx;
+		}
+	}
 }
 
 // Draw a triangle, ignoring matrix transform.
@@ -593,38 +682,7 @@ void pax_simple_tri(pax_buf_t *buf, pax_col_t color, float x0, float y0, float x
 		return;
 	}
 	
-	// Find the point opposite to point 1 on the X axis.
-	float xc = x0 + (x2 - x0) * (y1 - y0) / (y2 - y0);
-	
-	// Draw top half.
-	float nIter = y1 - y0 + 0.5;
-	for (int i = 0; i < nIter; i++) {
-		// Interpolate points between point 0 and point c, point 0 and point 1.
-		float part = i / nIter;
-		float xl = x0 + (xc - x0) * part;
-		float xr = x0 + (x1 - x0) * part;
-		if (xr < xl) PAX_SWAP(float, xl, xr);
-		int y = y0 + i + 0.5;
-		// Draw the line segment.
-		for (int x = xl + 0.5; x < xr + 0.5; x++) {
-			pax_set_pixel(buf, color, x, y);
-		}
-	}
-	
-	// Draw bottom half.
-	nIter = y2 - y1 + 0.5;
-	for (int i = 0; i < nIter; i++) {
-		// Interpolate points between point c and point 2, point 1 and point 2.
-		float part = i / nIter;
-		float xl = xc + (x2 - xc) * part;
-		float xr = x1 + (x2 - x1) * part;
-		if (xr < xl) PAX_SWAP(float, xl, xr);
-		int y = y1 + i + 0.5;
-		// Draw the line segment.
-		for (int x = xl + 0.5; x < xr + 0.5; x++) {
-			pax_set_pixel(buf, color, x, y);
-		}
-	}
+	pax_tri_unshaded(buf, color, x0, y0, x1, y1, x2, y2);
 	
 	PAX_SUCCESS();
 }
