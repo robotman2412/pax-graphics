@@ -56,18 +56,29 @@ extern "C" {
 /* ============ TYPES ============ */
 
 struct pax_tri;
+struct pax_quad;
 struct pax_rect;
 union  matrix_2d;
 struct matrix_stack_2d;
 enum   pax_buf_type;
 struct pax_buf;
+struct pax_shader;
 
 typedef struct pax_tri         pax_tri_t;
+typedef struct pax_quad        pax_quad_t;
 typedef struct pax_rect        pax_rect_t;
 typedef union  matrix_2d       matrix_2d_t;
 typedef struct matrix_stack_2d matrix_stack_2d_t;
 typedef enum   pax_buf_type    pax_buf_type_t;
 typedef struct pax_buf         pax_buf_t;
+typedef struct pax_shader      pax_shader_t;
+
+// Function pointer for shader callback.
+// Tint is the color parameter to the pax_shade_xxx function.
+typedef pax_col_t (*pax_shader_func_t)(pax_col_t tint, int x, int y, float u, float v, void *args);
+// Function pointer for transformer callback.
+// It's job is to optionally move the triangle vertices.
+typedef void (*pax_transf_func_t)(pax_tri_t *tri, pax_tri_t *uvs, void *args);
 
 typedef int32_t               pax_err_t;
 typedef uint32_t              pax_col_t;
@@ -75,6 +86,11 @@ typedef uint32_t              pax_col_t;
 struct pax_tri {
 	// Triangle points.
 	float x0, y0, x1, y1, x2, y2;
+};
+
+struct pax_quad {
+	// Quad points.
+	float x0, y0, x1, y1, x2, y2, x3, y3;
 };
 
 struct pax_rect {
@@ -134,6 +150,17 @@ struct pax_buf {
 	pax_rect_t        clip;
 	// Matrix stack.
 	matrix_stack_2d_t stack_2d;
+};
+
+struct pax_shader {
+	// Transformer callback.
+	pax_transf_func_t transformer;
+	// Transformer arguments.
+	void             *transformer_args;
+	// Shader callback.
+	pax_shader_func_t callback;
+	// Shader arguments.
+	void             *callback_args;
 };
 
 #ifdef __cplusplus

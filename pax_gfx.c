@@ -173,7 +173,7 @@ static inline void pax_tri_unshaded(pax_buf_t *buf, pax_col_t color,
 
 // Internal method for unshaded triangles.
 // Assumes points are sorted by Y.
-static inline void pax_tri_shaded(pax_buf_t *buf, pax_col_t color,
+static inline void pax_tri_shaded(pax_buf_t *buf, pax_col_t color, pax_shader_t *shader,
 		float x0, float y0, float x1, float y1, float x2, float y2,
 		float u0, float v0, float u1, float v1, float u2, float v2) {
 	
@@ -269,9 +269,10 @@ static inline void pax_tri_shaded(pax_buf_t *buf, pax_col_t color,
 			float du = (u_right - u_left) / nIter;
 			float dv = (v_right - v_left) / nIter;
 			for (int x = x_left + 0.5; x < x_right; x ++) {
+				// Apply the shader,
+				pax_col_t result = (*shader->callback)(color, x, y, u, v, shader->callback_args);
 				// And simply merge colors accordingly.
-				// Stand-in for shader.
-				pax_merge_pixel(buf, pax_col_rgb(u*255, v*255, 0), x, y);
+				pax_merge_pixel(buf, result, x, y);
 				u += du;
 				v += dv;
 			}
@@ -330,9 +331,10 @@ static inline void pax_tri_shaded(pax_buf_t *buf, pax_col_t color,
 			float du = (u_right - u_left) / nIter;
 			float dv = (v_right - v_left) / nIter;
 			for (int x = x_left + 0.5; x < x_right; x ++) {
+				// Apply the shader,
+				pax_col_t result = (*shader->callback)(color, x, y, u, v, shader->callback_args);
 				// And simply merge colors accordingly.
-				// Stand-in for shader.
-				pax_merge_pixel(buf, pax_col_rgb(u*255, v*255, 0), x, y);
+				pax_merge_pixel(buf, result, x, y);
 				u += du;
 				v += dv;
 			}
@@ -739,6 +741,95 @@ pax_col_t pax_get_pixel(pax_buf_t *buf, int x, int y) {
 
 
 /* ========= DRAWING: 2D ========= */
+
+// Draw a rectangle with a shader.
+// If uvs is NULL, a default will be used (0,0; 1,0; 1,1; 0,1).
+void pax_shade_rect(pax_buf_t *buf, pax_col_t color, pax_shader_t *shader,
+		pax_quad_t *uvs, float x, float y, float width, float height) {
+	if (!uvs) {
+		uvs = &(pax_quad_t) {
+			.x0 = 0, .y0 = 0,
+			.x1 = 1, .y1 = 0,
+			.x2 = 1, .y2 = 1,
+			.x3 = 0, .y3 = 1
+		};
+	}
+	
+	pax_tri_t uv0 = {
+		.x0 = uvs->x0, .y0 = uvs->y0,
+		.x1 = uvs->x1, .y1 = uvs->y1,
+		.x2 = uvs->x2, .y0 = uvs->y2
+	};
+	pax_tri_t uv1 = {
+		.x0 = uvs->x0, .y0 = uvs->y0,
+		.x1 = uvs->x3, .y1 = uvs->y3,
+		.x2 = uvs->x2, .y0 = uvs->y2
+	};
+	
+	pax_shade_tri(buf, color, shader, &uv0, x, y, x + width - 1, y, x + width - 1, y + height - 1);
+	pax_shade_tri(buf, color, shader, &uv1, x, y, x, y + height - 1, x + width - 1, y + height - 1);
+}
+
+// Draw a triangle with a shader.
+// If uvs is NULL, a default will be used (0,0; 1,0; 0,1).
+void pax_shade_tri(pax_buf_t *buf, pax_col_t color, pax_shader_t *shader,
+		pax_tri_t *uvs, float x0, float y0, float x1, float y1, float x2, float y2) {
+	PAX_BUF_CHECK();
+	matrix_2d_transform(buf->stack_2d.value, &x0, &y0);
+	matrix_2d_transform(buf->stack_2d.value, &x1, &y1);
+	matrix_2d_transform(buf->stack_2d.value, &x2, &y2);
+	
+	if (!isfinite(x0) || !isfinite(y0) || !isfinite(x1) || !isfinite(y1) || !isfinite(x2) || !isfinite(y2)) {
+		// We can't draw to infinity.
+		pax_last_error = PAX_ERR_INF;
+		return;
+	}
+	
+	if (!uvs) {
+		uvs = &(pax_tri_t) {
+			.x0 = 0, .y0 = 0,
+			.x1 = 1, .y1 = 0,
+			.x2 = 0, .y2 = 1
+		};
+	}
+	
+	// Sort points by height.
+	if (y1 < y0) {
+		PAX_SWAP_POINTS(x0, y0, x1, y1);
+		PAX_SWAP_POINTS(uvs->x0, uvs->y0, uvs->x1, uvs->y1);
+	}
+	if (y2 < y0) {
+		PAX_SWAP_POINTS(x0, y0, x2, y2);
+		PAX_SWAP_POINTS(uvs->x0, uvs->y0, uvs->x2, uvs->y2);
+	}
+	if (y2 < y1) {
+		PAX_SWAP_POINTS(x1, y1, x2, y2);
+		PAX_SWAP_POINTS(uvs->x1, uvs->y1, uvs->x2, uvs->y2);
+	}
+	
+	if (y2 == y0 || (x2 == x0 && x1 == x0)) {
+		// We can't draw a flat triangle.
+		PAX_SUCCESS();
+		return;
+	}
+	
+	pax_tri_shaded(buf, color, shader,
+		x0, y0, x1, y1, x2, y2,
+		uvs->x0, uvs->y0, uvs->x1, uvs->y1, uvs->x2, uvs->y2
+	);
+	
+	PAX_SUCCESS();
+}
+
+// Draw an arc with a shader, angles in radians.
+// If uvs is NULL, a default will be used (0,0; 1,0; 1,1; 0,1).
+void pax_shade_arc(pax_buf_t *buf, pax_col_t color, pax_shader_t *shader,
+		pax_quad_t *uvs, float x,  float y,  float r,  float a0, float a1);
+
+// Draw a circle with a shader.
+// If uvs is NULL, a default will be used (0,0; 1,0; 1,1; 0,1).
+void pax_shade_circle(pax_buf_t *buf, pax_col_t color, pax_shader_t *shader,
+		pax_quad_t *uvs, float x,  float y,  float r);
 
 // Draw a rectangle.
 void pax_draw_rect(pax_buf_t *buf, pax_col_t color, float x, float y, float width, float height) {

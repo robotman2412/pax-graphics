@@ -117,16 +117,26 @@ pax_col_t   pax_get_pixel           (pax_buf_t *buf, int x, int y);
 
 /* ========= DRAWING: 2D ========= */
 
+// Draw a rectangle with a shader.
+// If uvs is NULL, a default will be used (0,0; 1,0; 1,1; 0,1).
+void        pax_shade_rect          (pax_buf_t *buf, pax_col_t color, pax_shader_t *shader, pax_quad_t *uvs, float x, float y, float width, float height);
+// Draw a triangle with a shader.
+// If uvs is NULL, a default will be used (0,0; 1,0; 0,1).
+void        pax_shade_tri           (pax_buf_t *buf, pax_col_t color, pax_shader_t *shader, pax_tri_t  *uvs, float x0, float y0, float x1, float y1, float x2, float y2);
+// Draw an arc with a shader, angles in radians.
+// If uvs is NULL, a default will be used (0,0; 1,0; 1,1; 0,1).
+void        pax_shade_arc           (pax_buf_t *buf, pax_col_t color, pax_shader_t *shader, pax_quad_t *uvs, float x,  float y,  float r,  float a0, float a1);
+// Draw a circle with a shader.
+// If uvs is NULL, a default will be used (0,0; 1,0; 1,1; 0,1).
+void        pax_shade_circle        (pax_buf_t *buf, pax_col_t color, pax_shader_t *shader, pax_quad_t *uvs, float x,  float y,  float r);
+
 // Draw a rectangle.
 void        pax_draw_rect           (pax_buf_t *buf, pax_col_t color, float x, float y, float width, float height);
-
 // Draw a line.
 void        pax_draw_line           (pax_buf_t *buf, pax_col_t color, float x0, float y0, float x1, float y1);
-
 // Draw a triangle.
 void        pax_draw_tri            (pax_buf_t *buf, pax_col_t color, float x0, float y0, float x1, float y1, float x2, float y2);
-
-// Draw na arc, angles in radians.
+// Draw an arc, angles in radians.
 void        pax_draw_arc            (pax_buf_t *buf, pax_col_t color, float x,  float y,  float r,  float a0, float a1);
 // Draw a circle.
 void        pax_draw_circle         (pax_buf_t *buf, pax_col_t color, float x,  float y,  float r);
