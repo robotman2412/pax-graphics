@@ -55,11 +55,15 @@ extern "C" {
 
 /* ============ TYPES ============ */
 
+struct pax_tri;
+struct pax_rect;
 union  matrix_2d;
 struct matrix_stack_2d;
 enum   pax_buf_type;
 struct pax_buf;
 
+typedef struct pax_tri         pax_tri_t;
+typedef struct pax_rect        pax_rect_t;
 typedef union  matrix_2d       matrix_2d_t;
 typedef struct matrix_stack_2d matrix_stack_2d_t;
 typedef enum   pax_buf_type    pax_buf_type_t;
@@ -67,6 +71,16 @@ typedef struct pax_buf         pax_buf_t;
 
 typedef int32_t               pax_err_t;
 typedef uint32_t              pax_col_t;
+
+struct pax_tri {
+	// Triangle points.
+	float x0, y0, x1, y1, x2, y2;
+};
+
+struct pax_rect {
+	// Reactangle points.
+	float x, y, w, h;
+};
 
 union matrix_2d {
 	struct {
@@ -99,12 +113,14 @@ struct pax_buf {
 		// Buffer pointer.
 		void         *buf;
 	};
-	// Width in pixels.
-	int            width;
-	// Height    in pixels.
-	int               height;
 	// Bits per pixel.
 	int               bpp;
+	
+	// Width in pixels.
+	int               width;
+	// Height    in pixels.
+	int               height;
+	
 	// Dirty x (top left).
 	int               dirty_x0;
 	// Dirty y (top left).
@@ -113,6 +129,9 @@ struct pax_buf {
 	int               dirty_x1;
 	// Dirty y (bottom right).
 	int               dirty_y1;
+	
+	// Clip rect.
+	pax_rect_t        clip;
 	// Matrix stack.
 	matrix_stack_2d_t stack_2d;
 };

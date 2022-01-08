@@ -67,6 +67,109 @@ static const char *TAG   = "pax";
 
 
 
+/* ======= DRAWING HELPERS ======= */
+
+// Internal method for unshaded triangles.
+// Assumes points are sorted by Y.
+static inline void pax_tri_unshaded(pax_buf_t *buf, pax_col_t color, float x0, float y0, float x1, float y1, float x2, float y2) {
+	// Find the appropriate Y for y0, y1 and y2 inside the triangle.
+	float y_post_0 = (int) (y0 + 0.5) + 0.5;
+	float y_post_1 = (int) (y1 + 0.5) + 0.5;
+	float y_pre_2  = (int) (y2 - 0.5) + 0.5;
+	// And the coefficients for x0->x1, x1->x2 and x0->x2.
+	float x0_x1_dx = (x1 - x0) / (y1 - y0);
+	float x1_x2_dx = (x2 - x1) / (y2 - y1);
+	float x0_x2_dx = (x2 - x0) / (y2 - y0);
+	
+	// Clip: Y axis.
+	if (y_post_0 > buf->clip.y + buf->clip.h) {
+		y_post_0 = (int) (buf->clip.y + buf->clip.h - 0.5) + 0.5;
+	}
+	if (y_post_1 > buf->clip.y + buf->clip.h) {
+		y_post_1 = (int) (buf->clip.y + buf->clip.h - 0.5) + 0.5;
+	}
+	if (y_pre_2  > buf->clip.y + buf->clip.h) {
+		y_pre_2  = (int) (buf->clip.y + buf->clip.h - 0.5) + 0.5;
+	}
+	
+	if (y_pre_2  < buf->clip.y) {
+		y_pre_2  = (int) (buf->clip.y + 0.5) + 0.5;
+	}
+	if (y_post_1 < buf->clip.y) {
+		y_post_1 = (int) (buf->clip.y + 0.5) + 0.5;
+	}
+	if (y_post_0 < buf->clip.y) {
+		y_post_0 = (int) (buf->clip.y + 0.5) + 0.5;
+	}
+	
+	// Draw top half.
+	// This condition is false if no one point is inside the triangle and above y1.
+	if (y_post_0 < y_post_1 && y_post_0 >= y0) {
+		// Find the X counterparts to the other points we found.
+		float x_a = x0 + x0_x1_dx * (y_post_0 - y0);
+		float x_b = x0 + x0_x2_dx * (y_post_0 - y0);
+		for (int y = y_post_0; y < (int) y_post_1; y++) {
+			// Plot the horizontal line.
+			float x_left, x_right;
+			if (x_a < x_b) {
+				x_left  = x_a;
+				x_right = x_b;
+			} else {
+				x_left  = x_b;
+				x_right = x_a;
+			}
+			// Clip: X axis.
+			if (x_right > buf->clip.x + buf->clip.w) {
+				x_right = buf->clip.x + buf->clip.w;
+			}
+			if (x_left < buf->clip.x) {
+				x_left = buf->clip.x;
+			}
+			for (int x = x_left + 0.5; x < x_right; x ++) {
+				// And simply merge colors accordingly.
+				pax_merge_pixel(buf, color, x, y);
+			}
+			// Move X.
+			x_a += x0_x1_dx;
+			x_b += x0_x2_dx;
+		}
+	}
+	// Draw bottom half.
+	// This condition might be confusing, but it's false if no point at all is inside the triangle.
+	if (y_post_0 <= y_pre_2 && y_post_1 >= y1 && y_pre_2 <= y2) {
+		// Find the X counterparts to the other points we found.
+		float x_a = x1 + x1_x2_dx * (y_post_1 - y1);
+		float x_b = x0 + x0_x2_dx * (y_post_1 - y0);
+		for (int y = y_post_1; y <= (int) y_pre_2; y++) {
+			// Plot the horizontal line.
+			float x_left, x_right;
+			if (x_a < x_b) {
+				x_left  = x_a;
+				x_right = x_b;
+			} else {
+				x_left  = x_b;
+				x_right = x_a;
+			}
+			// Clip: X axis.
+			if (x_right > buf->clip.x + buf->clip.w) {
+				x_right = buf->clip.x + buf->clip.w;
+			}
+			if (x_left < buf->clip.x) {
+				x_left = buf->clip.x;
+			}
+			for (int x = x_left + 0.5; x < x_right; x ++) {
+				// And simply merge colors accordingly.
+				pax_merge_pixel(buf, color, x, y);
+			}
+			// Move X.
+			x_a += x1_x2_dx;
+			x_b += x0_x2_dx;
+		}
+	}
+}
+
+
+
 /* ============ DEBUG ============ */
 
 // Describe error.
@@ -111,6 +214,7 @@ void pax_buf_init(pax_buf_t *buf, void *mem, int width, int height, pax_buf_type
 		}
 	};
 	pax_mark_clean(buf);
+	pax_noclip(buf);
 	PAX_SUCCESS();
 }
 
@@ -127,6 +231,51 @@ void pax_buf_destroy(pax_buf_t *buf) {
 	free(buf->buf);
 	
 	PAX_SUCCESS();
+}
+
+// Clip the buffer to the desired rectangle.
+void pax_clip(pax_buf_t *buf, float x, float y, float width, float height) {
+	// Make width and height positive.
+	if (width < 0) {
+		x += width;
+		width = -width;
+	}
+	if (height < 0) {
+		y += height;
+		height = -height;
+	}
+	// Clip the entire rectangle to be at most the buffer's size.
+	if (x < 0) {
+		width += x;
+		x = 0;
+	}
+	if (y < 0) {
+		height += y;
+		y = 0;
+	}
+	if (x + width > buf->width) {
+		width = buf->width - x;
+	}
+	if (y + height > buf->height) {
+		height = buf->height - y;
+	}
+	// Apply the clip.
+	buf->clip = (pax_rect_t) {
+		.x = x,
+		.y = y,
+		.w = width,
+		.h = height
+	};
+}
+
+// Clip the buffer to it's full size.
+void pax_noclip(pax_buf_t *buf) {
+	buf->clip = (pax_rect_t) {
+		.x = 0,
+		.y = 0,
+		.w = buf->width,
+		.h = buf->height
+	};
 }
 
 // Check whether the buffer is dirty.
@@ -184,7 +333,7 @@ void pax_mark_dirty2(pax_buf_t *buf, int x, int y, int width, int height) {
 
 // A linear interpolation based only in ints.
 static inline uint8_t pax_lerp(uint8_t part, uint8_t from, uint8_t to) {
-	return from + (((to - from) * (part + (part >> 7))) >> 8);
+	return from + (( (to - from) * (part + (part >> 7)) ) >> 8);
 }
 
 // Converts HSV to ARGB.
@@ -528,6 +677,8 @@ void pax_background(pax_buf_t *buf, pax_col_t color) {
 
 // Draw a rectangle, ignoring matrix transform.
 void pax_simple_rect(pax_buf_t *buf, pax_col_t color, float x, float y, float width, float height) {
+	PAX_BUF_CHECK();
+	
 	// Fix rect dimensions.
 	if (width < 0) {
 		width = -width;
@@ -539,30 +690,27 @@ void pax_simple_rect(pax_buf_t *buf, pax_col_t color, float x, float y, float wi
 	}
 	
 	// Clip rect in inside of buffer.
-	if (x < 0) {
-		width += x;
-		x = 0;
+	if (x < buf->clip.x) {
+		width += buf->clip.x - x;
+		x = buf->clip.x;
 	}
-	if (y < 0) {
-		height += y;
-		y = 0;
+	if (y < buf->clip.y) {
+		height += buf->clip.y - y;
+		y = buf->clip.y;
 	}
-	if (x + width + 0.5 > buf->width) {
-		width = buf->width - x - 0.5;
+	if (x + width > buf->clip.x + buf->clip.w) {
+		width = buf->clip.x + buf->clip.w - x;
 	}
-	if (y + height + 0.5 > buf->height) {
-		height = buf->height - y - 0.5;
+	if (y + height > buf->clip.y + buf->clip.h) {
+		height = buf->clip.y + buf->clip.h - y;
 	}
-	
-	PAX_BUF_CHECK();
 	
 	pax_mark_dirty2(buf, x + 0.5, y + 0.5, width + 0.5, height + 0.5);
 	
-	uint32_t value = pax_col2buf(buf, color);
 	// Pixel time.
 	for (int _y = y + 0.5; _y < y + height + 0.5; _y ++) {
 		for (int _x = x + 0.5; _x < x + width + 0.5; _x ++) {
-			pax_merge_pixel(buf, value, _x, _y);
+			pax_merge_pixel(buf, color, _x, _y);
 		}
 	}
 	
@@ -595,70 +743,6 @@ void pax_simple_line(pax_buf_t *buf, pax_col_t color, float x0, float y0, float 
 	}
 	
 	PAX_SUCCESS();
-}
-
-// Segmented rendering approach.
-// No shading.
-static inline void pax_tri_unshaded(pax_buf_t *buf, pax_col_t color, float x0, float y0, float x1, float y1, float x2, float y2) {
-	// Find the appropriate Y for y0, y1 and y2 inside the triangle.
-	float y_post_0 = (int) (y0 + 0.5) + 0.5;
-	float y_post_1 = (int) (y1 + 0.5) + 0.5;
-	float y_pre_2  = (int) (y2 - 0.5) + 0.5;
-	// And the coefficients for x0->x1, x1->x2 and x0->x2.
-	float x0_x1_dx = (x1 - x0) / (y1 - y0);
-	float x1_x2_dx = (x2 - x1) / (y2 - y1);
-	float x0_x2_dx = (x2 - x0) / (y2 - y0);
-	
-	// Draw top half.
-	// This condition is false if no one point is inside the triangle and above y1.
-	if (y_post_0 < y_post_1) {
-		// Find the X counterparts to the other points we found.
-		float x_a = x0 + x0_x1_dx * (y_post_0 - y0);
-		float x_b = x0 + x0_x2_dx * (y_post_0 - y0);
-		for (int y = y_post_0; y < (int) y_post_1; y++) {
-			// Plot the horizontal line.
-			float x_left, x_right;
-			if (x_a < x_b) {
-				x_left  = x_a;
-				x_right = x_b;
-			} else {
-				x_left  = x_b;
-				x_right = x_a;
-			}
-			for (int x = x_left + 0.5; x < x_right; x ++) {
-				// And simply merge colors accordingly.
-				pax_merge_pixel(buf, color, x, y);
-			}
-			// Move X.
-			x_a += x0_x1_dx;
-			x_b += x0_x2_dx;
-		}
-	}
-	// Draw bottom half.
-	// This condition might be confusing, but it's false if no point at all is inside the triangle.
-	if (y_post_0 <= y_pre_2) {
-		// Find the X counterparts to the other points we found.
-		float x_a = x1 + x1_x2_dx * (y_post_1 - y1);
-		float x_b = x0 + x0_x2_dx * (y_post_1 - y0);
-		for (int y = y_post_1; y <= (int) y_pre_2; y++) {
-			// Plot the horizontal line.
-			float x_left, x_right;
-			if (x_a < x_b) {
-				x_left  = x_a;
-				x_right = x_b;
-			} else {
-				x_left  = x_b;
-				x_right = x_a;
-			}
-			for (int x = x_left + 0.5; x < x_right; x ++) {
-				// And simply merge colors accordingly.
-				pax_merge_pixel(buf, color, x, y);
-			}
-			// Move X.
-			x_a += x1_x2_dx;
-			x_b += x0_x2_dx;
-		}
-	}
 }
 
 // Draw a triangle, ignoring matrix transform.

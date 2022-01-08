@@ -45,6 +45,10 @@ char      *pax_desc_err           (pax_err_t error);
 void      pax_buf_init            (pax_buf_t *buf, void *mem, int width, int height, pax_buf_type_t type);
 // Destroy the buffer, freeing its memory.
 void      pax_buf_destroy         (pax_buf_t *buf);
+// Clip the buffer to the desired rectangle.
+void      pax_clip                (pax_buf_t *buf, float x, float y, float width, float height);
+// Clip the buffer to it's full size.
+void      pax_noclip              (pax_buf_t *buf);
 
 // Check whether the buffer is dirty.
 bool      pax_is_dirty            (pax_buf_t *buf);
