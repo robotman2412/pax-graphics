@@ -71,11 +71,14 @@ static const char *TAG   = "pax";
 
 // Internal method for unshaded triangles.
 // Assumes points are sorted by Y.
-static inline void pax_tri_unshaded(pax_buf_t *buf, pax_col_t color, float x0, float y0, float x1, float y1, float x2, float y2) {
+static inline void pax_tri_unshaded(pax_buf_t *buf, pax_col_t color,
+		float x0, float y0, float x1, float y1, float x2, float y2) {
+	
 	// Find the appropriate Y for y0, y1 and y2 inside the triangle.
 	float y_post_0 = (int) (y0 + 0.5) + 0.5;
 	float y_post_1 = (int) (y1 + 0.5) + 0.5;
 	float y_pre_2  = (int) (y2 - 0.5) + 0.5;
+	
 	// And the coefficients for x0->x1, x1->x2 and x0->x2.
 	float x0_x1_dx = (x1 - x0) / (y1 - y0);
 	float x1_x2_dx = (x2 - x1) / (y2 - y1);
@@ -164,6 +167,182 @@ static inline void pax_tri_unshaded(pax_buf_t *buf, pax_col_t color, float x0, f
 			// Move X.
 			x_a += x1_x2_dx;
 			x_b += x0_x2_dx;
+		}
+	}
+}
+
+// Internal method for unshaded triangles.
+// Assumes points are sorted by Y.
+static inline void pax_tri_shaded(pax_buf_t *buf, pax_col_t color,
+		float x0, float y0, float x1, float y1, float x2, float y2,
+		float u0, float v0, float u1, float v1, float u2, float v2) {
+	
+	// Find the appropriate Y for y0, y1 and y2 inside the triangle.
+	float y_post_0 = (int) (y0 + 0.5) + 0.5;
+	float y_post_1 = (int) (y1 + 0.5) + 0.5;
+	float y_pre_2  = (int) (y2 - 0.5) + 0.5;
+	
+	// And the coefficients for x0->x1, x1->x2 and x0->x2.
+	float x0_x1_dx = (x1 - x0) / (y1 - y0);
+	float x1_x2_dx = (x2 - x1) / (y2 - y1);
+	float x0_x2_dx = (x2 - x0) / (y2 - y0);
+	
+	// And UVs.
+	float u0_u1_du = (u1 - u0) / (y1 - y0);
+	float v0_v1_dv = (v1 - v0) / (y1 - y0);
+	float u0_u2_du = (u2 - u0) / (y2 - y0);
+	float v0_v2_dv = (v2 - v0) / (y2 - y0);
+	float u1_u2_du = (u2 - u1) / (y2 - y1);
+	float v1_v2_dv = (v2 - v1) / (y2 - y1);
+	
+	// Clip: Y axis.
+	if (y_post_0 > buf->clip.y + buf->clip.h) {
+		y_post_0 = (int) (buf->clip.y + buf->clip.h - 0.5) + 0.5;
+	}
+	if (y_post_1 > buf->clip.y + buf->clip.h) {
+		y_post_1 = (int) (buf->clip.y + buf->clip.h - 0.5) + 0.5;
+	}
+	if (y_pre_2  > buf->clip.y + buf->clip.h) {
+		y_pre_2  = (int) (buf->clip.y + buf->clip.h - 0.5) + 0.5;
+	}
+	
+	if (y_pre_2  < buf->clip.y) {
+		y_pre_2  = (int) (buf->clip.y + 0.5) + 0.5;
+	}
+	if (y_post_1 < buf->clip.y) {
+		y_post_1 = (int) (buf->clip.y + 0.5) + 0.5;
+	}
+	if (y_post_0 < buf->clip.y) {
+		y_post_0 = (int) (buf->clip.y + 0.5) + 0.5;
+	}
+	
+	// Draw top half.
+	// This condition is false if no one point is inside the triangle and above y1.
+	if (y_post_0 < y_post_1 && y_post_0 >= y0) {
+		float coeff = (y_post_0 - y0);
+		// Find the X counterparts to the other points we found.
+		float x_a = x0 + x0_x1_dx * coeff;
+		float x_b = x0 + x0_x2_dx * coeff;
+		// And UV ranges.
+		float u_a = u0 + u0_u1_du * coeff;
+		float v_a = v0 + v0_v1_dv * coeff;
+		float u_b = u0 + u0_u2_du * coeff;
+		float v_b = v0 + v0_v2_dv * coeff;
+		for (int y = y_post_0; y < (int) y_post_1; y++) {
+			// Plot the horizontal line.
+			float x_left, x_right;
+			float u_left, u_right;
+			float v_left, v_right;
+			if (x_a < x_b) {
+				x_left  = x_a;
+				x_right = x_b;
+				u_left  = u_a;
+				u_right = u_b;
+				v_left  = v_a;
+				v_right = v_b;
+			} else {
+				x_left  = x_b;
+				x_right = x_a;
+				u_left  = u_b;
+				u_right = u_a;
+				v_left  = v_b;
+				v_right = v_a;
+			}
+			// Clip: X axis.
+			// if (x_right > buf->clip.x + buf->clip.w) {
+			// 	float new_x_right = buf->clip.x + buf->clip.w;
+			// 	float delta = (new_x_right - x_right) / (x_left - x_right);
+			// 	x_right = new_x_right;
+			// 	u_right = (u_left - u_right) * delta;
+			// 	v_right = (v_left - v_right) * delta;
+			// }
+			// if (x_left < buf->clip.x) {
+			// 	float new_x_left = buf->clip.x;
+			// 	float delta = (new_x_left - x_right) / (x_left - x_right);
+			// 	x_left = new_x_left;
+			// 	u_left = (u_left - u_right) * delta;
+			// 	v_left = (v_left - v_right) * delta;
+			// }
+			// Find UV ranges.
+			int nIter = x_right - (int) (x_left + 0.5);
+			float u = u_left, v = v_left;
+			float du = (u_right - u_left) / nIter;
+			float dv = (v_right - v_left) / nIter;
+			for (int x = x_left + 0.5; x < x_right; x ++) {
+				// And simply merge colors accordingly.
+				// Stand-in for shader.
+				pax_merge_pixel(buf, pax_col_rgb(u*255, v*255, 0), x, y);
+				u += du;
+				v += dv;
+			}
+			// Move X.
+			x_a += x0_x1_dx;
+			x_b += x0_x2_dx;
+			u_a += u0_u1_du;
+			v_a += v0_v1_dv;
+			u_b += u0_u2_du;
+			v_b += v0_v2_dv;
+		}
+	}
+	// Draw bottom half.
+	// This condition might be confusing, but it's false if no point at all is inside the triangle.
+	if (y_post_0 <= y_pre_2 && y_post_1 >= y1 && y_pre_2 <= y2) {
+		float coeff0 = (y_post_1 - y0);
+		float coeff1 = (y_post_1 - y1);
+		// Find the X counterparts to the other points we found.
+		float x_a = x1 + x1_x2_dx * coeff1;
+		float x_b = x0 + x0_x2_dx * coeff0;
+		// And UV ranges.
+		float u_a = u1 + u1_u2_du * coeff1;
+		float v_a = v1 + v1_v2_dv * coeff1;
+		float u_b = u0 + u0_u2_du * coeff0;
+		float v_b = v0 + v0_v2_dv * coeff0;
+		for (int y = y_post_1; y <= (int) y_pre_2; y++) {
+			// Plot the horizontal line.
+			float x_left, x_right;
+			float u_left, u_right;
+			float v_left, v_right;
+			if (x_a < x_b) {
+				x_left  = x_a;
+				x_right = x_b;
+				u_left  = u_a;
+				u_right = u_b;
+				v_left  = v_a;
+				v_right = v_b;
+			} else {
+				x_left  = x_b;
+				x_right = x_a;
+				u_left  = u_b;
+				u_right = u_a;
+				v_left  = v_b;
+				v_right = v_a;
+			}
+			// Clip: X axis.
+			// if (x_right > buf->clip.x + buf->clip.w) {
+			// 	x_right = buf->clip.x + buf->clip.w;
+			// }
+			// if (x_left < buf->clip.x) {
+			// 	x_left = buf->clip.x;
+			// }
+			// Find UV ranges.
+			int nIter = x_right - (int) (x_left + 0.5);
+			float u = u_left, v = v_left;
+			float du = (u_right - u_left) / nIter;
+			float dv = (v_right - v_left) / nIter;
+			for (int x = x_left + 0.5; x < x_right; x ++) {
+				// And simply merge colors accordingly.
+				// Stand-in for shader.
+				pax_merge_pixel(buf, pax_col_rgb(u*255, v*255, 0), x, y);
+				u += du;
+				v += dv;
+			}
+			// Move X.
+			x_a += x1_x2_dx;
+			x_b += x0_x2_dx;
+			u_a += u1_u2_du;
+			v_a += v1_v2_dv;
+			u_b += u0_u2_du;
+			v_b += v0_v2_dv;
 		}
 	}
 }
