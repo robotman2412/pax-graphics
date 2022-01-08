@@ -727,21 +727,66 @@ void pax_simple_line(pax_buf_t *buf, pax_col_t color, float x0, float y0, float 
 		return;
 	}
 	
+	if (y0 > y1) PAX_SWAP_POINTS(x0, y0, x1, y1);
+	
+	// Determine whether the line might fall within the clip rect.
+	if (!buf->clip.w || !buf->clip.h) goto noneed;
+	if (y1 < buf->clip.y || y0 > buf->clip.y + buf->clip.h - 1) goto noneed;
+	if (x0 == x1 && (x0 < buf->clip.x || x0 > buf->clip.x + buf->clip.w - 1)) goto noneed;
+	if (x0 < buf->clip.x && x1 < buf->clip.x) goto noneed;
+	if (x0 > buf->clip.x + buf->clip.w - 1 && x1 > buf->clip.x + buf->clip.w - 1) goto noneed;
+	
+	// Clip top.
+	if (y0 < buf->clip.y) {
+		x0 = (x1 - x0) * (buf->clip.y - y0) / (y1 - y0);
+		y0 = buf->clip.y;
+	}
+	// Clip bottom.
+	if (y1 > buf->clip.y + buf->clip.h - 1) {
+		x1 = (x1 - x0) * (buf->clip.y + buf->clip.h - 1 - y0) / (y1 - y0);
+		y1 = buf->clip.y + buf->clip.h - 1;
+	}
+	// Clip left.
+	if (x1 < buf->clip.x) {
+		y1 = (y1 - y0) * (buf->clip.x - x0) / (x1 - x0);
+		x1 = buf->clip.x;
+	} else if (x0 < buf->clip.x) {
+		y0 = (y1 - y0) * (buf->clip.x - x0) / (x1 - x0);
+		x0 = buf->clip.x;
+	}
+	// Clip right.
+	if (x1 > buf->clip.x + buf->clip.w - 1) {
+		y1 = (y1 - y0) * (buf->clip.x + buf->clip.w - 1 - x0) / (x1 - x0);
+		x1 = buf->clip.x + buf->clip.w - 1;
+	} else if (x0 > buf->clip.x + buf->clip.w - 1) {
+		y0 = (y1 - y0) * (buf->clip.x + buf->clip.w - 1 - x0) / (x1 - x0);
+		x0 = buf->clip.x + buf->clip.w - 1;
+	}
+	
+	// If any point is outside clip now, we don't draw a line.
+	if (y0 < buf->clip.y || y1 > buf->clip.y + buf->clip.h - 1) goto noneed;
+	
+	// Determine whether the line is "steep" (dx*dx > dy*dy).
 	float dx = x1 - x0;
 	float dy = y1 - y0;
 	bool is_steep = fabs(dx) < fabs(dy);
-	float nIter;
+	int nIter;
 	
-	if (is_steep) nIter = fabs(dy);
-	else nIter = fabs(dx);
+	if (is_steep) nIter = fabs(dy) + 0.5;
+	else nIter = fabs(dx) + 0.5;
 	
-	for (int i = 0; i < nIter + 0.5; i++) {
-		float lerp = i / nIter;
-		float x = x0 + dx * lerp;
-		float y = y0 + dy * lerp;
+	// Adjust dx and dy.
+	dx /= nIter;
+	dy /= nIter;
+	float x = x0, y = y0;
+	for (int i = 0; i < nIter; i++) {
+		x += dx;
+		y += dy;
 		pax_merge_pixel(buf, color, x + 0.5, y + 0.5);
 	}
 	
+	// This label is used if there's no need to try to draw a line.
+	noneed:
 	PAX_SUCCESS();
 }
 
