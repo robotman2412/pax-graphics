@@ -270,7 +270,7 @@ static inline void pax_tri_shaded(pax_buf_t *buf, pax_col_t color, pax_shader_t 
 			float dv = (v_right - v_left) / nIter;
 			for (int x = x_left + 0.5; x < x_right; x ++) {
 				// Apply the shader,
-				pax_col_t result = (*shader->callback)(color, x, y, u, v, shader->callback_args);
+				pax_col_t result = (shader->callback)(color, x, y, u, v, shader->callback_args);
 				// And simply merge colors accordingly.
 				pax_merge_pixel(buf, result, x, y);
 				u += du;
@@ -332,7 +332,7 @@ static inline void pax_tri_shaded(pax_buf_t *buf, pax_col_t color, pax_shader_t 
 			float dv = (v_right - v_left) / nIter;
 			for (int x = x_left + 0.5; x < x_right; x ++) {
 				// Apply the shader,
-				pax_col_t result = (*shader->callback)(color, x, y, u, v, shader->callback_args);
+				pax_col_t result = (shader->callback)(color, x, y, u, v, shader->callback_args);
 				// And simply merge colors accordingly.
 				pax_merge_pixel(buf, result, x, y);
 				u += du;
@@ -758,16 +758,16 @@ void pax_shade_rect(pax_buf_t *buf, pax_col_t color, pax_shader_t *shader,
 	pax_tri_t uv0 = {
 		.x0 = uvs->x0, .y0 = uvs->y0,
 		.x1 = uvs->x1, .y1 = uvs->y1,
-		.x2 = uvs->x2, .y0 = uvs->y2
+		.x2 = uvs->x2, .y2 = uvs->y2
 	};
 	pax_tri_t uv1 = {
 		.x0 = uvs->x0, .y0 = uvs->y0,
 		.x1 = uvs->x3, .y1 = uvs->y3,
-		.x2 = uvs->x2, .y0 = uvs->y2
+		.x2 = uvs->x2, .y2 = uvs->y2
 	};
 	
-	pax_shade_tri(buf, color, shader, &uv0, x, y, x + width - 1, y, x + width - 1, y + height - 1);
-	pax_shade_tri(buf, color, shader, &uv1, x, y, x, y + height - 1, x + width - 1, y + height - 1);
+	pax_shade_tri(buf, color, shader, &uv0, x, y, x + width, y, x + width, y + height);
+	pax_shade_tri(buf, color, shader, &uv1, x, y, x, y + height, x + width, y + height);
 }
 
 // Draw a triangle with a shader.

@@ -73,15 +73,15 @@ typedef enum   pax_buf_type    pax_buf_type_t;
 typedef struct pax_buf         pax_buf_t;
 typedef struct pax_shader      pax_shader_t;
 
+typedef int32_t               pax_err_t;
+typedef uint32_t              pax_col_t;
+
 // Function pointer for shader callback.
 // Tint is the color parameter to the pax_shade_xxx function.
 typedef pax_col_t (*pax_shader_func_t)(pax_col_t tint, int x, int y, float u, float v, void *args);
 // Function pointer for transformer callback.
 // It's job is to optionally move the triangle vertices.
 typedef void (*pax_transf_func_t)(pax_tri_t *tri, pax_tri_t *uvs, void *args);
-
-typedef int32_t               pax_err_t;
-typedef uint32_t              pax_col_t;
 
 struct pax_tri {
 	// Triangle points.
