@@ -137,8 +137,15 @@ static inline uint32_t pax_buf2col(pax_buf_t *buf, uint32_t value) {
 	} else if (buf->type == PAX_BUF_8_332RGB) {
 		// 8BPP 332-RGB
 		// From:                               RrrG ggBb
-		// To:   Aaaa aaaa Rrrr rrrr Gggg gggg Bbbb bbbb
-		return 0;
+		// To:   .... .... Rrr. .... Ggg. .... .... ....
+		// Add:  .... .... ...R rrRr ...Gg gGg .... ....
+		// Add:  .... .... .... .... .... .... BbBb BbBb
+		pax_col_t color = ((value << 16) & 0x00e00000) | ((value << 11) & 0x0000e000);
+		color |= (color >> 3) | ((color >> 6) & 0x000f0f00);
+		pax_col_t temp  = (value & 0x03);
+		temp |= temp << 2;
+		color |= temp | (temp << 4);
+		return color | 0xff000000;
 	} else if (buf->type == PAX_BUF_8_2222ARGB) {
 		// 8BPP 2222-ARGB
 		// From:                               AaRr GgBb
@@ -150,8 +157,8 @@ static inline uint32_t pax_buf2col(pax_buf_t *buf, uint32_t value) {
 	} else if (buf->type == PAX_BUF_16_4444ARGB) {
 		// 16BPP 4444-ARGB
 		// From:                     Aaaa Rrrr Gggg Bbbb
-		// To:   Aaaa aaaa Rrrr rrrr Gggg gggg Bbbb bbbb
-		// Add:       Aaaa      Rrrr      Gggg      Bbbb
+		// To:   Aaaa .... Rrrr .... Gggg .... Bbbb ....
+		// Add:  .... Aaaa .... Rrrr .... Gggg .... Bbbb
 		pax_col_t color = ((value << 16) & 0xf0000000) | ((value << 12) & 0x00f00000) | ((value << 8) & 0x0000f000) | ((value << 4) & 0x000000f0);
 		color |= color >> 4;
 		return color;
@@ -177,19 +184,19 @@ static inline void pax_set_pixel_u(pax_buf_t *buf, uint32_t color, int x, int y)
 	uint8_t bpp = buf->bpp;
 	if (bpp == 1) {
 		// 1BPP
-		// uint8_t *ptr = &buf->buf_8bpp[(x + y * buf->width) >> 3];
-		// uint8_t mask = 0x01 << (x & 7);
-		// *ptr = (*ptr & ~mask) | (color << (x & 7) * 2);
+		uint8_t *ptr = &buf->buf_8bpp[(x + y * buf->width) >> 3];
+		uint8_t mask = 0x01 << (x & 7);
+		*ptr = (*ptr & ~mask) | (color << (x & 7));
 	} else if (bpp == 2) {
 		// 2BPP
-		// uint8_t *ptr = &buf->buf_8bpp[(x + y * buf->width) >> 2];
-		// uint8_t mask = 0x03 << (x & 3) * 2;
-		// *ptr = (*ptr & ~mask) | (color << (x & 3) * 2);
+		uint8_t *ptr = &buf->buf_8bpp[(x + y * buf->width) >> 2];
+		uint8_t mask = 0x03 << (x & 3) * 2;
+		*ptr = (*ptr & ~mask) | (color << ((x & 3) * 2));
 	} else if (bpp == 4) {
 		// 4BPP
-		// uint8_t *ptr = &buf->buf_8bpp[(x + y * buf->width) >> 1];
-		// uint8_t mask = (x & 1) ? 0xf0 : 0x0f;
-		// *ptr = (*ptr & ~mask) | (color << (x & 1) * 4);
+		uint8_t *ptr = &buf->buf_8bpp[(x + y * buf->width) >> 1];
+		uint8_t mask = (x & 1) ? 0xf0 : 0x0f;
+		*ptr = (*ptr & ~mask) | (color << ((x & 1) * 4));
 	} else if (bpp == 8) {
 		// 8BPP
 		buf->buf_8bpp[x + y * buf->width] = color;
@@ -207,11 +214,29 @@ static inline void pax_set_pixel_u(pax_buf_t *buf, uint32_t color, int x, int y)
 // Get a pixel, unsafe (don't check bounds or buffer, no color conversion).
 static inline uint32_t pax_get_pixel_u(pax_buf_t *buf, int x, int y) {
 	uint8_t bpp = buf->bpp;
-	if (bpp == 8) {
-		return buf->buf_16bpp[x + y * buf->width];
+	if (bpp == 1) {
+		// 1BPP
+		uint8_t *ptr = &buf->buf_8bpp[(x + y * buf->width) >> 3];
+		uint8_t mask = 0x01 << (x & 7);
+		return (*ptr & mask) >> (x & 7);
+	} else if (bpp == 2) {
+		// 2BPP
+		uint8_t *ptr = &buf->buf_8bpp[(x + y * buf->width) >> 2];
+		uint8_t mask = 0x03 << (x & 3) * 2;
+		return (*ptr & mask) >> ((x & 3) * 2);
+	} else if (bpp == 4) {
+		// 4BPP
+		uint8_t *ptr = &buf->buf_8bpp[(x + y * buf->width) >> 1];
+		uint8_t mask = (x & 1) ? 0xf0 : 0x0f;
+		return (*ptr & mask) >> ((x & 1) * 4);
+	} else if (bpp == 8) {
+		// 8BPP
+		return buf->buf_8bpp[x + y * buf->width];
 	} else if (bpp == 16) {
+		// 16BPP
 		return buf->buf_16bpp[x + y * buf->width];
 	} else if (bpp == 32) {
+		// 32BPP
 		return buf->buf_32bpp[x + y * buf->width];
 	} else {
 		//PAX_ERROR1("pax_get_pixel_u", PAX_ERR_PARAM, 0);
@@ -584,7 +609,10 @@ char *pax_desc_err(pax_err_t error) {
 
 // Debug stuff.
 void pax_debug(pax_buf_t *buf) {
-	ESP_LOGW(TAG, "Performing buffer dump in format %08x", buf->type);
+	pax_col_t c0 = 0xff489be0;
+	uint32_t  c1 = pax_col2buf(buf, c0);
+	uint32_t  c2 = pax_buf2col(buf, c1);
+	ESP_LOGW(TAG, "%06x -> %02x -> %06x", c0, c1, c2);
 }
 
 
@@ -640,11 +668,20 @@ void pax_buf_convert(pax_buf_t *dst, pax_buf_t *src, pax_buf_type_t type) {
 	if (!(src) || !(src)->buf) PAX_ERROR("pax_buf_convert (src)", PAX_ERR_NOBUF);
 	if (!(dst) || !(dst)->buf) PAX_ERROR("pax_buf_convert (dst)", PAX_ERR_NOBUF);
 	
-	//if (!dst) dst = src;
+	// pax_buf_t dummy;
+	// bool use_dummy = !dst;
+	// if (use_dummy) {
+	// 	dummy = *src;
+	// 	dst = &dummy;
+	// }
+	
 	// We can't go using realloc on an unknown buffer.
 	if (!dst->do_free) PAX_ERROR("pax_buf_convert", PAX_ERR_PARAM);
 	// Src and dst must match in size.
-	if (src->width != dst->width || src->height != dst->height) PAX_ERROR("pax_buf_convert", PAX_ERR_BOUNDS);
+	if (src->width != dst->width || src->height != dst->height) {
+		ESP_LOGE(TAG, "size mismatch: %dx%d vs %dx%d", src->width, src->height, dst->width, dst->height);
+		PAX_ERROR("pax_buf_convert", PAX_ERR_BOUNDS);
+	}
 	
 	dst->bpp = PAX_GET_BPP(type);
 	dst->type = type;
@@ -675,6 +712,10 @@ void pax_buf_convert(pax_buf_t *dst, pax_buf_t *src, pax_buf_type_t type) {
 		dst->buf = realloc(dst->buf, new_size);
 		if (!dst->buf) PAX_ERROR("pax_buf_convert", PAX_ERR_NOMEM);
 	}
+	
+	// if (use_dummy) {
+	// 	*src = dummy;
+	// }
 }
 
 // Clip the buffer to the desired rectangle.
