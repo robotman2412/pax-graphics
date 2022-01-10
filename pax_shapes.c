@@ -23,7 +23,13 @@
 */
 
 #include "pax_shapes.h"
+
 #include <stdlib.h>
+#include <stdio.h>
+#include <esp_system.h>
+#include <sdkconfig.h>
+#include <esp_err.h>
+#include <esp_log.h>
 
 /* =========== HELPERS =========== */
 
@@ -124,6 +130,8 @@ size_t pax_vectorise_bezier(pax_vec1_t **output, pax_vec4_t control_points, size
 	for (size_t i = 0; i < n_iter; i++) {
 		qsort(lines, n_lines, sizeof(bezier_segment_t), pax_vectorise_bezier_segment_comp);
 	}
+	
+	return 0;
 }
 
 // Draw a cubic bezier curve.
