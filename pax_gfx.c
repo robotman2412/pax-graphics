@@ -35,6 +35,10 @@
 #include <string.h>
 #include <math.h>
 
+
+
+/* =========== HELPERS =========== */
+
 pax_err_t pax_last_error = PAX_OK;
 static const char *TAG   = "pax";
 
@@ -47,10 +51,6 @@ static const char *TAG   = "pax";
 #endif
 
 #define PAX_SUCCESS() { pax_last_error = PAX_OK; }
-
-
-
-/* =========== HELPERS =========== */
 
 // Buffer sanity check.
 #define PAX_BUF_CHECK(where) { if (!(buf) || !(buf)->buf) PAX_ERROR(where, PAX_ERR_NOBUF); }

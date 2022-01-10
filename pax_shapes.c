@@ -25,8 +25,41 @@
 #include "pax_shapes.h"
 #include <stdlib.h>
 
+/* =========== HELPERS =========== */
+
+pax_err_t pax_last_error = PAX_OK;
+static const char *TAG   = "pax";
+
+#ifdef PAX_AUTOREPORT
+#define PAX_ERROR(where, errno) { ESP_LOGE(TAG, "@ %s: %s", where, pax_desc_err(errno)); pax_last_error = errno; return; }
+#define PAX_ERROR1(where, errno, retval) { ESP_LOGE(TAG, "@ %s: %s", where, pax_desc_err(errno)); pax_last_error = errno; return retval; }
+#else
+#define PAX_ERROR(where, errno) { pax_last_error = errno; return; }
+#define PAX_ERROR1(where, errno, retval) { pax_last_error = errno; return retval; }
+#endif
+
+#define PAX_SUCCESS() { pax_last_error = PAX_OK; }
+
+// Buffer sanity check.
+#define PAX_BUF_CHECK(where) { if (!(buf) || !(buf)->buf) PAX_ERROR(where, PAX_ERR_NOBUF); }
+// Buffer sanity check.
+#define PAX_BUF_CHECK1(where, retval) { if (!(buf) || !(buf)->buf) PAX_ERROR1(where, PAX_ERR_NOBUF, retval); }
+
+// This is only applicable during bezier vectorisation.
+typedef struct bezier_point {
+	float x,  y;
+	// float dx, dy;
+	float part;
+} bezier_point_t;
+
+// This is only applicable during bezier vectorisation.
+typedef struct bezier_segment {
+	bezier_point_t *from;
+	bezier_point_t *to;
+} bezier_segment_t;
+
 #define pax_calc_bezier(part, ctl) pax_calc_bezier0(part, (ctl).x0, (ctl).y0, (ctl).x1, (ctl).y1, (ctl).x2, (ctl).y2, (ctl).x3, (ctl).y3)
-static inline pax_vec1_t pax_calc_bezier0(float part, float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3) {
+static inline bezier_point_t pax_calc_bezier0(float part, float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3) {
 	// This is literally just a series of linear interpolations.
 	float xa = x0 + (x1 - x0) * part;
 	float xb = x1 + (x2 - x1) * part;
@@ -42,42 +75,55 @@ static inline pax_vec1_t pax_calc_bezier0(float part, float x0, float y0, float 
 	float yq = yb + (yc - yb) * part;
 	float y  = yp + (yq - yp) * part;
 	
-	return (pax_vec1_t) { .x = x, .y = y };
+	return (bezier_point_t) { .x = x, .y = y, .part = part };
 }
 
-static int pax_vectorise_bezier_comp(const void *e0, const void *e1) {
-	const pax_vec2_t *a = e0;
-	const pax_vec2_t *b = e1;
-	float x_a = a->x1 - a->x0;
-	float y_a = a->y1 - a->y0;
+static int pax_vectorise_bezier_segment_comp(const void *e0, const void *e1) {
+	const bezier_segment_t *a = e0;
+	const bezier_segment_t *b = e1;
+	float x_a = a->to->x - a->from->x;
+	float y_a = a->to->y - a->from->y;
 	float len_a = x_a * x_a + y_a * y_a;
-	float x_b = b->x1 - b->x0;
-	float y_b = b->y1 - b->y0;
+	float x_b = b->to->x - b->from->x;
+	float y_b = b->to->y - b->from->y;
 	float len_b = x_b * x_b + y_b * y_b;
 	if (len_a < len_b) return -1;
 	if (len_a > len_b) return 1;
 	return 0;
 }
 
+static int pax_vectorise_bezier_point_comp(const void *e0, const void *e1) {
+	const bezier_point_t *a = e0;
+	const bezier_point_t *b = e1;
+	float delta = b->part - a->part;
+	return delta / fabs(delta);
+}
+
+/* ============ CURVES =========== */
+
 // Convert a cubic bezier curve to line segments.
 // Returns the number of segments created.
 size_t pax_vectorise_bezier(pax_vec1_t **output, pax_vec4_t control_points, size_t max_points) {
-	// Start with just two lines: start to T=0.5 to end.
-	pax_vec2_t *buf = malloc(sizeof(pax_vec2_t) * (max_points - 1));
-	pax_vec1_t center = pax_calc_bezier(0.5, control_points);
-	size_t n_lines = 2;
-	buf[0] = (pax_vec2_t) { .x0 = control_points.x0, .y0 = control_points.y0, .x1 = center.x, .y1 = center.y };
-	buf[1] = (pax_vec2_t) { .x0 = center.x, .y0 = center.y, .x1 = control_points.x3, .y1 = control_points.y3 };
+	if (max_points < 4) PAX_ERROR1("pax_vectorise_bezier", PAX_ERR_PARAM, 0);
 	
-	// Iterate continuously: take the longest line segment and then split it.
+	// Start with just three points: start, T=0.5 and end.
+	bezier_point_t *points = malloc(sizeof(bezier_point_t) * max_points);
+	points[0] = (bezier_point_t) { .x = control_points.x0, .y = control_points.y0, .part = 0 };
+	points[1] = pax_calc_bezier(0.5, control_points);
+	points[2] = (bezier_point_t) { .x = control_points.x3, .y = control_points.y3, .part = 1 };
+	size_t n_points = 3;
+	
+	// Turn the points into lines.
+	bezier_segment_t *lines = malloc(sizeof(bezier_segment_t) * max_points);
+	lines[0] = (bezier_segment_t) { .from = &points[0], .to = &points[1] };
+	lines[1] = (bezier_segment_t) { .from = &points[1], .to = &points[2] };
+	size_t n_lines = 2;
+	
+	// Bifurcate the longest line segment continuously.
 	size_t n_iter = max_points - 3;
 	for (size_t i = 0; i < n_iter; i++) {
-		qsort(buf, n_lines, sizeof(pax_vec2_t), pax_vectorise_bezier_comp);
+		qsort(lines, n_lines, sizeof(bezier_segment_t), pax_vectorise_bezier_segment_comp);
 	}
-	
-	// Convert lines back to points.
-	size_t index;
-	pax_vec1_t *point_buf = malloc(sizeof(pax_vec1_t) * (n_lines + 1));
 }
 
 // Draw a cubic bezier curve.
