@@ -1,7 +1,7 @@
 /*
 	MIT License
 
-	Copyright (c) 2021 Julian Scheffers
+	Copyright (c) 2022 Julian Scheffers
 
 	Permission is hereby granted, free of charge, to any person obtaining a copy
 	of this software and associated documentation files (the "Software"), to deal
@@ -22,11 +22,16 @@
 	SOFTWARE.
 */
 
+#ifndef PAX_TYPES_H
+#define PAX_TYPES_H
+
 #ifdef __cplusplus
 extern "C" {
 #endif //__cplusplus
 
 #include <stdint.h>
+#include <stddef.h>
+#include <stdbool.h>
 #include <math.h>
 #define PAX_AUTOREPORT
 
@@ -34,7 +39,7 @@ extern "C" {
 #define M_PI 3.141592653589793
 #endif //M_PI
 
-/* ====== ERROR DEFS ===== */
+/* ========= ERROR DEFS ========== */
 
 // Unknown error.
 #define PAX_ERR_UNKNOWN    1
@@ -55,8 +60,8 @@ extern "C" {
 
 /* ============ TYPES ============ */
 
-struct pax_tri;
-struct pax_quad;
+struct pax_vec3;
+struct pax_vec4;
 struct pax_rect;
 union  matrix_2d;
 struct matrix_stack_2d;
@@ -64,8 +69,12 @@ enum   pax_buf_type;
 struct pax_buf;
 struct pax_shader;
 
-typedef struct pax_tri         pax_tri_t;
-typedef struct pax_quad        pax_quad_t;
+typedef struct pax_vec1        pax_vec1_t;
+typedef struct pax_vec2        pax_vec2_t;
+typedef struct pax_vec3        pax_vec3_t;
+typedef struct pax_vec4        pax_vec4_t;
+typedef struct pax_vec3        pax_tri_t;
+typedef struct pax_vec4        pax_quad_t;
 typedef struct pax_rect        pax_rect_t;
 typedef union  matrix_2d       matrix_2d_t;
 typedef struct matrix_stack_2d matrix_stack_2d_t;
@@ -83,12 +92,22 @@ typedef pax_col_t (*pax_shader_func_t)(pax_col_t tint, int x, int y, float u, fl
 // It's job is to optionally move the triangle vertices.
 typedef void (*pax_transf_func_t)(pax_tri_t *tri, pax_tri_t *uvs, void *args);
 
-struct pax_tri {
+struct pax_vec1 {
+	// Single point.
+	float x, y;
+};
+
+struct pax_vec2 {
+	// Line points.
+	float x0, y0, x1, y1;
+};
+
+struct pax_vec3 {
 	// Triangle points.
 	float x0, y0, x1, y1, x2, y2;
 };
 
-struct pax_quad {
+struct pax_vec4 {
 	// Quad points.
 	float x0, y0, x1, y1, x2, y2, x3, y3;
 };
@@ -112,13 +131,25 @@ struct matrix_stack_2d {
 };
 
 enum pax_buf_type {
+	PAX_BUF_1_GREY      = 0x10000101,
+	PAX_BUF_2_GREY      = 0x10000202,
+	PAX_BUF_4_GREY      = 0x10000404,
+	PAX_BUF_8_GREY      = 0x10000808,
+	PAX_BUF_4_1111ARGB  = 0x00111104,
+	PAX_BUF_8_332RGB    = 0x00033208,
+	PAX_BUF_8_2222ARGB  = 0x00444408,
 	PAX_BUF_16_565RGB   = 0x00056510,
+	PAX_BUF_16_4444ARGB = 0x00444410,
 	PAX_BUF_32_8888ARGB = 0x00888820
 };
 
 struct pax_buf {
 	// Buffer type, color modes, etc.
 	pax_buf_type_t    type;
+	// Whether to perform free on the buffer on deinit.
+	bool              do_free;
+	// Whether to reverse the endianness of the buffer.
+	bool              reverse_endianness;
 	union {
 		// Shorthand for 8bpp buffer.
 		uint8_t      *buf_8bpp;
@@ -166,3 +197,5 @@ struct pax_shader {
 #ifdef __cplusplus
 }
 #endif //__cplusplus
+
+#endif //PAX_TYPES_H

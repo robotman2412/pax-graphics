@@ -1,7 +1,7 @@
 /*
 	MIT License
 
-	Copyright (c) 2021 Julian Scheffers
+	Copyright (c) 2022 Julian Scheffers
 
 	Permission is hereby granted, free of charge, to any person obtaining a copy
 	of this software and associated documentation files (the "Software"), to deal
@@ -22,14 +22,15 @@
 	SOFTWARE.
 */
 
+#ifndef PAX_GFX_H
+#define PAX_GFX_H
+
 #ifdef __cplusplus
 extern "C" {
 #endif //__cplusplus
 
-#include <stdint.h>
-#include <stddef.h>
-#include <stdbool.h>
 #include "pax_types.h"
+#include "pax_fonts.h"
 
 /* ============ DEBUG ============ */
 
@@ -37,6 +38,8 @@ extern pax_err_t pax_last_error;
 
 // Describe error.
 char      *pax_desc_err           (pax_err_t error);
+// Debug stuff.
+void       pax_debug              (pax_buf_t *buf);
 
 /* ============ BUFFER =========== */
 
@@ -45,6 +48,9 @@ char      *pax_desc_err           (pax_err_t error);
 void      pax_buf_init            (pax_buf_t *buf, void *mem, int width, int height, pax_buf_type_t type);
 // Destroy the buffer, freeing its memory.
 void      pax_buf_destroy         (pax_buf_t *buf);
+// Convert the buffer to the given new format.
+// If dest is NULL or equal to src, src will be converted.
+void      pax_buf_convert         (pax_buf_t *dst, pax_buf_t *src, pax_buf_type_t type);
 // Clip the buffer to the desired rectangle.
 void      pax_clip                (pax_buf_t *buf, float x, float y, float width, float height);
 // Clip the buffer to it's full size.
@@ -141,6 +147,16 @@ void        pax_draw_arc            (pax_buf_t *buf, pax_col_t color, float x,  
 // Draw a circle.
 void        pax_draw_circle         (pax_buf_t *buf, pax_col_t color, float x,  float y,  float r);
 
+/* ======= DRAWING: TEXT ======= */
+
+// Draw a string with the given font.
+// If font is NULL, the default font (7x9) will be used.
+void        pax_draw_text           (pax_buf_t *buf, pax_col_t color, pax_font_t *font, float font_size, float x, float y, char *text);
+// Calculate the size of the string with the given font.
+// Size is before matrix transformation.
+// If font is NULL, the default font (7x9) will be used.
+pax_vec1_t  pax_text_size           (pax_font_t *font, float font_size, char *text);
+
 /* ======= DRAWING: SIMPLE ======= */
 
 // Fill the background.
@@ -164,3 +180,5 @@ void        pax_simple_circle       (pax_buf_t *buf, pax_col_t color, float x,  
 #ifdef __cplusplus
 }
 #endif //__cplusplus
+
+#endif //PAX_GFX_H
