@@ -22,37 +22,27 @@
 	SOFTWARE.
 */
 
-#ifndef PAX_SHADERS_H
-#define PAX_SHADERS_H
+#ifndef PAX_SHAPES_H
+#define PAX_SHAPES_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif //__cplusplus
 
 #include "pax_types.h"
-#include "pax_fonts.h"
 #include "pax_gfx.h"
 
-/* ============ FONTS ============ */
+/* ============ CURVES =========== */
 
-typedef struct pax_shader_font_bitmap_uni_args {
-	pax_font_t   *font;
-	unsigned char glyph;
-} pax_shader_font_bitmap_uni_args_t;
+// Convert a cubic bezier curve to line segments.
+// Returns the number of segments created.
+size_t pax_vectorise_bezier(pax_vec1_t **output, pax_vec4_t control_points, size_t max_points);
 
-// Texture shader for bitmap fonts.
-pax_col_t pax_shader_font_bitmap_uni(pax_col_t tint, int x, int y, float u, float v, void *args);
-
-/* ========== TEXTURES =========== */
-
-// Create a shader_t of the given texture.
-// Texture format is pax_but_t*.
-#define PAX_SHADER_TEXTURE(texture) (pax_shader_t) { .callback = pax_shader_texture, .callback_args = texture }
-// Texture shader. No interpolation.
-pax_col_t pax_shader_texture(pax_col_t tint, int x, int y, float u, float v, void *args);
+// Draw a cubic bezier curve.
+void   pax_draw_bezier     (pax_buf_t *buf, pax_col_t color, pax_vec4_t control_points);
 
 #ifdef __cplusplus
 }
 #endif //__cplusplus
 
-#endif //PAX_SHADERS_H
+#endif //PAX_SHAPES_H
