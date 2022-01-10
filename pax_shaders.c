@@ -40,3 +40,11 @@ pax_col_t pax_shader_font_bitmap_uni(pax_col_t tint, int x, int y, float u, floa
     
     return args->font->glyphs_uni[glyph_index] & (1 << (glyph_x & 7)) ? tint : 0;
 }
+
+pax_col_t pax_shader_texture(pax_col_t tint, int x, int y, float u, float v, void *args) {
+	if (!args) {
+		return (u < 0.5) ^ (v >= 0.5) ? 0xffff00ff : 0xff1f1f1f;
+	}
+	pax_buf_t *image = (pax_buf_t *) args;
+	return pax_get_pixel(image, u*image->width, v*image->height);
+}

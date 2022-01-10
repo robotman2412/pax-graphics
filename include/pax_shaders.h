@@ -38,7 +38,14 @@ typedef struct pax_shader_font_bitmap_uni_args {
 	unsigned char glyph;
 } pax_shader_font_bitmap_uni_args_t;
 
+// Texture shader for bitmap fonts.
 pax_col_t pax_shader_font_bitmap_uni(pax_col_t tint, int x, int y, float u, float v, void *args);
+
+// Create a shader_t of the given texture.
+// Texture format is pax_but_t*.
+#define PAX_SHADER_TEXTURE(texture) (pax_shader_t) { .callback = pax_shader_texture, .callback_args = texture }
+// Texture shader. No interpolation.
+pax_col_t pax_shader_texture(pax_col_t tint, int x, int y, float u, float v, void *args);
 
 #ifdef __cplusplus
 }

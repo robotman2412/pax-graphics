@@ -219,6 +219,14 @@ static inline uint32_t pax_get_pixel_u(pax_buf_t *buf, int x, int y) {
 	}
 }
 
+// UV interpolation helper for the circle methods.
+static inline float pax_flerp4(float x, float y, float e0, float e1, float e2, float e3) {
+	x = x *  0.5 + 0.5;
+	y = y * -0.5 + 0.5;
+	float a = e0 + (e1 - e0) * x;
+	float b = e2 + (e3 - e2) * x;
+	return a + (b - a) * y;
+}
 
 
 /* ======= DRAWING HELPERS ======= */
@@ -990,7 +998,7 @@ void pax_shade_rect(pax_buf_t *buf, pax_col_t color, pax_shader_t *shader,
 // Draw a triangle with a shader.
 // If uvs is NULL, a default will be used (0,0; 1,0; 0,1).
 void pax_shade_tri(pax_buf_t *buf, pax_col_t color, pax_shader_t *shader,
-		pax_tri_t *uvs, float x0, float y0, float x1, float y1, float x2, float y2) {
+		pax_tri_t *_uvs, float x0, float y0, float x1, float y1, float x2, float y2) {
 	PAX_BUF_CHECK("pax_shade_tri");
 	matrix_2d_transform(buf->stack_2d.value, &x0, &y0);
 	matrix_2d_transform(buf->stack_2d.value, &x1, &y1);
@@ -1002,26 +1010,29 @@ void pax_shade_tri(pax_buf_t *buf, pax_col_t color, pax_shader_t *shader,
 		return;
 	}
 	
-	if (!uvs) {
-		uvs = &(pax_tri_t) {
+	pax_tri_t uvs;
+	if (!_uvs) {
+		uvs = (pax_tri_t) {
 			.x0 = 0, .y0 = 0,
 			.x1 = 1, .y1 = 0,
 			.x2 = 0, .y2 = 1
 		};
+	} else {
+		uvs = *_uvs;
 	}
 	
 	// Sort points by height.
 	if (y1 < y0) {
 		PAX_SWAP_POINTS(x0, y0, x1, y1);
-		PAX_SWAP_POINTS(uvs->x0, uvs->y0, uvs->x1, uvs->y1);
+		PAX_SWAP_POINTS(uvs.x0, uvs.y0, uvs.x1, uvs.y1);
 	}
 	if (y2 < y0) {
 		PAX_SWAP_POINTS(x0, y0, x2, y2);
-		PAX_SWAP_POINTS(uvs->x0, uvs->y0, uvs->x2, uvs->y2);
+		PAX_SWAP_POINTS(uvs.x0, uvs.y0, uvs.x2, uvs.y2);
 	}
 	if (y2 < y1) {
 		PAX_SWAP_POINTS(x1, y1, x2, y2);
-		PAX_SWAP_POINTS(uvs->x1, uvs->y1, uvs->x2, uvs->y2);
+		PAX_SWAP_POINTS(uvs.x1, uvs.y1, uvs.x2, uvs.y2);
 	}
 	
 	if (y2 == y0 || (x2 == x0 && x1 == x0)) {
@@ -1032,7 +1043,7 @@ void pax_shade_tri(pax_buf_t *buf, pax_col_t color, pax_shader_t *shader,
 	
 	pax_tri_shaded(buf, color, shader,
 		x0, y0, x1, y1, x2, y2,
-		uvs->x0, uvs->y0, uvs->x1, uvs->y1, uvs->x2, uvs->y2
+		uvs.x0, uvs.y0, uvs.x1, uvs.y1, uvs.x2, uvs.y2
 	);
 	
 	PAX_SUCCESS();
@@ -1041,12 +1052,76 @@ void pax_shade_tri(pax_buf_t *buf, pax_col_t color, pax_shader_t *shader,
 // Draw an arc with a shader, angles in radians.
 // If uvs is NULL, a default will be used (0,0; 1,0; 1,1; 0,1).
 void pax_shade_arc(pax_buf_t *buf, pax_col_t color, pax_shader_t *shader,
-		pax_quad_t *uvs, float x,  float y,  float r,  float a0, float a1);
+		pax_quad_t *uvs, float x,  float y,  float r,  float a0, float a1) {
+	PAX_BUF_CHECK("pax_draw_arc");
+	if (!uvs) {
+		uvs = &(pax_quad_t) {
+			.x0 = 0, .y0 = 0,
+			.x1 = 1, .y1 = 0,
+			.x2 = 1, .y2 = 1,
+			.x3 = 0, .y3 = 1
+		};
+	}
+	
+	// Simplify the angles slightly.
+	float a2 = fmodf(a0, M_PI * 2);
+	a1 += a2 - a0;
+	a0 = a2;
+	if (a1 < a0) PAX_SWAP(float, a0, a1);
+	if (a1 - a0 > M_PI * 2) {
+		a1 = M_PI * 2;
+		a0 = 0;
+	}
+	
+	// Pick an appropriate number of divisions.
+	int n_div;
+	matrix_2d_t matrix = buf->stack_2d.value;
+	float _r = r * sqrtf(matrix.a0*matrix.a0 + matrix.b0*matrix.b0) * sqrtf(matrix.a1*matrix.a1 + matrix.b1*matrix.b1);
+	if (_r > 30) n_div = (a1 - a0) / M_PI * 32 + 1;
+	else n_div = (a1 - a0) / M_PI * 16 + 1;
+	
+	// Get the sine and cosine of one division, used for rotation in the loop.
+	float div_angle = (a1 - a0) / n_div;
+	float _sin = sinf(div_angle);
+	float _cos = cosf(div_angle);
+	
+	// Start with a unit vector matrix according to a0.
+	float x0 = cosf(a0);
+	float y0 = sinf(a0);
+	
+	pax_tri_t tri_uvs;
+	tri_uvs.x0 = (uvs->x0 + uvs->x1 + uvs->x2 + uvs->x3) * 0.25;
+	tri_uvs.y0 = (uvs->y0 + uvs->y1 + uvs->y2 + uvs->y3) * 0.25;
+	
+	tri_uvs.x1 = pax_flerp4(x0, y0, uvs->x0, uvs->x1, uvs->x3, uvs->x2);
+	tri_uvs.y1 = pax_flerp4(x0, y0, uvs->y0, uvs->y1, uvs->y3, uvs->y2);
+	
+	// Draw it as a series of triangles, rotating with what is essentially matrix multiplication.
+	for (int i = 0; i < n_div; i++) {
+		// Perform the rotation.
+		float x1 = x0 * _cos - y0 * _sin;
+		float y1 = x0 * _sin + y0 * _cos;
+		// And UV interpolation.
+		tri_uvs.x2 = pax_flerp4(x1, y1, uvs->x0, uvs->x1, uvs->x3, uvs->x2);
+		tri_uvs.y2 = pax_flerp4(x1, y1, uvs->y0, uvs->y1, uvs->y3, uvs->y2);
+		// We subtract y0 and y1 from y because our up is -y.
+		pax_shade_tri(buf, color, shader, &tri_uvs, x, y, x + x0 * r, y - y0 * r, x + x1 * r, y - y1 * r);
+		// Assign them yes.
+		x0 = x1;
+		y0 = y1;
+		tri_uvs.x1 = tri_uvs.x2;
+		tri_uvs.y1 = tri_uvs.y2;
+	}
+	
+	PAX_SUCCESS();
+}
 
 // Draw a circle with a shader.
 // If uvs is NULL, a default will be used (0,0; 1,0; 1,1; 0,1).
 void pax_shade_circle(pax_buf_t *buf, pax_col_t color, pax_shader_t *shader,
-		pax_quad_t *uvs, float x,  float y,  float r);
+		pax_quad_t *uvs, float x,  float y,  float r) {
+	pax_shade_arc(buf, color, shader, uvs, x, y, r, 0, 2*M_PI);
+}
 
 // Draw a rectangle.
 void pax_draw_rect(pax_buf_t *buf, pax_col_t color, float x, float y, float width, float height) {
