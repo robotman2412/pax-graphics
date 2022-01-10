@@ -5,7 +5,7 @@ ESP-IDF module
 # API cheat sheet
 | name | returns | args | desc
 | :--- | :------ | :--- | :---
-| pax_buf_init | void | buf, mem, width, height, type | Create a new buffer.<br>If mem is NULL, a new area is allocated.void pax_buf_init (pax_buf_t *buf, void *mem, int width, int height, pax_buf_type_t type);
+| pax_buf_init | void | buf, mem, width, height, type | Create a new buffer.<br>If mem is NULL, a new area is allocated.
 | pax_buf_destroy | void | pax_buf_t *buf | Destroy the buffer, freeing its memory.
 | pax_buf_convert | void | pax_buf_t *dst, pax_buf_t *src, pax_buf_type_t type | Convert the buffer to the given new format.<br>If dest is NULL or equal to src, src will be converted.
 | pax_clip | void | pax_buf_t *buf, float x, float y, float width, float height | Clip the buffer to the desired rectangle.
