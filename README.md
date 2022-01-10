@@ -15,14 +15,14 @@ ESP-IDF module
 | pax_mark_dirty0 | void | pax_buf_t *buf | Mark the entire buffer as dirty.
 | pax_mark_dirty1 | void | pax_buf_t *buf, int x, int y | Mark a single point as dirty.
 | pax_mark_dirty2 | void | pax_buf_t *buf, int x, int y, int width, int height | Mark a rectangle as dirty.
-| pax_col_rgb | pax_col_t | q r, q g, q b | Combines RGB.
-| pax_col_argb | pax_col_t | q a, q r, q g, q b | Combines ARGB.
+| pax_col_rgb | pax_col_t | uint8_t r, uint8_t g, uint8_t b | Combines RGB.
+| pax_col_argb | pax_col_t | uint8_t a, uint8_t r, uint8_t g, uint8_t b | Combines ARGB.
 | pax_col_hsv | pax_col_t | uint8_t h, uint8_t s, uint8_t v | Converts HSV to ARGB.
 | pax_col_lerp | pax_col_t | uint8_t part, pax_col_t from, pax_col_t to | Linearly interpolates between from and to, including alpha.
 | pax_col_merge | pax_col_t | pax_col_t base, pax_col_t top | Merges the two colors, based on alpha.
-| matrix_2d_is_identity | bool | q m | Check whether the matrix exactly equals the identity matrix.
-| matrix_2d_is_identity1 | bool | h m | Check whether the matrix represents no more than a translation.
-| matrix_2d_is_identity2 | bool | h m | Check whether the matrix represents no more than a translation and/or scale.
+| matrix_2d_is_identity | bool | matrix_2d_t m | Check whether the matrix exactly equals the identity matrix.
+| matrix_2d_is_identity1 | bool | matrix_2d_t m | Check whether the matrix represents no more than a translation.
+| matrix_2d_is_identity2 | bool | matrix_2d_t m | Check whether the matrix represents no more than a translation and/or scale.
 | matrix_2d_identity | matrix_2d_t | | 2D identity matrix: represents no transformation.
 | matrix_2d_scale | matrix_2d_t | float x, float y | 2D scale matrix: represents a 2D scaling.
 | matrix_2d_translate | matrix_2d_t | float x, float y | 2D translation matrix: represents a 2D movement of the camera.
