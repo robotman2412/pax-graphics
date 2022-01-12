@@ -1,0 +1,32 @@
+# PAX docs: Colors
+
+In PAX, there are a few color utilities.
+These include:
+- ARGB
+- RGB
+- HSV
+- interpolation
+- alpha-based merging (called overlaying in computer graphics)
+
+All colors are measured in 0-255 integers.
+
+### Color: HSV
+
+| returns   | name         | args               | description
+| :------   | :---         | :---               | :---
+| pax_col_t | pax_col_ahsv | uint8_t alpha, hue, saturation, brightness | Translates HSV into RGB and sets the alpha to A.
+| pax_col_t | pax_col_hsv  | uint8_t hue, saturation, brightness        | Translates HSV into RGB and sets the alpha to fullly opaque.
+
+### Color: RGB
+
+| returns   | name         | args               | description
+| :------   | :---         | :---               | :---
+| pax_col_t | pax_col_argb | uint8_t alpha, red, green, blue | Combines ARGB from individual numbers.
+| pax_col_t | pax_col_rgb  | uint8_t red, green, blue        | Combines RGB from individual numbers. Full opacity.
+
+### Color: merging
+
+| returns   | name          | args               | description
+| :------   | :---          | :---               | :---
+| pax_col_t | pax_col_lerp  | uint8_t part, pax_col_t from, pax_col_t to | Performs a linear interpolation (fade) between two colors.
+| pax_col_t | pax_col_merge | pax_col_t base, pax_col_t top              | Overlays top over base, specified by alpha channels.
