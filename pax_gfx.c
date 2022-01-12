@@ -871,7 +871,12 @@ static inline uint8_t pax_lerp(uint8_t part, uint8_t from, uint8_t to) {
 }
 
 // Converts HSV to ARGB.
-pax_col_t pax_col_hsv(uint8_t _h, uint8_t s, uint8_t v) {
+pax_col_t pax_col_hsv(uint8_t h, uint8_t s, uint8_t v) {
+	return pax_col_ahsv(255, h, s, v);
+}
+
+// Converts AHSV to ARGB.
+pax_col_t pax_col_ahsv(uint8_t a, uint8_t _h, uint8_t s, uint8_t v) {
 	uint16_t h     = _h * 6;
 	uint16_t phase = h >> 8;
 	// Parts of HSV.
@@ -910,7 +915,7 @@ pax_col_t pax_col_hsv(uint8_t _h, uint8_t s, uint8_t v) {
 			return 0;
 	}
 	// Merge.
-	return 0xff000000 | (r << 16) | (g << 8) | b;
+	return (a << 24) | (r << 16) | (g << 8) | b;
 }
 
 // Linearly interpolates between from and to, including alpha.

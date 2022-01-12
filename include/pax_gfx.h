@@ -73,8 +73,10 @@ void      pax_mark_dirty2         (pax_buf_t *buf, int x, int y, int width, int 
 #define pax_col_rgb(r, g, b)      ( 0xff000000 | ((char)(r) << 16) | ((char)(g) << 8) | (char)(b) )
 // Combines ARGB.
 #define pax_col_argb(a, r, g, b)  ( ((char)(a) << 24) | ((char)(r) << 16) | ((char)(g) << 8) | (char)(b) )
-// Converts HSV to ARGB.
+// Converts HSV to RGB.
 pax_col_t pax_col_hsv             (uint8_t h, uint8_t s, uint8_t v);
+// Converts AHSV to ARGB.
+pax_col_t pax_col_ahsv            (uint8_t a, uint8_t h, uint8_t s, uint8_t v);
 // Linearly interpolates between from and to, including alpha.
 pax_col_t pax_col_lerp            (uint8_t part, pax_col_t from, pax_col_t to);
 // Merges the two colors, based on alpha.
