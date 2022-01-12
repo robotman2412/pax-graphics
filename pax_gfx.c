@@ -1436,18 +1436,18 @@ void pax_simple_line(pax_buf_t *buf, pax_col_t color, float x0, float y0, float 
 	}
 	// Clip left.
 	if (x1 < buf->clip.x) {
-		y1 = (y1 - y0) * (buf->clip.x - x0) / (x1 - x0);
+		y1 = y0 + (y1 - y0) * (buf->clip.x - x0) / (x1 - x0);
 		x1 = buf->clip.x;
 	} else if (x0 < buf->clip.x) {
-		y0 = (y1 - y0) * (buf->clip.x - x0) / (x1 - x0);
+		y0 = y0 + (y1 - y0) * (buf->clip.x - x0) / (x1 - x0);
 		x0 = buf->clip.x;
 	}
 	// Clip right.
 	if (x1 > buf->clip.x + buf->clip.w - 1) {
-		y1 = (y1 - y0) * (buf->clip.x + buf->clip.w - 1 - x0) / (x1 - x0);
+		y1 = y0 + (y1 - y0) * (buf->clip.x + buf->clip.w - 1 - x0) / (x1 - x0);
 		x1 = buf->clip.x + buf->clip.w - 1;
 	} else if (x0 > buf->clip.x + buf->clip.w - 1) {
-		y0 = (y1 - y0) * (buf->clip.x + buf->clip.w - 1 - x0) / (x1 - x0);
+		y0 = y0 + (y1 - y0) * (buf->clip.x + buf->clip.w - 1 - x0) / (x1 - x0);
 		x0 = buf->clip.x + buf->clip.w - 1;
 	}
 	
