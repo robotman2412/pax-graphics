@@ -113,6 +113,9 @@ void        pax_apply_2d          (pax_buf_t *buf, matrix_2d_t a);
 void        pax_push_2d           (pax_buf_t *buf);
 // Pop the top matrix off the stack.
 void        pax_pop_2d            (pax_buf_t *buf);
+// Reset the matrix stack.
+// If full is true, the entire stack gets cleared instead of just the top.
+void        pax_reset_2d          (pax_buf_t *buf, bool full);
 
 /* ======== DRAWING: PIXEL ======= */
 

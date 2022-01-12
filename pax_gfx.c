@@ -1003,6 +1003,22 @@ void pax_pop_2d(pax_buf_t *buf) {
 	PAX_SUCCESS();
 }
 
+// Reset the matrix stack.
+// If full is true, the entire stack gets cleared.
+// Else, only the top element gets cleared.
+void pax_reset_2d(pax_buf_t *buf, bool full) {
+	if (full) {
+		matrix_stack_2d_t *current = buf->stack_2d.parent;
+		while (current) {
+			matrix_stack_2d_t *next = current->parent;
+			free(current);
+			current = next;
+		}
+		buf->stack_2d.parent = NULL;
+	}
+	buf->stack_2d.value = matrix_2d_identity();
+}
+
 
 
 /* ======== DRAWING: PIXEL ======= */

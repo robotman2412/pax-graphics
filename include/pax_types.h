@@ -60,6 +60,11 @@ extern "C" {
 
 /* ============ TYPES ============ */
 
+// More verbose way of saying reset only the top matrix.
+#define PAX_RESET_TOP 0
+// More verbose way of saying reset the whole matrix stack.
+#define PAX_RESET_ALL 1
+
 struct pax_vec3;
 struct pax_vec4;
 struct pax_rect;
