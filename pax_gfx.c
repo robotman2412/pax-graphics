@@ -436,20 +436,20 @@ static inline void pax_tri_shaded(pax_buf_t *buf, pax_col_t color, pax_shader_t 
 				v_right = v_a;
 			}
 			// Clip: X axis.
-			// if (x_right > buf->clip.x + buf->clip.w) {
-			// 	float new_x_right = buf->clip.x + buf->clip.w;
-			// 	float delta = (new_x_right - x_right) / (x_left - x_right);
-			// 	x_right = new_x_right;
-			// 	u_right = (u_left - u_right) * delta;
-			// 	v_right = (v_left - v_right) * delta;
-			// }
-			// if (x_left < buf->clip.x) {
-			// 	float new_x_left = buf->clip.x;
-			// 	float delta = (new_x_left - x_right) / (x_left - x_right);
-			// 	x_left = new_x_left;
-			// 	u_left = (u_left - u_right) * delta;
-			// 	v_left = (v_left - v_right) * delta;
-			// }
+			if (x_right > buf->clip.x + buf->clip.w - 1) {
+				float new_x_right = buf->clip.x + buf->clip.w - 1;
+				float delta = (new_x_right - x_left) / (x_right - x_left);
+				x_right = new_x_right;
+				u_right = u_left + (u_right - u_left) * delta;
+				v_right = v_left + (v_right - v_left) * delta;
+			}
+			if (x_left < buf->clip.x) {
+				float new_x_left = buf->clip.x;
+				float delta = (new_x_left - x_left) / (x_right - x_left);
+				x_left = new_x_left;
+				u_left = u_left + (u_right - u_left) * delta;
+				v_left = v_left + (v_right - v_left) * delta;
+			}
 			// Find UV ranges.
 			int x = x_left + 0.5;
 			int nIter = x_right - x;
@@ -508,12 +508,20 @@ static inline void pax_tri_shaded(pax_buf_t *buf, pax_col_t color, pax_shader_t 
 				v_right = v_a;
 			}
 			// Clip: X axis.
-			// if (x_right > buf->clip.x + buf->clip.w) {
-			// 	x_right = buf->clip.x + buf->clip.w;
-			// }
-			// if (x_left < buf->clip.x) {
-			// 	x_left = buf->clip.x;
-			// }
+			if (x_right > buf->clip.x + buf->clip.w - 1) {
+				float new_x_right = buf->clip.x + buf->clip.w - 1;
+				float delta = (new_x_right - x_left) / (x_right - x_left);
+				x_right = new_x_right;
+				u_right = u_left + (u_right - u_left) * delta;
+				v_right = v_left + (v_right - v_left) * delta;
+			}
+			if (x_left < buf->clip.x) {
+				float new_x_left = buf->clip.x;
+				float delta = (new_x_left - x_left) / (x_right - x_left);
+				x_left = new_x_left;
+				u_left = u_left + (u_right - u_left) * delta;
+				v_left = v_left + (v_right - v_left) * delta;
+			}
 			// Find UV ranges.
 			int x = x_left + 0.5;
 			int nIter = x_right - x;
@@ -558,6 +566,46 @@ static inline void pax_rect_shaded(pax_buf_t *buf, pax_col_t color, pax_shader_t
 		height = -height;
 		PAX_SWAP_POINTS(u0, v0, u3, v3);
 		PAX_SWAP_POINTS(u1, v1, u2, v2);
+	}
+	
+	// Clip rect in inside of buffer.
+	if (x < buf->clip.x) {
+		float part = (buf->clip.x - x) / width;
+		u0 = u0 + (u1 - u0) * part;
+		v0 = v0 + (v1 - v0) * part;
+		u3 = u3 + (u2 - u3) * part;
+		v3 = v3 + (v2 - v3) * part;
+		
+		width += buf->clip.x - x;
+		x = buf->clip.x;
+	}
+	if (x + width > buf->clip.x + buf->clip.w) {
+		float part = (buf->clip.x + buf->clip.w - 1 - x) / width;
+		u1 = u0 + (u1 - u0) * part;
+		v1 = v0 + (v1 - v0) * part;
+		u2 = u3 + (u2 - u3) * part;
+		v2 = v3 + (v2 - v3) * part;
+		
+		width = buf->clip.x + buf->clip.w - 1 - x;
+	}
+	if (y < buf->clip.y) {
+		float part = (buf->clip.y - y) / height;
+		u0 = u0 + (u3 - u0) * part;
+		v0 = v0 + (v3 - v0) * part;
+		u1 = u1 + (u2 - u1) * part;
+		v1 = v1 + (v2 - v1) * part;
+		
+		height += buf->clip.y - y;
+		y = buf->clip.y;
+	}
+	if (y + height > buf->clip.y + buf->clip.h) {
+		float part = (buf->clip.y + buf->clip.h - 1 - y) / height;
+		u3 = u0 + (u3 - u0) * part;
+		v3 = v0 + (v3 - v0) * part;
+		u2 = u1 + (u2 - u1) * part;
+		v2 = v1 + (v2 - v1) * part;
+		
+		height = buf->clip.y + buf->clip.h - 1 - y;
 	}
 	
 	// Find UV deltas.
@@ -1332,8 +1380,7 @@ pax_vec1_t pax_text_size(pax_font_t *font, float font_size, char *text) {
 			if (c == '\r' && next == '\n') i++;
 		} else {
 			x += w;
-			float _text_w = x + w;
-			if (_text_w > text_w) text_w = _text_w;
+			if (x > text_w) text_w = x;
 		}
 	}
 	
@@ -1462,15 +1509,16 @@ void pax_simple_line(pax_buf_t *buf, pax_col_t color, float x0, float y0, float 
 	
 	if (is_steep) nIter = fabs(dy) + 0.5;
 	else nIter = fabs(dx) + 0.5;
+	if (nIter < 1) nIter = 1;
 	
 	// Adjust dx and dy.
 	dx /= nIter;
 	dy /= nIter;
 	float x = x0, y = y0;
-	for (int i = 0; i < nIter; i++) {
+	for (int i = 0; i <= nIter; i++) {
+		pax_merge_pixel(buf, color, x + 0.5, y + 0.5);
 		x += dx;
 		y += dy;
-		pax_merge_pixel(buf, color, x + 0.5, y + 0.5);
 	}
 	
 	// This label is used if there's no need to try to draw a line.
