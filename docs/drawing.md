@@ -46,11 +46,12 @@ Shaded drawing draws shapes after applying [transformations](matrices.md).
 It takes a shader and a UVs argument so that the shape may have multiple colors.
 The UVs, final x and y position and color are passed to the shader to allow this.
 
+There is no shaded version of a line.
+
 List of shaded drawing methods:
-| name             | arguments                                                           | description
-| :--------------- | :------------------------------------------------------------------ | :----------
-| pax_shade_rect   | pax_buf_t *buf, pax_col_t color, float x, y, width, height          | Draws a rectangle with the given dimensions.
-| pax_shade_line   | pax_buf_t *buf, pax_col_t color, float x0, y0, x1, y1               | Draws a line between two points.
-| pax_shade_tri    | pax_buf_t *buf, pax_col_t color, float x0, y0, x1, y1, x2, y2       | Draws a triangle between three points.
-| pax_shade_arc    | pax_buf_t *buf, pax_col_t color, float x, y, radius, angle0, angle1 | Draws an arc between two angles, at a given midpoint.
-| pax_shade_circle | pax_buf_t *buf, pax_col_t color, float x, y, radius                 | Draws a circle at a given midpoint.
+| name             | arguments                                                                                                  | description
+| :--------------- | :--------------------------------------------------------------------------------------------------------- | :----------
+| pax_shade_rect   | pax_buf_t *buf, pax_col_t color, pax_shader_t *shader, pax_quad_t *uvs, float x, y, width, height          | Draws a rectangle with the given dimensions.
+| pax_shade_tri    | pax_buf_t *buf, pax_col_t color, pax_shader_t *shader, pax_tri_t  *uvs, float x0, y0, x1, y1, x2, y2       | Draws a triangle between three points.
+| pax_shade_arc    | pax_buf_t *buf, pax_col_t color, pax_shader_t *shader, pax_quad_t *uvs, float x, y, radius, angle0, angle1 | Draws an arc between two angles, at a given midpoint.
+| pax_shade_circle | pax_buf_t *buf, pax_col_t color, pax_shader_t *shader, pax_quad_t *uvs, float x, y, radius                 | Draws a circle at a given midpoint.
