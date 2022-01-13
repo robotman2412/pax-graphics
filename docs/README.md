@@ -202,6 +202,7 @@ The API is split into a few groups:
 - [Matrix transformations](matrices.md)
     - Applying transformations
     - Using the matrix stack
+- [Shaders](shaders.md)
 
 # API reference
 
