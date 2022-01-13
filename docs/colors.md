@@ -2,11 +2,10 @@
 
 In PAX, there are a few color utilities.
 These include:
-- ARGB
-- RGB
-- HSV
-- interpolation
-- alpha-based merging (called overlaying in computer graphics)
+- [RGB (for combining RGB)](#color-rgb)
+- [HSV (for color pickers and rainbows)](#color-hsv)
+- [interpolation (for gradients)](#color-merging)
+- [alpha-based merging (called overlaying in computer graphics)](#color-merging)
 
 All colors are measured in 0-255 integers.
 
