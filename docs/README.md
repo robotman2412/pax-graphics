@@ -257,15 +257,15 @@ Finally, there's [functions for merging colors](colors.md#color-merging).
 ## API reference: Basic drawing
 
 In PAX, you can opt to draw shapes in different ways:
-- Simple (ignoring [transforms](#api-reference-matrix-transformation) and with a color)
-- Normal (with a color)
-- Shaded (with a shader for some specific look), often used for [texturing](#api-reference-shading) (drawing a shape with an image on it)
+- [Simple](drawing.md#simple-drawing) (ignoring [transforms](#api-reference-matrix-transformation) and with a color)
+- [Normal](drawing.md#normal-drawing) (with a color)
+- [Shaded](drawing.md#shaded-drawing) (with a shader for some specific look), often used for [texturing](#api-reference-shading) (drawing a shape with an image on it)
 
 What variant is best for you?
 - You want to draw a simple menu with just some text and basic shapes?
     - Simple (you probably won't need to use transformations, but you could).
 - You want to add an image to a shape or otherwise more complex than a single color?
-    - Shaded (you can even [make your own](shaders.md#making-your-own-shader)).
+    - Shaded (you can even [make your own shader](shaders.md#making-your-own-shader)).
 - Anything else with just one color per shape?
     - Normal.
 
