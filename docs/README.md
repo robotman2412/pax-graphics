@@ -14,9 +14,9 @@ This library is the successor of the revised graphics API for [the old badge.tea
     - [Colors](#api-reference-colors)
     - [Text](#api-reference-text)
 - [Advanced API reference](#api-reference-advanced-features)
+    - [Clipping](#api-reference-clipping)
     - [Matrix transformations](#api-reference-matrix-transformations)
     - [Shaders](#api-reference-shaders)
-    - [Clipping](#api-reference-clipping)
 
 # Getting started
 
@@ -253,8 +253,21 @@ Finally, there's [functions for merging colors](colors.md#color-merging).
 
 ## API reference: Basic drawing
 
+In PAX, you can opt to draw shapes in different ways:
+- Simple (ignoring [transforms](#api-reference-matrix-transformation) and with a color)
+- Normal (with a color)
+- Shaded (with a shader for some specific look), often used for [texturing](#api-reference-shading) (drawing a shape with an image on it)
+
+What variant is best for you?
+- You want to draw a simple menu with just some text and basic shapes?
+    - Simple (you probably won't need to use transformations, but you could).
+- You want to add an image to a shape or otherwise more complex than a single color?
+    - Shaded (you can even [make your own](shaders.md#making-your-own-shader)).
+- Anything else with just one color per shape?
+    - Normal.
+
 There are five basic shapes you can draw:
-| shape     | simple              | without shader    | with shader
+| shape     | simple              | normal            | with shader
 | :-------- | :------------------ | :---------------- | :----------
 | rectangle | `pax_simple_rect`   | `pax_draw_rect`   | `pax_shade_rect`
 | line      | `pax_simple_line`   | `pax_draw_line`   | Not available.
@@ -265,11 +278,13 @@ There are five basic shapes you can draw:
 Each method here consists of a set of arguments based on the shape:
 | shape     | arguments                      | description
 | :-------- | :----------------------------- | :----------
-| rectangle | `x, y, width, heigt`           | top left corner of rectangle
+| rectangle | `x, y, width, height`          | top left corner of rectangle
 | line      | `x0, y0, x1, y1`               | both points that define the line
 | triangle  | `x0, y0, x1, y1, x2, y2`       | all three points that define the triangle
 | circle    | `x, y, radius`                 | midpoint of circle and radius
 | arc       | `x, y, radius, angle0, angle1` | arc from angle0 to angle1 in radians, with midpoint and radius (angles start to the right and go counterclockwise)
+
+### In case you do use shaders
 
 If the method is one of the `pax_shade_` methods, two additional arguments are added after `color`:
 - `pax_shader_t *shader, pax_quad_t *uvs` (Except triangle)
@@ -280,7 +295,7 @@ If the method is one of the `pax_shade_` methods, two additional arguments are a
 
 UVs are "texture co-ordinates" in the computer graphics world.
 They are floating-point and range from 0 to 1.
-It is up to the shader to turn these into pixel co-ordinated for e.g. adding a texture to a shape.
+It is up to the shader to turn these into pixel co-ordinates for e.g. adding a texture to a shape.
 
 Note: It is acceptable for a rectangle to have a negative width or height. In this case, the UVs still match but with the negative width and height.
 
@@ -306,6 +321,88 @@ The font_size is the same as the line height for drawing text.
 The text features also respect newlines (in the forms of `\n`, `\r\n` or `\r`).
 
 # API reference: Advanced features
-## API reference: Matrix transformations
-## API reference: Shaders
+
+The flagship features of PAX are also the more difficult to use, so here's a basic overview:
+- There is a [clipping system](#api-reference-clipping), used to isolate drawing to just a small part of the screen,
+- There are [matrix transformations](#api-reference-matrix-transformations), used to distort and move around everything you draw,
+- Finally, there are [shaders](#api-reference-shaders), used to add an image to a shape or for more complex coloring of shapes.
+
 ## API reference: Clipping
+
+When you apply clipping, PAX acts as if the buffer is smaller than it might in reality be.<br>
+Clipping can be useful if you want to e.g. draw a big shape but prevent it from overlapping with another area.
+Clipping redefines the rectangle in which you can draw.
+
+To apply clipping, use [`pax_clip`](drawing.md#clipping):
+```c
+pax_clip(&buffer, x, y, width, height);
+```
+
+To remove clipping (AKA be able to draw on the entire buffer again), use [`pax_noclip`](drawing.md#clipping):
+```c
+pax_noclip(&buffer);
+```
+
+## API reference: Matrix transformations
+
+Imagine this: You just painstakingly created some vector graphics, but they're too big to fit.
+You could re-do all that work, or you could take advantage of transformations.<br>
+In PAX, transformations apply to all method starting with `pax_draw_` or `pax_simple_`.
+They can be used to re-size, rotate and move shapes around.
+
+First, you need to know what a stack is. <br>
+In simple terms, a stack is like a bunch of paper in a box:
+You can grab only the top piece of paper, and you can only add paper to the top.<br>
+This is like scopes in C: The hierarchy allows you to preserve important information while you temporarily change it.
+
+The way to use the stack is with [`pax_push_2d`](matrices.md#matrix-stack) and [`pax_pop_2d`](matrices.md#matrix-stack):
+```c
+pax_push_2d(&buffer);
+// Any changes made in here will not propagate...
+pax_pop_2d(&buffer);
+// ... out here.
+```
+
+If you've want to reset just the current matrix, use [`pax_reset_2d`](matrices.md#matrix-stack) like so:
+```c
+// Imaging some transformations happened here.
+// This changes only the current (top) matrix, so your stack is untouched.
+pax_reset_2d(&buffer, PAX_RESET_TOP);
+```
+
+If you've completely lost track, use [`pax_reset_2d`](matrices.md#matrix-stack) in it's other form:
+```c
+// Imaging some transformations happened here.
+// Now, do this if you need the stack to be empty.
+pax_reset_2d(&buffer, PAX_RESET_ALL);
+```
+
+Now that you know what the stack is,
+you can use [`pax_apply_2d`](matrices.md#applying-matrices) to perform a transformation:
+```c
+// You can do as many in a row as you'd like.
+pax_apply_2d(&buffer, my_perfect_transformation);
+```
+
+Let's say you'd like to change the scale of just you vector graphics you made.
+For this, you use [`matrix_2d_scale`](matrices.md#types-of-matrices):
+```c
+pax_push_2d(&buffer);
+pax_apply_2d(&buffer, matrix_2d_scale(x_scale, y_scale));
+// Draw your things that need to be scaled here.
+pax_pop_2d(&buffer);
+```
+
+But now, you decide you want it placed elsewhere.
+To move around things, use [`matrix_2d_translate`](matrices.md#types-of-matrices):
+```c
+pax_apply_2d(&buffer, matrix_2d_translate(x_scale, y_scale));
+```
+
+There's also the fancy rotation matrix [`matrix_2d_rotate`](matrices.md#types-of-matrices):
+```c
+// Angle is in radians, positive angles rotate everything counterclockwise.
+pax_apply_2d(&buffer, matrix_2d_rotate(angle));
+```
+
+## API reference: Shaders
