@@ -1,0 +1,56 @@
+# PAX docs: drawing
+
+The drawing methods are the core of PAX graphics.
+
+Drawing methods fall in to three categories:
+- [Simple](#simple-drawing)
+- [Normal](#normal-drawing)
+- [Shaded](#shaded-drawing)
+
+Each category had its own properties:
+- Simple drawing does not apply [transformations](#matrices.md).
+- Normal and simple drawing use a uniform color.
+- Shaded drawing can have more than one color.
+
+# Simple drawing
+
+Simple drawing draws the given shape directly without applying [transformations](matrices.md).
+It also has only one color for the entire shape.
+
+List of simple drawing methods:
+| name              | arguments                                                           | description
+| :---------------- | :------------------------------------------------------------------ | :----------
+| pax_simple_rect   | pax_buf_t *buf, pax_col_t color, float x, y, width, height          | Draws a rectangle with the given dimensions.
+| pax_simple_line   | pax_buf_t *buf, pax_col_t color, float x0, y0, x1, y1               | Draws a line between two points.
+| pax_simple_tri    | pax_buf_t *buf, pax_col_t color, float x0, y0, x1, y1, x2, y2       | Draws a triangle between three points.
+| pax_simple_arc    | pax_buf_t *buf, pax_col_t color, float x, y, radius, angle0, angle1 | Draws an arc between two angles, at a given midpoint.
+| pax_simple_circle | pax_buf_t *buf, pax_col_t color, float x, y, radius                 | Draws a circle at a given midpoint.
+
+# Normal drawing
+
+Normal drawing draws shapes after applying [transformations](matrices.md).
+It also has only one color for the entire shape.
+
+List of normal drawing methods:
+| name            | arguments                                                           | description
+| :-------------- | :------------------------------------------------------------------ | :----------
+| pax_draw_rect   | pax_buf_t *buf, pax_col_t color, float x, y, width, height          | Draws a rectangle with the given dimensions.
+| pax_draw_line   | pax_buf_t *buf, pax_col_t color, float x0, y0, x1, y1               | Draws a line between two points.
+| pax_draw_tri    | pax_buf_t *buf, pax_col_t color, float x0, y0, x1, y1, x2, y2       | Draws a triangle between three points.
+| pax_draw_arc    | pax_buf_t *buf, pax_col_t color, float x, y, radius, angle0, angle1 | Draws an arc between two angles, at a given midpoint.
+| pax_draw_circle | pax_buf_t *buf, pax_col_t color, float x, y, radius                 | Draws a circle at a given midpoint.
+
+# Shaded drawing
+
+Shaded drawing draws shapes after applying [transformations](matrices.md).
+It takes a shader and a UVs argument so that the shape may have multiple colors.
+The UVs, final x and y position and color are passed to the shader to allow this.
+
+List of shaded drawing methods:
+| name             | arguments                                                           | description
+| :--------------- | :------------------------------------------------------------------ | :----------
+| pax_shade_rect   | pax_buf_t *buf, pax_col_t color, float x, y, width, height          | Draws a rectangle with the given dimensions.
+| pax_shade_line   | pax_buf_t *buf, pax_col_t color, float x0, y0, x1, y1               | Draws a line between two points.
+| pax_shade_tri    | pax_buf_t *buf, pax_col_t color, float x0, y0, x1, y1, x2, y2       | Draws a triangle between three points.
+| pax_shade_arc    | pax_buf_t *buf, pax_col_t color, float x, y, radius, angle0, angle1 | Draws an arc between two angles, at a given midpoint.
+| pax_shade_circle | pax_buf_t *buf, pax_col_t color, float x, y, radius                 | Draws a circle at a given midpoint.
