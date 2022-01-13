@@ -144,7 +144,7 @@ void my_graphics_function() {
     }
 }
 ```
-(TODO: Image of this)
+The code we just added is the actual code which writes your beautiful creation to the screen.<br>
 If you use a different screen, you'll need to find it's documentation for which type of buffer it wants and how you write to it.
 
 Finally, there's cleanup.<br>
@@ -347,7 +347,7 @@ pax_noclip(&buffer);
 
 Imagine this: You just painstakingly created some vector graphics, but they're too big to fit.
 You could re-do all that work, or you could take advantage of transformations.<br>
-In PAX, transformations apply to all method starting with `pax_draw_` or `pax_simple_`.
+In PAX, transformations apply to all method starting with `pax_draw_` or `pax_shade_`.
 They can be used to re-size, rotate and move shapes around.
 
 First, you need to know what a stack is. <br>
@@ -363,7 +363,7 @@ pax_pop_2d(&buffer);
 // ... out here.
 ```
 
-If you've want to reset just the current matrix, use [`pax_reset_2d`](matrices.md#matrix-stack) like so:
+If you want to reset just the current matrix, use [`pax_reset_2d`](matrices.md#matrix-stack) like so:
 ```c
 // Imaging some transformations happened here.
 // This changes only the current (top) matrix, so your stack is untouched.
@@ -384,7 +384,7 @@ you can use [`pax_apply_2d`](matrices.md#applying-matrices) to perform a transfo
 pax_apply_2d(&buffer, my_perfect_transformation);
 ```
 
-Let's say you'd like to change the scale of just you vector graphics you made.
+Let's say you'd like to change the scale of just your vector graphics you made.
 For this, you use [`matrix_2d_scale`](matrices.md#types-of-matrices):
 ```c
 pax_push_2d(&buffer);
@@ -396,6 +396,7 @@ pax_pop_2d(&buffer);
 But now, you decide you want it placed elsewhere.
 To move around things, use [`matrix_2d_translate`](matrices.md#types-of-matrices):
 ```c
+// By scaling, you are multiplying the size by the given factors.
 pax_apply_2d(&buffer, matrix_2d_translate(x_scale, y_scale));
 ```
 
@@ -406,3 +407,28 @@ pax_apply_2d(&buffer, matrix_2d_rotate(angle));
 ```
 
 ## API reference: Shaders
+
+The shader is PAX' most advanced feature.<br>
+Internally, they are used for boring things like drawing text, but you can truly turn it into anything you'd like.
+
+The way most users will see shaders is with [`PAX_SHADER_TEXTURE`](shaders.md#built-in-shaders):
+```c
+pax_shader_t my_texture_shader = PAX_SHADER_TEXTURE(&my_texture);
+```
+
+You can also make your own shaders, for example one that shows some nice rainbows:
+```c
+// The shader callback.
+pax_col_t my_shader_callback(pax_col_t tint, int x, int y, float u, float v, void *args) {
+    return pax_col_hsv(x / 50.0 * 255.0 + y / 150.0 * 255.0, 255, 255);
+}
+
+// The shader object.
+pax_shader_t my_shader = {
+    .callback      = my_shader,
+    .callback_args = NULL
+};
+```
+The `callback_args` property is passed directly to the selected callback as the `args` parameter.
+
+For more information on how to make and use your own shaders, see [shaders.md](shaders.md#making-your-own-shaders).
