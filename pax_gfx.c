@@ -1620,5 +1620,5 @@ void pax_simple_arc(pax_buf_t *buf, pax_col_t color, float x, float y, float r, 
 
 // Draw a circle, ignoring matrix transform.
 void pax_simple_circle(pax_buf_t *buf, pax_col_t color, float x, float y, float r) {
-	pax_simple_arc(buf, color, x, y, r, 0, M_PI);
+	pax_simple_arc(buf, color, x, y, r, 0, M_PI * 2);
 }
