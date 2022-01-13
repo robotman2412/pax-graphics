@@ -232,7 +232,9 @@ pax_buf_destroy(&buffer);
 
 ## API reference: Colors
 
-Usually you'll use [`pax_col_rgb`](colors.md#color-rgb) or [`pax_col_argb`](colors.md#color-rgb):
+PAX has a small collection of color functions for creating and modifying colors.
+
+For simple colors, [`pax_col_rgb`](colors.md#color-rgb) or [`pax_col_argb`](colors.md#color-rgb) are usually the appropriate functions:
 ```c
 pax_col_t color_0 = pax_col_argb(alpha, red, green, blue);
 pax_col_t color_1 = pax_col_rgb (red, green, blue);
@@ -240,8 +242,8 @@ pax_col_t color_1 = pax_col_rgb (red, green, blue);
 
 You can also use [`pax_col_hsv`](colors.md#color-hsv) or [`pax_col_ahsv`](colors.md#color-hsv) to convert HSV to RGB:
 ```c
-pax_col_t color_2 = pax_col_ahsv(alpha, hue, seturation, brightness);
-pax_col_t color_3 = pax_col_hsv (hue, seturation, brightness);
+pax_col_t color_2 = pax_col_ahsv(alpha, hue, saturation, brightness);
+pax_col_t color_3 = pax_col_hsv (hue, saturation, brightness);
 ```
 
 Otherwise, you can specify it in hexadecimal with the `0xAARRGGBB` format:
