@@ -215,19 +215,19 @@ For the MCH2022 badge, the size is 320x240 and the format is [`PAX_BUF_16_565RGB
 pax_buf_t buffer;
 pax_buf_init(&buffer, memory, width, height, format);
 ```
-If you want, you can use a different type for intermediary buffers (used for drawing images, etc.):
+If you want, you can use a different type for intermediary buffers (e.g. to store image textures):
 - [`PAX_BUF_32_8888ARGB`](setup.md#formats)
 - [`PAX_BUF_16_4444ARGB`](setup.md#formats)
 - [`PAX_BUF_8_2222ARGB`](setup.md#formats)
 - [`PAX_BUF_8_332RGB`](setup.md#formats)
-- [other](setup.md#formats)
+- [other color formats](setup.md#formats)
 
 PAX converts colors automatically for you.
 
-When you're done, you can use [`pax_buf_destroy`](setup.md#pax_buf_init):
+When you're done and you won't use a given buffer anymore, you can use [`pax_buf_destroy`](setup.md#pax_buf_init):
 PAX will automatically free any memory it used for the buffer.
 ```c
-pax_buf_init(&buffer);
+pax_buf_destroy(&buffer);
 ```
 
 ## API reference: Colors
@@ -289,7 +289,7 @@ Note: It is acceptable for a rectangle to have a negative width or height. In th
 In PAX, you can use different fonts for text (even though there's only one font called "7x9" for now).
 You draw text by using [`pax_draw_text`](text.md#drawing-text):
 ```c
-pax_draw_text(buffer, color, font, font_size, x, y, text);
+pax_draw_text(&buffer, color, font, font_size, x, y, text);
 ```
 Font is usually [`PAX_FONT_DEFAULT`](text.md#fonts) or another [`PAX_FONT_`](text.md#fonts).<br>
 The `font_size` is the line height: 9 by default for the font "7x9".
