@@ -148,7 +148,7 @@ The code we just added is the actual code which writes your beautiful creation t
 If you use a different screen, you'll need to find it's documentation for which type of buffer it wants and how you write to it.
 
 Finally, there's cleanup.<br>
-If you don't want to use the buffer you made during setup, you can clean it up with
+If you don't want to use the buffer you made during setup anymore, you can clean it up with
 [`pax_buf_destroy`](#api-reference-setup "Frees any memory assigned to the buffer").
 ```c
 void my_graphics_function() {
@@ -203,6 +203,9 @@ The API is split into a few groups:
     - Applying transformations
     - Using the matrix stack
 - [Shaders](shaders.md)
+    - Using shaders
+    - List of shaders
+    - Creating shaders
 
 # API reference
 
