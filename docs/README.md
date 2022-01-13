@@ -57,7 +57,7 @@ void my_graphics_function() {
 }
 ```
 Here's what it looks like if you write it to the screen:
-(TODO: Image of this)
+![A green background](images/getting_started_i_background.jpg "A green background")
 
 To draw a circle, you use [`pax_draw_circle`](#api-reference-basic-drawing) or [`pax_simple_circle`](#api-reference-basic-drawing)
 with a midpoint co-ordinates and the radius:
@@ -78,7 +78,7 @@ void my_graphics_function() {
 }
 ```
 Here's what it looks like if you write it to the screen:
-(TODO: Image of this)
+![And a red circle](images/getting_started_i_circle.jpg "And a red circle")
 
 Text is a bit more complicated, because you get to pick a font.
 However, you can pick any font for now. We'll go with the default (and currently only font) "7x9".<br>
@@ -109,7 +109,7 @@ void my_graphics_function() {
 }
 ```
 Here's what it looks like if you write it to the screen:
-(TODO: Image of this)
+![And some text](images/getting_started_i_circle.jpg "And some text")
 
 Next, you'll want to draw this to the screen.<br>
 This differs per screen type, but for the MCH2022 badge's screen you use the
