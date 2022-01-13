@@ -109,7 +109,7 @@ void my_graphics_function() {
 }
 ```
 Here's what it looks like if you write it to the screen:
-![And some text](images/getting_started_i_circle.jpg "And some text")
+![And some text](images/getting_started_i_text.jpg "And some text")
 
 Next, you'll want to draw this to the screen.<br>
 This differs per screen type, but for the MCH2022 badge's screen you use the
