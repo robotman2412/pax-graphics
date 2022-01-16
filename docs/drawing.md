@@ -1,4 +1,4 @@
-# PAX docs: drawing
+# PAX docs: Drawing
 
 The drawing methods are the core of PAX graphics.
 
