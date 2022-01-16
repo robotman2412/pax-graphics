@@ -12,7 +12,7 @@ Other drawing methods include:
 - [Background](#background)
 
 Each category had its own properties:
-- Simple drawing does not apply [transformations](#matrices.md).
+- Simple drawing does not apply [transformations](matrices.md).
 - Normal and simple drawing use a uniform color.
 - Shaded drawing can have more than one color.
 
