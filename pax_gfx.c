@@ -175,6 +175,10 @@ static inline uint32_t pax_buf2col(pax_buf_t *buf, uint32_t value) {
 		return color | 0xff000000;
 	} else if (buf->type == PAX_BUF_32_8888ARGB) {
 		return value;
+	} else if (PAX_IS_PALLETTE(buf->type)) {
+		// Pallette lookup.
+		if (value >= buf->pallette_size) return *buf->pallette;
+		else return buf->pallette[value];
 	}
 	PAX_ERROR1("pax_buf2col", PAX_ERR_PARAM, 0);
 }
@@ -865,7 +869,7 @@ void pax_mark_dirty2(pax_buf_t *buf, int x, int y, int width, int height) {
 
 /* ============ COLORS =========== */
 
-// A linear interpolation based only in ints.
+// A linear interpolation based only on ints.
 static inline uint8_t pax_lerp(uint8_t part, uint8_t from, uint8_t to) {
 	return from + (( (to - from) * (part + (part >> 7)) ) >> 8);
 }
@@ -937,6 +941,15 @@ pax_col_t pax_col_merge(pax_col_t base, pax_col_t top) {
 		 |  pax_lerp(part, base,       top);
 }
 
+// Tints the color, commonly used for textures.
+pax_col_t pax_col_tint(pax_col_t col, pax_col_t tint) {
+	if (!tint) return 0;
+	if (tint == -1) return col;
+	return (pax_lerp(tint >> 24, 0, col >> 24) << 24)
+		 | (pax_lerp(tint >> 16, 0, col >> 16) << 16)
+		 | (pax_lerp(tint >>  8, 0, col >>  8) <<  8)
+		 |  pax_lerp(tint,       0, col);
+}
 
 
 /* ============ MATRIX =========== */

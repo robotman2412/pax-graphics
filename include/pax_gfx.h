@@ -81,6 +81,8 @@ pax_col_t pax_col_ahsv            (uint8_t a, uint8_t h, uint8_t s, uint8_t v);
 pax_col_t pax_col_lerp            (uint8_t part, pax_col_t from, pax_col_t to);
 // Merges the two colors, based on alpha.
 pax_col_t pax_col_merge           (pax_col_t base, pax_col_t top);
+// Tints the color, commonly used for textures.
+pax_col_t pax_col_tint            (pax_col_t col, pax_col_t tint);
 
 /* ============ MATRIX =========== */
 

@@ -136,14 +136,22 @@ struct matrix_stack_2d {
 };
 
 enum pax_buf_type {
-	PAX_BUF_1_GREY      = 0x10000101,
+	PAX_BUF_1_PAL       = 0x20000001,
+	PAX_BUF_2_PAL       = 0x20000002,
+	PAX_BUF_4_PAL       = 0x20000004,
+	PAX_BUF_8_PAL       = 0x20000008,
+	PAX_BUF_16_PAL      = 0x20000008,
+	
+	PAX_BUF_1_GREY      = 0x10000001,
 	PAX_BUF_2_GREY      = 0x10000202,
-	PAX_BUF_4_GREY      = 0x10000404,
-	PAX_BUF_8_GREY      = 0x10000808,
-	PAX_BUF_4_1111ARGB  = 0x00111104,
+	PAX_BUF_4_GREY      = 0x10000004,
+	PAX_BUF_8_GREY      = 0x10000008,
+	
 	PAX_BUF_8_332RGB    = 0x00033208,
-	PAX_BUF_8_2222ARGB  = 0x00444408,
 	PAX_BUF_16_565RGB   = 0x00056510,
+	
+	PAX_BUF_4_1111ARGB  = 0x00111104,
+	PAX_BUF_8_2222ARGB  = 0x00444408,
 	PAX_BUF_16_4444ARGB = 0x00444410,
 	PAX_BUF_32_8888ARGB = 0x00888820
 };
@@ -167,6 +175,10 @@ struct pax_buf {
 	};
 	// Bits per pixel.
 	int               bpp;
+	// Pallette for buffers with a pallette type.
+	pax_col_t        *pallette;
+	// The number of colors in the pallette.
+	size_t            pallette_size;
 	
 	// Width in pixels.
 	int               width;
