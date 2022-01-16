@@ -31,7 +31,8 @@ In each file you'd like to use PAX graphics in, you'll need to include the `pax_
 #include <pax_gfx.h>
 ```
 
-The [`pax_buf_init`](#api-reference-setup) function is used to create a new graphics environment.
+The [`pax_buf_init`](#api-reference-setup) function is used to create a new graphics environment.![matrices_initial](https://user-images.githubusercontent.com/25562445/149658010-17f3ea72-212a-4cf5-a3f0-ad58852c575d.png)
+
 Here, we use it with the type PAX_BUF_16_565RGB, which is appropriate for the screen used by the MCH2022 badge.
 ```c
 void my_graphics_function() {
@@ -310,6 +311,7 @@ Note: It is acceptable for a rectangle to have a negative width or height. In th
 In PAX, you can use different fonts for text (even though there's only one font called "7x9" for now).
 You draw text by using [`pax_draw_text`](text.md#drawing-text):
 ```c
+// Draw some text.
 pax_draw_text(&buffer, color, font, font_size, x, y, text);
 ```
 Font is usually [`PAX_FONT_DEFAULT`](text.md#fonts) or another [`PAX_FONT_`](text.md#fonts).<br>
@@ -318,6 +320,7 @@ If this number is 0, the font's default size is used.
 
 You can also calculate the size of a given string with [`pax_text_size`](text.md#text-size):
 ```c
+// Get the size of some text.
 pax_vec1_t size = pax_text_size(font, font_size, text);
 float text_width  = size.x;
 float text_height = size.y;
@@ -341,11 +344,13 @@ Clipping redefines the rectangle in which you can draw.
 
 To apply clipping, use [`pax_clip`](drawing.md#clipping):
 ```c
+// Apply clipping. Automatically fixed negative width and/or height.
 pax_clip(&buffer, x, y, width, height);
 ```
 
 To remove clipping (AKA be able to draw on the entire buffer again), use [`pax_noclip`](drawing.md#clipping):
 ```c
+// Remove clipping.
 pax_noclip(&buffer);
 ```
 
@@ -359,29 +364,44 @@ They can be used to re-size, rotate and move shapes around.
 First, you need to know what a stack is. <br>
 In simple terms, a stack is like a bunch of paper in a box:
 You can grab only the top piece of paper, and you can only add paper to the top.<br>
-This is like scopes in C: The hierarchy allows you to preserve important information while you temporarily change it.
+This is like method calls in C: The method you call won't modify your variables unless you want it to.
 
-The way to use the stack is with [`pax_push_2d`](matrices.md#matrix-stack) and [`pax_pop_2d`](matrices.md#matrix-stack):
+Let's start with a visual example.
+Here, you see an initial situation: a scale matrix has been applied.
+![The initial situation](images/matrices_initial.png "The initial situation")<br>
+Let's say we want to do something else, but we need this matrix later.
+To do this, you'll need to push the matrix stack.
+
+Now, to push the stack, use [`pax_push_2d`](matrices.md#matrix-stack):
 ```c
+// Push the matrix stack. Duplicates the top matrix.
 pax_push_2d(&buffer);
-// Any changes made in here will not propagate...
+```
+![After push](images/matrices_push.png "After push")
+
+At this point, it's safe to perform some operation.
+Let's say a rotation happened.
+![After rotation](images/matrices_apply.png "After rotation")
+
+But what if you want no transformation but still to remember the old ones?<br>
+You use [`pax_reset_2d`](matrices.md#matrix-stack) with the argument `PAX_RESET_TOP`:
+```c
+// Reset the top matrix.
+// A matrix that represents no transformation is also called the 'identity' matrix.
+pax_push_2d(&buffer, PAX_RESET_TOP);
+```
+![After reset](images/matrices_reset.png "After reset")
+
+Finally, you want to use the initial matrix again.
+For this, you need to pop the stack.<br>
+Use [`pax_pop_2d`](matrices.md#matrix-stack):
+```c
+// Pop the matrix stack.
 pax_pop_2d(&buffer);
-// ... out here.
 ```
+![Back to normal](images/matrices_pop.png "Back to normal")
 
-If you want to reset just the current matrix, use [`pax_reset_2d`](matrices.md#matrix-stack) like so:
-```c
-// Imaging some transformations happened here.
-// This changes only the current (top) matrix, so your stack is untouched.
-pax_reset_2d(&buffer, PAX_RESET_TOP);
-```
-
-If you've completely lost track, use [`pax_reset_2d`](matrices.md#matrix-stack) in it's other form:
-```c
-// Imaging some transformations happened here.
-// Now, do this if you need the stack to be empty.
-pax_reset_2d(&buffer, PAX_RESET_ALL);
-```
+### Transformation options
 
 Now that you know what the stack is,
 you can use [`pax_apply_2d`](matrices.md#applying-matrices) to perform a transformation:
@@ -390,20 +410,18 @@ you can use [`pax_apply_2d`](matrices.md#applying-matrices) to perform a transfo
 pax_apply_2d(&buffer, my_perfect_transformation);
 ```
 
-Let's say you'd like to change the scale of just your vector graphics you made.
+Let's say you'd like to change the scale of the vector graphics you made.
 For this, you use [`matrix_2d_scale`](matrices.md#types-of-matrices):
 ```c
-pax_push_2d(&buffer);
 pax_apply_2d(&buffer, matrix_2d_scale(x_scale, y_scale));
 // Draw your things that need to be scaled here.
-pax_pop_2d(&buffer);
 ```
 
 But now, you decide you want it placed elsewhere.
 To move around things, use [`matrix_2d_translate`](matrices.md#types-of-matrices):
 ```c
 // By scaling, you are multiplying the size by the given factors.
-pax_apply_2d(&buffer, matrix_2d_translate(x_scale, y_scale));
+pax_apply_2d(&buffer, matrix_2d_translate(x_offset, y_offset));
 ```
 
 There's also the fancy rotation matrix [`matrix_2d_rotate`](matrices.md#types-of-matrices):
