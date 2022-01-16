@@ -214,22 +214,22 @@ A reference for how to use certain features.
 
 ## API reference: Setup
 
-For setting up a buffer, use [`pax_buf_init`](setup.md#pax_buf_init):
-For the MCH2022 badge, the size is 320x240 and the format is [`PAX_BUF_16_565RGB`](setup.md#formats).
+For setting up a buffer, use [`pax_buf_init`](setup.md#buffer-creation):
+For the MCH2022 badge, the size is 320x240 and the format is [`PAX_BUF_16_565RGB`](setup.md#buffer-formats).
 ```c
 pax_buf_t buffer;
 pax_buf_init(&buffer, memory, width, height, format);
 ```
 If you want, you can use a different type for intermediary buffers (e.g. to store image textures):
-- [`PAX_BUF_32_8888ARGB`](setup.md#formats)
-- [`PAX_BUF_16_4444ARGB`](setup.md#formats)
-- [`PAX_BUF_8_2222ARGB`](setup.md#formats)
-- [`PAX_BUF_8_332RGB`](setup.md#formats)
-- [other color formats](setup.md#formats)
+- [`PAX_BUF_32_8888ARGB`](setup.md#buffer-formats)
+- [`PAX_BUF_16_4444ARGB`](setup.md#buffer-formats)
+- [`PAX_BUF_8_2222ARGB`](setup.md#buffer-formats)
+- [`PAX_BUF_8_332RGB`](setup.md#buffer-formats)
+- [other color formats](setup.md#buffer-formats)
 
 PAX converts colors automatically for you.
 
-When you're done and you won't use a given buffer anymore, you can use [`pax_buf_destroy`](setup.md#pax_buf_init):
+When you're done and you won't use a given buffer anymore, you can use [`pax_buf_destroy`](setup.md#buffer-creation):
 PAX will automatically free any memory it used for the buffer.
 ```c
 pax_buf_destroy(&buffer);
