@@ -22,51 +22,12 @@
 	SOFTWARE.
 */
 
-#include "pax_gfx.h"
+#include "pax_internal.h"
 #include "pax_shaders.h"
 
-#include <stdio.h>
-#include <esp_system.h>
-#include <sdkconfig.h>
-#include <esp_err.h>
-#include <esp_log.h>
-#include <stdint.h>
 #include <malloc.h>
 #include <string.h>
 #include <math.h>
-
-
-
-/* =========== HELPERS =========== */
-
-pax_err_t pax_last_error = PAX_OK;
-static const char *TAG   = "pax";
-
-#ifdef PAX_AUTOREPORT
-#define PAX_ERROR(where, errno) { ESP_LOGE(TAG, "@ %s: %s", where, pax_desc_err(errno)); pax_last_error = errno; return; }
-#define PAX_ERROR1(where, errno, retval) { ESP_LOGE(TAG, "@ %s: %s", where, pax_desc_err(errno)); pax_last_error = errno; return retval; }
-#else
-#define PAX_ERROR(where, errno) { pax_last_error = errno; return; }
-#define PAX_ERROR1(where, errno, retval) { pax_last_error = errno; return retval; }
-#endif
-
-#define PAX_SUCCESS() { pax_last_error = PAX_OK; }
-
-// Buffer sanity check.
-#define PAX_BUF_CHECK(where) { if (!(buf) || !(buf)->buf) PAX_ERROR(where, PAX_ERR_NOBUF); }
-// Buffer sanity check.
-#define PAX_BUF_CHECK1(where, retval) { if (!(buf) || !(buf)->buf) PAX_ERROR1(where, PAX_ERR_NOBUF, retval); }
-
-// Swap two variables.
-#define PAX_SWAP(type, a, b) { type tmp = a; a = b; b = tmp; }
-// Swap two points represented by floats.
-#define PAX_SWAP_POINTS(x0, y0, x1, y1) { float tmp = x1; x1 = x0; x0 = tmp; tmp = y1; y1 = y0; y0 = tmp; }
-// Sort two points represented by floats.
-#define PAX_SORT_POINTS(x0, y0, x1, y1) { if (y1 < y0) PAX_SWAP_POINTS(x0, y0, x1, y1) }
-
-#define PAX_GET_BPP(type)     ((type) & 0xff)
-#define PAX_IS_GREY(type)     (((type) & 0xf0000000) == 0x10000000)
-#define PAX_IS_PALLETTE(type) (((type) & 0xf0000000) == 0x20000000)
 
 static inline uint32_t pax_col2buf(pax_buf_t *buf, pax_col_t color) {
 	uint8_t bpp = buf->bpp;

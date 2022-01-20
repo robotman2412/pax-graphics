@@ -23,6 +23,7 @@
 */
 
 #include "pax_shapes.h"
+#include "pax_internal.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -30,26 +31,6 @@
 #include <sdkconfig.h>
 #include <esp_err.h>
 #include <esp_log.h>
-
-/* =========== HELPERS =========== */
-
-pax_err_t pax_last_error = PAX_OK;
-static const char *TAG   = "pax";
-
-#ifdef PAX_AUTOREPORT
-#define PAX_ERROR(where, errno) { ESP_LOGE(TAG, "@ %s: %s", where, pax_desc_err(errno)); pax_last_error = errno; return; }
-#define PAX_ERROR1(where, errno, retval) { ESP_LOGE(TAG, "@ %s: %s", where, pax_desc_err(errno)); pax_last_error = errno; return retval; }
-#else
-#define PAX_ERROR(where, errno) { pax_last_error = errno; return; }
-#define PAX_ERROR1(where, errno, retval) { pax_last_error = errno; return retval; }
-#endif
-
-#define PAX_SUCCESS() { pax_last_error = PAX_OK; }
-
-// Buffer sanity check.
-#define PAX_BUF_CHECK(where) { if (!(buf) || !(buf)->buf) PAX_ERROR(where, PAX_ERR_NOBUF); }
-// Buffer sanity check.
-#define PAX_BUF_CHECK1(where, retval) { if (!(buf) || !(buf)->buf) PAX_ERROR1(where, PAX_ERR_NOBUF, retval); }
 
 // This is only applicable during bezier vectorisation.
 typedef struct bezier_point {
