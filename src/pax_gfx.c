@@ -25,6 +25,8 @@
 #include "pax_internal.h"
 #include "pax_shaders.h"
 
+pax_err_t pax_last_error = PAX_OK;
+
 #include <malloc.h>
 #include <string.h>
 #include <math.h>
@@ -614,9 +616,11 @@ char *pax_desc_err(pax_err_t error) {
 		"Invalid parameters",
 		"Infinite parameters",
 		"Out of bounds",
-		"Matrix stack underflow"
+		"Matrix stack underflow",
+		"Image decoding error"
 	};
-	if (error > 0 || error < -6) return unknown;
+	size_t n_desc = sizeof(desc) / sizeof(char *);
+	if (error > 0 || error < -n_desc) return unknown;
 	else return desc[-error];
 }
 
@@ -671,6 +675,8 @@ void pax_buf_destroy(pax_buf_t *buf) {
 	if (buf->do_free) {
 		free(buf->buf);
 	}
+	buf->buf  = NULL;
+	buf->type = 0;
 	
 	PAX_SUCCESS();
 }

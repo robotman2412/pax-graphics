@@ -39,7 +39,6 @@ extern "C" {
 
 /* =========== HELPERS =========== */
 
-pax_err_t pax_last_error = PAX_OK;
 static const char *TAG   = "pax";
 
 #ifdef PAX_AUTOREPORT
