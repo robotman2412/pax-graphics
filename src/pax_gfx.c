@@ -1424,6 +1424,14 @@ void pax_background(pax_buf_t *buf, pax_col_t color) {
 		for (size_t i = 0; i < buf->width * buf->height; i++) {
 			buf->buf_32bpp[i] = value;
 		}
+	} else {
+		if      (buf->bpp == 1) value = -value;
+		else if (buf->bpp == 2) value = value * 0x55;
+		else if (buf->bpp == 4) value = value * 0x11;
+		size_t limit = (7 + buf->width * buf->height * buf->bpp) / 8;
+		for (size_t i = 0; i < limit; i++) {
+			buf->buf_8bpp[i] = value;
+		}
 	}
 	
 	PAX_SUCCESS();
