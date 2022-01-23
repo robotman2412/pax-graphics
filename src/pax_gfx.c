@@ -1012,8 +1012,12 @@ void pax_merge_pixel(pax_buf_t *buf, pax_col_t color, int x, int y) {
 		return;
 	}
 	PAX_SUCCESS();
-	pax_col_t base = pax_buf2col(buf, pax_get_pixel_u(buf, x, y));
-	pax_set_pixel_u(buf, pax_col2buf(buf, pax_col_merge(base, color)), x, y);
+	if (PAX_IS_PALETTE(buf->type)) {
+		pax_set_pixel_u(buf, color, x, y);
+	} else {
+		pax_col_t base = pax_buf2col(buf, pax_get_pixel_u(buf, x, y));
+		pax_set_pixel_u(buf, pax_col2buf(buf, pax_col_merge(base, color)), x, y);
+	}
 }
 
 // Set a pixel.
@@ -1025,7 +1029,11 @@ void pax_set_pixel(pax_buf_t *buf, pax_col_t color, int x, int y) {
 		return;
 	}
 	PAX_SUCCESS();
-	pax_set_pixel_u(buf, pax_col2buf(buf, color), x, y);
+	if (PAX_IS_PALETTE(buf->type)) {
+		pax_set_pixel_u(buf, color, x, y);
+	} else {
+		pax_set_pixel_u(buf, pax_col2buf(buf, color), x, y);
+	}
 }
 
 // Get a pixel.
@@ -1422,7 +1430,13 @@ pax_vec1_t pax_text_size(pax_font_t *font, float font_size, char *text) {
 void pax_background(pax_buf_t *buf, pax_col_t color) {
 	PAX_BUF_CHECK("pax_background");
 	
-	uint32_t value = pax_col2buf(buf, color);
+	uint32_t value;
+	if (PAX_IS_PALETTE(buf->type)) {
+		if (color > buf->pallette_size) value = 0;
+		else value = color;
+	} else {
+		value = pax_col2buf(buf, color);
+	}
 	
 	if (buf->bpp == 16) {
 		for (size_t i = 0; i < buf->width * buf->height; i++) {
