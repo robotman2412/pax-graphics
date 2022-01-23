@@ -791,10 +791,10 @@ bool pax_is_dirty(pax_buf_t *buf) {
 // Mark the entire buffer as clean.
 void pax_mark_clean(pax_buf_t *buf) {
 	PAX_BUF_CHECK("pax_mark_clean");
-	buf->dirty_x0 = buf->width - 1;
-	buf->dirty_y0 = buf->height - 1;
-	buf->dirty_x1 = 0;
-	buf->dirty_y1 = 0;
+	buf->dirty_x0 = buf->width;
+	buf->dirty_y0 = buf->height;
+	buf->dirty_x1 = -1;
+	buf->dirty_y1 = -1;
 	PAX_SUCCESS();
 }
 
@@ -814,8 +814,8 @@ void pax_mark_dirty1(pax_buf_t *buf, int x, int y) {
 	
 	if (x < buf->dirty_x0) buf->dirty_x0 = x;
 	if (x > buf->dirty_x1) buf->dirty_x1 = x;
-	if (y < buf->dirty_x0) buf->dirty_y0 = y;
-	if (y > buf->dirty_x1) buf->dirty_y1 = y;
+	if (y < buf->dirty_y0) buf->dirty_y0 = y;
+	if (y > buf->dirty_y1) buf->dirty_y1 = y;
 	
 	PAX_SUCCESS();
 }
@@ -1079,6 +1079,7 @@ void pax_shade_rect(pax_buf_t *buf, pax_col_t color, pax_shader_t *shader,
 		matrix_2d_transform(buf->stack_2d.value, &x, &y);
 		width  *= buf->stack_2d.value.a0;
 		height *= buf->stack_2d.value.b1;
+		pax_mark_dirty2(buf, x - 0.5, y - 0.5, width + 1, height + 1);
 		pax_rect_shaded(
 			buf, color, shader, x, y, width, height,
 			uvs->x0, uvs->y0, uvs->x1, uvs->y1,
@@ -1142,6 +1143,13 @@ void pax_shade_tri(pax_buf_t *buf, pax_col_t color, pax_shader_t *shader,
 		PAX_SUCCESS();
 		return;
 	}
+	
+	pax_mark_dirty1(buf, x0 - 0.5, y0 - 0.5);
+	pax_mark_dirty1(buf, x1 - 0.5, y1 - 0.5);
+	pax_mark_dirty1(buf, x2 - 0.5, y2 - 0.5);
+	pax_mark_dirty1(buf, x0 + 0.5, y0 + 0.5);
+	pax_mark_dirty1(buf, x1 + 0.5, y1 + 0.5);
+	pax_mark_dirty1(buf, x2 + 0.5, y2 + 0.5);
 	
 	pax_tri_shaded(buf, color, shader,
 		x0, y0, x1, y1, x2, y2,
@@ -1467,7 +1475,7 @@ void pax_simple_rect(pax_buf_t *buf, pax_col_t color, float x, float y, float wi
 		height = buf->clip.y + buf->clip.h - y;
 	}
 	
-	pax_mark_dirty2(buf, x + 0.5, y + 0.5, width + 0.5, height + 0.5);
+	pax_mark_dirty2(buf, x - 0.5, y - 0.5, width + 1, height + 1);
 	
 	// Pixel time.
 	for (int _y = y + 0.5; _y < y + height + 0.5; _y ++) {
@@ -1528,6 +1536,9 @@ void pax_simple_line(pax_buf_t *buf, pax_col_t color, float x0, float y0, float 
 	// If any point is outside clip now, we don't draw a line.
 	if (y0 < buf->clip.y || y1 > buf->clip.y + buf->clip.h - 1) goto noneed;
 	
+	pax_mark_dirty1(buf, x0, y0);
+	pax_mark_dirty1(buf, x1, y1);
+	
 	// Determine whether the line is "steep" (dx*dx > dy*dy).
 	float dx = x1 - x0;
 	float dy = y1 - y0;
@@ -1574,6 +1585,12 @@ void pax_simple_tri(pax_buf_t *buf, pax_col_t color, float x0, float y0, float x
 		return;
 	}
 	
+	pax_mark_dirty1(buf, x0 - 0.5, y0 - 0.5);
+	pax_mark_dirty1(buf, x1 - 0.5, y1 - 0.5);
+	pax_mark_dirty1(buf, x2 - 0.5, y2 - 0.5);
+	pax_mark_dirty1(buf, x0 + 0.5, y0 + 0.5);
+	pax_mark_dirty1(buf, x1 + 0.5, y1 + 0.5);
+	pax_mark_dirty1(buf, x2 + 0.5, y2 + 0.5);
 	pax_tri_unshaded(buf, color, x0, y0, x1, y1, x2, y2);
 	
 	PAX_SUCCESS();
