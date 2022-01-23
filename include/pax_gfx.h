@@ -43,6 +43,15 @@ void       pax_debug              (pax_buf_t *buf);
 
 /* ============ BUFFER =========== */
 
+// Get the bits per pixel for the given buffer type.
+#define PAX_GET_BPP(type)     ((type) & 0xff)
+// Reflects whether the buffer type is greyscale.
+#define PAX_IS_GREY(type)     (((type) & 0xf0000000) == 0x10000000)
+// Reflects whether the buffer type is paletted.
+#define PAX_IS_PALETTE(type) (((type) & 0xf0000000) == 0x20000000)
+// Reflects whether the buffer type is color.
+#define PAX_IS_COLOR(type)    (((type) & 0xf0000000) == 0x00000000)
+
 // Create a new buffer.
 // If mem is NULL, a new area is allocated.
 void      pax_buf_init            (pax_buf_t *buf, void *mem, int width, int height, pax_buf_type_t type);

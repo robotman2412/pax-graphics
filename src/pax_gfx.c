@@ -138,7 +138,7 @@ static inline uint32_t pax_buf2col(pax_buf_t *buf, uint32_t value) {
 		return color | 0xff000000;
 	} else if (buf->type == PAX_BUF_32_8888ARGB) {
 		return value;
-	} else if (PAX_IS_PALLETTE(buf->type)) {
+	} else if (PAX_IS_PALETTE(buf->type)) {
 		// Pallette lookup.
 		if (value >= buf->pallette_size) return *buf->pallette;
 		else return buf->pallette[value];
@@ -1048,6 +1048,12 @@ pax_col_t pax_get_pixel(pax_buf_t *buf, int x, int y) {
 // If uvs is NULL, a default will be used (0,0; 1,0; 1,1; 0,1).
 void pax_shade_rect(pax_buf_t *buf, pax_col_t color, pax_shader_t *shader,
 		pax_quad_t *uvs, float x, float y, float width, float height) {
+	if (!shader) {
+		// If shader is NULL, simplify this.
+		pax_draw_rect(buf, color, x, y, width, height);
+		return;
+	}
+	
 	if (!uvs) {
 		uvs = &(pax_quad_t) {
 			.x0 = 0, .y0 = 0,
@@ -1089,6 +1095,12 @@ void pax_shade_rect(pax_buf_t *buf, pax_col_t color, pax_shader_t *shader,
 // If uvs is NULL, a default will be used (0,0; 1,0; 0,1).
 void pax_shade_tri(pax_buf_t *buf, pax_col_t color, pax_shader_t *shader,
 		pax_tri_t *_uvs, float x0, float y0, float x1, float y1, float x2, float y2) {
+	if (!shader) {
+		// If shader is NULL, simplify this.
+		pax_draw_tri(buf, color, x0, y0, x1, y1, x2, y2);
+		return;
+	}
+	
 	PAX_BUF_CHECK("pax_shade_tri");
 	matrix_2d_transform(buf->stack_2d.value, &x0, &y0);
 	matrix_2d_transform(buf->stack_2d.value, &x1, &y1);
@@ -1143,6 +1155,12 @@ void pax_shade_tri(pax_buf_t *buf, pax_col_t color, pax_shader_t *shader,
 // If uvs is NULL, a default will be used (0,0; 1,0; 1,1; 0,1).
 void pax_shade_arc(pax_buf_t *buf, pax_col_t color, pax_shader_t *shader,
 		pax_quad_t *uvs, float x,  float y,  float r,  float a0, float a1) {
+	if (!shader) {
+		// If shader is NULL, simplify this.
+		pax_draw_arc(buf, color, x, y, r, a0, a1);
+		return;
+	}
+	
 	PAX_BUF_CHECK("pax_draw_arc");
 	if (!uvs) {
 		uvs = &(pax_quad_t) {
@@ -1342,7 +1360,7 @@ void pax_draw_text(pax_buf_t *buf, pax_col_t color, pax_font_t *font, float font
 		char c = text[i], next = text[i + 1];
 		if (c == '\r' || c == '\n') {
 			x = _x;
-			y += h + 1;
+			y += h;
 			if (c == '\r' && next == '\n') i++;
 		} else {
 			args.glyph = pax_is_visible_char(c) ? c : 1;
@@ -1366,7 +1384,7 @@ pax_vec1_t pax_text_size(pax_font_t *font, float font_size, char *text) {
 	float h = size_mul * font->glyphs_uni_h;
 	
 	float text_w = 0;
-	float text_h = h + 1;
+	float text_h = h;
 	
 	size_t len = strlen(text);
 	
@@ -1376,8 +1394,8 @@ pax_vec1_t pax_text_size(pax_font_t *font, float font_size, char *text) {
 		char c = text[i], next = text[i + 1];
 		if (c == '\r' || c == '\n') {
 			x = 0;
-			y += h + 1;
-			text_h = y + h + 1;
+			y += h;
+			text_h = y + h;
 			if (c == '\r' && next == '\n') i++;
 		} else {
 			x += w;

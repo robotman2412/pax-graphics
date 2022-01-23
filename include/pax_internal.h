@@ -63,10 +63,6 @@ static const char *TAG   = "pax";
 // Sort two points represented by floats.
 #define PAX_SORT_POINTS(x0, y0, x1, y1) { if (y1 < y0) PAX_SWAP_POINTS(x0, y0, x1, y1) }
 
-#define PAX_GET_BPP(type)     ((type) & 0xff)
-#define PAX_IS_GREY(type)     (((type) & 0xf0000000) == 0x10000000)
-#define PAX_IS_PALLETTE(type) (((type) & 0xf0000000) == 0x20000000)
-
 #ifdef __cplusplus
 }
 #endif //__cplusplus

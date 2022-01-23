@@ -204,9 +204,10 @@ struct pax_buf {
 
 struct pax_shader {
 	// Transformer callback.
-	pax_transf_func_t transformer;
+	// pax_transf_func_t transformer;
 	// Transformer arguments.
-	void             *transformer_args;
+	// void             *transformer_args;
+	
 	// Shader callback.
 	pax_shader_func_t callback;
 	// Shader arguments.
