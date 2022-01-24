@@ -1013,7 +1013,8 @@ void pax_merge_pixel(pax_buf_t *buf, pax_col_t color, int x, int y) {
 	}
 	PAX_SUCCESS();
 	if (PAX_IS_PALETTE(buf->type)) {
-		pax_set_pixel_u(buf, color, x, y);
+		if (color & 0xff000000)
+			pax_set_pixel_u(buf, color, x, y);
 	} else {
 		pax_col_t base = pax_buf2col(buf, pax_get_pixel_u(buf, x, y));
 		pax_set_pixel_u(buf, pax_col2buf(buf, pax_col_merge(base, color)), x, y);
@@ -1094,7 +1095,7 @@ void pax_shade_rect(pax_buf_t *buf, pax_col_t color, pax_shader_t *shader,
 			uvs->x2, uvs->y2, uvs->x3, uvs->y3
 		);
 	} else {
-		// We still ned triangles.
+		// We still need triangles.
 		pax_shade_tri(buf, color, shader, &uv0, x, y, x + width, y, x + width, y + height);
 		pax_shade_tri(buf, color, shader, &uv1, x, y, x, y + height, x + width, y + height);
 	}
@@ -1353,6 +1354,7 @@ static inline bool pax_is_visible_char(char c) {
 void pax_draw_text(pax_buf_t *buf, pax_col_t color, pax_font_t *font, float font_size, float _x, float _y, char *text) {
 	PAX_BUF_CHECK("pax_draw_text");
 	
+	if (!text || !*text) return;
 	if (!font) font = PAX_FONT_DEFAULT;
 	
 	if (font_size == 0) font_size = font->glyphs_uni_h;
