@@ -47,7 +47,7 @@ pax_col_t pax_shader_font_bitmap_uni(pax_col_t tint, int x, int y, float u, floa
 
 // Create a shader_t of the given texture.
 // Texture format is pax_but_t*.
-#define PAX_SHADER_TEXTURE(texture) (pax_shader_t) { .callback = pax_shader_texture, .callback_args = texture }
+#define PAX_SHADER_TEXTURE(texture) (pax_shader_t) { .callback = pax_shader_texture, .callback_args = texture, .alpha_promise_0=true, .alpha_promise_255=false }
 // Texture shader. No interpolation.
 pax_col_t pax_shader_texture(pax_col_t tint, int x, int y, float u, float v, void *args);
 
