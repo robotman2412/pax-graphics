@@ -223,10 +223,16 @@ static inline float pax_flerp4(float x, float y, float e0, float e1, float e2, f
 
 /* ======= DRAWING HELPERS ======= */
 
+// Helper for setting pixels in drawing routines.
+// Used to allow to optimise away alpha in colors.
+typedef void (*pax_setter_t)(pax_buf_t *buf, pax_col_t color, int x, int y);
+
 // Internal method for unshaded triangles.
 // Assumes points are sorted by Y.
 static void pax_tri_unshaded(pax_buf_t *buf, pax_col_t color,
 		float x0, float y0, float x1, float y1, float x2, float y2) {
+	
+	pax_setter_t setter = color >= 0xff000000 ? pax_merge_pixel : pax_set_pixel;
 	
 	// Find the appropriate Y for y0, y1 and y2 inside the triangle.
 	float y_post_0 = (int) (y0 + 0.5) + 0.5;
@@ -284,7 +290,7 @@ static void pax_tri_unshaded(pax_buf_t *buf, pax_col_t color,
 			}
 			for (int x = x_left + 0.5; x < x_right; x ++) {
 				// And simply merge colors accordingly.
-				pax_merge_pixel(buf, color, x, y);
+				setter(buf, color, x, y);
 			}
 			// Move X.
 			x_a += x0_x1_dx;
@@ -316,7 +322,7 @@ static void pax_tri_unshaded(pax_buf_t *buf, pax_col_t color,
 			}
 			for (int x = x_left + 0.5; x < x_right; x ++) {
 				// And simply merge colors accordingly.
-				pax_merge_pixel(buf, color, x, y);
+				setter(buf, color, x, y);
 			}
 			// Move X.
 			x_a += x1_x2_dx;
@@ -1015,6 +1021,8 @@ void pax_merge_pixel(pax_buf_t *buf, pax_col_t color, int x, int y) {
 	if (PAX_IS_PALETTE(buf->type)) {
 		if (color & 0xff000000)
 			pax_set_pixel_u(buf, color, x, y);
+	} else if (color >= 0xff000000) {
+		pax_set_pixel_u(buf, pax_col2buf(buf, color), x, y);
 	} else {
 		pax_col_t base = pax_buf2col(buf, pax_get_pixel_u(buf, x, y));
 		pax_set_pixel_u(buf, pax_col2buf(buf, pax_col_merge(base, color)), x, y);
