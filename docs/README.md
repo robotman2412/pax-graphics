@@ -31,7 +31,7 @@ In each file you'd like to use PAX graphics in, you'll need to include the `pax_
 #include <pax_gfx.h>
 ```
 
-The [`pax_buf_init`](#api-reference-setup) function is used to create a new graphics environment.![matrices_initial](https://user-images.githubusercontent.com/25562445/149658010-17f3ea72-212a-4cf5-a3f0-ad58852c575d.png)
+The [`pax_buf_init`](#api-reference-setup) function is used to create a new graphics environment.
 
 Here, we use it with the type PAX_BUF_16_565RGB, which is appropriate for the screen used by the MCH2022 badge.
 ```c
@@ -449,10 +449,12 @@ pax_col_t my_shader_callback(pax_col_t tint, int x, int y, float u, float v, voi
 
 // The shader object.
 pax_shader_t my_shader = {
-    .callback      = my_shader,
-    .callback_args = NULL
+    .callback          = my_shader,
+    .callback_args     = NULL,
+    .alpha_promise_0   = false,
+    .alpha_promise_255 = true
 };
 ```
 The `callback_args` property is passed directly to the selected callback as the `args` parameter.
 
-For more information on how to make and use your own shaders, see [shaders.md](shaders.md#making-your-own-shaders).
+For more information on how to make and use your own shaders, and how the `alpha_promise_` attributes work, see [shaders.md](shaders.md#making-your-own-shaders).

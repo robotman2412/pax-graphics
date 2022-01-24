@@ -42,9 +42,15 @@ pax_col_t my_shader_callback(pax_col_t tint, int x, int y, float u, float v, voi
 Then, you need to define your shader struct:
 ```c
 // The callback_args value is passed straight to args in my_shader_callback.
+// Here, alpha_promise_0 states that the shader won't always return full transparency when the tint color's alpha is 0.
+// Likewise, as we always return full opacity, alpha_promise_255 states that we do always return full opacity when the color's alpha is 255.
+// These promises are used for optimisation internally,
+// So if their condition is technically speaking true (you might ignore the tint like here), the promise is true.
 pax_shader_t my_shader = (pax_shader_t) {
-    .callback      = my_shader_callback,
-    .callback_args = NULL
+    .callback          = my_shader_callback,
+    .callback_args     = NULL,
+    .alpha_promise_0   = false,
+    .alpha_promise_255 = true
 };
 ```
 
