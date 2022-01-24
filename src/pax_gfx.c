@@ -232,7 +232,11 @@ typedef void (*pax_setter_t)(pax_buf_t *buf, pax_col_t color, int x, int y);
 static void pax_tri_unshaded(pax_buf_t *buf, pax_col_t color,
 		float x0, float y0, float x1, float y1, float x2, float y2) {
 	
-	pax_setter_t setter = color >= 0xff000000 ? pax_merge_pixel : pax_set_pixel;
+	if (color < 0x01000000) {
+		PAX_SUCCESS();
+		return;
+	}
+	pax_setter_t setter = color >= 0xff000000 ? pax_set_pixel : pax_merge_pixel;
 	
 	// Find the appropriate Y for y0, y1 and y2 inside the triangle.
 	float y_post_0 = (int) (y0 + 0.5) + 0.5;
@@ -337,6 +341,12 @@ static void pax_tri_shaded(pax_buf_t *buf, pax_col_t color, pax_shader_t *shader
 		float x0, float y0, float x1, float y1, float x2, float y2,
 		float u0, float v0, float u1, float v1, float u2, float v2) {
 	
+	if (color < 0x01000000 && shader->alpha_promise_0) {
+		PAX_SUCCESS();
+		return;
+	}
+	pax_setter_t setter = shader->alpha_promise_255 && (color >= 0xff000000) ? pax_set_pixel : pax_merge_pixel;
+	
 	// Find the appropriate Y for y0, y1 and y2 inside the triangle.
 	float y_post_0 = (int) (y0 + 0.5) + 0.5;
 	float y_post_1 = (int) (y1 + 0.5) + 0.5;
@@ -434,7 +444,7 @@ static void pax_tri_shaded(pax_buf_t *buf, pax_col_t color, pax_shader_t *shader
 				// Apply the shader,
 				pax_col_t result = (shader->callback)(color, x, y, u, v, shader->callback_args);
 				// And simply merge colors accordingly.
-				pax_merge_pixel(buf, result, x, y);
+				setter(buf, result, x, y);
 				u += du;
 				v += dv;
 			}
@@ -506,7 +516,7 @@ static void pax_tri_shaded(pax_buf_t *buf, pax_col_t color, pax_shader_t *shader
 				// Apply the shader,
 				pax_col_t result = (shader->callback)(color, x, y, u, v, shader->callback_args);
 				// And simply merge colors accordingly.
-				pax_merge_pixel(buf, result, x, y);
+				setter(buf, result, x, y);
 				u += du;
 				v += dv;
 			}
@@ -526,6 +536,12 @@ static void pax_tri_shaded(pax_buf_t *buf, pax_col_t color, pax_shader_t *shader
 static void pax_rect_shaded(pax_buf_t *buf, pax_col_t color, pax_shader_t *shader,
 		float x, float y, float width, float height,
 		float u0, float v0, float u1, float v1, float u2, float v2, float u3, float v3) {
+	
+	if (color < 0x01000000 && shader->alpha_promise_0) {
+		PAX_SUCCESS();
+		return;
+	}
+	pax_setter_t setter = shader->alpha_promise_255 && (color >= 0xff000000) ? pax_set_pixel : pax_merge_pixel;
 	
 	// Fix width and height.
 	if (width < 0) {
@@ -597,7 +613,7 @@ static void pax_rect_shaded(pax_buf_t *buf, pax_col_t color, pax_shader_t *shade
 		float u = u_a, v = v_a;
 		for (int _x = x + 0.5; _x < x + width + 0.5; _x ++) {
 			pax_col_t result = (shader->callback)(color, _x, _y, u, v, shader->callback_args);
-			pax_merge_pixel(buf, result, _x, _y);
+			setter(buf, result, _x, _y);
 			u += ua_ub_du;
 			v += va_vb_dv;
 		}
@@ -1378,8 +1394,10 @@ void pax_draw_text(pax_buf_t *buf, pax_col_t color, pax_font_t *font, float font
 		.font          = font
 	};
 	pax_shader_t shader = {
-		.callback      = pax_shader_font_bitmap_uni,
-		.callback_args = &args
+		.callback          = pax_shader_font_bitmap_uni,
+		.callback_args     = &args,
+		.alpha_promise_0   = true,
+		.alpha_promise_255 = false
 	};
 	
 	for (size_t i = 0; i < len; i ++) {
@@ -1472,6 +1490,10 @@ void pax_background(pax_buf_t *buf, pax_col_t color) {
 // Draw a rectangle, ignoring matrix transform.
 void pax_simple_rect(pax_buf_t *buf, pax_col_t color, float x, float y, float width, float height) {
 	PAX_BUF_CHECK("pax_simple_rect");
+	if (color < 0x01000000) {
+		PAX_SUCCESS();
+		return;
+	}
 	
 	// Fix rect dimensions.
 	if (width < 0) {
@@ -1500,11 +1522,12 @@ void pax_simple_rect(pax_buf_t *buf, pax_col_t color, float x, float y, float wi
 	}
 	
 	pax_mark_dirty2(buf, x - 0.5, y - 0.5, width + 1, height + 1);
+	pax_setter_t setter = color >= 0xff000000 ? pax_set_pixel : pax_merge_pixel;
 	
 	// Pixel time.
 	for (int _y = y + 0.5; _y < y + height + 0.5; _y ++) {
 		for (int _x = x + 0.5; _x < x + width + 0.5; _x ++) {
-			pax_merge_pixel(buf, color, _x, _y);
+			setter(buf, color, _x, _y);
 		}
 	}
 	

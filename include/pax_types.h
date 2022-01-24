@@ -212,6 +212,10 @@ struct pax_shader {
 	pax_shader_func_t callback;
 	// Shader arguments.
 	void             *callback_args;
+	// Whether to promise that an alpha of 0 in tint will return a fully transparent.
+	bool              alpha_promise_0;
+	// Whether to promise that an alpha of 255 in tint will return a fully opaque.
+	bool              alpha_promise_255;
 };
 
 #ifdef __cplusplus
