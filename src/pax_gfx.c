@@ -532,10 +532,58 @@ static void pax_tri_shaded(pax_buf_t *buf, pax_col_t color, pax_shader_t *shader
 }
 
 
+// Optimisation which maps a buffer directly onto another.
+static void pax_overlay_buffer(pax_buf_t *base, pax_buf_t *top, int x, int y, int width, int height) {
+	int tex_x = 0, tex_y = 0;
+	
+	// Perform clipping.
+	if (x < base->clip.x) {
+		tex_x = base->clip.x + 0.5 - x;
+		width -= tex_x;
+		x  = base->clip.x + 0.5;
+	}
+	if (x + width > base->clip.x + base->clip.w) {
+		width = base->clip.x + base->clip.w - 0.5 - x;
+	}
+	if (y < base->clip.y) {
+		tex_y = base->clip.y + 0.5 - y;
+		height -= tex_y;
+		y  = base->clip.y + 0.5;
+	}
+	if (y + height > base->clip.y + base->clip.h) {
+		height = base->clip.y + base->clip.h - 0.5 - y;
+	}
+	
+	// Now, let us MAP.
+	for (int _y = 0; _y < height; _y++) {
+		for (int _x = 0; _x < width; _x++) {
+			pax_col_t col = pax_get_pixel(top, tex_x, tex_y);
+			pax_merge_pixel(base, col, x, y);
+			tex_x ++;
+			x ++;
+		}
+		tex_x -= width;
+		x -= width;
+		tex_y ++;
+		y ++;
+	}
+}
+
+
 // Internal method for shaded rects.
 static void pax_rect_shaded(pax_buf_t *buf, pax_col_t color, pax_shader_t *shader,
 		float x, float y, float width, float height,
 		float u0, float v0, float u1, float v1, float u2, float v2, float u3, float v3) {
+	
+	bool is_default_uv = u0 == 0 && v0 == 0 && u1 == 1 && v1 == 0 && u2 == 1 && v2 == 1 && u3 == 0 && v3 == 1;
+	// Try to perform a mapping optimisation.
+	if (shader->callback == pax_shader_texture && color == 0xffffffff) {
+		pax_buf_t *top = (pax_buf_t *) shader->callback_args;
+		if (is_default_uv && (int) (width + 0.5) == top->width && (int) (height + 0.5) == top->height) {
+			pax_overlay_buffer(buf, top, x + 0.5, y + 0.5, width + 0.5, height + 0.5);
+			return;
+		}
+	}
 	
 	if (color < 0x01000000 && shader->alpha_promise_0) {
 		PAX_SUCCESS();
@@ -626,6 +674,7 @@ static void pax_rect_shaded(pax_buf_t *buf, pax_col_t color, pax_shader_t *shade
 }
 
 
+
 /* ============ DEBUG ============ */
 
 // Describe error.
@@ -653,6 +702,7 @@ void pax_debug(pax_buf_t *buf) {
 	uint32_t  c2 = pax_buf2col(buf, c1);
 	ESP_LOGW(TAG, "%06x -> %02x -> %06x", c0, c1, c2);
 }
+
 
 
 /* ============ BUFFER =========== */
