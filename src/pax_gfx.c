@@ -570,6 +570,76 @@ static void pax_overlay_buffer(pax_buf_t *base, pax_buf_t *top, int x, int y, in
 }
 
 
+// Optimisation which makes more assumptions about UVs.
+static void pax_rect_shaded1(pax_buf_t *buf, pax_col_t color, pax_shader_t *shader,
+		float x, float y, float width, float height, float u0, float v0, float u1, float v1) {
+	
+	if (color < 0x01000000 && shader->alpha_promise_0) {
+		PAX_SUCCESS();
+		return;
+	}
+	pax_setter_t setter = shader->alpha_promise_255 && (color >= 0xff000000) ? pax_set_pixel : pax_merge_pixel;
+	
+	// Fix width and height.
+	if (width < 0) {
+		x += width;
+		width = -width;
+		PAX_SWAP(float, u0, u1);
+	}
+	if (height < 0) {
+		y += height;
+		height = -height;
+		PAX_SWAP(float, v0, v1);
+	}
+	
+	// Clip rect in inside of buffer.
+	if (x < buf->clip.x) {
+		float part = (buf->clip.x - x) / width;
+		u0 = u0 + (u1 - u0) * part;
+		
+		width += buf->clip.x - x;
+		x = buf->clip.x;
+	}
+	if (x + width > buf->clip.x + buf->clip.w) {
+		float part = (buf->clip.x + buf->clip.w - 1 - x) / width;
+		u1 = u0 + (u1 - u0) * part;
+		
+		width = buf->clip.x + buf->clip.w - 1 - x;
+	}
+	if (y < buf->clip.y) {
+		float part = (buf->clip.y - y) / height;
+		v0 = v0 + (v1 - v0) * part;
+		
+		height += buf->clip.y - y;
+		y = buf->clip.y;
+	}
+	if (y + height > buf->clip.y + buf->clip.h) {
+		float part = (buf->clip.y + buf->clip.h - 1 - y) / height;
+		v1 = v0 + (v1 - v0) * part;
+		
+		height = buf->clip.y + buf->clip.h - 1 - y;
+	}
+	
+	// Find UV deltas.
+	float u0_u1_du = (u1 - u0) / width;
+	float v0_v1_dv = (v1 - v0) / height;
+	
+	float v = v0;
+	
+	// Pixel time.
+	for (int _y = y + 0.5; _y < y + height + 0.5; _y ++) {
+		float u = u0;
+		for (int _x = x + 0.5; _x < x + width + 0.5; _x ++) {
+			pax_col_t result = (shader->callback)(color, _x, _y, u, v, shader->callback_args);
+			setter(buf, result, _x, _y);
+			u += u0_u1_du;
+		}
+		v += v0_v1_dv;
+	}
+	
+}
+
+
 // Internal method for shaded rects.
 static void pax_rect_shaded(pax_buf_t *buf, pax_col_t color, pax_shader_t *shader,
 		float x, float y, float width, float height,
@@ -583,6 +653,9 @@ static void pax_rect_shaded(pax_buf_t *buf, pax_col_t color, pax_shader_t *shade
 			pax_overlay_buffer(buf, top, x + 0.5, y + 0.5, width + 0.5, height + 0.5);
 			return;
 		}
+	} else if (is_default_uv || (v0 == v1 && v2 == v3 && u0 == u3 && u1 == u2)) {
+		pax_rect_shaded1(buf, color, shader, x, y, width, height, u0, v0, u2, v2);
+		return;
 	}
 	
 	if (color < 0x01000000 && shader->alpha_promise_0) {
