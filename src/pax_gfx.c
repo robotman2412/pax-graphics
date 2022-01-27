@@ -25,11 +25,18 @@
 #include "pax_internal.h"
 #include "pax_shaders.h"
 
-pax_err_t pax_last_error = PAX_OK;
-
 #include <malloc.h>
 #include <string.h>
 #include <math.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
+
+// The last error reported.
+pax_err_t pax_last_error = PAX_OK;
+// Whether multi-core rendering is enabled.
+bool      pax_do_multicore = false;
+// The task handle for the other core.
+static TaskHandle_t multicore_handle = NULL;
 
 static inline uint32_t pax_col2buf(pax_buf_t *buf, pax_col_t color) {
 	uint8_t bpp = buf->bpp;
@@ -774,6 +781,52 @@ void pax_debug(pax_buf_t *buf) {
 	uint32_t  c1 = pax_col2buf(buf, c0);
 	uint32_t  c2 = pax_buf2col(buf, c1);
 	ESP_LOGW(TAG, "%06x -> %02x -> %06x", c0, c1, c2);
+}
+
+
+
+/* ===== MULTI-CORE RENDERING ==== */
+
+// The actual task for multicore rendering.
+static void pax_multicore_task_function(void *args) {
+	while (pax_do_multicore) {
+		vTaskDelay(3 / portTICK_PERIOD_MS);
+	}
+	multicore_handle = NULL;
+	vTaskDelete(NULL);
+}
+
+// If multi-core rendering is enabled, wait for the other core.
+void pax_join() {
+	while (multicore_handle) {
+		// Wait for the other core.
+		vTaskDelay(5 / portTICK_PERIOD_MS);
+	}
+}
+
+// Enable multi-core rendering.
+void pax_enable_multicore(int core) {
+	if (pax_do_multicore) return;
+	int result = xTaskCreatePinnedToCore(
+		pax_multicore_task_function,
+		"pax_multicore", 2048, NULL, 2,
+		&multicore_handle, core
+	);
+	if (result != pdPASS) {
+		multicore_handle = NULL;
+		ESP_LOGW(TAG, "Failed to enable multicore rendering.");
+	} else {
+		pax_do_multicore = true;
+	}
+}
+
+// Disable multi-core rendering.
+void pax_disable_multicore() {
+	if (!pax_do_multicore) return;
+	pax_do_multicore = false;
+	// The task, realising multicore is now disabled, will end itself when finished.
+	pax_join();
+	multicore_handle = NULL;
 }
 
 

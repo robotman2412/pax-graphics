@@ -34,6 +34,7 @@ extern "C" {
 
 /* ============ DEBUG ============ */
 
+// The last error reported.
 extern pax_err_t pax_last_error;
 
 // Describe error.
@@ -41,16 +42,29 @@ char      *pax_desc_err           (pax_err_t error);
 // Debug stuff.
 void       pax_debug              (pax_buf_t *buf);
 
+/* ===== MULTI-CORE RENDERING ==== */
+
+// Whether multi-core rendering is enabled.
+// You should not modify this variable.
+extern bool      pax_do_multicore;
+// If multi-core rendering is enabled, wait for the other core.
+void      pax_join                ();
+// Enable multi-core rendering.
+// You must specify the core number to use.
+void      pax_enable_multicore    (int core);
+// Disable multi-core rendering.
+void      pax_disable_multicore   ();
+
 /* ============ BUFFER =========== */
 
 // Get the bits per pixel for the given buffer type.
-#define PAX_GET_BPP(type)     ((type) & 0xff)
+#define PAX_GET_BPP(type)         ((type) & 0xff)
 // Reflects whether the buffer type is greyscale.
-#define PAX_IS_GREY(type)     (((type) & 0xf0000000) == 0x10000000)
+#define PAX_IS_GREY(type)         (((type) & 0xf0000000) == 0x10000000)
 // Reflects whether the buffer type is paletted.
-#define PAX_IS_PALETTE(type) (((type) & 0xf0000000) == 0x20000000)
+#define PAX_IS_PALETTE(type)      (((type) & 0xf0000000) == 0x20000000)
 // Reflects whether the buffer type is color.
-#define PAX_IS_COLOR(type)    (((type) & 0xf0000000) == 0x00000000)
+#define PAX_IS_COLOR(type)        (((type) & 0xf0000000) == 0x00000000)
 
 // Create a new buffer.
 // If mem is NULL, a new area is allocated.

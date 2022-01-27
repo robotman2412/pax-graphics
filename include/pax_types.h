@@ -75,6 +75,8 @@ struct matrix_stack_2d;
 enum   pax_buf_type;
 struct pax_buf;
 struct pax_shader;
+enum   pax_task_type;
+struct pax_task;
 
 typedef struct pax_vec1        pax_vec1_t;
 typedef struct pax_vec2        pax_vec2_t;
@@ -88,6 +90,8 @@ typedef struct matrix_stack_2d matrix_stack_2d_t;
 typedef enum   pax_buf_type    pax_buf_type_t;
 typedef struct pax_buf         pax_buf_t;
 typedef struct pax_shader      pax_shader_t;
+typedef enum   pax_task_type   pax_task_type_t;
+typedef struct pax_task        pax_task_t;
 
 typedef int32_t               pax_err_t;
 typedef uint32_t              pax_col_t;
@@ -203,11 +207,6 @@ struct pax_buf {
 };
 
 struct pax_shader {
-	// Transformer callback.
-	// pax_transf_func_t transformer;
-	// Transformer arguments.
-	// void             *transformer_args;
-	
 	// Shader callback.
 	pax_shader_func_t callback;
 	// Shader arguments.
@@ -216,6 +215,42 @@ struct pax_shader {
 	bool              alpha_promise_0;
 	// Whether to promise that an alpha of 255 in tint will return a fully opaque.
 	bool              alpha_promise_255;
+};
+
+// Type of task to do.
+// Things like text and arcs will decompose to rects and triangles.
+enum pax_task_type {
+	// Background fill.
+	PAX_TASK_BACKGROUND,
+	// Rectangle draw.
+	PAX_TASK_RECTANGLE,
+	// Triangle draw.
+	PAX_TASK_TRI
+};
+
+// A task to perform.
+// Every task has pre-transformed co-ordinates.
+// If you change the shader object's content (AKA the value that args points to),
+// You should ran pax_join before making the change.
+struct pax_task {
+	// The type of thing to do.
+	pax_task_type_t type;
+	// Color to use.
+	pax_col_t       color;
+	// Shader to use.
+	pax_shader_t   *shader;
+	// UVs to use.
+	union {
+		// UVs to use for rects and arcs.
+		pax_quad_t *quad_uvs;
+		// UVs to use for triangle.
+		pax_tri_t  *tri_uvs;
+	};
+	// Additional parameters.
+	// This is an array of floats for X, Y, and dimensions of shapes.
+	float          *shape;
+	// Number of floats in the shape array.
+	size_t          shape_len;
 };
 
 #ifdef __cplusplus
