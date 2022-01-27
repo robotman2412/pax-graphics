@@ -768,6 +768,7 @@ char *pax_desc_err(pax_err_t error) {
 		"Infinite parameters",
 		"Out of bounds",
 		"Matrix stack underflow",
+		"Out of data",
 		"Image decoding error"
 	};
 	size_t n_desc = sizeof(desc) / sizeof(char *);

@@ -57,8 +57,10 @@ extern "C" {
 #define PAX_ERR_BOUNDS    -5
 // Matrix stack underflow.
 #define PAX_ERR_UNDERFLOW -6
+// Out of data.
+#define PAX_ERR_NODATA    -7
 // Image decoding error.
-#define PAX_ERR_DECODE    -7
+#define PAX_ERR_DECODE    -8
 
 /* ============ TYPES ============ */
 
