@@ -29,11 +29,9 @@
 extern "C" {
 #endif //__cplusplus
 
-#include <stdint.h>
-#include <stddef.h>
-#include <stdbool.h>
+#include "pax_config.h"
+
 #include <math.h>
-#define PAX_AUTOREPORT
 
 #ifndef M_PI
 #define M_PI 3.141592653589793
