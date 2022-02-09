@@ -1,0 +1,156 @@
+
+#ifndef PAX_GFX_C
+#error "This file should not be compiled on it's own."
+#endif
+
+#include "pax_internal.h"
+
+/* ======= UNSHADED DRAWING ====== */
+
+// Multi-core method for unshaded triangles.
+// Assumes points are sorted by Y.
+// If odd_scanline is true, the odd (counted from 0) lines are drawn, otherwise the even lines are drawn.
+static void paxmcr_tri_unshaded(bool odd_scanline, pax_buf_t *buf, pax_col_t color,
+		float x0, float y0, float x1, float y1, float x2, float y2) {
+	
+	if (color < 0x01000000) {
+		PAX_SUCCESS();
+		return;
+	}
+	pax_setter_t setter = color >= 0xff000000 ? pax_set_pixel : pax_merge_pixel;
+	
+	// Find the appropriate Y for y0, y1 and y2 inside the triangle.
+	float y_post_0 = (int) (y0 + 0.5) + 0.5;
+	float y_post_1 = (int) (y1 + 0.5) + 0.5;
+	float y_pre_2  = (int) (y2 - 0.5) + 0.5;
+	
+	// And the coefficients for x0->x1, x1->x2 and x0->x2.
+	float x0_x1_dx = (x1 - x0) / (y1 - y0);
+	float x1_x2_dx = (x2 - x1) / (y2 - y1);
+	float x0_x2_dx = (x2 - x0) / (y2 - y0);
+	
+	// Clip: Y axis.
+	if (y_post_0 > buf->clip.y + buf->clip.h) {
+		y_post_0 = (int) (buf->clip.y + buf->clip.h - 0.5) + 0.5;
+	}
+	if (y_post_1 > buf->clip.y + buf->clip.h) {
+		y_post_1 = (int) (buf->clip.y + buf->clip.h - 0.5) + 0.5;
+	}
+	if (y_pre_2  > buf->clip.y + buf->clip.h) {
+		y_pre_2  = (int) (buf->clip.y + buf->clip.h - 0.5) + 0.5;
+	}
+	
+	if (y_pre_2  < buf->clip.y) {
+		y_pre_2  = (int) (buf->clip.y + 0.5) + 0.5;
+	}
+	if (y_post_1 < buf->clip.y) {
+		y_post_1 = (int) (buf->clip.y + 0.5) + 0.5;
+	}
+	if (y_post_0 < buf->clip.y) {
+		y_post_0 = (int) (buf->clip.y + 0.5) + 0.5;
+	}
+	
+	// Draw top half.
+	// This condition is false if no one point is inside the triangle and above y1.
+	if (y_post_0 < y_post_1 && y_post_0 >= y0) {
+		// Find the X counterparts to the other points we found.
+		float x_a = x0 + x0_x1_dx * (y_post_0 - y0);
+		float x_b = x0 + x0_x2_dx * (y_post_0 - y0);
+		// Snap y to the correct line.
+		int y = y_post_0;
+		if ((y & 1) != odd_scanline) {
+			y ++;
+			x_a += x0_x1_dx;
+			x_b += x0_x2_dx;
+		}
+		for (; y < (int) y_post_1; y += 2) {
+			// Plot the horizontal line.
+			float x_left, x_right;
+			if (x_a < x_b) {
+				x_left  = x_a;
+				x_right = x_b;
+			} else {
+				x_left  = x_b;
+				x_right = x_a;
+			}
+			// Clip: X axis.
+			if (x_right > buf->clip.x + buf->clip.w) {
+				x_right = buf->clip.x + buf->clip.w;
+			}
+			if (x_left < buf->clip.x) {
+				x_left = buf->clip.x;
+			}
+			for (int x = x_left + 0.5; x < x_right; x ++) {
+				// And simply merge colors accordingly.
+				setter(buf, color, x, y);
+			}
+			// Move X.
+			x_a += 2*x0_x1_dx;
+			x_b += 2*x0_x2_dx;
+		}
+	}
+	// Draw bottom half.
+	// This condition might be confusing, but it's false if no point at all is inside the triangle.
+	if (y_post_0 <= y_pre_2 && y_post_1 >= y1 && y_pre_2 <= y2) {
+		// Find the X counterparts to the other points we found.
+		float x_a = x1 + x1_x2_dx * (y_post_1 - y1);
+		float x_b = x0 + x0_x2_dx * (y_post_1 - y0);
+		// Snap y to the correct line.
+		int y = y_post_1;
+		if ((y & 1) != odd_scanline) {
+			y ++;
+			x_a += x1_x2_dx;
+			x_b += x0_x2_dx;
+		}
+		for (; y <= (int) y_pre_2; y += 2) {
+			// Plot the horizontal line.
+			float x_left, x_right;
+			if (x_a < x_b) {
+				x_left  = x_a;
+				x_right = x_b;
+			} else {
+				x_left  = x_b;
+				x_right = x_a;
+			}
+			// Clip: X axis.
+			if (x_right > buf->clip.x + buf->clip.w) {
+				x_right = buf->clip.x + buf->clip.w;
+			}
+			if (x_left < buf->clip.x) {
+				x_left = buf->clip.x;
+			}
+			for (int x = x_left + 0.5; x < x_right; x ++) {
+				// And simply merge colors accordingly.
+				setter(buf, color, x, y);
+			}
+			// Move X.
+			x_a += 2*x1_x2_dx;
+			x_b += 2*x0_x2_dx;
+		}
+	}
+}
+
+// Multi-core method for rectangle drawing.
+// If odd_scanline is true, the odd (counted from 0) lines are drawn, otherwise the even lines are drawn.
+static void paxmcr_rect_unshaded(bool odd_scanline, pax_buf_t *buf, pax_col_t color,
+		float x, float y, float width, float height) {
+	
+	if (color < 0x01000000) {
+		PAX_SUCCESS();
+		return;
+	}
+	pax_setter_t setter = color >= 0xff000000 ? pax_set_pixel : pax_merge_pixel;
+	
+	// Snap _y to the correct line.
+	int _y = y + 0.5;
+	if ((_y & 1) != odd_scanline) {
+		_y ++;
+	}
+	
+	// Pixel time.
+	for (; _y < y + height + 0.5; _y += 2) {
+		for (int _x = x + 0.5; _x < x + width + 0.5; _x ++) {
+			setter(buf, color, _x, _y);
+		}
+	}
+}

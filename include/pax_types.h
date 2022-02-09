@@ -220,10 +220,8 @@ struct pax_shader {
 // Type of task to do.
 // Things like text and arcs will decompose to rects and triangles.
 enum pax_task_type {
-	// Background fill.
-	PAX_TASK_BACKGROUND,
 	// Rectangle draw.
-	PAX_TASK_RECTANGLE,
+	PAX_TASK_RECT,
 	// Triangle draw.
 	PAX_TASK_TRI
 };

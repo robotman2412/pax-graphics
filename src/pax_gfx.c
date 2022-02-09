@@ -30,13 +30,21 @@
 #include <math.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
+#include <freertos/queue.h>
 
 // The last error reported.
-pax_err_t pax_last_error = PAX_OK;
+pax_err_t            pax_last_error   = PAX_OK;
 // Whether multi-core rendering is enabled.
-bool      pax_do_multicore = false;
+// You should not modify this variable.
+bool                 pax_do_multicore = false;
+#ifdef PAX_COMPILE_MCR
+// Whether or not the multicore task is currently busy.
+static bool          multicore_busy   = false;
 // The task handle for the other core.
-static TaskHandle_t multicore_handle = NULL;
+static TaskHandle_t  multicore_handle = NULL;
+// The render queue for the other core.
+static QueueHandle_t queue_handle     = NULL;
+#endif
 
 static inline uint32_t pax_col2buf(pax_buf_t *buf, pax_col_t color) {
 	uint8_t bpp = buf->bpp;
@@ -232,9 +240,15 @@ static inline float pax_flerp4(float x, float y, float e0, float e1, float e2, f
 
 #define PAX_GFX_C
 
+// Single-core rendering.
 #include "drawing_helpers/pax_dh_unshaded.c"
-
 #include "drawing_helpers/pax_dh_shaded.c"
+
+// Multi-core rendering.
+#ifdef PAX_COMPILE_MCR
+#include "drawing_helpers/pax_dh_mcr_unshaded.c"
+#include "drawing_helpers/pax_dh_mcr_shaded.c"
+#endif
 
 /* ============ DEBUG ============ */
 
@@ -269,46 +283,131 @@ void pax_debug(pax_buf_t *buf) {
 
 /* ===== MULTI-CORE RENDERING ==== */
 
+#ifdef PAX_COMPILE_MCR
+// The scheduler for multicore rendering.
+static void paxmcr_add_task(pax_task_t *task) {
+	// Create a copy.
+	pax_task_t copy = *task;
+	
+	// Of the shape,
+	copy.shape   = malloc(copy.shape_len * sizeof(float));
+	memcpy(copy.shape_len, task->shape, copy.shape_len * sizeof(float));
+	
+	// The shader,
+	if (copy.shader) {
+		copy.shader  = malloc(sizeof(pax_shader_t));
+		*copy.shader = *task->shader;
+	}
+	
+	// And the UVs.
+	if (copy.type == PAX_TASK_TRI && copy.tri_uvs) {
+		copy.tri_uvs = malloc(sizeof(pax_tri_t));
+		*copy.tri_uvs = *task->tri_uvs;
+	} else if (copy.type == PAX_TASK_RECT && copy.quad_uvs) {
+		copy.quad_uvs = malloc(sizeof(pax_quad_t));
+		*copy.quad_uvs = *task->quad_uvs;
+	}
+	
+	// Snedt it.
+	if (xQueueSend(queue_handle, &copy, pdMS_TO_TICKS(100)) != pdTRUE) {
+		ESP_LOGE(TAG, "No space in queue after 100ms!");
+		ESP_LOGW(TAG, "Reverting to disabling MCR.");
+		pax_disable_multicore();
+	}
+}
+
 // The actual task for multicore rendering.
 static void pax_multicore_task_function(void *args) {
+	const char *TAG = "pax-mcr-worker";
+	ESP_LOGI(TAG, "MCR worker started.");
+	
+	multicore_busy = false;
+	pax_task_t current_task;
 	while (pax_do_multicore) {
-		vTaskDelay(3 / portTICK_PERIOD_MS);
+		// Wait for a task.
+		if (uxQueueMessagesWaiting(queue_handle)) {
+			multicore_busy = true;
+			while (xQueueReceive(queue_handle, &current_task, 0)) {
+				// TODO: lamol
+				
+				// Free up our memories.
+				free(current_task.shape);
+				if (current_task.shader)
+					free(current_task.shader);
+				if (current_task.tri_uvs)
+					free(current_task.tri_uvs);
+			}
+			multicore_busy = false;
+		} else {
+			// There's nothing else to do.
+			taskYIELD();
+		}
 	}
+	
+	ESP_LOGI(TAG, "MCR worker stopped.");
 	multicore_handle = NULL;
 	vTaskDelete(NULL);
 }
+#endif
 
 // If multi-core rendering is enabled, wait for the other core.
 void pax_join() {
-	while (multicore_handle) {
+	#ifdef PAX_COMPILE_MCR
+	while (multicore_handle && (uxQueueMessagesWaiting(queue_handle) || multicore_busy)) {
 		// Wait for the other core.
-		vTaskDelay(5 / portTICK_PERIOD_MS);
+		vTaskDelay(1 / portTICK_PERIOD_MS);
 	}
+	#endif
 }
 
 // Enable multi-core rendering.
 void pax_enable_multicore(int core) {
-	if (pax_do_multicore) return;
+	#ifdef PAX_COMPILE_MCR
+	if (pax_do_multicore) {
+		ESP_LOGW(TAG, "No need to enable MCR: MCR was already enabled.");
+		return;
+	}
+	
+	// Create a queue for the rendering tasks.
+	if (!queue_handle) {
+		queue_handle = xQueueCreate(30, sizeof(pax_task_t));
+		if (!queue_handle) {
+			ESP_LOGE(TAG, "Failed to enable MCR: Queue creation error.");
+		}
+	}
+	
+	// Create a task to do said rendering.
 	int result = xTaskCreatePinnedToCore(
 		pax_multicore_task_function,
-		"pax_multicore", 2048, NULL, 2,
+		"pax_mcr_worker", 2048, NULL, 2,
 		&multicore_handle, core
 	);
 	if (result != pdPASS) {
 		multicore_handle = NULL;
-		ESP_LOGW(TAG, "Failed to enable multicore rendering.");
+		ESP_LOGE(TAG, "Failed to enable MCR: Task creation error %s (%x).", esp_err_to_name(result), result);
 	} else {
 		pax_do_multicore = true;
+		ESP_LOGI(TAG, "Successfully enabled MCR.");
 	}
+	#else
+	ESP_LOGE(TAG, "Failed to enable MCR: MCR not compiled, please define PAX_COMPILE_MCR.");
+	#endif
 }
 
 // Disable multi-core rendering.
 void pax_disable_multicore() {
-	if (!pax_do_multicore) return;
+	#ifdef PAX_COMPILE_MCR
+	if (!pax_do_multicore) {
+		ESP_LOGW(TAG, "No need to disable MCR: MCR was not enabled.");
+		return;
+	}
 	pax_do_multicore = false;
 	// The task, realising multicore is now disabled, will end itself when finished.
 	pax_join();
 	multicore_handle = NULL;
+	#else
+	ESP_LOGE(TAG, "No need to disable MCR: MCR not compiled, please define PAX_COMPILE_MCR.");
+	#endif
 }
 
 
@@ -767,11 +866,35 @@ void pax_shade_rect(pax_buf_t *buf, pax_col_t color, pax_shader_t *shader,
 		width  *= buf->stack_2d.value.a0;
 		height *= buf->stack_2d.value.b1;
 		pax_mark_dirty2(buf, x - 0.5, y - 0.5, width + 1, height + 1);
-		pax_rect_shaded(
-			buf, color, shader, x, y, width, height,
-			uvs->x0, uvs->y0, uvs->x1, uvs->y1,
-			uvs->x2, uvs->y2, uvs->x3, uvs->y3
-		);
+		#ifdef PAX_COMPILE_MCR
+		if (pax_do_multicore) {
+			float shape[4] = {
+				x, y, width, height
+			};
+			pax_task_t task = {
+				.type      = PAX_TASK_RECT,
+				.color     = color,
+				.shader    = shader,
+				.quad_uvs  = uvs,
+				.shape     = shape,
+				.shape_len = 4
+			};
+			paxmcr_add_task(&task);
+			paxmcr_rect_shaded(
+				false,
+				buf, color, shader, x, y, width, height,
+				uvs->x0, uvs->y0, uvs->x1, uvs->y1,
+				uvs->x2, uvs->y2, uvs->x3, uvs->y3
+			);
+		} else
+		#endif
+		{
+			pax_rect_shaded(
+				buf, color, shader, x, y, width, height,
+				uvs->x0, uvs->y0, uvs->x1, uvs->y1,
+				uvs->x2, uvs->y2, uvs->x3, uvs->y3
+			);
+		}
 	} else {
 		// We still need triangles.
 		pax_shade_tri(buf, color, shader, &uv0, x, y, x + width, y, x + width, y + height);
@@ -782,7 +905,7 @@ void pax_shade_rect(pax_buf_t *buf, pax_col_t color, pax_shader_t *shader,
 // Draw a triangle with a shader.
 // If uvs is NULL, a default will be used (0,0; 1,0; 0,1).
 void pax_shade_tri(pax_buf_t *buf, pax_col_t color, pax_shader_t *shader,
-		pax_tri_t *_uvs, float x0, float y0, float x1, float y1, float x2, float y2) {
+		pax_tri_t *uvs, float x0, float y0, float x1, float y1, float x2, float y2) {
 	if (!shader) {
 		// If shader is NULL, simplify this.
 		pax_draw_tri(buf, color, x0, y0, x1, y1, x2, y2);
@@ -800,29 +923,26 @@ void pax_shade_tri(pax_buf_t *buf, pax_col_t color, pax_shader_t *shader,
 		return;
 	}
 	
-	pax_tri_t uvs;
-	if (!_uvs) {
-		uvs = (pax_tri_t) {
+	if (!uvs) {
+		uvs = &(pax_tri_t) {
 			.x0 = 0, .y0 = 0,
 			.x1 = 1, .y1 = 0,
 			.x2 = 0, .y2 = 1
 		};
-	} else {
-		uvs = *_uvs;
 	}
 	
 	// Sort points by height.
 	if (y1 < y0) {
 		PAX_SWAP_POINTS(x0, y0, x1, y1);
-		PAX_SWAP_POINTS(uvs.x0, uvs.y0, uvs.x1, uvs.y1);
+		PAX_SWAP_POINTS(uvs->x0, uvs->y0, uvs->x1, uvs->y1);
 	}
 	if (y2 < y0) {
 		PAX_SWAP_POINTS(x0, y0, x2, y2);
-		PAX_SWAP_POINTS(uvs.x0, uvs.y0, uvs.x2, uvs.y2);
+		PAX_SWAP_POINTS(uvs->x0, uvs->y0, uvs->x2, uvs->y2);
 	}
 	if (y2 < y1) {
 		PAX_SWAP_POINTS(x1, y1, x2, y2);
-		PAX_SWAP_POINTS(uvs.x1, uvs.y1, uvs.x2, uvs.y2);
+		PAX_SWAP_POINTS(uvs->x1, uvs->y1, uvs->x2, uvs->y2);
 	}
 	
 	if (y2 == y0 || (x2 == x0 && x1 == x0)) {
@@ -838,10 +958,34 @@ void pax_shade_tri(pax_buf_t *buf, pax_col_t color, pax_shader_t *shader,
 	pax_mark_dirty1(buf, x1 + 0.5, y1 + 0.5);
 	pax_mark_dirty1(buf, x2 + 0.5, y2 + 0.5);
 	
-	pax_tri_shaded(buf, color, shader,
-		x0, y0, x1, y1, x2, y2,
-		uvs.x0, uvs.y0, uvs.x1, uvs.y1, uvs.x2, uvs.y2
-	);
+	#ifdef PAX_COMPILE_MCR
+	if (pax_do_multicore) {
+		float shape[6] = {
+			x0, y0, x1, y1, x2, y2
+		};
+		pax_task_t task = {
+			.type      = PAX_TASK_TRI,
+			.color     = color,
+			.shader    = shader,
+			.tri_uvs   = &uvs,
+			.shape     = shape,
+			.shape_len = 6
+		};
+		paxmcr_add_task(&task);
+		paxmcr_tri_shaded(
+			false, buf, color, shader,
+			x0, y0, x1, y1, x2, y2,
+			uvs->x0, uvs->y0, uvs->x1, uvs->y1, uvs->x2, uvs->y2
+		);
+	} else
+	#endif
+	{
+		pax_tri_shaded(
+			buf, color, shader,
+			x0, y0, x1, y1, x2, y2,
+			uvs->x0, uvs->y0, uvs->x1, uvs->y1, uvs->x2, uvs->y2
+		);
+	}
 	
 	PAX_SUCCESS();
 }
@@ -1062,6 +1206,7 @@ void pax_draw_text(pax_buf_t *buf, pax_col_t color, pax_font_t *font, float font
 			y += h;
 			if (c == '\r' && next == '\n') i++;
 		} else {
+			pax_join();
 			args.glyph = pax_is_visible_char(c) ? c : 1;
 			pax_shade_rect(buf, color, &shader, NULL, x, y, w, h);
 			x += w;
@@ -1112,6 +1257,10 @@ pax_vec1_t pax_text_size(pax_font_t *font, float font_size, char *text) {
 // Fill the background.
 void pax_background(pax_buf_t *buf, pax_col_t color) {
 	PAX_BUF_CHECK("pax_background");
+	
+	#ifdef PAX_COMPILE_MCR
+	pax_join();
+	#endif
 	
 	uint32_t value;
 	if (PAX_IS_PALETTE(buf->type)) {
@@ -1177,7 +1326,25 @@ void pax_simple_rect(pax_buf_t *buf, pax_col_t color, float x, float y, float wi
 	}
 	
 	pax_mark_dirty2(buf, x - 0.5, y - 0.5, width + 1, height + 1);
-	pax_rect_unshaded(buf, color, x, y, width, height);
+	#ifdef PAX_COMPILE_MCR
+	if (pax_do_multicore) {
+		float shape[4] = {
+			x, y, width, height
+		};
+		pax_task_t task = {
+			.type      = PAX_TASK_RECT,
+			.color     = color,
+			.shader    = NULL,
+			.shape     = shape,
+			.shape_len = 4
+		};
+		paxmcr_add_task(&task);
+		paxmcr_rect_unshaded(false, buf, color, x, y, width, height);
+	} else
+	#endif
+	{
+		pax_rect_unshaded(buf, color, x, y, width, height);
+	}
 	
 	PAX_SUCCESS();
 }
@@ -1233,6 +1400,9 @@ void pax_simple_line(pax_buf_t *buf, pax_col_t color, float x0, float y0, float 
 	
 	pax_mark_dirty1(buf, x0, y0);
 	pax_mark_dirty1(buf, x1, y1);
+	#ifdef PAX_COMPILE_MCR
+	pax_join();
+	#endif
 	pax_line_unshaded(buf, color, x0, y0, x1, y1);
 	
 	// This label is used if there's no need to try to draw a line.
@@ -1267,7 +1437,25 @@ void pax_simple_tri(pax_buf_t *buf, pax_col_t color, float x0, float y0, float x
 	pax_mark_dirty1(buf, x0 + 0.5, y0 + 0.5);
 	pax_mark_dirty1(buf, x1 + 0.5, y1 + 0.5);
 	pax_mark_dirty1(buf, x2 + 0.5, y2 + 0.5);
-	pax_tri_unshaded(buf, color, x0, y0, x1, y1, x2, y2);
+	#ifdef PAX_COMPILE_MCR
+	if (pax_do_multicore) {
+		float shape[6] = {
+			x0, y0, x1, y1, x2, y2
+		};
+		pax_task_t task = {
+			.type      = PAX_TASK_TRI,
+			.color     = color,
+			.shader    = NULL,
+			.shape     = shape,
+			.shape_len = 6
+		};
+		paxmcr_add_task(&task);
+		paxmcr_tri_unshaded(false, buf, color, x0, y0, x1, y1, x2, y2);
+	} else
+	#endif
+	{
+		pax_tri_unshaded(buf, color, x0, y0, x1, y1, x2, y2);
+	}
 	
 	PAX_SUCCESS();
 }
