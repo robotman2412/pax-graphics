@@ -40,6 +40,8 @@ bool                 pax_do_multicore = false;
 #ifdef PAX_COMPILE_MCR
 // Whether or not the multicore task is currently busy.
 static bool          multicore_busy   = false;
+// The task handle for the main core.
+static TaskHandle_t  main_handle      = NULL;
 // The task handle for the other core.
 static TaskHandle_t  multicore_handle = NULL;
 // The render queue for the other core.
@@ -287,24 +289,24 @@ void pax_debug(pax_buf_t *buf) {
 // The scheduler for multicore rendering.
 static void paxmcr_add_task(pax_task_t *task) {
 	// Create a copy.
-	pax_task_t copy = *task;
+	pax_task_t copy    = *task;
 	
 	// Of the shape,
-	copy.shape   = malloc(copy.shape_len * sizeof(float));
-	memcpy(copy.shape_len, task->shape, copy.shape_len * sizeof(float));
+	copy.shape         = malloc(copy.shape_len * sizeof(float));
+	memcpy(copy.shape, task->shape, copy.shape_len * sizeof(float));
 	
 	// The shader,
 	if (copy.shader) {
-		copy.shader  = malloc(sizeof(pax_shader_t));
-		*copy.shader = *task->shader;
+		copy.shader    = malloc(sizeof(pax_shader_t));
+		*copy.shader   = *task->shader;
 	}
 	
 	// And the UVs.
 	if (copy.type == PAX_TASK_TRI && copy.tri_uvs) {
-		copy.tri_uvs = malloc(sizeof(pax_tri_t));
-		*copy.tri_uvs = *task->tri_uvs;
+		copy.tri_uvs   = malloc(sizeof(pax_tri_t));
+		*copy.tri_uvs  = *task->tri_uvs;
 	} else if (copy.type == PAX_TASK_RECT && copy.quad_uvs) {
-		copy.quad_uvs = malloc(sizeof(pax_quad_t));
+		copy.quad_uvs  = malloc(sizeof(pax_quad_t));
 		*copy.quad_uvs = *task->quad_uvs;
 	}
 	
@@ -322,22 +324,68 @@ static void pax_multicore_task_function(void *args) {
 	ESP_LOGI(TAG, "MCR worker started.");
 	
 	multicore_busy = false;
-	pax_task_t current_task;
+	pax_task_t tsk;
 	while (pax_do_multicore) {
 		// Wait for a task.
 		if (uxQueueMessagesWaiting(queue_handle)) {
 			multicore_busy = true;
-			while (xQueueReceive(queue_handle, &current_task, 0)) {
-				// TODO: lamol
+			while (xQueueReceive(queue_handle, &tsk, 0)) {
+				// TODO: Sanity check on tasks?
+				// Now, we actually DRAW.
+				if (tsk.shader) {
+					if (tsk.type == PAX_TASK_RECT) {
+						paxmcr_rect_shaded(
+							true, tsk.buffer,
+							tsk.color, tsk.shader,
+							tsk.shape[0], tsk.shape[1],
+							tsk.shape[2], tsk.shape[3],
+							tsk.quad_uvs->x0, tsk.quad_uvs->y0,
+							tsk.quad_uvs->x1, tsk.quad_uvs->y1,
+							tsk.quad_uvs->x2, tsk.quad_uvs->y2,
+							tsk.quad_uvs->x3, tsk.quad_uvs->y3
+						);
+					} else if (tsk.type == PAX_TASK_TRI) {
+						paxmcr_tri_shaded(
+							true, tsk.buffer,
+							tsk.color, tsk.shader,
+							tsk.shape[0], tsk.shape[1],
+							tsk.shape[2], tsk.shape[3],
+							tsk.shape[4], tsk.shape[5],
+							tsk.tri_uvs->x0, tsk.tri_uvs->y0,
+							tsk.tri_uvs->x1, tsk.tri_uvs->y1,
+							tsk.tri_uvs->x2, tsk.tri_uvs->y2
+						);
+					}
+				} else {
+					if (tsk.type == PAX_TASK_RECT) {
+						paxmcr_rect_unshaded(
+							true, tsk.buffer,
+							tsk.color,
+							tsk.shape[0], tsk.shape[1],
+							tsk.shape[2], tsk.shape[3]
+						);
+					} else if (tsk.type == PAX_TASK_TRI) {
+						paxmcr_tri_unshaded(
+							true, tsk.buffer,
+							tsk.color,
+							tsk.shape[0], tsk.shape[1],
+							tsk.shape[2], tsk.shape[3],
+							tsk.shape[4], tsk.shape[5]
+						);
+					}
+				}
 				
 				// Free up our memories.
-				free(current_task.shape);
-				if (current_task.shader)
-					free(current_task.shader);
-				if (current_task.tri_uvs)
-					free(current_task.tri_uvs);
+				free(tsk.shape);
+				if (tsk.shader)
+					free(tsk.shader);
+				if (tsk.tri_uvs)
+					free(tsk.tri_uvs);
 			}
+			// We're done with drawing.
 			multicore_busy = false;
+			// Wake the main task.
+			vTaskResume(main_handle);
 		} else {
 			// There's nothing else to do.
 			taskYIELD();
@@ -355,7 +403,7 @@ void pax_join() {
 	#ifdef PAX_COMPILE_MCR
 	while (multicore_handle && (uxQueueMessagesWaiting(queue_handle) || multicore_busy)) {
 		// Wait for the other core.
-		vTaskDelay(1 / portTICK_PERIOD_MS);
+		taskYIELD();
 	}
 	#endif
 }
@@ -368,9 +416,12 @@ void pax_enable_multicore(int core) {
 		return;
 	}
 	
+	// Figure out who we are so the worker can wake us up.
+	main_handle = xTaskGetCurrentTaskHandle();
+	
 	// Create a queue for the rendering tasks.
 	if (!queue_handle) {
-		queue_handle = xQueueCreate(30, sizeof(pax_task_t));
+		queue_handle = xQueueCreate(PAX_QUEUE_SIZE, sizeof(pax_task_t));
 		if (!queue_handle) {
 			ESP_LOGE(TAG, "Failed to enable MCR: Queue creation error.");
 		}
@@ -402,8 +453,13 @@ void pax_disable_multicore() {
 		return;
 	}
 	pax_do_multicore = false;
+	
 	// The task, realising multicore is now disabled, will end itself when finished.
 	pax_join();
+	
+	vQueueDelete(queue_handle);
+	queue_handle = NULL;
+	
 	multicore_handle = NULL;
 	#else
 	ESP_LOGE(TAG, "No need to disable MCR: MCR not compiled, please define PAX_COMPILE_MCR.");
@@ -872,6 +928,7 @@ void pax_shade_rect(pax_buf_t *buf, pax_col_t color, pax_shader_t *shader,
 				x, y, width, height
 			};
 			pax_task_t task = {
+				.buffer    = buf,
 				.type      = PAX_TASK_RECT,
 				.color     = color,
 				.shader    = shader,
@@ -964,10 +1021,11 @@ void pax_shade_tri(pax_buf_t *buf, pax_col_t color, pax_shader_t *shader,
 			x0, y0, x1, y1, x2, y2
 		};
 		pax_task_t task = {
+			.buffer    = buf,
 			.type      = PAX_TASK_TRI,
 			.color     = color,
 			.shader    = shader,
-			.tri_uvs   = &uvs,
+			.tri_uvs   = uvs,
 			.shape     = shape,
 			.shape_len = 6
 		};
@@ -1212,6 +1270,7 @@ void pax_draw_text(pax_buf_t *buf, pax_col_t color, pax_font_t *font, float font
 			x += w;
 		}
 	}
+	pax_join();
 	
 	PAX_SUCCESS();
 }
@@ -1332,6 +1391,7 @@ void pax_simple_rect(pax_buf_t *buf, pax_col_t color, float x, float y, float wi
 			x, y, width, height
 		};
 		pax_task_t task = {
+			.buffer    = buf,
 			.type      = PAX_TASK_RECT,
 			.color     = color,
 			.shader    = NULL,
@@ -1443,6 +1503,7 @@ void pax_simple_tri(pax_buf_t *buf, pax_col_t color, float x0, float y0, float x
 			x0, y0, x1, y1, x2, y2
 		};
 		pax_task_t task = {
+			.buffer    = buf,
 			.type      = PAX_TASK_TRI,
 			.color     = color,
 			.shader    = NULL,

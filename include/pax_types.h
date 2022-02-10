@@ -231,6 +231,8 @@ enum pax_task_type {
 // If you change the shader object's content (AKA the value that args points to),
 // You should ran pax_join before making the change.
 struct pax_task {
+	// The buffer to apply this task to.
+	pax_buf_t      *buffer;
 	// The type of thing to do.
 	pax_task_type_t type;
 	// Color to use.

@@ -12,4 +12,7 @@
 // Compile in multi-core rendering.
 #define PAX_COMPILE_MCR
 
+// Queue size to use for multi-core rendering.
+#define PAX_QUEUE_SIZE 30
+
 #endif //PAX_CONFIG_H

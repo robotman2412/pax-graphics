@@ -328,6 +328,7 @@ static void paxmcr_rect_shaded1(bool odd_scanline, pax_buf_t *buf, pax_col_t col
 	int _y = y + 0.5;
 	if ((_y & 1) != odd_scanline) {
 		_y ++;
+		v += v0_v1_dv;
 	}
 	
 	// Pixel time.
@@ -434,6 +435,10 @@ static void paxmcr_rect_shaded(bool odd_scanline, pax_buf_t *buf, pax_col_t colo
 	int _y = y + 0.5;
 	if ((_y & 1) != odd_scanline) {
 		_y ++;
+		u_a += u0_u3_du;
+		v_a += v0_v3_dv;
+		u_b += u1_u2_du;
+		v_b += v1_v2_dv;
 	}
 	
 	// Pixel time.
