@@ -43,6 +43,7 @@ struct pax_font {
 	uint8_t *glyphs_uni;
 	uint8_t  glyphs_uni_w;
 	uint8_t  glyphs_uni_h;
+	uint16_t default_size;
 };
 
 #define PAX_BITMAP_UNI 0
@@ -55,7 +56,8 @@ struct pax_font {
 	.type = PAX_BITMAP_UNI,\
 	.glyphs_uni = arrname,\
 	.glyphs_uni_w = w,\
-	.glyphs_uni_h = h\
+	.glyphs_uni_h = h,\
+	.default_size = h\
 }
 
 /* ============ INDEX ============ */
