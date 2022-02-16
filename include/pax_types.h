@@ -72,10 +72,38 @@ struct pax_vec4;
 struct pax_rect;
 union  matrix_2d;
 struct matrix_stack_2d;
-enum   pax_buf_type;
+enum   pax_buf_type {
+	PAX_BUF_1_PAL       = 0x20000001,
+	PAX_BUF_2_PAL       = 0x20000002,
+	PAX_BUF_4_PAL       = 0x20000004,
+	PAX_BUF_8_PAL       = 0x20000008,
+	PAX_BUF_16_PAL      = 0x20000008,
+	
+	PAX_BUF_1_GREY      = 0x10000001,
+	PAX_BUF_2_GREY      = 0x10000202,
+	PAX_BUF_4_GREY      = 0x10000004,
+	PAX_BUF_8_GREY      = 0x10000008,
+	
+	PAX_BUF_8_332RGB    = 0x00033208,
+	PAX_BUF_16_565RGB   = 0x00056510,
+	
+	PAX_BUF_4_1111ARGB  = 0x00111104,
+	PAX_BUF_8_2222ARGB  = 0x00444408,
+	PAX_BUF_16_4444ARGB = 0x00444410,
+	PAX_BUF_32_8888ARGB = 0x00888820
+};
+
 struct pax_buf;
 struct pax_shader;
-enum   pax_task_type;
+// Type of task to do.
+// Things like text and arcs will decompose to rects and triangles.
+enum   pax_task_type {
+	// Rectangle draw.
+	PAX_TASK_RECT,
+	// Triangle draw.
+	PAX_TASK_TRI
+};
+
 struct pax_task;
 
 typedef struct pax_vec1        pax_vec1_t;
@@ -141,27 +169,6 @@ struct matrix_stack_2d {
 	matrix_2d_t        value;
 };
 
-enum pax_buf_type {
-	PAX_BUF_1_PAL       = 0x20000001,
-	PAX_BUF_2_PAL       = 0x20000002,
-	PAX_BUF_4_PAL       = 0x20000004,
-	PAX_BUF_8_PAL       = 0x20000008,
-	PAX_BUF_16_PAL      = 0x20000008,
-	
-	PAX_BUF_1_GREY      = 0x10000001,
-	PAX_BUF_2_GREY      = 0x10000202,
-	PAX_BUF_4_GREY      = 0x10000004,
-	PAX_BUF_8_GREY      = 0x10000008,
-	
-	PAX_BUF_8_332RGB    = 0x00033208,
-	PAX_BUF_16_565RGB   = 0x00056510,
-	
-	PAX_BUF_4_1111ARGB  = 0x00111104,
-	PAX_BUF_8_2222ARGB  = 0x00444408,
-	PAX_BUF_16_4444ARGB = 0x00444410,
-	PAX_BUF_32_8888ARGB = 0x00888820
-};
-
 struct pax_buf {
 	// Buffer type, color modes, etc.
 	pax_buf_type_t    type;
@@ -215,15 +222,6 @@ struct pax_shader {
 	bool              alpha_promise_0;
 	// Whether to promise that an alpha of 255 in tint will return a fully opaque.
 	bool              alpha_promise_255;
-};
-
-// Type of task to do.
-// Things like text and arcs will decompose to rects and triangles.
-enum pax_task_type {
-	// Rectangle draw.
-	PAX_TASK_RECT,
-	// Triangle draw.
-	PAX_TASK_TRI
 };
 
 // A task to perform.

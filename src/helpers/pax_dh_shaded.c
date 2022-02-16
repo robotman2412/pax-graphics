@@ -1,3 +1,26 @@
+/*
+	MIT License
+
+	Copyright (c) 2022 Julian Scheffers
+
+	Permission is hereby granted, free of charge, to any person obtaining a copy
+	of this software and associated documentation files (the "Software"), to deal
+	in the Software without restriction, including without limitation the rights
+	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+	copies of the Software, and to permit persons to whom the Software is
+	furnished to do so, subject to the following conditions:
+
+	The above copyright notice and this permission notice shall be included in all
+	copies or substantial portions of the Software.
+
+	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+	SOFTWARE.
+*/
 
 #ifndef PAX_GFX_C
 #error "This file should not be compiled on it's own."
@@ -9,7 +32,7 @@
 
 // Internal method for shaded triangles.
 // Assumes points are sorted by Y.
-static void paxmcr_tri_shaded(bool odd_scanline, pax_buf_t *buf, pax_col_t color, pax_shader_t *shader,
+static void pax_tri_shaded(pax_buf_t *buf, pax_col_t color, pax_shader_t *shader,
 		float x0, float y0, float x1, float y1, float x2, float y2,
 		float u0, float v0, float u1, float v1, float u2, float v2) {
 	
@@ -70,18 +93,7 @@ static void paxmcr_tri_shaded(bool odd_scanline, pax_buf_t *buf, pax_col_t color
 		float v_a = v0 + v0_v1_dv * coeff;
 		float u_b = u0 + u0_u2_du * coeff;
 		float v_b = v0 + v0_v2_dv * coeff;
-		// Snap y to the correct line.
-		int y = y_post_0;
-		if ((y & 1) != odd_scanline) {
-			y ++;
-			x_a += x0_x1_dx;
-			x_b += x0_x2_dx;
-			u_a += u0_u1_du;
-			v_a += v0_v1_dv;
-			u_b += u0_u2_du;
-			v_b += v0_v2_dv;
-		}
-		for (; y < (int) y_post_1; y += 2) {
+		for (int y = y_post_0; y < (int) y_post_1; y++) {
 			// Plot the horizontal line.
 			float x_left, x_right;
 			float u_left, u_right;
@@ -132,12 +144,12 @@ static void paxmcr_tri_shaded(bool odd_scanline, pax_buf_t *buf, pax_col_t color
 				v += dv;
 			}
 			// Move X.
-			x_a += 2*x0_x1_dx;
-			x_b += 2*x0_x2_dx;
-			u_a += 2*u0_u1_du;
-			v_a += 2*v0_v1_dv;
-			u_b += 2*u0_u2_du;
-			v_b += 2*v0_v2_dv;
+			x_a += x0_x1_dx;
+			x_b += x0_x2_dx;
+			u_a += u0_u1_du;
+			v_a += v0_v1_dv;
+			u_b += u0_u2_du;
+			v_b += v0_v2_dv;
 		}
 	}
 	// Draw bottom half.
@@ -153,18 +165,7 @@ static void paxmcr_tri_shaded(bool odd_scanline, pax_buf_t *buf, pax_col_t color
 		float v_a = v1 + v1_v2_dv * coeff1;
 		float u_b = u0 + u0_u2_du * coeff0;
 		float v_b = v0 + v0_v2_dv * coeff0;
-		// Snap y to the correct line.
-		int y = y_post_1;
-		if ((y & 1) != odd_scanline) {
-			y ++;
-			x_a += x1_x2_dx;
-			x_b += x0_x2_dx;
-			u_a += u1_u2_du;
-			v_a += v1_v2_dv;
-			u_b += u0_u2_du;
-			v_b += v0_v2_dv;
-		}
-		for (; y <= (int) y_pre_2; y += 2) {
+		for (int y = y_post_1; y <= (int) y_pre_2; y++) {
 			// Plot the horizontal line.
 			float x_left, x_right;
 			float u_left, u_right;
@@ -215,18 +216,18 @@ static void paxmcr_tri_shaded(bool odd_scanline, pax_buf_t *buf, pax_col_t color
 				v += dv;
 			}
 			// Move X.
-			x_a += 2*x1_x2_dx;
-			x_b += 2*x0_x2_dx;
-			u_a += 2*u1_u2_du;
-			v_a += 2*v1_v2_dv;
-			u_b += 2*u0_u2_du;
-			v_b += 2*v0_v2_dv;
+			x_a += x1_x2_dx;
+			x_b += x0_x2_dx;
+			u_a += u1_u2_du;
+			v_a += v1_v2_dv;
+			u_b += u0_u2_du;
+			v_b += v0_v2_dv;
 		}
 	}
 }
 
 // Optimisation which maps a buffer directly onto another.
-static void paxmcr_overlay_buffer(bool odd_scanline, pax_buf_t *base, pax_buf_t *top, int x, int y, int width, int height) {
+static void pax_overlay_buffer(pax_buf_t *base, pax_buf_t *top, int x, int y, int width, int height) {
 	int tex_x = 0, tex_y = 0;
 	
 	// Perform clipping.
@@ -247,14 +248,8 @@ static void paxmcr_overlay_buffer(bool odd_scanline, pax_buf_t *base, pax_buf_t 
 		height = base->clip.y + base->clip.h - 0.5 - y;
 	}
 	
-	// Fix Y co-ordinates.
-	if ((y & 1) != odd_scanline) {
-		y ++;
-		tex_y ++;
-	}
-	
 	// Now, let us MAP.
-	for (int _y = odd_scanline; _y < height; _y++) {
+	for (int _y = 0; _y < height; _y++) {
 		for (int _x = 0; _x < width; _x++) {
 			pax_col_t col = pax_get_pixel(top, tex_x, tex_y);
 			pax_merge_pixel(base, col, x, y);
@@ -263,13 +258,13 @@ static void paxmcr_overlay_buffer(bool odd_scanline, pax_buf_t *base, pax_buf_t 
 		}
 		tex_x -= width;
 		x -= width;
-		tex_y += 2;
-		y += 2;
+		tex_y ++;
+		y ++;
 	}
 }
 
 // Optimisation which makes more assumptions about UVs.
-static void paxmcr_rect_shaded1(bool odd_scanline, pax_buf_t *buf, pax_col_t color, pax_shader_t *shader,
+static void pax_rect_shaded1(pax_buf_t *buf, pax_col_t color, pax_shader_t *shader,
 		float x, float y, float width, float height, float u0, float v0, float u1, float v1) {
 	
 	if (color < 0x01000000 && shader->alpha_promise_0) {
@@ -324,28 +319,21 @@ static void paxmcr_rect_shaded1(bool odd_scanline, pax_buf_t *buf, pax_col_t col
 	
 	float v = v0;
 	
-	// Snap _y to the correct line.
-	int _y = y + 0.5;
-	if ((_y & 1) != odd_scanline) {
-		_y ++;
-		v += v0_v1_dv;
-	}
-	
 	// Pixel time.
-	for (; _y < y + height + 0.5; _y += 2) {
+	for (int _y = y + 0.5; _y < y + height + 0.5; _y ++) {
 		float u = u0;
 		for (int _x = x + 0.5; _x < x + width + 0.5; _x ++) {
 			pax_col_t result = (shader->callback)(color, _x, _y, u, v, shader->callback_args);
 			setter(buf, result, _x, _y);
 			u += u0_u1_du;
 		}
-		v += 2*v0_v1_dv;
+		v += v0_v1_dv;
 	}
 	
 }
 
 // Internal method for shaded rects.
-static void paxmcr_rect_shaded(bool odd_scanline, pax_buf_t *buf, pax_col_t color, pax_shader_t *shader,
+static void pax_rect_shaded(pax_buf_t *buf, pax_col_t color, pax_shader_t *shader,
 		float x, float y, float width, float height,
 		float u0, float v0, float u1, float v1, float u2, float v2, float u3, float v3) {
 	
@@ -354,11 +342,11 @@ static void paxmcr_rect_shaded(bool odd_scanline, pax_buf_t *buf, pax_col_t colo
 	if (shader->callback == pax_shader_texture && color == 0xffffffff) {
 		pax_buf_t *top = (pax_buf_t *) shader->callback_args;
 		if (is_default_uv && (int) (width + 0.5) == top->width && (int) (height + 0.5) == top->height) {
-			paxmcr_overlay_buffer(odd_scanline, buf, top, x + 0.5, y + 0.5, width + 0.5, height + 0.5);
+			pax_overlay_buffer(buf, top, x + 0.5, y + 0.5, width + 0.5, height + 0.5);
 			return;
 		}
 	} else if (is_default_uv || (v0 == v1 && v2 == v3 && u0 == u3 && u1 == u2)) {
-		paxmcr_rect_shaded1(odd_scanline, buf, color, shader, x, y, width, height, u0, v0, u2, v2);
+		pax_rect_shaded1(buf, color, shader, x, y, width, height, u0, v0, u2, v2);
 		return;
 	}
 	
@@ -431,18 +419,8 @@ static void paxmcr_rect_shaded(bool odd_scanline, pax_buf_t *buf, pax_col_t colo
 	float u_a = u0, v_a = v0;
 	float u_b = u1, v_b = v1;
 	
-	// Snap _y to the correct line.
-	int _y = y + 0.5;
-	if ((_y & 1) != odd_scanline) {
-		_y ++;
-		u_a += u0_u3_du;
-		v_a += v0_v3_dv;
-		u_b += u1_u2_du;
-		v_b += v1_v2_dv;
-	}
-	
 	// Pixel time.
-	for (; _y < y + height + 0.5; _y += 2) {
+	for (int _y = y + 0.5; _y < y + height + 0.5; _y ++) {
 		float ua_ub_du = (u_b - u_a) / width;
 		float va_vb_dv = (v_b - v_a) / width;
 		float u = u_a, v = v_a;
@@ -452,10 +430,10 @@ static void paxmcr_rect_shaded(bool odd_scanline, pax_buf_t *buf, pax_col_t colo
 			u += ua_ub_du;
 			v += va_vb_dv;
 		}
-		u_a += 2*u0_u3_du;
-		v_a += 2*v0_v3_dv;
-		u_b += 2*u1_u2_du;
-		v_b += 2*v1_v2_dv;
+		u_a += u0_u3_du;
+		v_a += v0_v3_dv;
+		u_b += u1_u2_du;
+		v_b += v1_v2_dv;
 	}
 	
 }

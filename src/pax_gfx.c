@@ -28,9 +28,12 @@
 #include <malloc.h>
 #include <string.h>
 #include <math.h>
+
+#ifdef PAX_COMPILE_MCR
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <freertos/queue.h>
+#endif
 
 // The last error reported.
 pax_err_t            pax_last_error   = PAX_OK;
@@ -238,20 +241,6 @@ static inline float pax_flerp4(float x, float y, float e0, float e1, float e2, f
 }
 
 
-/* ======= DRAWING HELPERS ======= */
-
-#define PAX_GFX_C
-
-// Single-core rendering.
-#include "drawing_helpers/pax_dh_unshaded.c"
-#include "drawing_helpers/pax_dh_shaded.c"
-
-// Multi-core rendering.
-#ifdef PAX_COMPILE_MCR
-#include "drawing_helpers/pax_dh_mcr_unshaded.c"
-#include "drawing_helpers/pax_dh_mcr_shaded.c"
-#endif
-
 /* ============ DEBUG ============ */
 
 // Describe error.
@@ -282,190 +271,22 @@ void pax_debug(pax_buf_t *buf) {
 }
 
 
+/* ======= DRAWING HELPERS ======= */
 
-/* ===== MULTI-CORE RENDERING ==== */
+#define PAX_GFX_C
 
+// Single-core rendering.
+#include "helpers/pax_dh_unshaded.c"
+#include "helpers/pax_dh_shaded.c"
+
+// Multi-core rendering.
 #ifdef PAX_COMPILE_MCR
-// The scheduler for multicore rendering.
-static void paxmcr_add_task(pax_task_t *task) {
-	// Create a copy.
-	pax_task_t copy    = *task;
-	
-	// Of the shape,
-	copy.shape         = malloc(copy.shape_len * sizeof(float));
-	memcpy(copy.shape, task->shape, copy.shape_len * sizeof(float));
-	
-	// The shader,
-	if (copy.shader) {
-		copy.shader    = malloc(sizeof(pax_shader_t));
-		*copy.shader   = *task->shader;
-	}
-	
-	// And the UVs.
-	if (copy.type == PAX_TASK_TRI && copy.tri_uvs) {
-		copy.tri_uvs   = malloc(sizeof(pax_tri_t));
-		*copy.tri_uvs  = *task->tri_uvs;
-	} else if (copy.type == PAX_TASK_RECT && copy.quad_uvs) {
-		copy.quad_uvs  = malloc(sizeof(pax_quad_t));
-		*copy.quad_uvs = *task->quad_uvs;
-	}
-	
-	// Snedt it.
-	if (xQueueSend(queue_handle, &copy, pdMS_TO_TICKS(100)) != pdTRUE) {
-		ESP_LOGE(TAG, "No space in queue after 100ms!");
-		ESP_LOGW(TAG, "Reverting to disabling MCR.");
-		pax_disable_multicore();
-	}
-}
-
-// The actual task for multicore rendering.
-static void pax_multicore_task_function(void *args) {
-	const char *TAG = "pax-mcr-worker";
-	ESP_LOGI(TAG, "MCR worker started.");
-	
-	multicore_busy = false;
-	pax_task_t tsk;
-	while (pax_do_multicore) {
-		// Wait for a task.
-		if (uxQueueMessagesWaiting(queue_handle)) {
-			multicore_busy = true;
-			while (xQueueReceive(queue_handle, &tsk, 0)) {
-				// TODO: Sanity check on tasks?
-				// Now, we actually DRAW.
-				if (tsk.shader) {
-					if (tsk.type == PAX_TASK_RECT) {
-						paxmcr_rect_shaded(
-							true, tsk.buffer,
-							tsk.color, tsk.shader,
-							tsk.shape[0], tsk.shape[1],
-							tsk.shape[2], tsk.shape[3],
-							tsk.quad_uvs->x0, tsk.quad_uvs->y0,
-							tsk.quad_uvs->x1, tsk.quad_uvs->y1,
-							tsk.quad_uvs->x2, tsk.quad_uvs->y2,
-							tsk.quad_uvs->x3, tsk.quad_uvs->y3
-						);
-					} else if (tsk.type == PAX_TASK_TRI) {
-						paxmcr_tri_shaded(
-							true, tsk.buffer,
-							tsk.color, tsk.shader,
-							tsk.shape[0], tsk.shape[1],
-							tsk.shape[2], tsk.shape[3],
-							tsk.shape[4], tsk.shape[5],
-							tsk.tri_uvs->x0, tsk.tri_uvs->y0,
-							tsk.tri_uvs->x1, tsk.tri_uvs->y1,
-							tsk.tri_uvs->x2, tsk.tri_uvs->y2
-						);
-					}
-				} else {
-					if (tsk.type == PAX_TASK_RECT) {
-						paxmcr_rect_unshaded(
-							true, tsk.buffer,
-							tsk.color,
-							tsk.shape[0], tsk.shape[1],
-							tsk.shape[2], tsk.shape[3]
-						);
-					} else if (tsk.type == PAX_TASK_TRI) {
-						paxmcr_tri_unshaded(
-							true, tsk.buffer,
-							tsk.color,
-							tsk.shape[0], tsk.shape[1],
-							tsk.shape[2], tsk.shape[3],
-							tsk.shape[4], tsk.shape[5]
-						);
-					}
-				}
-				
-				// Free up our memories.
-				free(tsk.shape);
-				if (tsk.shader)
-					free(tsk.shader);
-				if (tsk.tri_uvs)
-					free(tsk.tri_uvs);
-			}
-			// We're done with drawing.
-			multicore_busy = false;
-			// Wake the main task.
-			vTaskResume(main_handle);
-		} else {
-			// There's nothing else to do.
-			taskYIELD();
-		}
-	}
-	
-	ESP_LOGI(TAG, "MCR worker stopped.");
-	multicore_handle = NULL;
-	vTaskDelete(NULL);
-}
+#include "helpers/pax_dh_mcr_unshaded.c"
+#include "helpers/pax_dh_mcr_shaded.c"
 #endif
 
-// If multi-core rendering is enabled, wait for the other core.
-void pax_join() {
-	#ifdef PAX_COMPILE_MCR
-	while (multicore_handle && (uxQueueMessagesWaiting(queue_handle) || multicore_busy)) {
-		// Wait for the other core.
-		taskYIELD();
-	}
-	#endif
-}
-
-// Enable multi-core rendering.
-void pax_enable_multicore(int core) {
-	#ifdef PAX_COMPILE_MCR
-	if (pax_do_multicore) {
-		ESP_LOGW(TAG, "No need to enable MCR: MCR was already enabled.");
-		return;
-	}
-	
-	// Figure out who we are so the worker can wake us up.
-	main_handle = xTaskGetCurrentTaskHandle();
-	
-	// Create a queue for the rendering tasks.
-	if (!queue_handle) {
-		queue_handle = xQueueCreate(PAX_QUEUE_SIZE, sizeof(pax_task_t));
-		if (!queue_handle) {
-			ESP_LOGE(TAG, "Failed to enable MCR: Queue creation error.");
-		}
-	}
-	
-	// Create a task to do said rendering.
-	int result = xTaskCreatePinnedToCore(
-		pax_multicore_task_function,
-		"pax_mcr_worker", 2048, NULL, 2,
-		&multicore_handle, core
-	);
-	if (result != pdPASS) {
-		multicore_handle = NULL;
-		ESP_LOGE(TAG, "Failed to enable MCR: Task creation error %s (%x).", esp_err_to_name(result), result);
-	} else {
-		pax_do_multicore = true;
-		ESP_LOGI(TAG, "Successfully enabled MCR.");
-	}
-	#else
-	ESP_LOGE(TAG, "Failed to enable MCR: MCR not compiled, please define PAX_COMPILE_MCR.");
-	#endif
-}
-
-// Disable multi-core rendering.
-void pax_disable_multicore() {
-	#ifdef PAX_COMPILE_MCR
-	if (!pax_do_multicore) {
-		ESP_LOGW(TAG, "No need to disable MCR: MCR was not enabled.");
-		return;
-	}
-	pax_do_multicore = false;
-	
-	// The task, realising multicore is now disabled, will end itself when finished.
-	pax_join();
-	
-	vQueueDelete(queue_handle);
-	queue_handle = NULL;
-	
-	multicore_handle = NULL;
-	#else
-	ESP_LOGE(TAG, "No need to disable MCR: MCR not compiled, please define PAX_COMPILE_MCR.");
-	#endif
-}
-
+// Always included because of API dependencies.
+#include "helpers/pax_mcr.c"
 
 
 /* ============ BUFFER =========== */
@@ -752,84 +573,6 @@ pax_col_t pax_col_tint(pax_col_t col, pax_col_t tint) {
 		 | (pax_lerp(tint >>  8, 0, col >>  8) <<  8)
 		 |  pax_lerp(tint,       0, col);
 }
-
-
-/* ============ MATRIX =========== */
-
-// 2D rotation matrix: represents a 2D shearing.
-matrix_2d_t matrix_2d_rotate(float angle) {
-	float _cos = cosf(-angle);
-	float _sin = sinf(-angle);
-	return (matrix_2d_t) { .arr = {
-		_cos, -_sin, 0,
-		_sin,  _cos, 0
-	}};
-}
-
-// 2D matrix: applies the transformation that b represents on to a.
-matrix_2d_t matrix_2d_multiply(matrix_2d_t a, matrix_2d_t b) {
-	// [a b c] [p q r] [ap+bs aq+bt ar+bu+c]
-	// [d e f]*[s t u]=[dp+es dq+et dr+eu+f]
-	// [0 0 1] [0 0 1] [0     0     1      ]
-	return (matrix_2d_t) { .arr = {
-		a.a0*b.a0 + a.a1*b.b0,   a.a0*b.a1 + a.a1*b.b1,  a.a0*b.a2 + a.a1*b.b2 + a.a2,
-		a.b0*b.a0 + a.b1*b.b0,   a.b0*b.a1 + a.b1*b.b1,  a.b0*b.a2 + a.b1*b.b2 + a.b2
-	}};
-}
-
-// 2D matrix: applies the transformation that a represents on to a point.
-void matrix_2d_transform(matrix_2d_t a, float *x, float *y) {
-	// [a b c] [x]  [a]  [b] [c] [ax+by+c]
-	// [d e f]*[y]=x[d]+y[e]+[f]=[dx+ey+f]
-	// [0 0 1] [1]  [0]  [0] [1] [1      ]
-	float _x = *x, _y = *y;
-	*x = a.a0*_x + a.a1*_y + a.a2;
-	*y = a.b0*_x + a.b1*_y + a.b2;
-}
-
-// Apply the given matrix to the stack.
-void pax_apply_2d(pax_buf_t *buf, matrix_2d_t a) {
-	PAX_BUF_CHECK("pax_apply_2d");
-	buf->stack_2d.value = matrix_2d_multiply(buf->stack_2d.value, a);
-	PAX_SUCCESS();
-}
-
-// Push the current matrix up the stack.
-void pax_push_2d(pax_buf_t *buf) {
-	PAX_BUF_CHECK("pax_push_2d");
-	matrix_stack_2d_t *parent = malloc(sizeof(matrix_stack_2d_t));
-	if (!parent) PAX_ERROR("pax_push_2d", PAX_ERR_NOMEM);
-	*parent = buf->stack_2d;
-	buf->stack_2d.parent = parent;
-	PAX_SUCCESS();
-}
-
-// Pop the top matrix off the stack.
-void pax_pop_2d(pax_buf_t *buf) {
-	PAX_BUF_CHECK("pax_pop_2d");
-	matrix_stack_2d_t *parent = buf->stack_2d.parent;
-	if (!parent) PAX_ERROR("pax_pop_2d", PAX_ERR_UNDERFLOW);
-	buf->stack_2d = *parent;
-	free(parent);
-	PAX_SUCCESS();
-}
-
-// Reset the matrix stack.
-// If full is true, the entire stack gets cleared.
-// Else, only the top element gets cleared.
-void pax_reset_2d(pax_buf_t *buf, bool full) {
-	if (full) {
-		matrix_stack_2d_t *current = buf->stack_2d.parent;
-		while (current) {
-			matrix_stack_2d_t *next = current->parent;
-			free(current);
-			current = next;
-		}
-		buf->stack_2d.parent = NULL;
-	}
-	buf->stack_2d.value = matrix_2d_identity();
-}
-
 
 
 /* ======== DRAWING: PIXEL ======= */
