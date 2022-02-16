@@ -241,6 +241,7 @@ static inline float pax_flerp4(float x, float y, float e0, float e1, float e2, f
 }
 
 
+
 /* ============ DEBUG ============ */
 
 // Describe error.
@@ -271,6 +272,7 @@ void pax_debug(pax_buf_t *buf) {
 }
 
 
+
 /* ======= DRAWING HELPERS ======= */
 
 #define PAX_GFX_C
@@ -287,6 +289,7 @@ void pax_debug(pax_buf_t *buf) {
 
 // Always included because of API dependencies.
 #include "helpers/pax_mcr.c"
+
 
 
 /* ============ BUFFER =========== */
@@ -573,6 +576,7 @@ pax_col_t pax_col_tint(pax_col_t col, pax_col_t tint) {
 		 | (pax_lerp(tint >>  8, 0, col >>  8) <<  8)
 		 |  pax_lerp(tint,       0, col);
 }
+
 
 
 /* ======== DRAWING: PIXEL ======= */
