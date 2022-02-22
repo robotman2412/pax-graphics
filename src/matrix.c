@@ -58,6 +58,16 @@ void matrix_2d_transform(matrix_2d_t a, float *x, float *y) {
 	*y = a.b0*_x + a.b1*_y + a.b2;
 }
 
+// 2D vector: unifies a given vector (it's magnitude will be 1).
+// Does not work for vectors with all zero.
+pax_vec1_t vec1_unify(pax_vec1_t vec) {
+	float magnitude = sqrtf(vec.x*vec.x + vec.y*vec.y);
+	return (pax_vec1_t) {
+		.x = vec.x / magnitude,
+		.y = vec.y / magnitude
+	};
+}
+
 // Apply the given matrix to the stack.
 void pax_apply_2d(pax_buf_t *buf, matrix_2d_t a) {
 	PAX_BUF_CHECK("pax_apply_2d");

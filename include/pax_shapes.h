@@ -35,17 +35,47 @@ extern "C" {
 
 // Convert a cubic bezier curve to line segments, with the given number of points.
 // From and to range from 0 to 1, but any value is accepted.
-void pax_vectorise_bezier_part(pax_vec1_t **output, pax_vec4_t control_points, size_t max_points, float from, float to);
-
+void pax_vectorise_bezier_part(pax_vec1_t *output, size_t num_points, pax_vec4_t control_points, float from, float to);
 // Convert a cubic bezier curve to line segments, with the given number of points.
-void pax_vectorise_bezier    (pax_vec1_t **output, pax_vec4_t control_points, size_t max_points);
-
+void pax_vectorise_bezier     (pax_vec1_t *output, size_t num_points, pax_vec4_t control_points);
 // Draw a cubic bezier curve.
 // From and to range from 0 to 1, but any value is accepted.
-void pax_draw_bezier_part    (pax_buf_t *buf, pax_col_t color, pax_vec4_t control_points, float from, float to);
-
+void pax_draw_bezier_part     (pax_buf_t *buf, pax_col_t color, pax_vec4_t control_points, float from, float to);
 // Draw a cubic bezier curve.
-void pax_draw_bezier         (pax_buf_t *buf, pax_col_t color, pax_vec4_t control_points);
+void pax_draw_bezier          (pax_buf_t *buf, pax_col_t color, pax_vec4_t control_points);
+
+/* ============= ARCS ============ */
+
+// Vectorise an arc outline, angle in radians.
+void pax_vectorise_arc        (pax_vec1_t *output, size_t num_points, float x, float y, float r, float a0, float a1);
+// Vectorise a circle outline.
+void pax_vectorise_circle     (pax_vec1_t *output, size_t num_points, float x, float y, float r);
+
+/* =========== OUTLINES ========== */
+
+// Draw an arc outline, angle in radians.
+void pax_outline_arc          (pax_buf_t *buf, pax_col_t color, float x, float y, float r, float a0, float a1);
+// Draw a circle outline.
+void pax_outline_circle       (pax_buf_t *buf, pax_col_t color, float x, float y, float r);
+// Partially outline a shape defined by a list of points.
+// From and to range from 0 to 1, outside this range is ignored.
+// Does not close the shape: this must be done manually.
+void pax_outline_shape_part   (pax_buf_t *buf, pax_col_t color, size_t num_points, pax_vec1_t *points, float from, float to);
+// Outline a shape defined by a list of points.
+// Does not close the shape: this must be done manually.
+void pax_outline_shape        (pax_buf_t *buf, pax_col_t color, size_t num_points, pax_vec1_t *points);
+
+/* ======== TRIANGULATION ======== */
+
+// Triangulates a shape based on an outline.
+// In effect, this creates triangles which completely fill the shape.
+// Closes the shape: no need to have the last point overlap the first.
+// Stores triangles as triple-index pairs in output, which is a dynamically allocated size_t array.
+// Returns the number of triangles created.
+size_t pax_triangulate_shape    (size_t **output, size_t num_points, pax_vec1_t *points);
+// Draw a shape based on an outline.
+// Closes the shape: no need to have the last point overlap the first.
+void pax_draw_shape           (pax_buf_t *buf, pax_col_t color, size_t num_points, pax_vec1_t *points);
 
 #ifdef __cplusplus
 }

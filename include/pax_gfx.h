@@ -132,6 +132,10 @@ matrix_2d_t matrix_2d_multiply    (matrix_2d_t a, matrix_2d_t b);
 // 2D matrix: applies the transformation that a represents on to a point.
 void        matrix_2d_transform   (matrix_2d_t a, float *x, float *y);
 
+// 2D vector: unifies a given vector (it's magnitude will be 1).
+// Does not work for vectors with all zero.
+pax_vec1_t  vec1_unify            (pax_vec1_t vec);
+
 // Apply the given matrix to the stack.
 void        pax_apply_2d          (pax_buf_t *buf, matrix_2d_t a);
 // Push the current matrix up the stack.

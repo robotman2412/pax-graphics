@@ -838,7 +838,7 @@ void pax_shade_arc(pax_buf_t *buf, pax_col_t color, pax_shader_t *shader,
 	float _sin = sinf(div_angle);
 	float _cos = cosf(div_angle);
 	
-	// Start with a unit vector matrix according to a0.
+	// Start with a unit vector according to a0.
 	float x0 = cosf(a0);
 	float y0 = sinf(a0);
 	
@@ -943,7 +943,7 @@ void pax_draw_arc(pax_buf_t *buf, pax_col_t color, float x,  float y,  float r, 
 	float _sin = sinf(div_angle);
 	float _cos = cosf(div_angle);
 	
-	// Start with a unit vector matrix according to a0.
+	// Start with a unit vector according to a0.
 	float x0 = cosf(a0);
 	float y0 = sinf(a0);
 	
@@ -1295,7 +1295,7 @@ void pax_simple_arc(pax_buf_t *buf, pax_col_t color, float x, float y, float r, 
 	float _sin = sinf(div_angle);
 	float _cos = cosf(div_angle);
 	
-	// Start with a unit vector matrix according to a0.
+	// Start with a unit vector according to a0.
 	float x0 = cosf(a0);
 	float y0 = sinf(a0);
 	
