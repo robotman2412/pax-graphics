@@ -157,23 +157,29 @@ static void pax_rect_unshaded(pax_buf_t *buf, pax_col_t color,
 
 // Internal method for line drawing.
 static void pax_line_unshaded(pax_buf_t *buf, pax_col_t color, float x0, float y0, float x1, float y1) {
+	if (color < 0x01000000) {
+		PAX_SUCCESS();
+		return;
+	}
+	pax_setter_t setter = color >= 0xff000000 ? pax_set_pixel : pax_merge_pixel;
+	
 	// Determine whether the line is "steep" (dx*dx > dy*dy).
 	float dx = x1 - x0;
 	float dy = y1 - y0;
-	bool is_steep = fabs(dx) < fabs(dy);
+	bool is_steep = fabsf(dx) < fabsf(dy);
 	int nIter;
 	
 	// Determine the number of iterations.
-	if (is_steep) nIter = fabs(dy) + 0.5;
-	else nIter = fabs(dx) + 0.5;
+	nIter = ceilf(fabsf(is_steep ? dy : dx));
 	if (nIter < 1) nIter = 1;
 	
 	// Adjust dx and dy.
 	dx /= nIter;
 	dy /= nIter;
-	float x = x0, y = y0;
+	float x = x0;
+	float y = y0;
 	for (int i = 0; i <= nIter; i++) {
-		pax_merge_pixel(buf, color, x + 0.5, y + 0.5);
+		setter(buf, color, x, y);
 		x += dx;
 		y += dy;
 	}

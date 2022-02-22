@@ -29,8 +29,11 @@
 #include <stddef.h>
 #include <stdbool.h>
 
-// Tell PAX to immediately report errors instead of just setting pax_last_error.
+// Log errors instead of just setting pax_last_error.
 #define PAX_AUTOREPORT
+
+// Compile in bezier curves.
+#define PAX_COMPILE_BEZIER
 
 // Compile in multi-core rendering.
 #define PAX_COMPILE_MCR

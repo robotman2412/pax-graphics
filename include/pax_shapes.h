@@ -30,16 +30,22 @@ extern "C" {
 #endif //__cplusplus
 
 #include "pax_types.h"
-#include "pax_gfx.h"
 
 /* ============ CURVES =========== */
 
-// Convert a cubic bezier curve to line segments.
-// Returns the number of segments created.
-size_t pax_vectorise_bezier(pax_vec1_t **output, pax_vec4_t control_points, size_t max_points);
+// Convert a cubic bezier curve to line segments, with the given number of points.
+// From and to range from 0 to 1, but any value is accepted.
+void pax_vectorise_bezier_part(pax_vec1_t **output, pax_vec4_t control_points, size_t max_points, float from, float to);
+
+// Convert a cubic bezier curve to line segments, with the given number of points.
+void pax_vectorise_bezier    (pax_vec1_t **output, pax_vec4_t control_points, size_t max_points);
 
 // Draw a cubic bezier curve.
-void   pax_draw_bezier     (pax_buf_t *buf, pax_col_t color, pax_vec4_t control_points);
+// From and to range from 0 to 1, but any value is accepted.
+void pax_draw_bezier_part    (pax_buf_t *buf, pax_col_t color, pax_vec4_t control_points, float from, float to);
+
+// Draw a cubic bezier curve.
+void pax_draw_bezier         (pax_buf_t *buf, pax_col_t color, pax_vec4_t control_points);
 
 #ifdef __cplusplus
 }

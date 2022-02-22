@@ -40,25 +40,27 @@ extern "C" {
 /* ========= ERROR DEFS ========== */
 
 // Unknown error.
-#define PAX_ERR_UNKNOWN    1
+#define PAX_ERR_UNKNOWN      1
 // All is good.
-#define PAX_OK             0
+#define PAX_OK               0
 // Buffer pointer is null.
-#define PAX_ERR_NOBUF     -1
+#define PAX_ERR_NOBUF       -1
 // Out of memory.
-#define PAX_ERR_NOMEM     -2
+#define PAX_ERR_NOMEM       -2
 // Invalid parameters.
-#define PAX_ERR_PARAM     -3
+#define PAX_ERR_PARAM       -3
 // Infinite parameters.
-#define PAX_ERR_INF       -4
+#define PAX_ERR_INF         -4
 // Out of bounds parameters.
-#define PAX_ERR_BOUNDS    -5
+#define PAX_ERR_BOUNDS      -5
 // Matrix stack underflow.
-#define PAX_ERR_UNDERFLOW -6
+#define PAX_ERR_UNDERFLOW   -6
 // Out of data.
-#define PAX_ERR_NODATA    -7
+#define PAX_ERR_NODATA      -7
 // Image decoding error.
-#define PAX_ERR_DECODE    -8
+#define PAX_ERR_DECODE      -8
+// Unsupported operation (or not compiled in).
+#define PAX_ERR_UNSUPPORTED -9
 
 /* ============ TYPES ============ */
 
