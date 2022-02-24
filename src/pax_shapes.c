@@ -24,11 +24,23 @@
 
 #include "pax_shapes.h"
 #include "pax_internal.h"
+#include <string.h>
+#include <malloc.h>
+
+// This is only applicable during shape triangulation.
+typedef struct indexed_point {
+	union {
+		struct {
+			float  x, y;
+		};
+		pax_vec1_t vector;
+	};
+	size_t         index;
+} indexed_point_t;
 
 // This is only applicable during bezier vectorisation.
 typedef struct bezier_point {
-	float x,  y;
-	// float dx, dy;
+	float x, y;
 	float part;
 } bezier_point_t;
 
@@ -269,7 +281,7 @@ void pax_vectorise_arc(pax_vec1_t *ptr, size_t n_div, float x, float y, float r,
 	}
 	
 	// Get the sine and cosine of one division, used for rotation in the loop.
-	float div_angle = (a1 - a0) / n_div;
+	float div_angle = (a1 - a0) / (n_div - 1);
 	float _sin = sinf(div_angle);
 	float _cos = cosf(div_angle);
 	
@@ -442,28 +454,140 @@ void pax_outline_shape(pax_buf_t *buf, pax_col_t color, size_t num_points, pax_v
 	for (size_t i = 0; i < num_points - 1; i++) {
 		pax_draw_line(buf, color, points[i].x, points[i].y, points[i + 1].x, points[i + 1].y);
 	}
+	pax_draw_line(buf, color, points[0].x, points[0].y, points[num_points - 1].x, points[num_points - 1].y);
 }
 
 
 
 /* ======== TRIANGULATION ======== */
 
-// Triangulates a shape based on an outline.
+// Determine whether the points go clockwise or counter-clockwise.
+// Does not work for less then 3 points.
+static bool is_clockwise(int num_points, indexed_point_t *points, int index, int num_test, float dy) {
+	float result = 0;
+	// Simple but not optimisflflflfl loop.
+	for (int i = index; i < num_test + index; i++) {
+		int index0 = i+index;
+		int index1 = i+index+1;
+		index0 %= num_points;
+		index1 %= num_points;
+		result += (points[index1].x - points[index0].x) * (points[index1].y + points[index0].y + dy);
+	}
+	// Clockwise if result < 0.
+	return result < 0;
+}
+
+static bool is_clockwise3(int num_points, indexed_point_t *points, int index) {
+	// COPY NOW!
+	indexed_point_t test[3];
+	for (int i = 0; i < 3; i++) {
+		test[i] = points[(i+index)%num_points];
+	}
+	// DERIVE!
+	float rc0 = (test[1].x - test[0].x) / (test[1].y - test[0].y);
+	float rc1 = (test[2].x - test[1].x) / (test[2].y - test[1].y);
+	// COMPARE!
+	if (rc0 == rc1) return true;
+	// X DIRECTION!
+	bool dir0 = test[1].x > test[0].x;
+	bool dir1 = test[2].x > test[1].x;
+	
+	// FUCK!
+	if (dir0 == dir1) {
+		return (rc0 > rc1) ^ !dir0;
+	} else {
+		return (points[0].y > points[2].y) ^ dir1;
+	}
+}
+
+// Triangulates a shape based on an outline (any shape).
 // In effect, this creates triangles which completely fill the shape.
 // Closes the shape: no need to have the last point overlap the first.
+//
+// Capable of dealing with self-intersecting shapes:
+// Returns a set of additional points, positioned at every intersection.
+// These points are to be treated as concatenated to the original points array.
+//
 // Stores triangles as triple-index pairs in output, which is a dynamically allocated size_t array.
-// Returns the number of triangles created.
-// TODO: Remove the assumption that the points do not create overlapping lines.
-size_t pax_triangulate_shape(size_t **output, size_t num_points, pax_vec1_t *points) {
+// The number of triangles created is num_points - 2.
+size_t pax_triang_complete(size_t **output, pax_vec1_t **additional_points, size_t num_points, pax_vec1_t *points) {
+	return 0;
+}
+
+// Triangulates a shape based on an outline (concave, non self-intersecting only).
+// In effect, this creates triangles which completely fill the shape.
+// Closes the shape: no need to have the last point overlap the first.
+// Assumes the shape does not intersect itself.
+//
+// Stores triangles as triple-index pairs in output, which is a dynamically allocated size_t array.
+// The number of triangles created is num_points - 2.
+void pax_triang_concave(size_t **output, size_t num_points, pax_vec1_t *raw_points) {
 	// Cannot triangulate with less than 3 points.
 	if (num_points < 3) {
 		*output = NULL;
 		return 0;
 	}
+	
+	// Find an annoying variable.
+	float dy = 0;
+	// Create another handy dandy points array which includes their original index.
+	indexed_point_t *points = malloc(sizeof(indexed_point_t) * num_points);
+	for (size_t i = 0; i < num_points; i++) {
+		points[i] = (indexed_point_t) {
+			.vector = raw_points[i],
+			.index  = i
+		};
+		dy = fmaxf(dy, -points[i].y);
+	}
+	// The annoy extendsm.
+	dy *= 2;
+	dy += 2;
+	
 	// The number of triangles is always 2 less than the number of points.
-	size_t n_tris = num_points - 2;
+	size_t n_tris    = num_points - 2;
+	int    tri_index = 0;
+	size_t *tris     = malloc(sizeof(size_t) * n_tris * 3);
+	if (!tris) {
+		PAX_ERROR("pax_triangulate_shape", PAX_ERR_NOMEM);
+	}
+	// Find the funny ordering.
+	bool clockwise = is_clockwise(num_points, points, 0, num_points, dy);
 	
+	ESP_LOGE(TAG, "Shape clockwise: %d", clockwise);
 	
+	// LOCATE all EARS conTINUousLY.
+	for (size_t i = 0; i < n_tris; i++) {
+		ESP_LOGW(TAG, "Tri %zd", i);
+		// LOOK for an EAR.
+		for (size_t i = 0; i < num_points; i++) {
+			// bool attempt = is_clockwise3(num_points, points, i);
+			bool attempt = is_clockwise(num_points, points, i, 3, dy);
+			ESP_LOGI(TAG, "Attempt %zd: %d", i, attempt);
+			bool is_ear = clockwise == attempt;
+			if (is_ear) {
+				// We found an EAR, now we CONVERT IT.
+				tris[tri_index] = points[ i    % num_points].index;
+				tri_index ++;
+				tris[tri_index] = points[(i+1) % num_points].index;
+				tri_index ++;
+				tris[tri_index] = points[(i+2) % num_points].index;
+				tri_index ++;
+				
+				// REMOVE the ear's CENTER POINT.
+				int remove = (i+1) % num_points;
+				int post   = num_points - remove - 1;
+				// By means of MEMCPY.
+				memcpy(&points[remove], &points[remove + 1], sizeof(indexed_point_t) * post);
+				num_points --;
+				// Now, we CONTINUE FINIDIGN ERA.
+				ESP_LOGI(TAG, "Success!");
+				break;
+			}
+		}
+	}
+	
+	// AtThisPoint,,,   wearedone.
+	*output = tris;
 }
 
 // Draw a shape based on an outline.
@@ -471,18 +595,25 @@ size_t pax_triangulate_shape(size_t **output, size_t num_points, pax_vec1_t *poi
 void pax_draw_shape(pax_buf_t *buf, pax_col_t color, size_t num_points, pax_vec1_t *points) {
 	// Simply outsource the triangulation.
 	size_t *tris   = NULL;
-	size_t  n_tris = pax_triangulate_shape(tris, num_points, points);
-	if (!tris || !n_tris) {
+	size_t  n_tris = num_points - 2;
+	pax_triang_concave(&tris, num_points, points);
+	ESP_LOGE(TAG, "DRAWING %zd", n_tris);
+	if (!tris) {
 		return;
 	}
 	// Then draw all triangles.
-	for (size_t i = 0, tri_index = 0; i < n_tris; i++, tri_index += 3) {
-		pax_draw_tri(
-			buf, color,
+	for (size_t i = 0, tri_index = 0; i < n_tris; i++) {
+		ESP_LOGE(TAG, "FUCK YOU\n%10.5f %10.5f;  %10.5f %10.5f;  %10.5f %10.5f",
 			points[tris[tri_index  ]].x, points[tris[tri_index  ]].y,
 			points[tris[tri_index+1]].x, points[tris[tri_index+1]].y,
-			points[tris[tri_index+2]].x, points[tris[tri_index+2]].y,
+			points[tris[tri_index+2]].x, points[tris[tri_index+2]].y);
+		pax_draw_tri(
+			buf, color, //pax_col_hsv(i / (float) n_tris * 255.0f / 3.0f, 255, 255),
+			points[tris[tri_index  ]].x, points[tris[tri_index  ]].y,
+			points[tris[tri_index+1]].x, points[tris[tri_index+1]].y,
+			points[tris[tri_index+2]].x, points[tris[tri_index+2]].y
 		);
+		tri_index += 3;
 	}
 	// And free el triangles.
 	free(tris);

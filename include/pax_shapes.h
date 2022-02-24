@@ -67,12 +67,26 @@ void pax_outline_shape        (pax_buf_t *buf, pax_col_t color, size_t num_point
 
 /* ======== TRIANGULATION ======== */
 
-// Triangulates a shape based on an outline.
+// Triangulates a shape based on an outline (any shape).
 // In effect, this creates triangles which completely fill the shape.
 // Closes the shape: no need to have the last point overlap the first.
+//
+// Capable of dealing with self-intersecting shapes:
+// Returns a set of additional points, positioned at every intersection.
+// These points are to be treated as concatenated to the original points array.
+//
 // Stores triangles as triple-index pairs in output, which is a dynamically allocated size_t array.
-// Returns the number of triangles created.
-size_t pax_triangulate_shape    (size_t **output, size_t num_points, pax_vec1_t *points);
+// The number of triangles created is num_points - 2.
+// Returns the number of additional points created.
+size_t pax_triang_complete(size_t **output, pax_vec1_t **additional_points, size_t num_points, pax_vec1_t *points);
+// Triangulates a shape based on an outline (concave, non self-intersecting only).
+// In effect, this creates triangles which completely fill the shape.
+// Closes the shape: no need to have the last point overlap the first.
+// Assumes the shape does not intersect itself.
+//
+// Stores triangles as triple-index pairs in output, which is a dynamically allocated size_t array.
+// The number of triangles created is num_points - 2.
+void pax_triang_concave       (size_t **output, size_t num_points, pax_vec1_t *points);
 // Draw a shape based on an outline.
 // Closes the shape: no need to have the last point overlap the first.
 void pax_draw_shape           (pax_buf_t *buf, pax_col_t color, size_t num_points, pax_vec1_t *points);
