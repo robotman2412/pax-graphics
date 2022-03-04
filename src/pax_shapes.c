@@ -201,7 +201,7 @@ void pax_draw_bezier_part(pax_buf_t *buf, pax_col_t color, pax_vec4_t control_po
 #else
 	// Draw the curve in a more simple manner.
 	bezier_point_t last_point = pax_calc_bezier(from, control_points);
-	float delta = (to - from) / n_points;
+	float delta = (to - from) / (n_points - 2);
 	float part  = from;
 	for (size_t i = 0; i < n_points - 1; i++) {
 		bezier_point_t point = pax_calc_bezier(part, control_points);
