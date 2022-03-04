@@ -596,7 +596,7 @@ void pax_merge_pixel(pax_buf_t *buf, pax_col_t color, int x, int y) {
 			pax_set_pixel_u(buf, color, x, y);
 	} else if (color >= 0xff000000) {
 		pax_set_pixel_u(buf, pax_col2buf(buf, color), x, y);
-	} else {
+	} else if (color & 0xff000000) {
 		pax_col_t base = pax_buf2col(buf, pax_get_pixel_u(buf, x, y));
 		pax_set_pixel_u(buf, pax_col2buf(buf, pax_col_merge(base, color)), x, y);
 	}
