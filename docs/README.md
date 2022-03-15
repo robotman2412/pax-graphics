@@ -344,7 +344,7 @@ Clipping redefines the rectangle in which you can draw.
 
 To apply clipping, use [`pax_clip`](drawing.md#clipping):
 ```c
-// Apply clipping. Automatically fixed negative width and/or height.
+// Apply clipping. Automatically fixes negative width and/or height.
 pax_clip(&buffer, x, y, width, height);
 ```
 
