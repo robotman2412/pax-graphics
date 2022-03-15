@@ -29,3 +29,4 @@ All colors are measured in 0-255 integers.
 | :------   | :---          | :---               | :---
 | pax_col_t | pax_col_lerp  | uint8_t part, pax_col_t from, pax_col_t to | Performs a linear interpolation (fade) between two colors.
 | pax_col_t | pax_col_merge | pax_col_t base, pax_col_t top              | Overlays top over base, specified by alpha channels.
+| pax_col_t | pax_col_tint  | pax_col_t col, pax_col_t tint              | Tints col by tint, commonly used for textures.

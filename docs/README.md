@@ -196,6 +196,7 @@ The API is split into a few groups:
 - [Basic drawing](drawing.md)
     - Drawing with basic shapes
     - Drawing text
+    - Drawing images
     - Drawing using shaders
 - [Colors and color math](colors.md)
     - Creating colors
@@ -262,14 +263,16 @@ Finally, there's [functions for merging colors](colors.md#color-merging).
 
 In PAX, you can opt to draw shapes in different ways:
 - [Simple](drawing.md#simple-drawing) (ignoring [transforms](#api-reference-matrix-transformation) and with a color)
-- [Normal](drawing.md#normal-drawing) (with a color)
-- [Shaded](drawing.md#shaded-drawing) (with a shader for some specific look), often used for [texturing](#api-reference-shading) (drawing a shape with an image on it)
+- [Normal](drawing.md#normal-drawing) (with a color or with an image)
+- [Shaded](drawing.md#shaded-drawing) (with a shader for some specific look, for advanced users)
 
 What variant is best for you?
 - You want to draw a simple menu with just some text and basic shapes?
     - Simple (you probably won't need to use transformations, but you could).
-- You want to add an image to a shape or otherwise more complex than a single color?
+- You want to add something more complex than a single color?
     - Shaded (you can even [make your own shader](shaders.md#making-your-own-shader)).
+- You want to draw an image?
+    - Normal.
 - Anything else with just one color per shape?
     - Normal.
 
@@ -290,6 +293,12 @@ Each method here consists of a set of arguments based on the shape:
 | triangle  | `x0, y0, x1, y1, x2, y2`       | all three points that define the triangle
 | circle    | `x, y, radius`                 | midpoint of circle and radius
 | arc       | `x, y, radius, angle0, angle1` | arc from angle0 to angle1 in radians, with midpoint and radius (angles start to the right and go counterclockwise)
+
+You can also draw images:
+| name                 | arguments                          | description
+| :------------------- | :--------------------------------- | :----------
+| pax_draw_image       | image, x, y                        | Draws an image at the image's normal size.
+| pax_draw_image_sized | image, x, y, width, height         | Draw an image with a prespecified size.
 
 ### In case you do use shaders
 

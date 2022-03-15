@@ -36,13 +36,15 @@ Normal drawing draws shapes after applying [transformations](matrices.md).
 It also has only one color for the entire shape.
 
 List of normal drawing methods:
-| name            | arguments                                                            | description
-| :-------------- | :------------------------------------------------------------------- | :----------
-| pax_draw_rect   | pax_buf_t \*buf, pax_col_t color, float x, y, width, height          | Draws a rectangle with the given dimensions.
-| pax_draw_line   | pax_buf_t \*buf, pax_col_t color, float x0, y0, x1, y1               | Draws a line between two points.
-| pax_draw_tri    | pax_buf_t \*buf, pax_col_t color, float x0, y0, x1, y1, x2, y2       | Draws a triangle between three points.
-| pax_draw_arc    | pax_buf_t \*buf, pax_col_t color, float x, y, radius, angle0, angle1 | Draws an arc between two angles, at a given midpoint.
-| pax_draw_circle | pax_buf_t \*buf, pax_col_t color, float x, y, radius                 | Draws a circle at a given midpoint.
+| name                 | arguments                                                            | description
+| :------------------- | :------------------------------------------------------------------- | :----------
+| pax_draw_image       | pax_buf_t \*buf, pax_buf_t *image, float x, y                        | Draws an image at the image's normal size.
+| pax_draw_image_sized | pax_buf_t \*buf, pax_buf_t *image, float x, y, width, height         | Draw an image with a prespecified size.
+| pax_draw_rect        | pax_buf_t \*buf, pax_col_t color, float x, y, width, height          | Draws a rectangle with the given dimensions.
+| pax_draw_line        | pax_buf_t \*buf, pax_col_t color, float x0, y0, x1, y1               | Draws a line between two points.
+| pax_draw_tri         | pax_buf_t \*buf, pax_col_t color, float x0, y0, x1, y1, x2, y2       | Draws a triangle between three points.
+| pax_draw_arc         | pax_buf_t \*buf, pax_col_t color, float x, y, radius, angle0, angle1 | Draws an arc between two angles, at a given midpoint.
+| pax_draw_circle      | pax_buf_t \*buf, pax_col_t color, float x, y, radius                 | Draws a circle at a given midpoint.
 
 # Shaded drawing
 
