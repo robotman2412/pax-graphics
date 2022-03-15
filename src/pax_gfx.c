@@ -1021,10 +1021,10 @@ void pax_draw_text(pax_buf_t *buf, pax_col_t color, pax_font_t *font, float font
 	};
 	// And UVs.
 	pax_quad_t uvs = {
-		.x0 = 0, .y0 = 0,
-		.x1 = w, .y1 = 0,
-		.x2 = w, .y2 = h,
-		.x3 = 0, .y3 = h,
+		.x0 = 0,                  .y0 = 0,
+		.x1 = font->glyphs_uni_w, .y1 = 0,
+		.x2 = font->glyphs_uni_w, .y2 = font->glyphs_uni_h,
+		.x3 = 0,                  .y3 = font->glyphs_uni_h,
 	};
 	
 	for (size_t i = 0; i < len; i ++) {
@@ -1040,11 +1040,12 @@ void pax_draw_text(pax_buf_t *buf, pax_col_t color, pax_font_t *font, float font
 			// Update the glyph.
 			c = pax_is_visible_char(c) ? c : 1;
 			args.glyph = c;
-			args.glyph_y_mul = (w + 7) / 8;
-			size_t glyph_len = args.glyph_y_mul * h;
+			// Precalculate the index so it isn't calculated on every pixel.
+			args.glyph_y_mul = (font->glyphs_uni_w + 7) / 8;
+			size_t glyph_len = args.glyph_y_mul * font->glyphs_uni_h;
 			args.glyph_index = glyph_len * c;
 			// And draw it.
-			pax_shade_rect(buf, color, &shader, NULL, x, y, w, h);
+			pax_shade_rect(buf, color, &shader, &uvs, x, y, w, h);
 			
 			x += w;
 		}
