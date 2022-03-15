@@ -37,7 +37,9 @@ extern "C" {
 
 typedef struct pax_shader_font_bitmap_uni_args {
 	pax_font_t   *font;
-	unsigned char glyph;
+	char          glyph;
+	size_t        glyph_index;
+	size_t        glyph_y_mul;
 } pax_shader_font_bitmap_uni_args_t;
 
 // Texture shader for bitmap fonts.

@@ -637,7 +637,7 @@ pax_col_t pax_get_pixel(pax_buf_t *buf, int x, int y) {
 // Draws an image at the image's normal size.
 void pax_draw_image(pax_buf_t *buf, pax_buf_t *image, float x, float y) {
 	if (!image) PAX_ERROR("pax_draw_image", PAX_ERR_PARAM);
-	pax_draw_image(buf, image, x, y, image->width, image->height);
+	pax_draw_image_sized(buf, image, x, y, image->width, image->height);
 }
 
 // Draw an image with a prespecified size.
@@ -993,10 +993,13 @@ static inline bool pax_is_visible_char(char c) {
 void pax_draw_text(pax_buf_t *buf, pax_col_t color, pax_font_t *font, float font_size, float _x, float _y, char *text) {
 	PAX_BUF_CHECK("pax_draw_text");
 	
+	// Don't bother if it would turn out invisible.
 	if (!text || !*text) return;
 	if (color < 0x01000000) return;
+	// Apply default font.
 	if (!font) font = PAX_FONT_DEFAULT;
 	
+	// Calculate sizes.
 	if (font_size == 0) font_size = font->glyphs_uni_h;
 	float size_mul = font_size / font->glyphs_uni_h;
 	float w = size_mul * font->glyphs_uni_w;
@@ -1006,6 +1009,7 @@ void pax_draw_text(pax_buf_t *buf, pax_col_t color, pax_font_t *font, float font
 	
 	float x = _x, y = _y;
 	
+	// Set up shader.
 	pax_shader_font_bitmap_uni_args_t args = {
 		.font          = font
 	};
@@ -1015,17 +1019,33 @@ void pax_draw_text(pax_buf_t *buf, pax_col_t color, pax_font_t *font, float font
 		.alpha_promise_0   = true,
 		.alpha_promise_255 = false
 	};
+	// And UVs.
+	pax_quad_t uvs = {
+		.x0 = 0, .y0 = 0,
+		.x1 = w, .y1 = 0,
+		.x2 = w, .y2 = h,
+		.x3 = 0, .y3 = h,
+	};
 	
 	for (size_t i = 0; i < len; i ++) {
 		char c = text[i], next = text[i + 1];
 		if (c == '\r' || c == '\n') {
+			// Do newline characters.
 			x = _x;
 			y += h;
 			if (c == '\r' && next == '\n') i++;
 		} else {
+			// Join the other thread because we're about to change the shader.
 			pax_join();
-			args.glyph = pax_is_visible_char(c) ? c : 1;
+			// Update the glyph.
+			c = pax_is_visible_char(c) ? c : 1;
+			args.glyph = c;
+			args.glyph_y_mul = (w + 7) / 8;
+			size_t glyph_len = args.glyph_y_mul * h;
+			args.glyph_index = glyph_len * c;
+			// And draw it.
 			pax_shade_rect(buf, color, &shader, NULL, x, y, w, h);
+			
 			x += w;
 		}
 	}

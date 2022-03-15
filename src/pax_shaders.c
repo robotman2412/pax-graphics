@@ -24,21 +24,25 @@
 
 #include "pax_shaders.h"
 
-pax_col_t pax_shader_font_bitmap_uni(pax_col_t tint, int x, int y, float u, float v, void *_args) {
-    pax_shader_font_bitmap_uni_args_t *args = _args;
-    
+pax_col_t pax_shader_font_bitmap_uni(pax_col_t tint, int x, int y, float u, float v, void *args0) {
+	pax_shader_font_bitmap_uni_args_t *args = args0;
+	
 	if (u < 0)      u = 0;
 	else if (u > 1) u = 1;
 	if (v < 0)      v = 0;
 	else if (v > 1) v = 1;
 	
-    int glyph_x = u * args->font->glyphs_uni_w;
-    int glyph_y = v * args->font->glyphs_uni_h;
-    size_t glyph_y_mul = (args->font->glyphs_uni_w + 7) / 8;
-    size_t glyph_len   = glyph_y_mul * args->font->glyphs_uni_h;
-    size_t glyph_index = glyph_len * args->glyph + glyph_x / 8 + glyph_y_mul * glyph_y;
-    
-    return args->font->glyphs_uni[glyph_index] & (1 << (glyph_x & 7)) ? tint : 0;
+	int glyph_x = u * args->font->glyphs_uni_w;
+	int glyph_y = v * args->font->glyphs_uni_h;
+	size_t glyph_y_mul = (args->font->glyphs_uni_w + 7) / 8;
+	size_t glyph_len   = glyph_y_mul * args->font->glyphs_uni_h;
+	size_t glyph_index = glyph_len * args->glyph + glyph_x / 8 + glyph_y_mul * glyph_y;
+	
+	// int glyph_x = u;
+	// int glyph_y = v;
+	// size_t glyph_index = args->glyph_index + glyph_x / 8 + args->glyph_y_mul * glyph_y;
+	
+	return args->font->glyphs_uni[glyph_index] & (1 << (glyph_x & 7)) ? tint : 0;
 }
 
 pax_col_t pax_shader_texture(pax_col_t tint, int x, int y, float u, float v, void *args) {
