@@ -634,6 +634,17 @@ pax_col_t pax_get_pixel(pax_buf_t *buf, int x, int y) {
 
 /* ========= DRAWING: 2D ========= */
 
+// Draws an image at the image's normal size.
+void pax_draw_image(pax_buf_t *buf, pax_buf_t *image, float x, float y) {
+	if (!image) PAX_ERROR("pax_draw_image", PAX_ERR_PARAM);
+	pax_draw_image(buf, image, x, y, image->width, image->height);
+}
+
+// Draw an image with a prespecified size.
+void pax_draw_image_sized(pax_buf_t *buf, pax_buf_t *image, float x, float y, float width, float height) {
+	pax_shade_rect(buf, -1, &PAX_SHADER_TEXTURE(image), NULL, x, y, width, height);
+}
+
 // Draw a rectangle with a shader.
 // If uvs is NULL, a default will be used (0,0; 1,0; 1,1; 0,1).
 void pax_shade_rect(pax_buf_t *buf, pax_col_t color, pax_shader_t *shader,

@@ -170,6 +170,10 @@ void        pax_shade_arc           (pax_buf_t *buf, pax_col_t color, pax_shader
 // If uvs is NULL, a default will be used (0,0; 1,0; 1,1; 0,1).
 void        pax_shade_circle        (pax_buf_t *buf, pax_col_t color, pax_shader_t *shader, pax_quad_t *uvs, float x,  float y,  float r);
 
+// Draws an image at the image's normal size.
+void        pax_draw_image          (pax_buf_t *buf, pax_buf_t *image, float x, float y);
+// Draw an image with a prespecified size.
+void        pax_draw_image_sized    (pax_buf_t *buf, pax_buf_t *image, float x, float y, float width, float height);
 // Draw a rectangle.
 void        pax_draw_rect           (pax_buf_t *buf, pax_col_t color, float x, float y, float width, float height);
 // Draw a line.
