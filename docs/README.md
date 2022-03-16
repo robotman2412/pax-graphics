@@ -208,6 +208,9 @@ The API is split into a few groups:
     - Using shaders
     - List of shaders
     - Creating shaders
+- [Image codecs](codecs.md)
+    - Decoding PNG images
+    - Requires a [seperate component](https://github.com/robotman2412/pax-codecs)
 
 # API reference
 
