@@ -293,7 +293,7 @@ static void pax_rect_shaded1(pax_buf_t *buf, pax_col_t color, pax_shader_t *shad
 		width += buf->clip.x - x;
 		x = buf->clip.x;
 	}
-	if (x + width > buf->clip.x + buf->clip.w) {
+	if (x + width - 1 > buf->clip.x + buf->clip.w) {
 		float part = (buf->clip.x + buf->clip.w - 1 - x) / width;
 		u1 = u0 + (u1 - u0) * part;
 		
@@ -306,7 +306,7 @@ static void pax_rect_shaded1(pax_buf_t *buf, pax_col_t color, pax_shader_t *shad
 		height += buf->clip.y - y;
 		y = buf->clip.y;
 	}
-	if (y + height > buf->clip.y + buf->clip.h) {
+	if (y + height - 1 > buf->clip.y + buf->clip.h) {
 		float part = (buf->clip.y + buf->clip.h - 1 - y) / height;
 		v1 = v0 + (v1 - v0) * part;
 		
@@ -314,15 +314,15 @@ static void pax_rect_shaded1(pax_buf_t *buf, pax_col_t color, pax_shader_t *shad
 	}
 	
 	// Find UV deltas.
-	float u0_u1_du = (u1 - u0) / width;
-	float v0_v1_dv = (v1 - v0) / height;
+	float u0_u1_du = (u1 - u0) / (width  - 1);
+	float v0_v1_dv = (v1 - v0) / (height - 1);
 	
 	float v = v0;
 	
 	// Pixel time.
-	for (int _y = y + 0.5; _y < y + height + 0.5; _y ++) {
+	for (int _y = y + 0.5; _y < y + height - 0.5; _y ++) {
 		float u = u0;
-		for (int _x = x + 0.5; _x < x + width + 0.5; _x ++) {
+		for (int _x = x + 0.5; _x < x + width - 0.5; _x ++) {
 			pax_col_t result = (shader->callback)(color, _x, _y, u, v, shader->callback_args);
 			setter(buf, result, _x, _y);
 			u += u0_u1_du;
@@ -381,7 +381,7 @@ static void pax_rect_shaded(pax_buf_t *buf, pax_col_t color, pax_shader_t *shade
 		width += buf->clip.x - x;
 		x = buf->clip.x;
 	}
-	if (x + width > buf->clip.x + buf->clip.w) {
+	if (x + width - 1> buf->clip.x + buf->clip.w) {
 		float part = (buf->clip.x + buf->clip.w - 1 - x) / width;
 		u1 = u0 + (u1 - u0) * part;
 		v1 = v0 + (v1 - v0) * part;
@@ -400,7 +400,7 @@ static void pax_rect_shaded(pax_buf_t *buf, pax_col_t color, pax_shader_t *shade
 		height += buf->clip.y - y;
 		y = buf->clip.y;
 	}
-	if (y + height > buf->clip.y + buf->clip.h) {
+	if (y + height - 1> buf->clip.y + buf->clip.h) {
 		float part = (buf->clip.y + buf->clip.h - 1 - y) / height;
 		u3 = u0 + (u3 - u0) * part;
 		v3 = v0 + (v3 - v0) * part;
@@ -411,20 +411,20 @@ static void pax_rect_shaded(pax_buf_t *buf, pax_col_t color, pax_shader_t *shade
 	}
 	
 	// Find UV deltas.
-	float u0_u3_du = (u3 - u0) / height;
-	float v0_v3_dv = (v3 - v0) / height;
-	float u1_u2_du = (u2 - u1) / height;
-	float v1_v2_dv = (v2 - v1) / height;
+	float u0_u3_du = (u3 - u0) / (height - 1);
+	float v0_v3_dv = (v3 - v0) / (height - 1);
+	float u1_u2_du = (u2 - u1) / (height - 1);
+	float v1_v2_dv = (v2 - v1) / (height - 1);
 	
 	float u_a = u0, v_a = v0;
 	float u_b = u1, v_b = v1;
 	
 	// Pixel time.
-	for (int _y = y + 0.5; _y < y + height + 0.5; _y ++) {
-		float ua_ub_du = (u_b - u_a) / width;
-		float va_vb_dv = (v_b - v_a) / width;
+	for (int _y = y + 0.5; _y < y + height - 0.5; _y ++) {
+		float ua_ub_du = (u_b - u_a) / (width - 1);
+		float va_vb_dv = (v_b - v_a) / (width - 1);
 		float u = u_a, v = v_a;
-		for (int _x = x + 0.5; _x < x + width + 0.5; _x ++) {
+		for (int _x = x + 0.5; _x < x + width - 0.5; _x ++) {
 			pax_col_t result = (shader->callback)(color, _x, _y, u, v, shader->callback_args);
 			setter(buf, result, _x, _y);
 			u += ua_ub_du;
