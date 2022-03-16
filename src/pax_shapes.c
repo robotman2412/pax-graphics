@@ -597,7 +597,7 @@ void pax_draw_shape(pax_buf_t *buf, pax_col_t color, size_t num_points, pax_vec1
 	size_t *tris   = NULL;
 	size_t  n_tris = num_points - 2;
 	pax_triang_concave(&tris, num_points, points);
-	ESP_LOGE(TAG, "DRAWING %zd", n_tris);
+	// ESP_LOGE(TAG, "DRAWING %zd", n_tris);
 	if (!tris) {
 		return;
 	}

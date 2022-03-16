@@ -79,7 +79,7 @@ enum   pax_buf_type {
 	PAX_BUF_2_PAL       = 0x20000002,
 	PAX_BUF_4_PAL       = 0x20000004,
 	PAX_BUF_8_PAL       = 0x20000008,
-	PAX_BUF_16_PAL      = 0x20000008,
+	PAX_BUF_16_PAL      = 0x20000010,
 	
 	PAX_BUF_1_GREY      = 0x10000001,
 	PAX_BUF_2_GREY      = 0x10000202,

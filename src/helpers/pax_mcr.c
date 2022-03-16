@@ -27,10 +27,12 @@
 #endif
 
 #include "pax_internal.h"
+#include <esp_timer.h>
 
 
 /* ===== MULTI-CORE RENDERING ==== */
 
+#define PAX_COMPILE_MCR
 #ifdef PAX_COMPILE_MCR
 
 // The scheduler for multicore rendering.
@@ -76,7 +78,7 @@ static void pax_multicore_task_function(void *args) {
 		// Wait for a task.
 		if (uxQueueMessagesWaiting(queue_handle)) {
 			multicore_busy = true;
-			while (xQueueReceive(queue_handle, &tsk, 0)) {
+			while (uxQueueMessagesWaiting(queue_handle) && xQueueReceive(queue_handle, &tsk, pdMS_TO_TICKS(1))) {
 				// TODO: Sanity check on tasks?
 				// Now, we actually DRAW.
 				if (tsk.shader) {
@@ -133,9 +135,10 @@ static void pax_multicore_task_function(void *args) {
 			multicore_busy = false;
 			// Wake the main task.
 			vTaskResume(main_handle);
+			vTaskDelay(pdMS_TO_TICKS(5));
 		} else {
 			// There's nothing else to do.
-			taskYIELD();
+			vTaskDelay(pdMS_TO_TICKS(5));
 		}
 	}
 	
