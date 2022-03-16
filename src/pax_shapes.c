@@ -492,7 +492,7 @@ static bool is_clockwise3(int num_points, indexed_point_t *points, int index) {
 	bool dir0 = test[1].x > test[0].x;
 	bool dir1 = test[2].x > test[1].x;
 	
-	// FUCK!
+	// WHAT?!?
 	if (dir0 == dir1) {
 		return (rc0 > rc1) ^ !dir0;
 	} else {
@@ -603,10 +603,10 @@ void pax_draw_shape(pax_buf_t *buf, pax_col_t color, size_t num_points, pax_vec1
 	}
 	// Then draw all triangles.
 	for (size_t i = 0, tri_index = 0; i < n_tris; i++) {
-		ESP_LOGE(TAG, "FUCK YOU\n%10.5f %10.5f;  %10.5f %10.5f;  %10.5f %10.5f",
-			points[tris[tri_index  ]].x, points[tris[tri_index  ]].y,
-			points[tris[tri_index+1]].x, points[tris[tri_index+1]].y,
-			points[tris[tri_index+2]].x, points[tris[tri_index+2]].y);
+		// ESP_LOGE(TAG, "LOG YOU\n%10.5f %10.5f;  %10.5f %10.5f;  %10.5f %10.5f",
+		// 	points[tris[tri_index  ]].x, points[tris[tri_index  ]].y,
+		// 	points[tris[tri_index+1]].x, points[tris[tri_index+1]].y,
+		// 	points[tris[tri_index+2]].x, points[tris[tri_index+2]].y);
 		pax_draw_tri(
 			buf, color, //pax_col_hsv(i / (float) n_tris * 255.0f / 3.0f, 255, 255),
 			points[tris[tri_index  ]].x, points[tris[tri_index  ]].y,
