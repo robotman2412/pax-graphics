@@ -171,8 +171,8 @@ static void paxmcr_rect_unshaded(bool odd_scanline, pax_buf_t *buf, pax_col_t co
 	}
 	
 	// Pixel time.
-	for (; _y < y + height + 0.5; _y += 2) {
-		for (int _x = x + 0.5; _x < x + width + 0.5; _x ++) {
+	for (; _y <= y + height - 0.5; _y += 2) {
+		for (int _x = x + 0.5; _x <= x + width - 0.5; _x ++) {
 			setter(buf, color, _x, _y);
 		}
 	}

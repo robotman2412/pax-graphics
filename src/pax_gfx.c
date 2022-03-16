@@ -1011,7 +1011,7 @@ void pax_draw_text(pax_buf_t *buf, pax_col_t color, pax_font_t *font, float font
 	
 	// Set up shader.
 	pax_shader_font_bitmap_uni_args_t args = {
-		.font          = font
+		.font              = font
 	};
 	pax_shader_t shader = {
 		.callback          = pax_shader_font_bitmap_uni,

@@ -39,6 +39,6 @@ pax_col_t pax_shader_texture(pax_col_t tint, int x, int y, float u, float v, voi
 		return (u < 0.5) ^ (v >= 0.5) ? 0xffff00ff : 0xff1f1f1f;
 	}
 	pax_buf_t *image = (pax_buf_t *) args;
-	pax_col_t  color = pax_get_pixel(image, u*(image->width), v*(image->height));
+	pax_col_t  color = pax_get_pixel(image, u*image->width, v*image->height);
 	return pax_col_tint(color, tint);
 }
