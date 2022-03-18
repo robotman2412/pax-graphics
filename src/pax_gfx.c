@@ -89,6 +89,7 @@ static inline uint32_t pax_col2buf(pax_buf_t *buf, pax_col_t color) {
 		uint16_t value = ((color >> 8) & 0xf800) | ((color >> 5) & 0x07e0) | ((color >> 3) & 0x001f);
 		return (value >> 8) | ((value << 8) & 0xff00);
 	} else if (buf->type == PAX_BUF_32_8888ARGB) {
+		// Default color format, no conversion.
 		return color;
 	}
 	PAX_ERROR1("pax_col2buf", PAX_ERR_PARAM, 0);
@@ -157,11 +158,17 @@ static inline uint32_t pax_buf2col(pax_buf_t *buf, uint32_t value) {
 		color |= ((value << 3) & 0x00070000) | ((value >> 1) & 0x00000300) | ((value >> 2) & 0x00000007);
 		return color | 0xff000000;
 	} else if (buf->type == PAX_BUF_32_8888ARGB) {
+		// Default color format, no conversion.
 		return value;
 	} else if (PAX_IS_PALETTE(buf->type)) {
 		// Pallette lookup.
-		if (value >= buf->pallette_size) return *buf->pallette;
-		else return buf->pallette[value];
+		if (buf->pallette) {
+			if (value >= buf->pallette_size) return *buf->pallette;
+			else return buf->pallette[value];
+		} else {
+			// TODO: Warn of?
+			return 0xffff00ff;
+		}
 	}
 	PAX_ERROR1("pax_buf2col", PAX_ERR_PARAM, 0);
 }
@@ -306,16 +313,18 @@ void pax_buf_init(pax_buf_t *buf, void *mem, int width, int height, pax_buf_type
 		if (!mem) PAX_ERROR("pax_buf_init", PAX_ERR_NOMEM);
 	}
 	*buf = (pax_buf_t) {
-		.type       = type,
-		.buf        = mem,
-		.width      = width,
-		.height     = height,
-		.bpp        = PAX_GET_BPP(type),
-		.stack_2d   = {
-			.parent = NULL,
-			.value  = matrix_2d_identity()
+		.type        = type,
+		.buf         = mem,
+		.width       = width,
+		.height      = height,
+		.bpp         = PAX_GET_BPP(type),
+		.stack_2d    = {
+			.parent  = NULL,
+			.value   = matrix_2d_identity()
 		},
-		.do_free    = use_alloc
+		.do_free     = use_alloc,
+		.do_free_pal = false,
+		.pallette    = NULL
 	};
 	pax_mark_clean(buf);
 	pax_noclip(buf);
@@ -334,6 +343,9 @@ void pax_buf_destroy(pax_buf_t *buf) {
 	}
 	if (buf->do_free) {
 		free(buf->buf);
+		if (buf->pallette && buf->do_free_pal) {
+			free(buf->pallette);
+		}
 	}
 	buf->buf  = NULL;
 	buf->type = 0;

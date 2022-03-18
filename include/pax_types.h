@@ -99,7 +99,7 @@ struct pax_buf;
 struct pax_shader;
 // Type of task to do.
 // Things like text and arcs will decompose to rects and triangles.
-enum   pax_task_type {
+enum pax_task_type {
 	// Rectangle draw.
 	PAX_TASK_RECT,
 	// Triangle draw.
@@ -176,6 +176,8 @@ struct pax_buf {
 	pax_buf_type_t    type;
 	// Whether to perform free on the buffer on deinit.
 	bool              do_free;
+	// Whether to perform free on the palette on deinit.
+	bool              do_free_pal;
 	// Whether to reverse the endianness of the buffer.
 	bool              reverse_endianness;
 	union {
