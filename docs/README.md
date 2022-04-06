@@ -267,9 +267,12 @@ Finally, there's [functions for merging colors](colors.md#color-merging).
 In PAX, you can opt to draw shapes in different ways:
 - [Simple](drawing.md#simple-drawing) (ignoring [transforms](#api-reference-matrix-transformation) and with a color)
 - [Normal](drawing.md#normal-drawing) (with a color or with an image)
+- [Outline](drawing.md#outlined-drawing) (the outline of a shape)
 - [Shaded](drawing.md#shaded-drawing) (with a shader for some specific look, for advanced users)
 
 What variant is best for you?
+- You want to draw a line of some form around something?
+    - Outline.
 - You want to draw a simple menu with just some text and basic shapes?
     - Simple (you probably won't need to use transformations, but you could).
 - You want to add something more complex than a single color?
@@ -280,13 +283,13 @@ What variant is best for you?
     - Normal.
 
 There are five basic shapes you can draw:
-| shape     | simple              | normal            | with shader
-| :-------- | :------------------ | :---------------- | :----------
-| rectangle | `pax_simple_rect`   | `pax_draw_rect`   | `pax_shade_rect`
-| line      | `pax_simple_line`   | `pax_draw_line`   | Not available.
-| triangle  | `pax_simple_tri`    | `pax_draw_tri`    | `pax_shade_tri`
-| circle    | `pax_simple_circle` | `pax_draw_circle` | `pax_shade_circle`
-| arc       | `pax_simple_arc`    | `pax_draw_arc`    | `pax_shade_arc`
+| shape     | simple              | normal            | outline              | with shader
+| :-------- | :------------------ | :---------------- | :------------------- | :----------
+| rectangle | `pax_simple_rect`   | `pax_draw_rect`   | `pax_outline_rect`   | `pax_shade_rect`
+| line      | `pax_simple_line`   | `pax_draw_line`   | Not available.       | Not available.
+| triangle  | `pax_simple_tri`    | `pax_draw_tri`    | `pax_outline_tri`    | `pax_shade_tri`
+| circle    | `pax_simple_circle` | `pax_draw_circle` | `pax_outline_circle` | `pax_shade_circle`
+| arc       | `pax_simple_arc`    | `pax_draw_arc`    | `pax_outline_arc`    | `pax_shade_arc`
 
 Each method here consists of a set of arguments based on the shape:
 | shape     | arguments                      | description
@@ -316,7 +319,7 @@ UVs are "texture co-ordinates" in the computer graphics world.
 They are floating-point and range from 0 to 1.
 It is up to the shader to turn these into pixel co-ordinates for e.g. adding a texture to a shape.
 
-Note: It is acceptable for a rectangle to have a negative width or height. In this case, the UVs still match but with the negative width and height.
+Note: It is acceptable for a rectangle to have a negative width and/or height.
 
 ## API reference: Text
 
