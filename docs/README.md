@@ -267,7 +267,7 @@ Finally, there's [functions for merging colors](colors.md#color-merging).
 In PAX, you can opt to draw shapes in different ways:
 - [Simple](drawing.md#simple-drawing) (ignoring [transforms](#api-reference-matrix-transformation) and with a color)
 - [Normal](drawing.md#normal-drawing) (with a color or with an image)
-- [Outline](drawing.md#outlined-drawing) (the outline of a shape)
+- [Outline](drawing.md#outline-drawing) (the outline of a shape)
 - [Shaded](drawing.md#shaded-drawing) (with a shader for some specific look, for advanced users)
 
 What variant is best for you?
