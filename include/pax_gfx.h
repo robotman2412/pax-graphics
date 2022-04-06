@@ -31,6 +31,7 @@ extern "C" {
 
 #include "pax_types.h"
 #include "pax_fonts.h"
+#include "pax_shapes.h"
 
 /* ============ DEBUG ============ */
 
