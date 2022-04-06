@@ -314,6 +314,21 @@ void pax_vectorise_circle(pax_vec1_t *output, size_t num_points, float x, float 
 
 /* =========== OUTLINES ========== */
 
+// Draw a rectangle outline.
+void pax_outline_rect(pax_buf_t *buf, pax_col_t color, float x, float y, float width, float height) {
+	pax_draw_line(buf, color, x,             y,              x + width - 1, y);
+	pax_draw_line(buf, color, x,             y + height - 1, x + width - 1, y + height - 1);
+	pax_draw_line(buf, color, x,             y,              x,             y + height - 1);
+	pax_draw_line(buf, color, x + width - 1, y,              x + width - 1, y + height - 1);
+}
+
+// Draw a triangle outline.
+void pax_outline_tri(pax_buf_t *buf, pax_col_t color, float x0, float y0, float x1, float y1, float x2, float y2) {
+	pax_draw_line(buf, color, x0, y0, x1, y1);
+	pax_draw_line(buf, color, x2, y2, x1, y1);
+	pax_draw_line(buf, color, x0, y0, x2, y2);
+}
+
 // Draw an arc outline, angle in radians.
 void pax_outline_arc(pax_buf_t *buf, pax_col_t color, float x, float y, float r, float a0, float a1) {
 	PAX_BUF_CHECK("pax_draw_arc");

@@ -23,7 +23,19 @@
 */
 
 #include "pax_fonts.h"
+#include <strings.h>
 
 pax_font_t pax_fonts_index[PAX_N_FONTS] = {
     PAX_FONT_BITMAP_UNI("7x9", font_bitmap_raw_7x9, 7, 9)
 };
+
+// Finds the built-in font with the given name.
+pax_font_t *pax_get_font(char *name) {
+	for (size_t i = 0; i < PAX_N_FONTS; i++) {
+		if (!strcasecmp(pax_fonts_index[i].name, name)) {
+			return &pax_fonts_index[i];
+		}
+	}
+	return PAX_FONT_DEFAULT;
+}
+
