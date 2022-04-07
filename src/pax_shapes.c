@@ -384,12 +384,12 @@ void pax_outline_circle(pax_buf_t *buf, pax_col_t color, float x, float y, float
 // Does not close the shape: this must be done manually.
 void pax_outline_shape_part(pax_buf_t *buf, pax_col_t color, size_t num_points, pax_vec1_t *points, float from, float to) {
 	// El simplify.
+	if (to < from) {
+		PAX_SWAP(float, to, from);
+	}
 	if (from <= 0 && to >= 1) {
 		pax_outline_shape(buf, color, num_points, points);
 		return;
-	}
-	if (to < from) {
-		PAX_SWAP(float, to, from);
 	}
 	
 	// Calculate total distance.
@@ -469,7 +469,6 @@ void pax_outline_shape(pax_buf_t *buf, pax_col_t color, size_t num_points, pax_v
 	for (size_t i = 0; i < num_points - 1; i++) {
 		pax_draw_line(buf, color, points[i].x, points[i].y, points[i + 1].x, points[i + 1].y);
 	}
-	pax_draw_line(buf, color, points[0].x, points[0].y, points[num_points - 1].x, points[num_points - 1].y);
 }
 
 
