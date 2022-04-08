@@ -331,7 +331,7 @@ void pax_outline_tri(pax_buf_t *buf, pax_col_t color, float x0, float y0, float 
 
 // Draw an arc outline, angle in radians.
 void pax_outline_arc(pax_buf_t *buf, pax_col_t color, float x, float y, float r, float a0, float a1) {
-	PAX_BUF_CHECK("pax_draw_arc");
+	PAX_BUF_CHECK("pax_outline_arc");
 	
 	// Simplify the angles slightly.
 	float a2 = fmodf(a0, M_PI * 2);
