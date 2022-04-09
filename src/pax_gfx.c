@@ -1162,11 +1162,11 @@ void pax_simple_rect(pax_buf_t *buf, pax_col_t color, float x, float y, float wi
 	
 	// Clip rect in inside of buffer.
 	if (x < buf->clip.x) {
-		width += buf->clip.x - x;
+		width -= buf->clip.x - x;
 		x = buf->clip.x;
 	}
 	if (y < buf->clip.y) {
-		height += buf->clip.y - y;
+		height -= buf->clip.y - y;
 		y = buf->clip.y;
 	}
 	if (x + width > buf->clip.x + buf->clip.w) {
@@ -1174,6 +1174,12 @@ void pax_simple_rect(pax_buf_t *buf, pax_col_t color, float x, float y, float wi
 	}
 	if (y + height > buf->clip.y + buf->clip.h) {
 		height = buf->clip.y + buf->clip.h - y;
+	}
+	
+	// Check whether the rect is inside clip at all.
+	if (width < 0 || height < 0 || x > buf->clip.x + buf->clip.w || y > buf->clip.y + buf->clip.h) {
+		PAX_SUCCESS();
+		return;
 	}
 	
 	pax_mark_dirty2(buf, x - 0.5, y - 0.5, width + 1, height + 1);
