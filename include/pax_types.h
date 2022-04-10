@@ -103,7 +103,9 @@ enum pax_task_type {
 	// Rectangle draw.
 	PAX_TASK_RECT,
 	// Triangle draw.
-	PAX_TASK_TRI
+	PAX_TASK_TRI,
+	// Stop MCR workder.
+	PAX_TASK_STOP,
 };
 
 struct pax_task;
