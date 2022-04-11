@@ -32,7 +32,7 @@
 
 // Internal method for shaded triangles.
 // Assumes points are sorted by Y.
-static void paxmcr_tri_shaded(bool odd_scanline, pax_buf_t *buf, pax_col_t color, pax_shader_t *shader,
+static void paxmcr_tri_shaded(bool odd_scanline, pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
 		float x0, float y0, float x1, float y1, float x2, float y2,
 		float u0, float v0, float u1, float v1, float u2, float v2) {
 	
@@ -292,7 +292,7 @@ static void paxmcr_overlay_buffer(bool odd_scanline, pax_buf_t *base, pax_buf_t 
 }
 
 // Optimisation which makes more assumptions about UVs.
-static void paxmcr_rect_shaded1(bool odd_scanline, pax_buf_t *buf, pax_col_t color, pax_shader_t *shader,
+static void paxmcr_rect_shaded1(bool odd_scanline, pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
 		float x, float y, float width, float height, float u0, float v0, float u1, float v1) {
 	
 	if (color < 0x01000000 && shader->alpha_promise_0) {
@@ -386,7 +386,7 @@ static void paxmcr_rect_shaded1(bool odd_scanline, pax_buf_t *buf, pax_col_t col
 }
 
 // Internal method for shaded rects.
-static void paxmcr_rect_shaded(bool odd_scanline, pax_buf_t *buf, pax_col_t color, pax_shader_t *shader,
+static void paxmcr_rect_shaded(bool odd_scanline, pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
 		float x, float y, float width, float height,
 		float u0, float v0, float u1, float v1, float u2, float v2, float u3, float v3) {
 	

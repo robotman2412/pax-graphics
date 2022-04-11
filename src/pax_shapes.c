@@ -316,10 +316,13 @@ void pax_vectorise_circle(pax_vec1_t *output, size_t num_points, float x, float 
 
 // Draw a rectangle outline.
 void pax_outline_rect(pax_buf_t *buf, pax_col_t color, float x, float y, float width, float height) {
-	pax_draw_line(buf, color, x,             y,              x + width - 1, y);
-	pax_draw_line(buf, color, x,             y + height - 1, x + width - 1, y + height - 1);
-	pax_draw_line(buf, color, x,             y,              x,             y + height - 1);
-	pax_draw_line(buf, color, x + width - 1, y,              x + width - 1, y + height - 1);
+	pax_push_2d(buf);
+	pax_apply_2d(buf, matrix_2d_translate(x, y));
+	pax_draw_line(buf, color, 0,     0,      width, 0);
+	pax_draw_line(buf, color, 0,     height, width, height);
+	pax_draw_line(buf, color, 0,     0,      0,     height);
+	pax_draw_line(buf, color, width, 0,      width, height);
+	pax_pop_2d(buf);
 }
 
 // Draw a triangle outline.
@@ -382,7 +385,7 @@ void pax_outline_circle(pax_buf_t *buf, pax_col_t color, float x, float y, float
 // Partially outline a shape defined by a list of points.
 // From and to range from 0 to 1, outside this range is ignored.
 // Does not close the shape: this must be done manually.
-void pax_outline_shape_part(pax_buf_t *buf, pax_col_t color, size_t num_points, pax_vec1_t *points, float from, float to) {
+void pax_outline_shape_part(pax_buf_t *buf, pax_col_t color, size_t num_points, const pax_vec1_t *points, float from, float to) {
 	// El simplify.
 	if (to < from) {
 		PAX_SWAP(float, to, from);
@@ -465,7 +468,7 @@ void pax_outline_shape_part(pax_buf_t *buf, pax_col_t color, size_t num_points, 
 
 // Outline a shape defined by a list of points.
 // Does not close the shape: this must be done manually.
-void pax_outline_shape(pax_buf_t *buf, pax_col_t color, size_t num_points, pax_vec1_t *points) {
+void pax_outline_shape(pax_buf_t *buf, pax_col_t color, size_t num_points, const pax_vec1_t *points) {
 	for (size_t i = 0; i < num_points - 1; i++) {
 		pax_draw_line(buf, color, points[i].x, points[i].y, points[i + 1].x, points[i + 1].y);
 	}

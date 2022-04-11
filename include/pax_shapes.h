@@ -64,10 +64,10 @@ void pax_outline_circle       (pax_buf_t *buf, pax_col_t color, float x, float y
 // Partially outline a shape defined by a list of points.
 // From and to range from 0 to 1, outside this range is ignored.
 // Does not close the shape: this must be done manually.
-void pax_outline_shape_part   (pax_buf_t *buf, pax_col_t color, size_t num_points, pax_vec1_t *points, float from, float to);
+void pax_outline_shape_part   (pax_buf_t *buf, pax_col_t color, size_t num_points, const pax_vec1_t *points, float from, float to);
 // Outline a shape defined by a list of points.
 // Does not close the shape: this must be done manually.
-void pax_outline_shape        (pax_buf_t *buf, pax_col_t color, size_t num_points, pax_vec1_t *points);
+void pax_outline_shape        (pax_buf_t *buf, pax_col_t color, size_t num_points, const pax_vec1_t *points);
 
 /* ======== TRIANGULATION ======== */
 

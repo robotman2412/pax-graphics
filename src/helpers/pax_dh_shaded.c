@@ -32,7 +32,7 @@
 
 // Internal method for shaded triangles.
 // Assumes points are sorted by Y.
-static void pax_tri_shaded(pax_buf_t *buf, pax_col_t color, pax_shader_t *shader,
+static void pax_tri_shaded(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
 		float x0, float y0, float x1, float y1, float x2, float y2,
 		float u0, float v0, float u1, float v1, float u2, float v2) {
 	
@@ -264,7 +264,7 @@ static void pax_overlay_buffer(pax_buf_t *base, pax_buf_t *top, int x, int y, in
 }
 
 // Optimisation which makes more assumptions about UVs.
-static void pax_rect_shaded1(pax_buf_t *buf, pax_col_t color, pax_shader_t *shader,
+static void pax_rect_shaded1(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
 		float x, float y, float width, float height, float u0, float v0, float u1, float v1) {
 	
 	if (color < 0x01000000 && shader->alpha_promise_0) {
@@ -351,7 +351,7 @@ static void pax_rect_shaded1(pax_buf_t *buf, pax_col_t color, pax_shader_t *shad
 }
 
 // Internal method for shaded rects.
-static void pax_rect_shaded(pax_buf_t *buf, pax_col_t color, pax_shader_t *shader,
+static void pax_rect_shaded(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
 		float x, float y, float width, float height,
 		float u0, float v0, float u1, float v1, float u2, float v2, float u3, float v3) {
 	

@@ -160,16 +160,16 @@ pax_col_t   pax_get_pixel           (pax_buf_t *buf, int x, int y);
 
 // Draw a rectangle with a shader.
 // If uvs is NULL, a default will be used (0,0; 1,0; 1,1; 0,1).
-void        pax_shade_rect          (pax_buf_t *buf, pax_col_t color, pax_shader_t *shader, pax_quad_t *uvs, float x, float y, float width, float height);
+void        pax_shade_rect          (pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader, pax_quad_t *uvs, float x, float y, float width, float height);
 // Draw a triangle with a shader.
 // If uvs is NULL, a default will be used (0,0; 1,0; 0,1).
-void        pax_shade_tri           (pax_buf_t *buf, pax_col_t color, pax_shader_t *shader, pax_tri_t  *uvs, float x0, float y0, float x1, float y1, float x2, float y2);
+void        pax_shade_tri           (pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader, pax_tri_t  *uvs, float x0, float y0, float x1, float y1, float x2, float y2);
 // Draw an arc with a shader, angles in radians.
 // If uvs is NULL, a default will be used (0,0; 1,0; 1,1; 0,1).
-void        pax_shade_arc           (pax_buf_t *buf, pax_col_t color, pax_shader_t *shader, pax_quad_t *uvs, float x,  float y,  float r,  float a0, float a1);
+void        pax_shade_arc           (pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader, pax_quad_t *uvs, float x,  float y,  float r,  float a0, float a1);
 // Draw a circle with a shader.
 // If uvs is NULL, a default will be used (0,0; 1,0; 1,1; 0,1).
-void        pax_shade_circle        (pax_buf_t *buf, pax_col_t color, pax_shader_t *shader, pax_quad_t *uvs, float x,  float y,  float r);
+void        pax_shade_circle        (pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader, pax_quad_t *uvs, float x,  float y,  float r);
 
 // Draws an image at the image's normal size.
 void        pax_draw_image          (pax_buf_t *buf, pax_buf_t *image, float x, float y);
