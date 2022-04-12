@@ -9,3 +9,8 @@ Documentation can be found [here](docs).
 - https://github.com/robotman2412/mch2022-badge-tests
 - https://mch2022.org/
 - https://badge.team/
+
+# TODO list
+- Re-work the entire text system
+- Import more fonts
+- Plug in WiFi cables
