@@ -40,9 +40,14 @@ typedef struct pax_font pax_font_t;
 struct pax_font {
 	uint8_t  type;
 	char    *name;
-	uint8_t *glyphs_uni;
-	uint8_t  glyphs_uni_w;
-	uint8_t  glyphs_uni_h;
+	union {
+		// Monospace, bitmapped fonts.
+		struct {
+			uint8_t *glyphs;
+			uint8_t  width;
+			uint8_t  height;
+		} bitmap_mono;
+	};
 	uint16_t default_size;
 };
 
@@ -54,9 +59,11 @@ struct pax_font {
 #define PAX_FONT_BITMAP_UNI(strname, arrname, w, h) (pax_font_t) {\
 	.name = strname,\
 	.type = PAX_BITMAP_UNI,\
-	.glyphs_uni = arrname,\
-	.glyphs_uni_w = w,\
-	.glyphs_uni_h = h,\
+	.bitmap_mono = {\
+		.glyphs = arrname,\
+		.width  = w,\
+		.height = h,\
+	}, \
 	.default_size = h\
 }
 

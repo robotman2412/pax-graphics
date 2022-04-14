@@ -31,6 +31,7 @@ extern "C" {
 
 #include "pax_types.h"
 #include "pax_fonts.h"
+#include "pax_text.h"
 #include "pax_shapes.h"
 
 /* ============ DEBUG ============ */
@@ -185,16 +186,6 @@ void        pax_draw_tri            (pax_buf_t *buf, pax_col_t color, float x0, 
 void        pax_draw_arc            (pax_buf_t *buf, pax_col_t color, float x,  float y,  float r,  float a0, float a1);
 // Draw a circle.
 void        pax_draw_circle         (pax_buf_t *buf, pax_col_t color, float x,  float y,  float r);
-
-/* ======= DRAWING: TEXT ======= */
-
-// Draw a string with the given font.
-// If font is NULL, the default font (7x9) will be used.
-void        pax_draw_text           (pax_buf_t *buf, pax_col_t color, pax_font_t *font, float font_size, float x, float y, char *text);
-// Calculate the size of the string with the given font.
-// Size is before matrix transformation.
-// If font is NULL, the default font (7x9) will be used.
-pax_vec1_t  pax_text_size           (pax_font_t *font, float font_size, char *text);
 
 /* ======= DRAWING: SIMPLE ======= */
 

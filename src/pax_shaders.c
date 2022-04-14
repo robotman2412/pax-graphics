@@ -24,14 +24,14 @@
 
 #include "pax_shaders.h"
 
-pax_col_t pax_shader_font_bitmap_uni(pax_col_t tint, int x, int y, float u, float v, void *args0) {
-	pax_shader_font_bitmap_uni_args_t *args = args0;
+pax_col_t pax_shader_font_bitmap_mono(pax_col_t tint, int x, int y, float u, float v, void *args0) {
+	pax_shader_font_bitmap_mono_args_t *args = args0;
 	
 	int glyph_x = u;
 	int glyph_y = v;
 	size_t glyph_index = args->glyph_index + glyph_x / 8 + args->glyph_y_mul * glyph_y;
 	
-	return args->font->glyphs_uni[glyph_index] & (1 << (glyph_x & 7)) ? tint : 0;
+	return args->font->bitmap_mono.glyphs[glyph_index] & (1 << (glyph_x & 7)) ? tint : 0;
 }
 
 pax_col_t pax_shader_texture(pax_col_t tint, int x, int y, float u, float v, void *args) {

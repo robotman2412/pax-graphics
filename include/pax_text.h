@@ -22,39 +22,19 @@
 	SOFTWARE.
 */
 
-#ifndef PAX_SHADERS_H
-#define PAX_SHADERS_H
+#ifndef PAX_TEXT_H
+#define PAX_TEXT_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif //__cplusplus
-
-#include "pax_types.h"
-#include "pax_fonts.h"
 #include "pax_gfx.h"
 
-/* ============ FONTS ============ */
+/* ======= DRAWING: TEXT ======= */
 
-typedef struct pax_shader_font_bitmap_mono_args {
-	pax_font_t   *font;
-	char          glyph;
-	size_t        glyph_index;
-	size_t        glyph_y_mul;
-} pax_shader_font_bitmap_mono_args_t;
+// Draw a string with the given font.
+// If font is NULL, the default font (7x9) will be used.
+void        pax_draw_text           (pax_buf_t *buf, pax_col_t color, pax_font_t *font, float font_size, float x, float y, char *text);
+// Calculate the size of the string with the given font.
+// Size is before matrix transformation.
+// If font is NULL, the default font (7x9) will be used.
+pax_vec1_t  pax_text_size           (pax_font_t *font, float font_size, char *text);
 
-// Texture shader for monospace bitmap fonts.
-pax_col_t pax_shader_font_bitmap_mono(pax_col_t tint, int x, int y, float u, float v, void *args);
-
-/* ========== TEXTURES =========== */
-
-// Create a shader_t of the given texture.
-// Texture format is pax_but_t*.
-#define PAX_SHADER_TEXTURE(texture) (pax_shader_t) { .callback = pax_shader_texture, .callback_args = texture, .alpha_promise_0=true, .alpha_promise_255=false }
-// Texture shader. No interpolation.
-pax_col_t pax_shader_texture(pax_col_t tint, int x, int y, float u, float v, void *args);
-
-#ifdef __cplusplus
-}
-#endif //__cplusplus
-
-#endif //PAX_SHADERS_H
+#endif //PAX_TEXT_H
