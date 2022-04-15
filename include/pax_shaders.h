@@ -35,12 +35,13 @@ extern "C" {
 
 /* ============ FONTS ============ */
 
-typedef struct pax_shader_font_bitmap_mono_args {
-	pax_font_t   *font;
-	char          glyph;
-	size_t        glyph_index;
-	size_t        glyph_y_mul;
-} pax_shader_font_bitmap_mono_args_t;
+typedef struct pax_bmp_mono_args {
+	pax_font_t       *font;
+	pax_font_range_t *range;
+	char              glyph;
+	size_t            glyph_index;
+	size_t            glyph_y_mul;
+} pax_bmp_mono_args_t;
 
 // Texture shader for monospace bitmap fonts.
 pax_col_t pax_shader_font_bitmap_mono(pax_col_t tint, int x, int y, float u, float v, void *args);

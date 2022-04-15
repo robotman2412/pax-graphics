@@ -33,13 +33,35 @@ extern "C" {
 
 /* ============ TYPES ============ */
 
-struct pax_font;
+typedef enum {
+	PAX_FONT_BITMAP_MONO,
+	PAX_FONT_BITMAP_VAR,
+} pax_font_type_t;
 
-typedef struct pax_font pax_font_t;
+struct pax_font;
+struct pax_font_range;
+
+typedef struct pax_font       pax_font_t;
+typedef struct pax_font_range pax_font_range_t;
 
 struct pax_font {
-	uint8_t  type;
-	char    *name;
+	// The searchable name of the font.
+	char             *name;
+	// The number of ranges included in the font.
+	size_t            n_ranges;
+	// The ranges included in the font.
+	pax_font_range_t *ranges;
+	// Default point size.
+	uint16_t          default_size;
+};
+
+struct pax_font_range {
+	// The type of font range.
+	pax_font_type_t  type;
+	// First character in range.
+	wchar_t          start;
+	// Last character in range.
+	wchar_t          end;
 	union {
 		// Monospace, bitmapped fonts.
 		struct {
@@ -48,32 +70,14 @@ struct pax_font {
 			uint8_t  height;
 		} bitmap_mono;
 	};
-	uint16_t default_size;
 };
-
-#define PAX_BITMAP_UNI 0
-
-// Bitmap font definition: uniform width characters.
-// Bits are to be packed into bytes per row, and split rows vertically.
-// Only ascii and exactly ascii-sized fonts are supported.
-#define PAX_FONT_BITMAP_UNI(strname, arrname, w, h) (pax_font_t) {\
-	.name = strname,\
-	.type = PAX_BITMAP_UNI,\
-	.bitmap_mono = {\
-		.glyphs = arrname,\
-		.width  = w,\
-		.height = h,\
-	}, \
-	.default_size = h\
-}
 
 /* ============ INDEX ============ */
 
-extern uint8_t font_bitmap_raw_7x9[];
-
-#define PAX_N_FONTS 1
+#define PAX_N_FONTS pax_n_fonts
 #define PAX_FONT_DEFAULT (&pax_fonts_index[0])
-extern pax_font_t pax_fonts_index[PAX_N_FONTS];
+extern const pax_font_t pax_fonts_index[];
+extern const size_t     pax_n_fonts;
 
 /* ========== FUNCTIONS ========== */
 

@@ -25,9 +25,86 @@
 #include "pax_fonts.h"
 #include <strings.h>
 
-pax_font_t pax_fonts_index[PAX_N_FONTS] = {
-    PAX_FONT_BITMAP_UNI("7x9", font_bitmap_raw_7x9, 7, 9)
+// Font ROMs.
+extern const uint8_t font_bitmap_raw_7x9[];
+
+// ¯\_(ツ)_/¯
+//   0 1 2 3 4 5 6
+// 0 . . . . . . .
+// 1 . x . x . . .
+// 2 . x . x . . .
+// 3 . . . . . x .
+// 4 . . . . . x .
+// 5 . . . . x . .
+// 6 . . . x . . .
+// 7 . x x . . . .
+// 8 . . . . . . .
+
+
+const uint8_t funny_thingy[] = {
+	0x00,
+	0x0a,
+	0x0a,
+	0x40,
+	0x40,
+	0x20,
+	0x10,
+	0x06,
 };
+
+const uint8_t unfunny_thingy[] = {
+	0x00,
+	0x3e,
+	0x00,
+	0x00,
+	0x00,
+	0x00,
+	0x00,
+	0x00,
+	0x00,
+};
+
+const pax_font_range_t font_7x9_ranges[] = {
+	{ // Ascii range.
+		.type  = PAX_FONT_BITMAP_MONO,
+		.start = 0x00000,
+		.end   = 0x00080,
+		.bitmap_mono = {
+			.glyphs = font_bitmap_raw_7x9,
+			.width  = 7,
+			.height = 9,
+		},
+	}, { // Test range.
+		.type  = PAX_FONT_BITMAP_MONO,
+		.start = 0x030c4,
+		.end   = 0x030c4,
+		.bitmap_mono = {
+			.glyphs = funny_thingy,
+			.width  = 7,
+			.height = 9,
+		},
+	}, { // Macron range.
+		.type  = PAX_FONT_BITMAP_MONO,
+		.start = 0x000af,
+		.end   = 0x000af,
+		.bitmap_mono = {
+			.glyphs = unfunny_thingy,
+			.width  = 7,
+			.height = 9,
+		},
+	}
+};
+
+const pax_font_t pax_fonts_index[] = {
+	(pax_font_t) {
+		.name         = "7x9",
+		.n_ranges     = 3,
+		.ranges       = font_7x9_ranges,
+		.default_size = 9,
+	}
+    // PAX_FONT_BITMAP_UNI("7x9", font_bitmap_raw_7x9, 7, 9)
+};
+const size_t pax_n_fonts = sizeof(pax_fonts_index) / sizeof(pax_font_t);
 
 // Finds the built-in font with the given name.
 pax_font_t *pax_get_font(char *name) {
