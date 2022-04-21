@@ -24,8 +24,8 @@
 
 #include "pax_shaders.h"
 
-pax_col_t pax_shader_font_bitmap_mono(pax_col_t tint, int x, int y, float u, float v, void *args0) {
-	pax_bmp_mono_args_t *args = args0;
+pax_col_t pax_shader_font_bmp(pax_col_t tint, int x, int y, float u, float v, void *args0) {
+	pax_font_bmp_args_t *args = args0;
 	
 	int glyph_x = u;
 	int glyph_y = v;

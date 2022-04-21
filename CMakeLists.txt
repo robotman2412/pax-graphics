@@ -8,5 +8,7 @@ idf_component_register(
 	"src/pax_text.c"
 	
 	"fonts/font_bitmap_7x9.c"
+	"fonts/font_bitmap_sky.c"
+	"fonts/font_bitmap_permanentmarker22.c"
 	INCLUDE_DIRS include
 )

@@ -131,7 +131,7 @@ static inline bool pax_is_visible_char(wchar_t c) {
 pax_vec1_t text_bitmap_mono(pax_text_ctx_t *ctx, pax_font_range_t *range, wchar_t glyph) {
 	if (ctx->do_render) {
 		// Set up shader.
-		pax_bmp_mono_args_t args = {
+		pax_font_bmp_args_t args = {
 			.font        = ctx->font,
 			.range       = range,
 			.glyph       = glyph,
@@ -140,7 +140,7 @@ pax_vec1_t text_bitmap_mono(pax_text_ctx_t *ctx, pax_font_range_t *range, wchar_
 		size_t glyph_len = args.glyph_y_mul * range->bitmap_mono.height;
 		args.glyph_index = glyph_len * (glyph - range->start);
 		pax_shader_t shader = {
-			.callback          = pax_shader_font_bitmap_mono,
+			.callback          = pax_shader_font_bmp,
 			.callback_args     = &args,
 			.alpha_promise_0   = true,
 			.alpha_promise_255 = false,
@@ -169,6 +169,55 @@ pax_vec1_t text_bitmap_mono(pax_text_ctx_t *ctx, pax_font_range_t *range, wchar_
 	return (pax_vec1_t) {
 		.x = range->bitmap_mono.width,
 		.y = range->bitmap_mono.height
+	};
+}
+
+// Internal method for variable pitch bitmapped characters.
+pax_vec1_t text_bitmap_var(pax_text_ctx_t *ctx, pax_font_range_t *range, wchar_t glyph) {
+	size_t index = (glyph - range->start);
+	pax_bmpv_t *dims = &range->bitmap_var.dims[index];
+	if (ctx->do_render) {
+		// Set up shader.
+		pax_font_bmp_args_t args = {
+			.font        = ctx->font,
+			.range       = range,
+			.glyph       = glyph,
+			.glyph_y_mul = (dims->draw_w + 7) / 8
+		};
+		args.glyph_index = dims->index;
+		pax_shader_t shader = {
+			.callback          = pax_shader_font_bmp,
+			.callback_args     = &args,
+			.alpha_promise_0   = true,
+			.alpha_promise_255 = false,
+		};
+		
+		// And UVs.
+		pax_quad_t uvs = {
+			.x0 = 0,                  .y0 = 0,
+			.x1 = dims->draw_w-0.001, .y1 = 0,
+			.x2 = dims->draw_w-0.001, .y2 = dims->draw_h-0.001,
+			.x3 = 0,                  .y3 = dims->draw_h-0.001,
+		};
+		
+		// Start drawing, boy!
+		if (dims->draw_w && dims->draw_h) {
+			pax_shade_rect(
+				ctx->buf, ctx->color,
+				&shader, &uvs,
+				dims->draw_x,
+				dims->draw_y,
+				dims->draw_w,
+				dims->draw_h
+			);
+			pax_join();
+		}
+	}
+	
+	// Size calculation is very simple.
+	return (pax_vec1_t) {
+		.x = dims->measured_width,
+		.y = range->bitmap_var.height
 	};
 }
 
@@ -245,6 +294,7 @@ static pax_vec1_t text_generic(pax_text_ctx_t *ctx, char *text) {
 						dims = text_bitmap_mono(ctx, range, glyph);
 						break;
 					case PAX_FONT_BITMAP_VAR:
+						dims = text_bitmap_var(ctx, range, glyph);
 						break;
 				}
 			} else {
@@ -324,11 +374,11 @@ void pax_draw_text_old(pax_buf_t *buf, pax_col_t color, pax_font_t *font, float 
 	float x = _x, y = _y;
 	
 	// Set up shader.
-	pax_bmp_mono_args_t args = {
+	pax_font_bmp_args_t args = {
 		.font              = font
 	};
 	pax_shader_t shader = {
-		.callback          = pax_shader_font_bitmap_mono,
+		.callback          = pax_shader_font_bmp,
 		.callback_args     = &args,
 		.alpha_promise_0   = true,
 		.alpha_promise_255 = false

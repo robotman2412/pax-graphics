@@ -25,6 +25,9 @@
 #include "pax_fonts.h"
 #include <strings.h>
 
+extern const pax_font_range_t pax_font_sky_ranges[];
+extern const pax_font_range_t marker_ranges[];
+
 // Font ROMs.
 extern const uint8_t font_bitmap_raw_7x9[];
 
@@ -33,11 +36,11 @@ extern const uint8_t font_bitmap_raw_7x9[];
 // 0 . . . . . . .
 // 1 . x . x . . .
 // 2 . x . x . . .
-// 3 . . . . . x .
-// 4 . . . . . x .
-// 5 . . . . x . .
-// 6 . . . x . . .
-// 7 . x x . . . .
+// 3 . . . . . . x
+// 4 . . . . . . x
+// 5 . . . . . x .
+// 6 . . . . x . .
+// 7 . x x x . . .
 // 8 . . . . . . .
 
 
@@ -49,7 +52,7 @@ const uint8_t funny_thingy[] = {
 	0x40,
 	0x20,
 	0x10,
-	0x06,
+	0x0e,
 };
 
 const uint8_t unfunny_thingy[] = {
@@ -96,11 +99,26 @@ const pax_font_range_t font_7x9_ranges[] = {
 };
 
 const pax_font_t pax_fonts_index[] = {
-	(pax_font_t) {
+	{ // Sky
+		.name         = "Sky",
+		.n_ranges     = 6,
+		.ranges       = pax_font_sky_ranges,
+		.default_size = 9,
+	}, { // Sky mono
 		.name         = "7x9",
 		.n_ranges     = 3,
 		.ranges       = font_7x9_ranges,
 		.default_size = 9,
+	}, { // Sky mono
+		.name         = "sky mono",
+		.n_ranges     = 3,
+		.ranges       = font_7x9_ranges,
+		.default_size = 9,
+	}, { // PermanentMarker
+		.name         = "permanentmarker",
+		.n_ranges     = 23,
+		.ranges       = marker_ranges,
+		.default_size = 22,
 	}
     // PAX_FONT_BITMAP_UNI("7x9", font_bitmap_raw_7x9, 7, 9)
 };

@@ -164,7 +164,7 @@ static void pax_multicore_task_function(void *args) {
 // If multi-core rendering is enabled, wait for the other core.
 void pax_join() {
 	#ifdef PAX_COMPILE_MCR
-	while (multicore_handle && eTaskGetState(multicore_handle) == eRunning) {
+	while ((multicore_handle && eTaskGetState(multicore_handle) == eRunning) || (queue_handle && uxQueueMessagesWaiting(queue_handle))) {
 		// Wait for the other core.
 		taskYIELD();
 	}

@@ -38,11 +38,24 @@ typedef enum {
 	PAX_FONT_BITMAP_VAR,
 } pax_font_type_t;
 
+struct pax_bmpv;
 struct pax_font;
 struct pax_font_range;
 
+typedef struct pax_bmpv       pax_bmpv_t;
 typedef struct pax_font       pax_font_t;
 typedef struct pax_font_range pax_font_range_t;
+
+struct pax_bmpv {
+	// The position of the drawn portion.
+	uint8_t draw_x, draw_y;
+	// The size of the drawn portion.
+	uint8_t draw_w, draw_h;
+	// The measured width of the glyph.
+	uint8_t measured_width;
+	// The index in the glyphs data for this glyph.
+	size_t index;
+};
 
 struct pax_font {
 	// The searchable name of the font.
@@ -68,7 +81,15 @@ struct pax_font_range {
 			uint8_t *glyphs;
 			uint8_t  width;
 			uint8_t  height;
+			// uint8_t  bpp;
 		} bitmap_mono;
+		// Variable pitch, bitmapped fonts.
+		struct {
+			uint8_t    *glyphs;
+			pax_bmpv_t *dims;
+			uint8_t     height;
+			// uint8_t     bpp;
+		} bitmap_var;
 	};
 };
 
