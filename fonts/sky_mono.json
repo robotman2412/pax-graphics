@@ -1,0 +1,4983 @@
+{
+	"url": "",
+	"font": "Sky mono",
+	"name": "Sky mono",
+	"glyphs": {
+		"32": {
+			"glyph": 32,
+			"visible": false,
+			"width": 7
+		},
+		"33": {
+			"glyph": 33,
+			"visible": true,
+			"bounds": {
+				"x": 3,
+				"y": 1,
+				"width": 1,
+				"height": 7
+			},
+			"width": 7,
+			"data": [
+				[
+					true
+				],
+				[
+					true
+				],
+				[
+					true
+				],
+				[
+					true
+				],
+				[
+					true
+				],
+				[
+					false
+				],
+				[
+					true
+				]
+			]
+		},
+		"34": {
+			"glyph": 34,
+			"visible": true,
+			"bounds": {
+				"x": 2,
+				"y": 1,
+				"width": 3,
+				"height": 2
+			},
+			"width": 7,
+			"data": [
+				[
+					true,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					true
+				]
+			]
+		},
+		"35": {
+			"glyph": 35,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 1,
+				"width": 5,
+				"height": 7
+			},
+			"width": 7,
+			"data": [
+				[
+					false,
+					true,
+					false,
+					true,
+					false
+				],
+				[
+					false,
+					true,
+					false,
+					true,
+					false
+				],
+				[
+					true,
+					true,
+					true,
+					true,
+					true
+				],
+				[
+					false,
+					true,
+					false,
+					true,
+					false
+				],
+				[
+					true,
+					true,
+					true,
+					true,
+					true
+				],
+				[
+					false,
+					true,
+					false,
+					true,
+					false
+				],
+				[
+					false,
+					true,
+					false,
+					true,
+					false
+				]
+			]
+		},
+		"36": {
+			"glyph": 36,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 0,
+				"width": 5,
+				"height": 9
+			},
+			"width": 7,
+			"data": [
+				[
+					false,
+					false,
+					true,
+					false,
+					false
+				],
+				[
+					false,
+					true,
+					true,
+					true,
+					false
+				],
+				[
+					true,
+					false,
+					true,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					true,
+					false,
+					false
+				],
+				[
+					false,
+					true,
+					true,
+					true,
+					false
+				],
+				[
+					false,
+					false,
+					true,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					true,
+					false,
+					true
+				],
+				[
+					false,
+					true,
+					true,
+					true,
+					false
+				],
+				[
+					false,
+					false,
+					true,
+					false,
+					false
+				]
+			]
+		},
+		"37": {
+			"glyph": 37,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 3,
+				"width": 5,
+				"height": 5
+			},
+			"width": 7,
+			"data": [
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					false,
+					false,
+					false,
+					true,
+					false
+				],
+				[
+					false,
+					false,
+					true,
+					false,
+					false
+				],
+				[
+					false,
+					true,
+					false,
+					false,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				]
+			]
+		},
+		"38": {
+			"glyph": 38,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 1,
+				"width": 5,
+				"height": 7
+			},
+			"width": 7,
+			"data": [
+				[
+					false,
+					true,
+					true,
+					false,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					true,
+					false
+				],
+				[
+					true,
+					false,
+					true,
+					false,
+					false
+				],
+				[
+					false,
+					true,
+					false,
+					false,
+					false
+				],
+				[
+					true,
+					false,
+					true,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					true,
+					false
+				],
+				[
+					false,
+					true,
+					true,
+					false,
+					true
+				]
+			]
+		},
+		"39": {
+			"glyph": 39,
+			"visible": true,
+			"bounds": {
+				"x": 3,
+				"y": 1,
+				"width": 1,
+				"height": 2
+			},
+			"width": 7,
+			"data": [
+				[
+					true
+				],
+				[
+					true
+				]
+			]
+		},
+		"40": {
+			"glyph": 40,
+			"visible": true,
+			"bounds": {
+				"x": 2,
+				"y": 1,
+				"width": 2,
+				"height": 7
+			},
+			"width": 7,
+			"data": [
+				[
+					false,
+					true
+				],
+				[
+					true,
+					false
+				],
+				[
+					true,
+					false
+				],
+				[
+					true,
+					false
+				],
+				[
+					true,
+					false
+				],
+				[
+					true,
+					false
+				],
+				[
+					false,
+					true
+				]
+			]
+		},
+		"41": {
+			"glyph": 41,
+			"visible": true,
+			"bounds": {
+				"x": 3,
+				"y": 1,
+				"width": 2,
+				"height": 7
+			},
+			"width": 7,
+			"data": [
+				[
+					true,
+					false
+				],
+				[
+					false,
+					true
+				],
+				[
+					false,
+					true
+				],
+				[
+					false,
+					true
+				],
+				[
+					false,
+					true
+				],
+				[
+					false,
+					true
+				],
+				[
+					true,
+					false
+				]
+			]
+		},
+		"42": {
+			"glyph": 42,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 2,
+				"width": 5,
+				"height": 5
+			},
+			"width": 7,
+			"data": [
+				[
+					false,
+					false,
+					true,
+					false,
+					false
+				],
+				[
+					true,
+					false,
+					true,
+					false,
+					true
+				],
+				[
+					false,
+					true,
+					true,
+					true,
+					false
+				],
+				[
+					true,
+					false,
+					true,
+					false,
+					true
+				],
+				[
+					false,
+					false,
+					true,
+					false,
+					false
+				]
+			]
+		},
+		"43": {
+			"glyph": 43,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 2,
+				"width": 5,
+				"height": 5
+			},
+			"width": 7,
+			"data": [
+				[
+					false,
+					false,
+					true,
+					false,
+					false
+				],
+				[
+					false,
+					false,
+					true,
+					false,
+					false
+				],
+				[
+					true,
+					true,
+					true,
+					true,
+					true
+				],
+				[
+					false,
+					false,
+					true,
+					false,
+					false
+				],
+				[
+					false,
+					false,
+					true,
+					false,
+					false
+				]
+			]
+		},
+		"44": {
+			"glyph": 44,
+			"visible": true,
+			"bounds": {
+				"x": 2,
+				"y": 7,
+				"width": 2,
+				"height": 2
+			},
+			"width": 7,
+			"data": [
+				[
+					false,
+					true
+				],
+				[
+					true,
+					false
+				]
+			]
+		},
+		"45": {
+			"glyph": 45,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 4,
+				"width": 5,
+				"height": 1
+			},
+			"width": 7,
+			"data": [
+				[
+					true,
+					true,
+					true,
+					true,
+					true
+				]
+			]
+		},
+		"46": {
+			"glyph": 46,
+			"visible": true,
+			"bounds": {
+				"x": 3,
+				"y": 7,
+				"width": 1,
+				"height": 1
+			},
+			"width": 7,
+			"data": [
+				[
+					true
+				]
+			]
+		},
+		"47": {
+			"glyph": 47,
+			"visible": true,
+			"bounds": {
+				"x": 2,
+				"y": 1,
+				"width": 3,
+				"height": 7
+			},
+			"width": 7,
+			"data": [
+				[
+					false,
+					false,
+					true
+				],
+				[
+					false,
+					false,
+					true
+				],
+				[
+					false,
+					true,
+					false
+				],
+				[
+					false,
+					true,
+					false
+				],
+				[
+					false,
+					true,
+					false
+				],
+				[
+					true,
+					false,
+					false
+				],
+				[
+					true,
+					false,
+					false
+				]
+			]
+		},
+		"48": {
+			"glyph": 48,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 1,
+				"width": 5,
+				"height": 7
+			},
+			"width": 7,
+			"data": [
+				[
+					false,
+					true,
+					true,
+					true,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					true,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					false,
+					true,
+					true,
+					true,
+					false
+				]
+			]
+		},
+		"49": {
+			"glyph": 49,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 1,
+				"width": 5,
+				"height": 7
+			},
+			"width": 7,
+			"data": [
+				[
+					false,
+					false,
+					true,
+					false,
+					false
+				],
+				[
+					false,
+					true,
+					true,
+					false,
+					false
+				],
+				[
+					false,
+					false,
+					true,
+					false,
+					false
+				],
+				[
+					false,
+					false,
+					true,
+					false,
+					false
+				],
+				[
+					false,
+					false,
+					true,
+					false,
+					false
+				],
+				[
+					false,
+					false,
+					true,
+					false,
+					false
+				],
+				[
+					true,
+					true,
+					true,
+					true,
+					true
+				]
+			]
+		},
+		"50": {
+			"glyph": 50,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 1,
+				"width": 5,
+				"height": 7
+			},
+			"width": 7,
+			"data": [
+				[
+					false,
+					true,
+					true,
+					true,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					false,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					false,
+					true,
+					true,
+					true,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					false
+				],
+				[
+					true,
+					true,
+					true,
+					true,
+					true
+				]
+			]
+		},
+		"51": {
+			"glyph": 51,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 1,
+				"width": 5,
+				"height": 7
+			},
+			"width": 7,
+			"data": [
+				[
+					false,
+					true,
+					true,
+					true,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					false,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					false,
+					true,
+					true,
+					true,
+					false
+				],
+				[
+					false,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					false,
+					true,
+					true,
+					true,
+					false
+				]
+			]
+		},
+		"52": {
+			"glyph": 52,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 1,
+				"width": 5,
+				"height": 7
+			},
+			"width": 7,
+			"data": [
+				[
+					false,
+					false,
+					false,
+					true,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					true,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					true,
+					false
+				],
+				[
+					true,
+					true,
+					true,
+					true,
+					true
+				],
+				[
+					false,
+					false,
+					false,
+					true,
+					false
+				],
+				[
+					false,
+					false,
+					false,
+					true,
+					false
+				],
+				[
+					false,
+					false,
+					false,
+					true,
+					false
+				]
+			]
+		},
+		"53": {
+			"glyph": 53,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 1,
+				"width": 5,
+				"height": 7
+			},
+			"width": 7,
+			"data": [
+				[
+					true,
+					true,
+					true,
+					true,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					false
+				],
+				[
+					false,
+					true,
+					true,
+					true,
+					false
+				],
+				[
+					false,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					false,
+					true,
+					true,
+					true,
+					false
+				]
+			]
+		},
+		"54": {
+			"glyph": 54,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 1,
+				"width": 5,
+				"height": 7
+			},
+			"width": 7,
+			"data": [
+				[
+					false,
+					true,
+					true,
+					true,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					false
+				],
+				[
+					true,
+					true,
+					true,
+					true,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					false,
+					true,
+					true,
+					true,
+					false
+				]
+			]
+		},
+		"55": {
+			"glyph": 55,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 1,
+				"width": 5,
+				"height": 7
+			},
+			"width": 7,
+			"data": [
+				[
+					true,
+					true,
+					true,
+					true,
+					true
+				],
+				[
+					false,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					false,
+					false,
+					false,
+					true,
+					false
+				],
+				[
+					false,
+					false,
+					false,
+					true,
+					false
+				],
+				[
+					false,
+					false,
+					true,
+					false,
+					false
+				],
+				[
+					false,
+					false,
+					true,
+					false,
+					false
+				],
+				[
+					false,
+					false,
+					true,
+					false,
+					false
+				]
+			]
+		},
+		"56": {
+			"glyph": 56,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 1,
+				"width": 5,
+				"height": 7
+			},
+			"width": 7,
+			"data": [
+				[
+					false,
+					true,
+					true,
+					true,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					false,
+					true,
+					true,
+					true,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					false,
+					true,
+					true,
+					true,
+					false
+				]
+			]
+		},
+		"57": {
+			"glyph": 57,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 1,
+				"width": 5,
+				"height": 7
+			},
+			"width": 7,
+			"data": [
+				[
+					false,
+					true,
+					true,
+					true,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					false,
+					true,
+					true,
+					true,
+					true
+				],
+				[
+					false,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					false,
+					true,
+					true,
+					true,
+					false
+				]
+			]
+		},
+		"58": {
+			"glyph": 58,
+			"visible": true,
+			"bounds": {
+				"x": 3,
+				"y": 3,
+				"width": 1,
+				"height": 5
+			},
+			"width": 7,
+			"data": [
+				[
+					true
+				],
+				[
+					false
+				],
+				[
+					false
+				],
+				[
+					false
+				],
+				[
+					true
+				]
+			]
+		},
+		"59": {
+			"glyph": 59,
+			"visible": true,
+			"bounds": {
+				"x": 2,
+				"y": 3,
+				"width": 2,
+				"height": 6
+			},
+			"width": 7,
+			"data": [
+				[
+					false,
+					true
+				],
+				[
+					false,
+					false
+				],
+				[
+					false,
+					false
+				],
+				[
+					false,
+					false
+				],
+				[
+					false,
+					true
+				],
+				[
+					true,
+					false
+				]
+			]
+		},
+		"60": {
+			"glyph": 60,
+			"visible": true,
+			"bounds": {
+				"x": 2,
+				"y": 2,
+				"width": 3,
+				"height": 5
+			},
+			"width": 7,
+			"data": [
+				[
+					false,
+					false,
+					true
+				],
+				[
+					false,
+					true,
+					false
+				],
+				[
+					true,
+					false,
+					false
+				],
+				[
+					false,
+					true,
+					false
+				],
+				[
+					false,
+					false,
+					true
+				]
+			]
+		},
+		"61": {
+			"glyph": 61,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 3,
+				"width": 5,
+				"height": 3
+			},
+			"width": 7,
+			"data": [
+				[
+					true,
+					true,
+					true,
+					true,
+					true
+				],
+				[
+					false,
+					false,
+					false,
+					false,
+					false
+				],
+				[
+					true,
+					true,
+					true,
+					true,
+					true
+				]
+			]
+		},
+		"62": {
+			"glyph": 62,
+			"visible": true,
+			"bounds": {
+				"x": 2,
+				"y": 2,
+				"width": 3,
+				"height": 5
+			},
+			"width": 7,
+			"data": [
+				[
+					true,
+					false,
+					false
+				],
+				[
+					false,
+					true,
+					false
+				],
+				[
+					false,
+					false,
+					true
+				],
+				[
+					false,
+					true,
+					false
+				],
+				[
+					true,
+					false,
+					false
+				]
+			]
+		},
+		"63": {
+			"glyph": 63,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 1,
+				"width": 5,
+				"height": 7
+			},
+			"width": 7,
+			"data": [
+				[
+					false,
+					true,
+					true,
+					true,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					false,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					false,
+					false,
+					false,
+					true,
+					false
+				],
+				[
+					false,
+					false,
+					true,
+					false,
+					false
+				],
+				[
+					false,
+					false,
+					false,
+					false,
+					false
+				],
+				[
+					false,
+					false,
+					true,
+					false,
+					false
+				]
+			]
+		},
+		"64": {
+			"glyph": 64,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 1,
+				"width": 5,
+				"height": 7
+			},
+			"width": 7,
+			"data": [
+				[
+					false,
+					true,
+					true,
+					true,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					true,
+					true,
+					true
+				],
+				[
+					true,
+					false,
+					true,
+					true,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					false
+				],
+				[
+					false,
+					true,
+					true,
+					true,
+					false
+				]
+			]
+		},
+		"65": {
+			"glyph": 65,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 1,
+				"width": 5,
+				"height": 7
+			},
+			"width": 7,
+			"data": [
+				[
+					false,
+					true,
+					true,
+					true,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					true,
+					true,
+					true,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				]
+			]
+		},
+		"66": {
+			"glyph": 66,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 1,
+				"width": 5,
+				"height": 7
+			},
+			"width": 7,
+			"data": [
+				[
+					true,
+					true,
+					true,
+					true,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					true,
+					true,
+					true,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					true,
+					true,
+					true,
+					false
+				]
+			]
+		},
+		"67": {
+			"glyph": 67,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 1,
+				"width": 5,
+				"height": 7
+			},
+			"width": 7,
+			"data": [
+				[
+					false,
+					true,
+					true,
+					true,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					false,
+					true,
+					true,
+					true,
+					false
+				]
+			]
+		},
+		"68": {
+			"glyph": 68,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 1,
+				"width": 5,
+				"height": 7
+			},
+			"width": 7,
+			"data": [
+				[
+					true,
+					true,
+					true,
+					true,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					true,
+					true,
+					true,
+					false
+				]
+			]
+		},
+		"69": {
+			"glyph": 69,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 1,
+				"width": 5,
+				"height": 7
+			},
+			"width": 7,
+			"data": [
+				[
+					true,
+					true,
+					true,
+					true,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					false
+				],
+				[
+					true,
+					true,
+					true,
+					false,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					false
+				],
+				[
+					true,
+					true,
+					true,
+					true,
+					true
+				]
+			]
+		},
+		"70": {
+			"glyph": 70,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 1,
+				"width": 5,
+				"height": 7
+			},
+			"width": 7,
+			"data": [
+				[
+					true,
+					true,
+					true,
+					true,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					false
+				],
+				[
+					true,
+					true,
+					true,
+					false,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					false
+				]
+			]
+		},
+		"71": {
+			"glyph": 71,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 1,
+				"width": 5,
+				"height": 7
+			},
+			"width": 7,
+			"data": [
+				[
+					false,
+					true,
+					true,
+					true,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					false
+				],
+				[
+					true,
+					false,
+					true,
+					true,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					false,
+					true,
+					true,
+					true,
+					false
+				]
+			]
+		},
+		"72": {
+			"glyph": 72,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 1,
+				"width": 5,
+				"height": 7
+			},
+			"width": 7,
+			"data": [
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					true,
+					true,
+					true,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				]
+			]
+		},
+		"73": {
+			"glyph": 73,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 1,
+				"width": 5,
+				"height": 7
+			},
+			"width": 7,
+			"data": [
+				[
+					true,
+					true,
+					true,
+					true,
+					true
+				],
+				[
+					false,
+					false,
+					true,
+					false,
+					false
+				],
+				[
+					false,
+					false,
+					true,
+					false,
+					false
+				],
+				[
+					false,
+					false,
+					true,
+					false,
+					false
+				],
+				[
+					false,
+					false,
+					true,
+					false,
+					false
+				],
+				[
+					false,
+					false,
+					true,
+					false,
+					false
+				],
+				[
+					true,
+					true,
+					true,
+					true,
+					true
+				]
+			]
+		},
+		"74": {
+			"glyph": 74,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 1,
+				"width": 5,
+				"height": 7
+			},
+			"width": 7,
+			"data": [
+				[
+					true,
+					true,
+					true,
+					true,
+					true
+				],
+				[
+					false,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					false,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					false,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					false,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					false,
+					true,
+					true,
+					true,
+					false
+				]
+			]
+		},
+		"75": {
+			"glyph": 75,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 1,
+				"width": 5,
+				"height": 7
+			},
+			"width": 7,
+			"data": [
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					true,
+					false
+				],
+				[
+					true,
+					false,
+					true,
+					false,
+					false
+				],
+				[
+					true,
+					true,
+					false,
+					false,
+					false
+				],
+				[
+					true,
+					false,
+					true,
+					false,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					true,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				]
+			]
+		},
+		"76": {
+			"glyph": 76,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 1,
+				"width": 5,
+				"height": 7
+			},
+			"width": 7,
+			"data": [
+				[
+					true,
+					false,
+					false,
+					false,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					false
+				],
+				[
+					true,
+					true,
+					true,
+					true,
+					true
+				]
+			]
+		},
+		"77": {
+			"glyph": 77,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 1,
+				"width": 5,
+				"height": 7
+			},
+			"width": 7,
+			"data": [
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					true,
+					false,
+					true,
+					true
+				],
+				[
+					true,
+					false,
+					true,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				]
+			]
+		},
+		"78": {
+			"glyph": 78,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 1,
+				"width": 5,
+				"height": 7
+			},
+			"width": 7,
+			"data": [
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					true,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					true,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					true,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				]
+			]
+		},
+		"79": {
+			"glyph": 79,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 1,
+				"width": 5,
+				"height": 7
+			},
+			"width": 7,
+			"data": [
+				[
+					false,
+					true,
+					true,
+					true,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					false,
+					true,
+					true,
+					true,
+					false
+				]
+			]
+		},
+		"80": {
+			"glyph": 80,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 1,
+				"width": 5,
+				"height": 7
+			},
+			"width": 7,
+			"data": [
+				[
+					true,
+					true,
+					true,
+					true,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					true,
+					true,
+					true,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					false
+				]
+			]
+		},
+		"81": {
+			"glyph": 81,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 1,
+				"width": 5,
+				"height": 7
+			},
+			"width": 7,
+			"data": [
+				[
+					false,
+					true,
+					true,
+					true,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					true,
+					false
+				],
+				[
+					false,
+					true,
+					true,
+					false,
+					true
+				]
+			]
+		},
+		"82": {
+			"glyph": 82,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 1,
+				"width": 5,
+				"height": 7
+			},
+			"width": 7,
+			"data": [
+				[
+					true,
+					true,
+					true,
+					true,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					true,
+					true,
+					true,
+					false
+				],
+				[
+					true,
+					false,
+					true,
+					false,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					true,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				]
+			]
+		},
+		"83": {
+			"glyph": 83,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 1,
+				"width": 5,
+				"height": 7
+			},
+			"width": 7,
+			"data": [
+				[
+					false,
+					true,
+					true,
+					true,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					false
+				],
+				[
+					false,
+					true,
+					true,
+					true,
+					false
+				],
+				[
+					false,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					false,
+					true,
+					true,
+					true,
+					false
+				]
+			]
+		},
+		"84": {
+			"glyph": 84,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 1,
+				"width": 5,
+				"height": 7
+			},
+			"width": 7,
+			"data": [
+				[
+					true,
+					true,
+					true,
+					true,
+					true
+				],
+				[
+					false,
+					false,
+					true,
+					false,
+					false
+				],
+				[
+					false,
+					false,
+					true,
+					false,
+					false
+				],
+				[
+					false,
+					false,
+					true,
+					false,
+					false
+				],
+				[
+					false,
+					false,
+					true,
+					false,
+					false
+				],
+				[
+					false,
+					false,
+					true,
+					false,
+					false
+				],
+				[
+					false,
+					false,
+					true,
+					false,
+					false
+				]
+			]
+		},
+		"85": {
+			"glyph": 85,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 1,
+				"width": 5,
+				"height": 7
+			},
+			"width": 7,
+			"data": [
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					false,
+					true,
+					true,
+					true,
+					false
+				]
+			]
+		},
+		"86": {
+			"glyph": 86,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 1,
+				"width": 5,
+				"height": 7
+			},
+			"width": 7,
+			"data": [
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					false,
+					true,
+					false,
+					true,
+					false
+				],
+				[
+					false,
+					true,
+					false,
+					true,
+					false
+				],
+				[
+					false,
+					false,
+					true,
+					false,
+					false
+				]
+			]
+		},
+		"87": {
+			"glyph": 87,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 1,
+				"width": 5,
+				"height": 7
+			},
+			"width": 7,
+			"data": [
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					true,
+					false,
+					true
+				],
+				[
+					true,
+					true,
+					false,
+					true,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				]
+			]
+		},
+		"88": {
+			"glyph": 88,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 1,
+				"width": 5,
+				"height": 7
+			},
+			"width": 7,
+			"data": [
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					false,
+					true,
+					false,
+					true,
+					false
+				],
+				[
+					false,
+					false,
+					true,
+					false,
+					false
+				],
+				[
+					false,
+					true,
+					false,
+					true,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				]
+			]
+		},
+		"89": {
+			"glyph": 89,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 1,
+				"width": 5,
+				"height": 7
+			},
+			"width": 7,
+			"data": [
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					false,
+					true,
+					false,
+					true,
+					false
+				],
+				[
+					false,
+					true,
+					false,
+					true,
+					false
+				],
+				[
+					false,
+					false,
+					true,
+					false,
+					false
+				],
+				[
+					false,
+					false,
+					true,
+					false,
+					false
+				],
+				[
+					false,
+					false,
+					true,
+					false,
+					false
+				]
+			]
+		},
+		"90": {
+			"glyph": 90,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 1,
+				"width": 5,
+				"height": 7
+			},
+			"width": 7,
+			"data": [
+				[
+					true,
+					true,
+					true,
+					true,
+					true
+				],
+				[
+					false,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					false,
+					false,
+					false,
+					true,
+					false
+				],
+				[
+					false,
+					false,
+					true,
+					false,
+					false
+				],
+				[
+					false,
+					true,
+					false,
+					false,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					false
+				],
+				[
+					true,
+					true,
+					true,
+					true,
+					true
+				]
+			]
+		},
+		"91": {
+			"glyph": 91,
+			"visible": true,
+			"bounds": {
+				"x": 2,
+				"y": 1,
+				"width": 3,
+				"height": 7
+			},
+			"width": 7,
+			"data": [
+				[
+					true,
+					true,
+					true
+				],
+				[
+					true,
+					false,
+					false
+				],
+				[
+					true,
+					false,
+					false
+				],
+				[
+					true,
+					false,
+					false
+				],
+				[
+					true,
+					false,
+					false
+				],
+				[
+					true,
+					false,
+					false
+				],
+				[
+					true,
+					true,
+					true
+				]
+			]
+		},
+		"92": {
+			"glyph": 92,
+			"visible": true,
+			"bounds": {
+				"x": 2,
+				"y": 1,
+				"width": 3,
+				"height": 7
+			},
+			"width": 7,
+			"data": [
+				[
+					true,
+					false,
+					false
+				],
+				[
+					true,
+					false,
+					false
+				],
+				[
+					false,
+					true,
+					false
+				],
+				[
+					false,
+					true,
+					false
+				],
+				[
+					false,
+					true,
+					false
+				],
+				[
+					false,
+					false,
+					true
+				],
+				[
+					false,
+					false,
+					true
+				]
+			]
+		},
+		"93": {
+			"glyph": 93,
+			"visible": true,
+			"bounds": {
+				"x": 2,
+				"y": 1,
+				"width": 3,
+				"height": 7
+			},
+			"width": 7,
+			"data": [
+				[
+					true,
+					true,
+					true
+				],
+				[
+					false,
+					false,
+					true
+				],
+				[
+					false,
+					false,
+					true
+				],
+				[
+					false,
+					false,
+					true
+				],
+				[
+					false,
+					false,
+					true
+				],
+				[
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					true,
+					true
+				]
+			]
+		},
+		"94": {
+			"glyph": 94,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 1,
+				"width": 5,
+				"height": 3
+			},
+			"width": 7,
+			"data": [
+				[
+					false,
+					false,
+					true,
+					false,
+					false
+				],
+				[
+					false,
+					true,
+					false,
+					true,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				]
+			]
+		},
+		"95": {
+			"glyph": 95,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 7,
+				"width": 5,
+				"height": 1
+			},
+			"width": 7,
+			"data": [
+				[
+					true,
+					true,
+					true,
+					true,
+					true
+				]
+			]
+		},
+		"96": {
+			"glyph": 96,
+			"visible": true,
+			"bounds": {
+				"x": 2,
+				"y": 1,
+				"width": 2,
+				"height": 2
+			},
+			"width": 7,
+			"data": [
+				[
+					true,
+					false
+				],
+				[
+					false,
+					true
+				]
+			]
+		},
+		"97": {
+			"glyph": 97,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 3,
+				"width": 5,
+				"height": 5
+			},
+			"width": 7,
+			"data": [
+				[
+					false,
+					true,
+					true,
+					true,
+					false
+				],
+				[
+					false,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					false,
+					true,
+					true,
+					true,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					false,
+					true,
+					true,
+					true,
+					true
+				]
+			]
+		},
+		"98": {
+			"glyph": 98,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 1,
+				"width": 5,
+				"height": 7
+			},
+			"width": 7,
+			"data": [
+				[
+					true,
+					false,
+					false,
+					false,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					false
+				],
+				[
+					true,
+					true,
+					true,
+					true,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					true,
+					true,
+					true,
+					false
+				]
+			]
+		},
+		"99": {
+			"glyph": 99,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 3,
+				"width": 5,
+				"height": 5
+			},
+			"width": 7,
+			"data": [
+				[
+					false,
+					true,
+					true,
+					true,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					false,
+					true,
+					true,
+					true,
+					false
+				]
+			]
+		},
+		"100": {
+			"glyph": 100,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 1,
+				"width": 5,
+				"height": 7
+			},
+			"width": 7,
+			"data": [
+				[
+					false,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					false,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					false,
+					true,
+					true,
+					true,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					false,
+					true,
+					true,
+					true,
+					true
+				]
+			]
+		},
+		"101": {
+			"glyph": 101,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 3,
+				"width": 5,
+				"height": 5
+			},
+			"width": 7,
+			"data": [
+				[
+					false,
+					true,
+					true,
+					true,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					true,
+					true,
+					true,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					false
+				],
+				[
+					false,
+					true,
+					true,
+					true,
+					false
+				]
+			]
+		},
+		"102": {
+			"glyph": 102,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 1,
+				"width": 4,
+				"height": 7
+			},
+			"width": 7,
+			"data": [
+				[
+					false,
+					false,
+					true,
+					true
+				],
+				[
+					false,
+					true,
+					false,
+					false
+				],
+				[
+					true,
+					true,
+					true,
+					false
+				],
+				[
+					false,
+					true,
+					false,
+					false
+				],
+				[
+					false,
+					true,
+					false,
+					false
+				],
+				[
+					false,
+					true,
+					false,
+					false
+				],
+				[
+					false,
+					true,
+					false,
+					false
+				]
+			]
+		},
+		"103": {
+			"glyph": 103,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 3,
+				"width": 5,
+				"height": 6
+			},
+			"width": 7,
+			"data": [
+				[
+					false,
+					true,
+					true,
+					true,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					false,
+					true,
+					true,
+					true,
+					true
+				],
+				[
+					false,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					false,
+					true,
+					true,
+					true,
+					false
+				]
+			]
+		},
+		"104": {
+			"glyph": 104,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 1,
+				"width": 5,
+				"height": 7
+			},
+			"width": 7,
+			"data": [
+				[
+					true,
+					false,
+					false,
+					false,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					false
+				],
+				[
+					true,
+					true,
+					true,
+					true,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				]
+			]
+		},
+		"105": {
+			"glyph": 105,
+			"visible": true,
+			"bounds": {
+				"x": 2,
+				"y": 1,
+				"width": 3,
+				"height": 7
+			},
+			"width": 7,
+			"data": [
+				[
+					false,
+					true,
+					false
+				],
+				[
+					false,
+					false,
+					false
+				],
+				[
+					true,
+					true,
+					false
+				],
+				[
+					false,
+					true,
+					false
+				],
+				[
+					false,
+					true,
+					false
+				],
+				[
+					false,
+					true,
+					false
+				],
+				[
+					true,
+					true,
+					true
+				]
+			]
+		},
+		"106": {
+			"glyph": 106,
+			"visible": true,
+			"bounds": {
+				"x": 2,
+				"y": 1,
+				"width": 2,
+				"height": 8
+			},
+			"width": 7,
+			"data": [
+				[
+					false,
+					true
+				],
+				[
+					false,
+					false
+				],
+				[
+					true,
+					true
+				],
+				[
+					false,
+					true
+				],
+				[
+					false,
+					true
+				],
+				[
+					false,
+					true
+				],
+				[
+					false,
+					true
+				],
+				[
+					true,
+					false
+				]
+			]
+		},
+		"107": {
+			"glyph": 107,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 1,
+				"width": 4,
+				"height": 7
+			},
+			"width": 7,
+			"data": [
+				[
+					true,
+					false,
+					false,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					true,
+					false
+				],
+				[
+					true,
+					true,
+					false,
+					false
+				],
+				[
+					true,
+					false,
+					true,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					true
+				]
+			]
+		},
+		"108": {
+			"glyph": 108,
+			"visible": true,
+			"bounds": {
+				"x": 2,
+				"y": 1,
+				"width": 3,
+				"height": 7
+			},
+			"width": 7,
+			"data": [
+				[
+					true,
+					true,
+					false
+				],
+				[
+					false,
+					true,
+					false
+				],
+				[
+					false,
+					true,
+					false
+				],
+				[
+					false,
+					true,
+					false
+				],
+				[
+					false,
+					true,
+					false
+				],
+				[
+					false,
+					true,
+					false
+				],
+				[
+					true,
+					true,
+					true
+				]
+			]
+		},
+		"109": {
+			"glyph": 109,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 3,
+				"width": 5,
+				"height": 5
+			},
+			"width": 7,
+			"data": [
+				[
+					true,
+					true,
+					false,
+					true,
+					false
+				],
+				[
+					true,
+					false,
+					true,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					true,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					true,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					true,
+					false,
+					true
+				]
+			]
+		},
+		"110": {
+			"glyph": 110,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 3,
+				"width": 5,
+				"height": 5
+			},
+			"width": 7,
+			"data": [
+				[
+					true,
+					true,
+					true,
+					true,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				]
+			]
+		},
+		"111": {
+			"glyph": 111,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 3,
+				"width": 5,
+				"height": 5
+			},
+			"width": 7,
+			"data": [
+				[
+					false,
+					true,
+					true,
+					true,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					false,
+					true,
+					true,
+					true,
+					false
+				]
+			]
+		},
+		"112": {
+			"glyph": 112,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 3,
+				"width": 5,
+				"height": 6
+			},
+			"width": 7,
+			"data": [
+				[
+					true,
+					false,
+					true,
+					true,
+					false
+				],
+				[
+					true,
+					true,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					true,
+					true,
+					true,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					false
+				]
+			]
+		},
+		"113": {
+			"glyph": 113,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 3,
+				"width": 5,
+				"height": 6
+			},
+			"width": 7,
+			"data": [
+				[
+					false,
+					true,
+					true,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					true,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					false,
+					true,
+					true,
+					true,
+					true
+				],
+				[
+					false,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					false,
+					false,
+					false,
+					false,
+					true
+				]
+			]
+		},
+		"114": {
+			"glyph": 114,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 2,
+				"width": 5,
+				"height": 6
+			},
+			"width": 7,
+			"data": [
+				[
+					true,
+					false,
+					true,
+					true,
+					false
+				],
+				[
+					true,
+					true,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					false
+				]
+			]
+		},
+		"115": {
+			"glyph": 115,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 3,
+				"width": 5,
+				"height": 5
+			},
+			"width": 7,
+			"data": [
+				[
+					false,
+					true,
+					true,
+					true,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					false
+				],
+				[
+					false,
+					true,
+					true,
+					true,
+					false
+				],
+				[
+					false,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					true,
+					true,
+					true,
+					false
+				]
+			]
+		},
+		"116": {
+			"glyph": 116,
+			"visible": true,
+			"bounds": {
+				"x": 2,
+				"y": 1,
+				"width": 3,
+				"height": 7
+			},
+			"width": 7,
+			"data": [
+				[
+					false,
+					true,
+					false
+				],
+				[
+					false,
+					true,
+					false
+				],
+				[
+					true,
+					true,
+					true
+				],
+				[
+					false,
+					true,
+					false
+				],
+				[
+					false,
+					true,
+					false
+				],
+				[
+					false,
+					true,
+					false
+				],
+				[
+					false,
+					false,
+					true
+				]
+			]
+		},
+		"117": {
+			"glyph": 117,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 3,
+				"width": 5,
+				"height": 5
+			},
+			"width": 7,
+			"data": [
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					false,
+					true,
+					true,
+					true,
+					true
+				]
+			]
+		},
+		"118": {
+			"glyph": 118,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 3,
+				"width": 5,
+				"height": 5
+			},
+			"width": 7,
+			"data": [
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					false,
+					true,
+					false,
+					true,
+					false
+				],
+				[
+					false,
+					false,
+					true,
+					false,
+					false
+				]
+			]
+		},
+		"119": {
+			"glyph": 119,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 3,
+				"width": 5,
+				"height": 5
+			},
+			"width": 7,
+			"data": [
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					true,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					true,
+					false,
+					true
+				],
+				[
+					false,
+					true,
+					false,
+					true,
+					false
+				]
+			]
+		},
+		"120": {
+			"glyph": 120,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 3,
+				"width": 5,
+				"height": 5
+			},
+			"width": 7,
+			"data": [
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					false,
+					true,
+					false,
+					true,
+					false
+				],
+				[
+					false,
+					false,
+					true,
+					false,
+					false
+				],
+				[
+					false,
+					true,
+					false,
+					true,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				]
+			]
+		},
+		"121": {
+			"glyph": 121,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 3,
+				"width": 5,
+				"height": 5
+			},
+			"width": 7,
+			"data": [
+				[
+					true,
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					false,
+					true,
+					false,
+					true,
+					false
+				],
+				[
+					false,
+					false,
+					true,
+					false,
+					false
+				],
+				[
+					false,
+					false,
+					true,
+					false,
+					false
+				],
+				[
+					false,
+					false,
+					true,
+					false,
+					false
+				]
+			]
+		},
+		"122": {
+			"glyph": 122,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 3,
+				"width": 5,
+				"height": 5
+			},
+			"width": 7,
+			"data": [
+				[
+					true,
+					true,
+					true,
+					true,
+					true
+				],
+				[
+					false,
+					false,
+					false,
+					true,
+					false
+				],
+				[
+					false,
+					false,
+					true,
+					false,
+					false
+				],
+				[
+					false,
+					true,
+					false,
+					false,
+					false
+				],
+				[
+					true,
+					true,
+					true,
+					true,
+					true
+				]
+			]
+		},
+		"123": {
+			"glyph": 123,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 1,
+				"width": 4,
+				"height": 7
+			},
+			"width": 7,
+			"data": [
+				[
+					false,
+					false,
+					true,
+					true
+				],
+				[
+					false,
+					true,
+					false,
+					false
+				],
+				[
+					false,
+					true,
+					false,
+					false
+				],
+				[
+					true,
+					false,
+					false,
+					false
+				],
+				[
+					false,
+					true,
+					false,
+					false
+				],
+				[
+					false,
+					true,
+					false,
+					false
+				],
+				[
+					false,
+					false,
+					true,
+					true
+				]
+			]
+		},
+		"124": {
+			"glyph": 124,
+			"visible": true,
+			"bounds": {
+				"x": 3,
+				"y": 1,
+				"width": 1,
+				"height": 7
+			},
+			"width": 7,
+			"data": [
+				[
+					true
+				],
+				[
+					true
+				],
+				[
+					true
+				],
+				[
+					true
+				],
+				[
+					true
+				],
+				[
+					true
+				],
+				[
+					true
+				]
+			]
+		},
+		"125": {
+			"glyph": 125,
+			"visible": true,
+			"bounds": {
+				"x": 2,
+				"y": 1,
+				"width": 4,
+				"height": 7
+			},
+			"width": 7,
+			"data": [
+				[
+					true,
+					true,
+					false,
+					false
+				],
+				[
+					false,
+					false,
+					true,
+					false
+				],
+				[
+					false,
+					false,
+					true,
+					false
+				],
+				[
+					false,
+					false,
+					false,
+					true
+				],
+				[
+					false,
+					false,
+					true,
+					false
+				],
+				[
+					false,
+					false,
+					true,
+					false
+				],
+				[
+					true,
+					true,
+					false,
+					false
+				]
+			]
+		},
+		"126": {
+			"glyph": 126,
+			"visible": true,
+			"bounds": {
+				"x": 1,
+				"y": 4,
+				"width": 6,
+				"height": 2
+			},
+			"width": 7,
+			"data": [
+				[
+					false,
+					true,
+					true,
+					false,
+					false,
+					true
+				],
+				[
+					true,
+					false,
+					false,
+					true,
+					true,
+					false
+				]
+			]
+		}
+	},
+	"glyphSel": 48,
+	"glyphList": [
+		32,
+		33,
+		34,
+		35,
+		36,
+		37,
+		38,
+		39,
+		40,
+		41,
+		42,
+		43,
+		44,
+		45,
+		46,
+		47,
+		48,
+		49,
+		50,
+		51,
+		52,
+		53,
+		54,
+		55,
+		56,
+		57,
+		58,
+		59,
+		60,
+		61,
+		62,
+		63,
+		64,
+		65,
+		66,
+		67,
+		68,
+		69,
+		70,
+		71,
+		72,
+		73,
+		74,
+		75,
+		76,
+		77,
+		78,
+		79,
+		80,
+		81,
+		82,
+		83,
+		84,
+		85,
+		86,
+		87,
+		88,
+		89,
+		90,
+		91,
+		92,
+		93,
+		94,
+		95,
+		96,
+		97,
+		98,
+		99,
+		100,
+		101,
+		102,
+		103,
+		104,
+		105,
+		106,
+		107,
+		108,
+		109,
+		110,
+		111,
+		112,
+		113,
+		114,
+		115,
+		116,
+		117,
+		118,
+		119,
+		120,
+		121,
+		122,
+		123,
+		124,
+		125,
+		126
+	],
+	"glyphRanges": [
+		{
+			"start": 32,
+			"end": 126
+		}
+	],
+	"glyphHeight": 9,
+	"gridDx": -2,
+	"gridDy": -2,
+	"gridWidth": 11,
+	"gridHeight": 13,
+	"showGrid": true,
+	"showRuler": false,
+	"showOutlines": true
+}
