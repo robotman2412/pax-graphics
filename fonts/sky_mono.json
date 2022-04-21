@@ -4260,9 +4260,9 @@
 			"visible": true,
 			"bounds": {
 				"x": 1,
-				"y": 2,
+				"y": 3,
 				"width": 5,
-				"height": 6
+				"height": 5
 			},
 			"width": 7,
 			"data": [
@@ -4279,13 +4279,6 @@
 					false,
 					false,
 					true
-				],
-				[
-					true,
-					false,
-					false,
-					false,
-					false
 				],
 				[
 					true,
@@ -4868,7 +4861,7 @@
 			]
 		}
 	},
-	"glyphSel": 48,
+	"glyphSel": 114,
 	"glyphList": [
 		32,
 		33,
