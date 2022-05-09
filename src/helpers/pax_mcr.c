@@ -23,8 +23,8 @@
 */
 
 #ifndef PAX_GFX_C
-#error "This file should not be compiled on it's own."
-#endif
+#pragma message "This file should not be compiled on it's own."
+#else
 
 #include "pax_internal.h"
 
@@ -242,3 +242,4 @@ void pax_disable_multicore() {
 	#endif
 }
 
+#endif

@@ -23,8 +23,8 @@
 */
 
 #ifndef PAX_GFX_C
-#error "This file should not be compiled on it's own."
-#endif
+#pragma message "This file should not be compiled on it's own."
+#else
 
 #include "pax_internal.h"
 
@@ -184,3 +184,5 @@ static void pax_line_unshaded(pax_buf_t *buf, pax_col_t color, float x0, float y
 		y += dy;
 	}
 }
+
+#endif
