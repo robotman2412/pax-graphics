@@ -59,13 +59,13 @@ struct pax_bmpv {
 
 struct pax_font {
 	// The searchable name of the font.
-	char             *name;
+	const char             *name;
 	// The number of ranges included in the font.
-	size_t            n_ranges;
+	const size_t            n_ranges;
 	// The ranges included in the font.
-	pax_font_range_t *ranges;
+	const pax_font_range_t *ranges;
 	// Default point size.
-	uint16_t          default_size;
+	uint16_t                default_size;
 };
 
 struct pax_font_range {

@@ -69,7 +69,7 @@ typedef struct {
 // Returns the new string pointer.
 // Sets the decoded UTF-8 using a pointer.
 // If the string terminates early or contains invalid unicode, U+FFFD is returned.
-char *utf8_getch(char *cstr, wchar_t *out) {
+char *utf8_getch(const char *cstr, wchar_t *out) {
 	char len, mask;
 	if (!*cstr) {
 		*out = 0xfffd; // Something something invalid UTF8.
@@ -106,21 +106,15 @@ char *utf8_getch(char *cstr, wchar_t *out) {
 }
 
 // Returns how many UTF-8 characters a given c-string contains.
-size_t utf8_strlen(char *cstr) {
-	char   *end   = cstr + strlen(cstr);
-	wchar_t dummy = 0;
-	size_t  len   = 0;
+size_t utf8_strlen(const char *cstr) {
+	const char *end   = cstr + strlen(cstr);
+	wchar_t     dummy = 0;
+	size_t      len   = 0;
 	while (cstr != end) {
 		len ++;
 		cstr = utf8_getch(cstr, &dummy);
 	}
 	return 0;
-}
-
-// Determine whether a character is visible according to text rendering.
-// Space is not considered visible.
-static inline bool pax_is_visible_char(wchar_t c) {
-	return c > 0x1f && c != 0x7f;
 }
 
 
@@ -238,7 +232,7 @@ static pax_font_range_t *text_get_range(pax_font_t *font, wchar_t c) {
 }
 
 // Internal method for rendering text and calculating text size.
-static pax_vec1_t text_generic(pax_text_ctx_t *ctx, char *text) {
+static pax_vec1_t text_generic(pax_text_ctx_t *ctx, const char *text) {
 	// Sanity checks.
 	if (!text || !*text) {
 		return (pax_vec1_t) { .x=0, .y=0, };
@@ -318,7 +312,7 @@ static pax_vec1_t text_generic(pax_text_ctx_t *ctx, char *text) {
 
 // Draw a string with the given font.
 // If font is NULL, the default font (7x9) will be used.
-void pax_draw_text(pax_buf_t *buf, pax_col_t color, pax_font_t *font, float font_size, float x, float y, char *text) {
+void pax_draw_text(pax_buf_t *buf, pax_col_t color, pax_font_t *font, float font_size, float x, float y, const char *text) {
 	if (!font) font = PAX_FONT_DEFAULT;
 	pax_text_ctx_t ctx = {
 		.do_render = true,
@@ -338,7 +332,7 @@ void pax_draw_text(pax_buf_t *buf, pax_col_t color, pax_font_t *font, float font
 // Calculate the size of the string with the given font.
 // Size is before matrix transformation.
 // If font is NULL, the default font (7x9) will be used.
-pax_vec1_t pax_text_size(pax_font_t *font, float font_size, char *text) {
+pax_vec1_t pax_text_size(pax_font_t *font, float font_size, const char *text) {
 	if (!font) font = PAX_FONT_DEFAULT;
 	pax_text_ctx_t ctx = {
 		.do_render = false,
@@ -351,6 +345,12 @@ pax_vec1_t pax_text_size(pax_font_t *font, float font_size, char *text) {
 
 
 /* ====== DEPRECATED CRAP ====== */
+
+// Determine whether a character is visible according to text rendering.
+// Space is not considered visible.
+// static inline bool pax_is_visible_char(wchar_t c) {
+// 	return c > 0x1f && c != 0x7f;
+// }
 
 /*
 // Draw a string with the given font.
