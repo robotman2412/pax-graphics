@@ -42,23 +42,23 @@ typedef struct {
 	// The on-screen position of the text.
 	float       x, y;
 	// The font to use.
-	pax_font_t *font;
+	const pax_font_t *font;
 	// The font size to use.
-	float       font_size;
+	float             font_size;
 	
 	/* ---- Rendering context ---- */
 	// The glyph offset, if any.
-	uint8_t    *glyph_offs;
+	const uint8_t    *glyph_offs;
 	// The glyph bits per pixel, if any.
-	uint8_t     glyph_bpp;
+	uint8_t           glyph_bpp;
 	// The rendered size of the glyph.
-	uint8_t     render_width, render_height;
+	uint8_t           render_width, render_height;
 	// The counted size of the glyph.
-	uint8_t     counted_width, counted_height;
+	uint8_t           counted_width, counted_height;
 	// The rendering offset of the glyph.
-	uint8_t     dx, dy;
+	uint8_t           dx, dy;
 	// The vertical offset in bits per pixel.
-	uint8_t     vertical_offs;
+	uint8_t           vertical_offs;
 } pax_text_ctx_t;
 
 
@@ -73,10 +73,10 @@ char *utf8_getch(const char *cstr, wchar_t *out) {
 	char len, mask;
 	if (!*cstr) {
 		*out = 0xfffd; // Something something invalid UTF8.
-		return cstr;
+		return (char *) cstr;
 	} else if (*cstr <= 0x7f) {
 		*out = *cstr;
-		return cstr + 1;
+		return (char *) cstr + 1;
 	} else if ((*cstr & 0xe0) == 0xc0) {
 		len = 2;
 		mask = 0x1f;
@@ -88,21 +88,21 @@ char *utf8_getch(const char *cstr, wchar_t *out) {
 		mask = 0x07;
 	} else {
 		*out = 0xfffd; // Something something invalid UTF8.
-		return cstr;
+		return (char *) cstr;
 	}
 	
 	*out = 0;
 	for (int i = 0; i < len; i++) {
 		if (!*cstr) {
 			*out = 0xfffd; // Something something invalid UTF8.
-			return cstr;
+			return (char *) cstr;
 		}
 		*out <<= 6;
 		*out |= *cstr & mask;
 		mask = 0x3f;
 		cstr ++;
 	}
-	return cstr;
+	return (char *) cstr;
 }
 
 // Returns how many UTF-8 characters a given c-string contains.
@@ -122,7 +122,7 @@ size_t utf8_strlen(const char *cstr) {
 /* ======= DRAWING: TEXT ======= */
 
 // Internal method for monospace bitmapped characters.
-pax_vec1_t text_bitmap_mono(pax_text_ctx_t *ctx, pax_font_range_t *range, wchar_t glyph) {
+pax_vec1_t text_bitmap_mono(pax_text_ctx_t *ctx, const pax_font_range_t *range, wchar_t glyph) {
 	if (ctx->do_render) {
 		// Set up shader.
 		pax_font_bmp_args_t args = {
@@ -167,9 +167,9 @@ pax_vec1_t text_bitmap_mono(pax_text_ctx_t *ctx, pax_font_range_t *range, wchar_
 }
 
 // Internal method for variable pitch bitmapped characters.
-pax_vec1_t text_bitmap_var(pax_text_ctx_t *ctx, pax_font_range_t *range, wchar_t glyph) {
+pax_vec1_t text_bitmap_var(pax_text_ctx_t *ctx, const pax_font_range_t *range, wchar_t glyph) {
 	size_t index = (glyph - range->start);
-	pax_bmpv_t *dims = &range->bitmap_var.dims[index];
+	const pax_bmpv_t *dims = &range->bitmap_var.dims[index];
 	if (ctx->do_render) {
 		// Set up shader.
 		pax_font_bmp_args_t args = {
@@ -216,13 +216,13 @@ pax_vec1_t text_bitmap_var(pax_text_ctx_t *ctx, pax_font_range_t *range, wchar_t
 }
 
 // Determines whether a character lies in a given range.
-static inline bool text_range_includes(pax_font_range_t *range, wchar_t c) {
+static inline bool text_range_includes(const pax_font_range_t *range, wchar_t c) {
 	return c >= range->start && c <= range->end;
 }
 
 // Internal method for determining the font range to use.
 // Returns NULL if not in any range.
-static pax_font_range_t *text_get_range(pax_font_t *font, wchar_t c) {
+static const pax_font_range_t *text_get_range(const pax_font_t *font, wchar_t c) {
 	for (size_t i = 0; i < font->n_ranges; i++) {
 		if (text_range_includes(&font->ranges[i], c)) {
 			return &font->ranges[i];
@@ -251,8 +251,8 @@ static pax_vec1_t text_generic(pax_text_ctx_t *ctx, const char *text) {
 	
 	float x = 0, y = 0;
 	float max_x = 0;
-	pax_font_range_t *range = NULL;
-	char *limit = text + strlen(text);
+	const pax_font_range_t *range = NULL;
+	const char *limit = text + strlen(text);
 	
 	// Simply loop over all characters.
 	while (text < limit) {
@@ -312,7 +312,7 @@ static pax_vec1_t text_generic(pax_text_ctx_t *ctx, const char *text) {
 
 // Draw a string with the given font.
 // If font is NULL, the default font (7x9) will be used.
-void pax_draw_text(pax_buf_t *buf, pax_col_t color, pax_font_t *font, float font_size, float x, float y, const char *text) {
+void pax_draw_text(pax_buf_t *buf, pax_col_t color, const pax_font_t *font, float font_size, float x, float y, const char *text) {
 	if (!font) font = PAX_FONT_DEFAULT;
 	pax_text_ctx_t ctx = {
 		.do_render = true,
@@ -332,7 +332,7 @@ void pax_draw_text(pax_buf_t *buf, pax_col_t color, pax_font_t *font, float font
 // Calculate the size of the string with the given font.
 // Size is before matrix transformation.
 // If font is NULL, the default font (7x9) will be used.
-pax_vec1_t pax_text_size(pax_font_t *font, float font_size, const char *text) {
+pax_vec1_t pax_text_size(const pax_font_t *font, float font_size, const char *text) {
 	if (!font) font = PAX_FONT_DEFAULT;
 	pax_text_ctx_t ctx = {
 		.do_render = false,

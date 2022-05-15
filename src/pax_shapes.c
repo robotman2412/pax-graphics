@@ -121,7 +121,7 @@ static int bezier_point_t_comp(const void *e0, const void *e1) {
 // Convert a cubic bezier curve to line segments, with the given number of points.
 // From and to are from 0 to 1, but any value is accepted.
 void pax_vectorise_bezier_part(pax_vec1_t *ptr, size_t max_points, pax_vec4_t control_points, float t_from, float t_to) {
-	if (max_points < 4) PAX_ERROR1("pax_vectorise_bezier", PAX_ERR_PARAM, 0);
+	if (max_points < 4) PAX_ERROR("pax_vectorise_bezier", PAX_ERR_PARAM);
 	if (!ptr) {
 		PAX_ERROR("pax_vectorise_bezier_part", PAX_ERR_PARAM);
 		return;
@@ -494,6 +494,7 @@ static bool is_clockwise(int num_points, indexed_point_t *points, int index, int
 	return result < 0;
 }
 
+/*
 static bool is_clockwise3(int num_points, indexed_point_t *points, int index) {
 	// COPY NOW!
 	indexed_point_t test[3];
@@ -516,6 +517,7 @@ static bool is_clockwise3(int num_points, indexed_point_t *points, int index) {
 		return (points[0].y > points[2].y) ^ dir1;
 	}
 }
+*/
 
 // Triangulates a shape based on an outline (any shape).
 // In effect, this creates triangles which completely fill the shape.
@@ -542,7 +544,7 @@ void pax_triang_concave(size_t **output, size_t num_points, pax_vec1_t *raw_poin
 	// Cannot triangulate with less than 3 points.
 	if (num_points < 3) {
 		*output = NULL;
-		return 0;
+		return;
 	}
 	
 	// Find an annoying variable.

@@ -36,11 +36,11 @@ extern "C" {
 /* ============ FONTS ============ */
 
 typedef struct pax_font_bmp_args {
-	pax_font_t       *font;
-	pax_font_range_t *range;
-	char              glyph;
-	size_t            glyph_index;
-	size_t            glyph_y_mul;
+	const pax_font_t       *font;
+	const pax_font_range_t *range;
+	wchar_t                 glyph;
+	size_t                  glyph_index;
+	size_t                  glyph_y_mul;
 } pax_font_bmp_args_t;
 
 // Texture shader for 1bpp bitmap fonts.

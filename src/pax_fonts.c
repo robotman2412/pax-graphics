@@ -125,7 +125,7 @@ const pax_font_t pax_fonts_index[] = {
 const size_t pax_n_fonts = sizeof(pax_fonts_index) / sizeof(pax_font_t);
 
 // Finds the built-in font with the given name.
-pax_font_t *pax_get_font(char *name) {
+const pax_font_t *pax_get_font(char *name) {
 	for (size_t i = 0; i < PAX_N_FONTS; i++) {
 		if (!strcasecmp(pax_fonts_index[i].name, name)) {
 			return &pax_fonts_index[i];

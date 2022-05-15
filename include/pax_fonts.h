@@ -78,16 +78,16 @@ struct pax_font_range {
 	union {
 		// Monospace, bitmapped fonts.
 		struct {
-			uint8_t *glyphs;
-			uint8_t  width;
-			uint8_t  height;
+			const uint8_t *glyphs;
+			const uint8_t  width;
+			const uint8_t  height;
 			// uint8_t  bpp;
 		} bitmap_mono;
 		// Variable pitch, bitmapped fonts.
 		struct {
-			uint8_t    *glyphs;
-			pax_bmpv_t *dims;
-			uint8_t     height;
+			const uint8_t    *glyphs;
+			const pax_bmpv_t *dims;
+			const uint8_t     height;
 			// uint8_t     bpp;
 		} bitmap_var;
 	};
@@ -103,7 +103,7 @@ extern const size_t     pax_n_fonts;
 /* ========== FUNCTIONS ========== */
 
 // Finds the built-in font with the given name.
-pax_font_t *pax_get_font(char *name);
+const pax_font_t *pax_get_font(char *name);
 
 #ifdef __cplusplus
 }
