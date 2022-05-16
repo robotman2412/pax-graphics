@@ -85,6 +85,26 @@ List of text methods:
 | void       | pax_draw_text | pax_buf_t \*buf, pax_col_t color, pax_font_t \*font, float font_size, float x, float y, char \*text | Draws text with a given font.
 | pax_vec1_t | pax_text_size | pax_font_t \*font, float font_size, char \*text | Calculate the size of the string with the given font.
 
+Of course, there are some font APIs as well.
+
+First, every font in pax has the attribute `default_size`:
+`myfont->default_size`
+
+This value is the size recommended by the font's creator.
+
+There is also this utility function that finds a font for you:
+| returns       | name         | arguments
+| :------------ | :----------- | :----------
+| pax_font_t \* | pax_get_font | char \*name
+If your pick isn't found it returns the default font instead.
+
+Current list of fonts:
+| name          | id                      | default size
+| :------------ | :---------------------- | :-----------
+| Sky Mono      | `"sky mono"` or `"7x9"` | 7 (width) by 9 (height)
+| Sky Variable  | `"sky"`                 | 9 (height)
+
+
 # Background
 | name           | arguments                        | description
 | :------------- | :------------------------------- | :----------
