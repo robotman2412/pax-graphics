@@ -41,6 +41,8 @@ typedef struct pax_font_bmp_args {
 	wchar_t                 glyph;
 	size_t                  glyph_index;
 	size_t                  glyph_y_mul;
+	uint8_t                 glyph_w;
+	uint8_t                 glyph_h;
 } pax_font_bmp_args_t;
 
 // Texture shader for 1bpp bitmap fonts.

@@ -23,12 +23,15 @@
 */
 
 #include "pax_shaders.h"
+#include <math.h>
 
 pax_col_t pax_shader_font_bmp(pax_col_t tint, int x, int y, float u, float v, void *args0) {
 	pax_font_bmp_args_t *args = args0;
 	
 	int glyph_x = u;
 	int glyph_y = v;
+	if (glyph_x >= args->glyph_w) glyph_x = args->glyph_w - 1;
+	if (glyph_y >= args->glyph_h) glyph_y = args->glyph_h - 1;
 	size_t glyph_index = args->glyph_index + glyph_x / 8 + args->glyph_y_mul * glyph_y;
 	
 	return args->range->bitmap_mono.glyphs[glyph_index] & (1 << (glyph_x & 7)) ? tint : 0;

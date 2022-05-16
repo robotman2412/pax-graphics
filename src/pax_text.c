@@ -129,7 +129,9 @@ pax_vec1_t text_bitmap_mono(pax_text_ctx_t *ctx, const pax_font_range_t *range, 
 			.font        = ctx->font,
 			.range       = range,
 			.glyph       = glyph,
-			.glyph_y_mul = (range->bitmap_mono.width + 7) / 8
+			.glyph_y_mul = (range->bitmap_mono.width + 7) / 8,
+			.glyph_w     = range->bitmap_mono.width,
+			.glyph_h     = range->bitmap_mono.height,
 		};
 		size_t glyph_len = args.glyph_y_mul * range->bitmap_mono.height;
 		args.glyph_index = glyph_len * (glyph - range->start);
@@ -176,7 +178,9 @@ pax_vec1_t text_bitmap_var(pax_text_ctx_t *ctx, const pax_font_range_t *range, w
 			.font        = ctx->font,
 			.range       = range,
 			.glyph       = glyph,
-			.glyph_y_mul = (dims->draw_w + 7) / 8
+			.glyph_y_mul = (dims->draw_w + 7) / 8,
+			.glyph_w     = dims->draw_w,
+			.glyph_h     = dims->draw_h,
 		};
 		args.glyph_index = dims->index;
 		pax_shader_t shader = {
@@ -189,9 +193,9 @@ pax_vec1_t text_bitmap_var(pax_text_ctx_t *ctx, const pax_font_range_t *range, w
 		// And UVs.
 		pax_quad_t uvs = {
 			.x0 = 0,                  .y0 = 0,
-			.x1 = dims->draw_w-0.001, .y1 = 0,
-			.x2 = dims->draw_w-0.001, .y2 = dims->draw_h-0.001,
-			.x3 = 0,                  .y3 = dims->draw_h-0.001,
+			.x1 = dims->draw_w-0.00, .y1 = 0,
+			.x2 = dims->draw_w-0.00, .y2 = dims->draw_h-0.00,
+			.x3 = 0,                  .y3 = dims->draw_h-0.00,
 		};
 		
 		// Start drawing, boy!
