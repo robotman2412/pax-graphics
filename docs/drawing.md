@@ -76,7 +76,7 @@ List of shaded drawing methods:
 
 # Text drawing
 
-Text drawing works like normal drawing, but with more characters.
+Text drawing works like normal drawing, but with more characters and UTF-8 support.
 In PAX, you can draw text as well as calculate it's size.
 
 List of text methods:
@@ -84,6 +84,26 @@ List of text methods:
 | :--------- | :------------ | :-------------------------------------------------------------------------------------------------- | :----------
 | void       | pax_draw_text | pax_buf_t \*buf, pax_col_t color, pax_font_t \*font, float font_size, float x, float y, char \*text | Draws text with a given font.
 | pax_vec1_t | pax_text_size | pax_font_t \*font, float font_size, char \*text | Calculate the size of the string with the given font.
+
+Of course, there are some font APIs as well.
+
+First, every font in pax has the attribute `default_size`:
+`myfont->default_size`.
+This value is the size recommended by the font's creator.
+
+There is also this utility function that finds a font for you:
+| returns       | name         | arguments
+| :------------ | :----------- | :----------
+| pax_font_t \* | pax_get_font | char \*name
+If your pick isn't found it returns the default font instead.
+
+Current list of fonts:
+| name             | id                      | default size            | glyphs
+| :--------------- | :---------------------- | :---------------------- | :-----
+| Sky Mono         | `"sky mono"` or `"7x9"` | 7 (width) by 9 (height) | ASCII
+| Sky Variable     | `"sky"`                 | 9 (height)              | ASCII and latin supplements
+| Permanent Marker | `"permanentmarker"`     | 22 (height)             | ASCII and latin supplements
+
 
 # Background
 | name           | arguments                        | description
