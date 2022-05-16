@@ -76,7 +76,7 @@ List of shaded drawing methods:
 
 # Text drawing
 
-Text drawing works like normal drawing, but with more characters.
+Text drawing works like normal drawing, but with more characters and UTF-8 support.
 In PAX, you can draw text as well as calculate it's size.
 
 List of text methods:
@@ -88,8 +88,7 @@ List of text methods:
 Of course, there are some font APIs as well.
 
 First, every font in pax has the attribute `default_size`:
-`myfont->default_size`
-
+`myfont->default_size`.
 This value is the size recommended by the font's creator.
 
 There is also this utility function that finds a font for you:
@@ -99,10 +98,11 @@ There is also this utility function that finds a font for you:
 If your pick isn't found it returns the default font instead.
 
 Current list of fonts:
-| name          | id                      | default size
-| :------------ | :---------------------- | :-----------
-| Sky Mono      | `"sky mono"` or `"7x9"` | 7 (width) by 9 (height)
-| Sky Variable  | `"sky"`                 | 9 (height)
+| name             | id                      | default size            | glyphs
+| :--------------- | :---------------------- | :---------------------- | :-----
+| Sky Mono         | `"sky mono"` or `"7x9"` | 7 (width) by 9 (height) | ASCII
+| Sky Variable     | `"sky"`                 | 9 (height)              | ASCII and latin supplements
+| Permanent Marker | `"permanentmarker"`     | 22 (height)             | ASCII and latin supplements
 
 
 # Background
