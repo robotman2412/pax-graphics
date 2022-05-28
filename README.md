@@ -6,6 +6,7 @@ ESP-IDF module
 Documentation can be found [here](docs).
 
 # See also
+- https://github.com/badgeteam/mch2022-firmware-esp32
 - https://github.com/robotman2412/mch2022-badge-tests
 - https://mch2022.org/
 - https://badge.team/
