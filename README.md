@@ -11,6 +11,6 @@ Documentation can be found [here](docs).
 - https://badge.team/
 
 # TODO list
-- Re-work the entire text system
+- Built-in word-wrap support
 - Import more fonts
-- Plug in WiFi cables
+- Calibrate magnetoturboencabulators
