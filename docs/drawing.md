@@ -95,6 +95,7 @@ There is also this utility function that finds a font for you:
 | returns       | name         | arguments
 | :------------ | :----------- | :----------
 | pax_font_t \* | pax_get_font | char \*name
+
 If your pick isn't found it returns the default font instead.
 
 Current list of fonts:
