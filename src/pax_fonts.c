@@ -27,6 +27,8 @@
 
 extern const pax_font_range_t pax_font_sky_ranges[];
 extern const pax_font_range_t marker_ranges[];
+extern const pax_font_range_t sairaregular_ranges[];
+extern const pax_font_range_t sairacondensed_ranges[];
 
 // Font ROMs.
 extern const uint8_t font_bitmap_raw_7x9[];
@@ -69,31 +71,34 @@ const uint8_t unfunny_thingy[] = {
 
 const pax_font_range_t font_7x9_ranges[] = {
 	{ // Ascii range.
-		.type  = PAX_FONT_BITMAP_MONO,
+		.type  = PAX_FONT_TYPE_BITMAP_MONO,
 		.start = 0x00000,
 		.end   = 0x00080,
 		.bitmap_mono = {
 			.glyphs = font_bitmap_raw_7x9,
 			.width  = 7,
 			.height = 9,
+			.bpp    = 1,
 		},
 	}, { // Test range.
-		.type  = PAX_FONT_BITMAP_MONO,
+		.type  = PAX_FONT_TYPE_BITMAP_MONO,
 		.start = 0x030c4,
 		.end   = 0x030c4,
 		.bitmap_mono = {
 			.glyphs = funny_thingy,
 			.width  = 7,
 			.height = 9,
+			.bpp    = 1,
 		},
 	}, { // Macron range.
-		.type  = PAX_FONT_BITMAP_MONO,
+		.type  = PAX_FONT_TYPE_BITMAP_MONO,
 		.start = 0x000af,
 		.end   = 0x000af,
 		.bitmap_mono = {
 			.glyphs = unfunny_thingy,
 			.width  = 7,
 			.height = 9,
+			.bpp    = 1,
 		},
 	}
 };
@@ -119,8 +124,17 @@ const pax_font_t pax_fonts_index[] = {
 		.n_ranges     = 23,
 		.ranges       = marker_ranges,
 		.default_size = 22,
+	}, { // Alpha test
+		.name         = "saira condensed",
+		.n_ranges     = 80,
+		.ranges       = sairacondensed_ranges,
+		.default_size = 45,
+	}, { // Saira regular
+		.name         = "saira regular",
+		.n_ranges     = 23,
+		.ranges       = sairaregular_ranges,
+		.default_size = 18,
 	}
-    // PAX_FONT_BITMAP_UNI("7x9", font_bitmap_raw_7x9, 7, 9)
 };
 const size_t pax_n_fonts = sizeof(pax_fonts_index) / sizeof(pax_font_t);
 

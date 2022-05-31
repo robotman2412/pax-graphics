@@ -29,12 +29,19 @@
 
 /* ======= DRAWING: TEXT ======= */
 
-// Draw a string with the given font.
-// If font is NULL, the default font (7x9) will be used.
-void        pax_draw_text           (pax_buf_t *buf, pax_col_t color, const pax_font_t *font, float font_size, float x, float y, const char *text);
+// Draw a string with the given font and return it's size.
+// Size is before matrix transformation.
+// If font is NULL, the default font (sky) will be used.
+// Font is scaled up without interpolation.
+pax_vec1_t  pax_draw_text           (pax_buf_t *buf, pax_col_t color, const pax_font_t *font, float font_size, float x, float y, const char *text);
+// Draw a string with the given font and return it's size.
+// Size is before matrix transformation.
+// If font is NULL, the default font (sky) will be used.
+// Font is scaled up with bilinear interpolation.
+pax_vec1_t  pax_draw_text_aa        (pax_buf_t *buf, pax_col_t color, const pax_font_t *font, float font_size, float x, float y, const char *text);
 // Calculate the size of the string with the given font.
 // Size is before matrix transformation.
-// If font is NULL, the default font (7x9) will be used.
+// If font is NULL, the default font (sky) will be used.
 pax_vec1_t  pax_text_size           (const pax_font_t *font, float font_size, const char *text);
 
 #endif //PAX_TEXT_H

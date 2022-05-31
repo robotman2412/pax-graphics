@@ -59,6 +59,8 @@ typedef struct {
 	uint8_t           dx, dy;
 	// The vertical offset in bits per pixel.
 	uint8_t           vertical_offs;
+	// Whether to do anti-aliasing and/or interpolation.
+	bool              do_aa;
 } pax_text_ctx_t;
 
 
@@ -129,18 +131,29 @@ pax_vec1_t text_bitmap_mono(pax_text_ctx_t *ctx, const pax_font_range_t *range, 
 			.font        = ctx->font,
 			.range       = range,
 			.glyph       = glyph,
-			.glyph_y_mul = (range->bitmap_mono.width + 7) / 8,
+			.glyph_y_mul = (range->bitmap_mono.width * range->bitmap_mono.bpp + 7) / 8,
 			.glyph_w     = range->bitmap_mono.width,
 			.glyph_h     = range->bitmap_mono.height,
+			.bpp         = range->bitmap_mono.bpp,
+			.ppb         = 8 / range->bitmap_mono.bpp,
 		};
+		args.mask        = (1 << args.bpp) - 1;
+		
 		size_t glyph_len = args.glyph_y_mul * range->bitmap_mono.height;
 		args.glyph_index = glyph_len * (glyph - range->start);
+		
 		pax_shader_t shader = {
-			.callback          = pax_shader_font_bmp,
 			.callback_args     = &args,
 			.alpha_promise_0   = true,
 			.alpha_promise_255 = false,
 		};
+		if (range->bitmap_mono.bpp > 1) {
+			// Multi-bit per pixel impl.
+			shader.callback = pax_shader_font_bmp_hi;
+		} else {
+			// Single bit per pixel impl.
+			shader.callback = ctx->do_aa ? pax_shader_font_bmp_aa : pax_shader_font_bmp;
+		}
 		
 		// And UVs.
 		pax_quad_t uvs = {
@@ -178,17 +191,27 @@ pax_vec1_t text_bitmap_var(pax_text_ctx_t *ctx, const pax_font_range_t *range, w
 			.font        = ctx->font,
 			.range       = range,
 			.glyph       = glyph,
-			.glyph_y_mul = (dims->draw_w + 7) / 8,
+			.glyph_y_mul = (dims->draw_w * range->bitmap_var.bpp + 7) / 8,
 			.glyph_w     = dims->draw_w,
 			.glyph_h     = dims->draw_h,
+			.bpp         = range->bitmap_var.bpp,
+			.ppb         = 8 / range->bitmap_var.bpp,
 		};
+		args.mask        = (1 << args.bpp) - 1;
 		args.glyph_index = dims->index;
+		
 		pax_shader_t shader = {
-			.callback          = pax_shader_font_bmp,
 			.callback_args     = &args,
 			.alpha_promise_0   = true,
 			.alpha_promise_255 = false,
 		};
+		if (range->bitmap_var.bpp > 1) {
+			// Multi-bit per pixel impl.
+			shader.callback = ctx->do_aa ? pax_shader_font_bmp_hi_aa : pax_shader_font_bmp_hi;
+		} else {
+			// Single bit per pixel impl.
+			shader.callback = ctx->do_aa ? pax_shader_font_bmp_aa : pax_shader_font_bmp;
+		}
 		
 		// And UVs.
 		pax_quad_t uvs = {
@@ -288,10 +311,10 @@ static pax_vec1_t text_generic(pax_text_ctx_t *ctx, const char *text) {
 			if (range) {
 				// Handle the character.
 				switch (range->type) {
-					case PAX_FONT_BITMAP_MONO:
+					case PAX_FONT_TYPE_BITMAP_MONO:
 						dims = text_bitmap_mono(ctx, range, glyph);
 						break;
-					case PAX_FONT_BITMAP_VAR:
+					case PAX_FONT_TYPE_BITMAP_VAR:
 						dims = text_bitmap_var(ctx, range, glyph);
 						break;
 				}
@@ -316,7 +339,7 @@ static pax_vec1_t text_generic(pax_text_ctx_t *ctx, const char *text) {
 
 // Draw a string with the given font.
 // If font is NULL, the default font (7x9) will be used.
-void pax_draw_text(pax_buf_t *buf, pax_col_t color, const pax_font_t *font, float font_size, float x, float y, const char *text) {
+pax_vec1_t pax_draw_text(pax_buf_t *buf, pax_col_t color, const pax_font_t *font, float font_size, float x, float y, const char *text) {
 	if (!font) font = PAX_FONT_DEFAULT;
 	pax_text_ctx_t ctx = {
 		.do_render = true,
@@ -326,11 +349,34 @@ void pax_draw_text(pax_buf_t *buf, pax_col_t color, const pax_font_t *font, floa
 		.y         = y,
 		.font      = font,
 		.font_size = font_size,
+		.do_aa     = false,
 	};
 	pax_push_2d (buf);
 	pax_apply_2d(buf, matrix_2d_translate(x, y));
-	text_generic(&ctx, text);
+	pax_vec1_t dims = text_generic(&ctx, text);
 	pax_pop_2d  (buf);
+	return dims;
+}
+
+// Draw a string with the given font.
+// If font is NULL, the default font (7x9) will be used.
+pax_vec1_t pax_draw_text_aa(pax_buf_t *buf, pax_col_t color, const pax_font_t *font, float font_size, float x, float y, const char *text) {
+	if (!font) font = PAX_FONT_DEFAULT;
+	pax_text_ctx_t ctx = {
+		.do_render = true,
+		.buf       = buf,
+		.color     = color,
+		.x         = x,
+		.y         = y,
+		.font      = font,
+		.font_size = font_size,
+		.do_aa     = true,
+	};
+	pax_push_2d (buf);
+	pax_apply_2d(buf, matrix_2d_translate(x, y));
+	pax_vec1_t dims = text_generic(&ctx, text);
+	pax_pop_2d  (buf);
+	return dims;
 }
 
 // Calculate the size of the string with the given font.

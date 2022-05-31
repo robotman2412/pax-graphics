@@ -43,10 +43,22 @@ typedef struct pax_font_bmp_args {
 	size_t                  glyph_y_mul;
 	uint8_t                 glyph_w;
 	uint8_t                 glyph_h;
+	uint8_t                 bpp;
+	uint8_t                 ppb;
+	uint8_t                 mask;
 } pax_font_bmp_args_t;
+
+// Texture shader for multi-bpp bitmap fonts.
+pax_col_t pax_shader_font_bmp_hi(pax_col_t tint, int x, int y, float u, float v, void *args);
+
+// Texture shader for multi-bpp bitmap fonts with linear interpolation.
+pax_col_t pax_shader_font_bmp_hi_aa(pax_col_t tint, int x, int y, float u, float v, void *args);
 
 // Texture shader for 1bpp bitmap fonts.
 pax_col_t pax_shader_font_bmp(pax_col_t tint, int x, int y, float u, float v, void *args);
+
+// Texture shader for 1bpp bitmap fonts with linear interpolation.
+pax_col_t pax_shader_font_bmp_aa(pax_col_t tint, int x, int y, float u, float v, void *args);
 
 /* ========== TEXTURES =========== */
 

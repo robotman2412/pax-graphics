@@ -10,5 +10,7 @@ idf_component_register(
 	"fonts/font_bitmap_7x9.c"
 	"fonts/font_bitmap_sky.c"
 	"fonts/font_bitmap_permanentmarker22.c"
+	"fonts/font_bitmap_sairaregular.c"
+	"fonts/font_bitmap_sairacondensed.c"
 	INCLUDE_DIRS include
 )

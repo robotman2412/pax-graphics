@@ -1410,58 +1410,64 @@ const pax_bmpv_t pax_font_sky_r5_dims[] = {
 // Combined ranges.
 const pax_font_range_t pax_font_sky_ranges[] = {
 { // Range 1 / 6.
-	.type  = PAX_FONT_BITMAP_VAR,
+	.type  = PAX_FONT_TYPE_BITMAP_VAR,
 	.start = 0x20,
 	.end   = 0x7e,
 	.bitmap_var = {
 		.glyphs = pax_font_sky_r0,
 		.dims   = pax_font_sky_r0_dims,
 		.height = 9,
+		.bpp    = 1,
 	},
 }, { // Range 2 / 6.
-	.type  = PAX_FONT_BITMAP_VAR,
+	.type  = PAX_FONT_TYPE_BITMAP_VAR,
 	.start = 0xa0,
 	.end   = 0xff,
 	.bitmap_var = {
 		.glyphs = pax_font_sky_r1,
 		.dims   = pax_font_sky_r1_dims,
 		.height = 9,
+		.bpp    = 1,
 	},
 }, { // Range 3 / 6.
-	.type  = PAX_FONT_BITMAP_VAR,
+	.type  = PAX_FONT_TYPE_BITMAP_VAR,
 	.start = 0x20ac,
 	.end   = 0x20ac,
 	.bitmap_var = {
 		.glyphs = pax_font_sky_r2,
 		.dims   = pax_font_sky_r2_dims,
 		.height = 9,
+		.bpp    = 1,
 	},
 }, { // Range 4 / 6.
-	.type  = PAX_FONT_BITMAP_VAR,
+	.type  = PAX_FONT_TYPE_BITMAP_VAR,
 	.start = 0x20bf,
 	.end   = 0x20bf,
 	.bitmap_var = {
 		.glyphs = pax_font_sky_r3,
 		.dims   = pax_font_sky_r3_dims,
 		.height = 9,
+		.bpp    = 1,
 	},
 }, { // Range 5 / 6.
-	.type  = PAX_FONT_BITMAP_VAR,
+	.type  = PAX_FONT_TYPE_BITMAP_VAR,
 	.start = 0x30c4,
 	.end   = 0x30c4,
 	.bitmap_var = {
 		.glyphs = pax_font_sky_r4,
 		.dims   = pax_font_sky_r4_dims,
 		.height = 9,
+		.bpp    = 1,
 	},
 }, { // Range 6 / 6.
-	.type  = PAX_FONT_BITMAP_VAR,
+	.type  = PAX_FONT_TYPE_BITMAP_VAR,
 	.start = 0xfffd,
 	.end   = 0xfffd,
 	.bitmap_var = {
 		.glyphs = pax_font_sky_r5,
 		.dims   = pax_font_sky_r5_dims,
 		.height = 9,
+		.bpp    = 1,
 	},
 }, 
 };
