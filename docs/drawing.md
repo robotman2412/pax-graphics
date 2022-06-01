@@ -104,6 +104,8 @@ Current list of fonts:
 | Sky Mono         | `"sky mono"` or `"7x9"` | 7 (width) by 9 (height) | ASCII
 | Sky Variable     | `"sky"`                 | 9 (height)              | ASCII and latin supplements
 | Permanent Marker | `"permanentmarker"`     | 22 (height)             | ASCII and latin supplements
+| Saira Regular    | `"saira regular"`       | 18 (height)             | ASCII and latin supplements
+| Saira Condensed  | `"saira condensed"`     | 45 (height)             | ASCII and latin supplements
 
 
 # Background
