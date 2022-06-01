@@ -57,9 +57,3 @@ If you don't need the buffer anymore, use `pax_buf_destroy`:
 // This works regardless of whether you allocated memory manually or not.
 pax_buf_destroy(&buffer);
 ```
-
-You can even do a conversion with `pax_buf_convert`:
-```c
-// This only works for two different, already initialised buffers.
-pax_buf_convert(&buffer_to, &buffer_from, new_format);
-```
