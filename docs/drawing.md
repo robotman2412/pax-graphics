@@ -93,6 +93,9 @@ First, every font in pax has the attribute `default_size`:
 `myfont->default_size`.
 This value is the size recommended by the font's creator.
 
+Second, every font has the `recommend_aa` attribute.
+This tells PAX whether to or not to use anti-aliasing (or rather interpolation) by default.
+
 There is also this utility function that finds a font for you:
 | returns       | name         | arguments
 | :------------ | :----------- | :----------
