@@ -51,12 +51,12 @@ List of normal drawing methods:
 Like normal drawing, but only draws the outline of a shape.
 
 List of outline drawing methods:
-| name              | arguments                                                            | description
-| :---------------- | :------------------------------------------------------------------- | :----------
-| pax_simple_rect   | pax_buf_t \*buf, pax_col_t color, float x, y, width, height          | Outlines a rectangle with the given dimensions.
-| pax_simple_tri    | pax_buf_t \*buf, pax_col_t color, float x0, y0, x1, y1, x2, y2       | Outlines a triangle between three points.
-| pax_simple_arc    | pax_buf_t \*buf, pax_col_t color, float x, y, radius, angle0, angle1 | Outlines an arc between two angles, at a given midpoint. Does not create lines to the center.
-| pax_simple_circle | pax_buf_t \*buf, pax_col_t color, float x, y, radius                 | Outlines a circle at a given midpoint.
+| name               | arguments                                                            | description
+| :----------------- | :------------------------------------------------------------------- | :----------
+| pax_outline_rect   | pax_buf_t \*buf, pax_col_t color, float x, y, width, height          | Outlines a rectangle with the given dimensions.
+| pax_outline_tri    | pax_buf_t \*buf, pax_col_t color, float x0, y0, x1, y1, x2, y2       | Outlines a triangle between three points.
+| pax_outline_arc    | pax_buf_t \*buf, pax_col_t color, float x, y, radius, angle0, angle1 | Outlines an arc between two angles, at a given midpoint. Does not create lines to the center.
+| pax_outline_circle | pax_buf_t \*buf, pax_col_t color, float x, y, radius                 | Outlines a circle at a given midpoint.
 
 # Shaded drawing
 
