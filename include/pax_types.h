@@ -156,15 +156,17 @@ struct pax_vec4 {
 };
 
 struct pax_rect {
-	// Reactangle points.
+	// Rectangle points.
 	float x, y, w, h;
 };
 
 union matrix_2d {
+	// Named members of the matrix.
 	struct {
 		float a0, a1, a2;
 		float b0, b1, b2;
 	};
+	// Array members of the matrix.
 	float arr[6];
 };
 

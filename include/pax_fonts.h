@@ -34,7 +34,9 @@ extern "C" {
 /* ============ TYPES ============ */
 
 typedef enum {
+	// For monospace bitmapped fonts.
 	PAX_FONT_TYPE_BITMAP_MONO,
+	// For variable pitch bitmapped fonts.
 	PAX_FONT_TYPE_BITMAP_VAR,
 } pax_font_type_t;
 
@@ -78,16 +80,24 @@ struct pax_font_range {
 	union {
 		// Monospace, bitmapped fonts.
 		struct {
+			// The raw glyph bytes.
 			const uint8_t *glyphs;
+			// The width of all glyphs.
 			const uint8_t  width;
+			// The height of all glyphs.
 			const uint8_t  height;
+			// The Bits Per Pixel of all glyphs.
 			const uint8_t  bpp;
 		} bitmap_mono;
 		// Variable pitch, bitmapped fonts.
 		struct {
+			// The raw glyph bytes.
 			const uint8_t    *glyphs;
+			// Additional dimensions defined per glyph.
 			const pax_bmpv_t *dims;
+			// The height of all glyphs.
 			const uint8_t     height;
+			// The Bits Per Pixel of all glyphs.
 			const uint8_t     bpp;
 		} bitmap_var;
 	};

@@ -124,7 +124,7 @@ const pax_font_t pax_fonts_index[] = {
 		.n_ranges     = 23,
 		.ranges       = marker_ranges,
 		.default_size = 22,
-	}, { // Alpha test
+	}, { // Saira condensed
 		.name         = "saira condensed",
 		.n_ranges     = 80,
 		.ranges       = sairacondensed_ranges,

@@ -29,11 +29,11 @@
 
 // 2D rotation matrix: represents a 2D shearing.
 matrix_2d_t matrix_2d_rotate(float angle) {
-	float _cos = cosf(-angle);
-	float _sin = sinf(-angle);
+	float cos_res = cosf(-angle);
+	float sin_res = sinf(-angle);
 	return (matrix_2d_t) { .arr = {
-		_cos, -_sin, 0,
-		_sin,  _cos, 0
+		cos_res, -sin_res, 0,
+		sin_res,  cos_res, 0
 	}};
 }
 

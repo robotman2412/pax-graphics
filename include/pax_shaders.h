@@ -35,16 +35,27 @@ extern "C" {
 
 /* ============ FONTS ============ */
 
+// Data relevant to drawing bitmap fonts.
 typedef struct pax_font_bmp_args {
+	// The font to be drawn.
 	const pax_font_t       *font;
+	// The range of the font to be drawn.
 	const pax_font_range_t *range;
+	// The glyph to be drawn.
 	wchar_t                 glyph;
+	// The first byte index of the glyph to be drawn.
 	size_t                  glyph_index;
+	// The bytes per line of the glyph.
 	size_t                  glyph_y_mul;
+	// The width of the glyph's drawn region.
 	uint8_t                 glyph_w;
+	// The height of the glyph's drawn region.
 	uint8_t                 glyph_h;
+	// The glyph's Bits Per Pixel.
 	uint8_t                 bpp;
+	// The glyph's Pixels Per Byte.
 	uint8_t                 ppb;
+	// The bitmask representing the max value that can be stored in bpp bits.
 	uint8_t                 mask;
 } pax_font_bmp_args_t;
 
