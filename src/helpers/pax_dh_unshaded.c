@@ -148,9 +148,9 @@ static void pax_rect_unshaded(pax_buf_t *buf, pax_col_t color,
 	pax_setter_t setter = color >= 0xff000000 ? pax_set_pixel : pax_merge_pixel;
 	
 	// Pixel time.
-	for (int _y = y + 0.5; _y <= y + height - 0.5; _y ++) {
-		for (int _x = x + 0.5; _x <= x + width - 0.5; _x ++) {
-			setter(buf, color, _x, _y);
+	for (int c_y = y + 0.5; c_y <= y + height - 0.5; c_y ++) {
+		for (int c_x = x + 0.5; c_x <= x + width - 0.5; c_x ++) {
+			setter(buf, color, c_x, c_y);
 		}
 	}
 }

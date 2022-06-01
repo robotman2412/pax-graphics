@@ -282,8 +282,8 @@ void pax_vectorise_arc(pax_vec1_t *ptr, size_t n_div, float x, float y, float r,
 	
 	// Get the sine and cosine of one division, used for rotation in the loop.
 	float div_angle = (a1 - a0) / (n_div - 1);
-	float _sin = sinf(div_angle);
-	float _cos = cosf(div_angle);
+	float c_sin = sinf(div_angle);
+	float c_cos = cosf(div_angle);
 	
 	// Start with a unit vector according to a0.
 	float x0 = cosf(a0);
@@ -292,8 +292,8 @@ void pax_vectorise_arc(pax_vec1_t *ptr, size_t n_div, float x, float y, float r,
 	// Draw it as a series of triangles, rotating with what is essentially matrix multiplication.
 	for (int i = 0; i < n_div; i++) {
 		// Perform the rotation.
-		float x1 = x0 * _cos - y0 * _sin;
-		float y1 = x0 * _sin + y0 * _cos;
+		float x1 = x0 * c_cos - y0 * c_sin;
+		float y1 = x0 * c_sin + y0 * c_cos;
 		// Store to array.
 		// We subtract y0 and y1 from y because our up is -y.
 		ptr[i] = (pax_vec1_t) { .x = x + x0 * r, .y = y - y0 * r };
@@ -349,14 +349,14 @@ void pax_outline_arc(pax_buf_t *buf, pax_col_t color, float x, float y, float r,
 	// Pick an appropriate number of divisions.
 	int n_div;
 	matrix_2d_t matrix = buf->stack_2d.value;
-	float _r = r * sqrtf(matrix.a0*matrix.a0 + matrix.b0*matrix.b0) * sqrtf(matrix.a1*matrix.a1 + matrix.b1*matrix.b1);
-	if (_r > 30) n_div = (a1 - a0) / M_PI * 32 + 1;
+	float c_r = r * sqrtf(matrix.a0*matrix.a0 + matrix.b0*matrix.b0) * sqrtf(matrix.a1*matrix.a1 + matrix.b1*matrix.b1);
+	if (c_r > 30) n_div = (a1 - a0) / M_PI * 32 + 1;
 	else n_div = (a1 - a0) / M_PI * 16 + 1;
 	
 	// Get the sine and cosine of one division, used for rotation in the loop.
 	float div_angle = (a1 - a0) / n_div;
-	float _sin = sinf(div_angle);
-	float _cos = cosf(div_angle);
+	float c_sin = sinf(div_angle);
+	float c_cos = cosf(div_angle);
 	
 	// Start with a unit vector according to a0.
 	float x0 = cosf(a0);
@@ -365,8 +365,8 @@ void pax_outline_arc(pax_buf_t *buf, pax_col_t color, float x, float y, float r,
 	// Draw it as a series of triangles, rotating with what is essentially matrix multiplication.
 	for (int i = 0; i < n_div; i++) {
 		// Perform the rotation.
-		float x1 = x0 * _cos - y0 * _sin;
-		float y1 = x0 * _sin + y0 * _cos;
+		float x1 = x0 * c_cos - y0 * c_sin;
+		float y1 = x0 * c_sin + y0 * c_cos;
 		// We subtract y0 and y1 from y because our up is -y.
 		pax_draw_line(buf, color, x + x0 * r, y - y0 * r, x + x1 * r, y - y1 * r);
 		// Assign them yes.

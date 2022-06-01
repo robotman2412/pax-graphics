@@ -277,8 +277,8 @@ static void paxmcr_overlay_buffer(bool odd_scanline, pax_buf_t *base, pax_buf_t 
 	}
 	
 	// Now, let us MAP.
-	for (int _y = odd_scanline; _y < height; _y += 2) {
-		for (int _x = 0; _x < width; _x++) {
+	for (int c_y = odd_scanline; c_y < height; c_y += 2) {
+		for (int c_x = 0; c_x < width; c_x++) {
 			pax_col_t col = pax_get_pixel(top, tex_x, tex_y);
 			pax_merge_pixel(base, col, x, y);
 			tex_x ++;
@@ -365,19 +365,19 @@ static void paxmcr_rect_shaded1(bool odd_scanline, pax_buf_t *buf, pax_col_t col
 	
 	float v = v0;
 	
-	// Snap _y to the correct line.
-	int _y = y + 0.5;
-	if ((_y & 1) != odd_scanline) {
-		_y ++;
+	// Snap c_y to the correct line.
+	int c_y = y + 0.5;
+	if ((c_y & 1) != odd_scanline) {
+		c_y ++;
 		v += v0_v1_dv;
 	}
 	
 	// Pixel time.
-	for (; _y <= y + height - 0.5; _y += 2) {
+	for (; c_y <= y + height - 0.5; c_y += 2) {
 		float u = u0;
-		for (int _x = x + 0.5; _x <= x + width - 0.5; _x ++) {
-			pax_col_t result = (shader->callback)(color, _x, _y, u, v, shader->callback_args);
-			setter(buf, result, _x, _y);
+		for (int c_x = x + 0.5; c_x <= x + width - 0.5; c_x ++) {
+			pax_col_t result = (shader->callback)(color, c_x, c_y, u, v, shader->callback_args);
+			setter(buf, result, c_x, c_y);
 			u += u0_u1_du;
 		}
 		v += 2*v0_v1_dv;
@@ -520,10 +520,10 @@ static void paxmcr_rect_shaded(bool odd_scanline, pax_buf_t *buf, pax_col_t colo
 	float u_a = u0, v_a = v0;
 	float u_b = u1, v_b = v1;
 	
-	// Snap _y to the correct line.
-	int _y = y + 0.5;
-	if ((_y & 1) != odd_scanline) {
-		_y ++;
+	// Snap c_y to the correct line.
+	int c_y = y + 0.5;
+	if ((c_y & 1) != odd_scanline) {
+		c_y ++;
 		u_a += u0_u3_du;
 		v_a += v0_v3_dv;
 		u_b += u1_u2_du;
@@ -531,13 +531,13 @@ static void paxmcr_rect_shaded(bool odd_scanline, pax_buf_t *buf, pax_col_t colo
 	}
 	
 	// Pixel time.
-	for (; _y <= y + height - 0.5; _y += 2) {
+	for (; c_y <= y + height - 0.5; c_y += 2) {
 		float ua_ub_du = (u_b - u_a) / (max_x - min_x);
 		float va_vb_dv = (v_b - v_a) / (max_x - min_x);
 		float u = u_a, v = v_a;
-		for (int _x = x + 0.5; _x <= x + width - 0.5; _x ++) {
-			pax_col_t result = (shader->callback)(color, _x, _y, u, v, shader->callback_args);
-			setter(buf, result, _x, _y);
+		for (int c_x = x + 0.5; c_x <= x + width - 0.5; c_x ++) {
+			pax_col_t result = (shader->callback)(color, c_x, c_y, u, v, shader->callback_args);
+			setter(buf, result, c_x, c_y);
 			u += ua_ub_du;
 			v += va_vb_dv;
 		}

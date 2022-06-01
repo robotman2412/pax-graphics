@@ -519,8 +519,8 @@ pax_col_t pax_col_hsv(uint8_t h, uint8_t s, uint8_t v) {
 }
 
 // Converts AHSV to ARGB.
-pax_col_t pax_col_ahsv(uint8_t a, uint8_t _h, uint8_t s, uint8_t v) {
-	uint16_t h     = _h * 6;
+pax_col_t pax_col_ahsv(uint8_t a, uint8_t c_h, uint8_t s, uint8_t v) {
+	uint16_t h     = c_h * 6;
 	uint16_t phase = h >> 8;
 	// Parts of HSV.
 	uint8_t up, down, other;
@@ -852,14 +852,14 @@ void pax_shade_arc(pax_buf_t *buf, pax_col_t color, pax_shader_t *shader,
 	// Pick an appropriate number of divisions.
 	int n_div;
 	matrix_2d_t matrix = buf->stack_2d.value;
-	float _r = r * sqrtf(matrix.a0*matrix.a0 + matrix.b0*matrix.b0) * sqrtf(matrix.a1*matrix.a1 + matrix.b1*matrix.b1);
-	if (_r > 30) n_div = (a1 - a0) / M_PI * 32 + 1;
+	float c_r = r * sqrtf(matrix.a0*matrix.a0 + matrix.b0*matrix.b0) * sqrtf(matrix.a1*matrix.a1 + matrix.b1*matrix.b1);
+	if (c_r > 30) n_div = (a1 - a0) / M_PI * 32 + 1;
 	else n_div = (a1 - a0) / M_PI * 16 + 1;
 	
 	// Get the sine and cosine of one division, used for rotation in the loop.
 	float div_angle = (a1 - a0) / (n_div - 1);
-	float _sin = sinf(div_angle);
-	float _cos = cosf(div_angle);
+	float c_sin = sinf(div_angle);
+	float c_cos = cosf(div_angle);
 	
 	// Start with a unit vector according to a0.
 	float x0 = cosf(a0);
@@ -875,8 +875,8 @@ void pax_shade_arc(pax_buf_t *buf, pax_col_t color, pax_shader_t *shader,
 	// Draw it as a series of triangles, rotating with what is essentially matrix multiplication.
 	for (int i = 0; i < n_div; i++) {
 		// Perform the rotation.
-		float x1 = x0 * _cos - y0 * _sin;
-		float y1 = x0 * _sin + y0 * _cos;
+		float x1 = x0 * c_cos - y0 * c_sin;
+		float y1 = x0 * c_sin + y0 * c_cos;
 		// And UV interpolation.
 		tri_uvs.x2 = pax_flerp4(x1, y1, uvs->x0, uvs->x1, uvs->x3, uvs->x2);
 		tri_uvs.y2 = pax_flerp4(x1, y1, uvs->y0, uvs->y1, uvs->y3, uvs->y2);
@@ -957,14 +957,14 @@ void pax_draw_arc(pax_buf_t *buf, pax_col_t color, float x,  float y,  float r, 
 	// Pick an appropriate number of divisions.
 	int n_div;
 	matrix_2d_t matrix = buf->stack_2d.value;
-	float _r = r * sqrtf(matrix.a0*matrix.a0 + matrix.b0*matrix.b0) * sqrtf(matrix.a1*matrix.a1 + matrix.b1*matrix.b1);
-	if (_r > 30) n_div = (a1 - a0) / M_PI * 32 + 1;
+	float c_r = r * sqrtf(matrix.a0*matrix.a0 + matrix.b0*matrix.b0) * sqrtf(matrix.a1*matrix.a1 + matrix.b1*matrix.b1);
+	if (c_r > 30) n_div = (a1 - a0) / M_PI * 32 + 1;
 	else n_div = (a1 - a0) / M_PI * 16 + 1;
 	
 	// Get the sine and cosine of one division, used for rotation in the loop.
 	float div_angle = (a1 - a0) / (n_div - 1);
-	float _sin = sinf(div_angle);
-	float _cos = cosf(div_angle);
+	float c_sin = sinf(div_angle);
+	float c_cos = cosf(div_angle);
 	
 	// Start with a unit vector according to a0.
 	float x0 = cosf(a0);
@@ -973,8 +973,8 @@ void pax_draw_arc(pax_buf_t *buf, pax_col_t color, float x,  float y,  float r, 
 	// Draw it as a series of triangles, rotating with what is essentially matrix multiplication.
 	for (int i = 0; i < n_div; i++) {
 		// Perform the rotation.
-		float x1 = x0 * _cos - y0 * _sin;
-		float y1 = x0 * _sin + y0 * _cos;
+		float x1 = x0 * c_cos - y0 * c_sin;
+		float y1 = x0 * c_sin + y0 * c_cos;
 		// We subtract y0 and y1 from y because our up is -y.
 		pax_draw_tri(buf, color, x, y, x + x0 * r, y - y0 * r, x + x1 * r, y - y1 * r);
 		// Assign them yes.
@@ -1231,8 +1231,8 @@ void pax_simple_arc(pax_buf_t *buf, pax_col_t color, float x, float y, float r, 
 	
 	// Get the sine and cosine of one division, used for rotation in the loop.
 	float div_angle = (a1 - a0) / (n_div - 1);
-	float _sin = sinf(div_angle);
-	float _cos = cosf(div_angle);
+	float c_sin = sinf(div_angle);
+	float c_cos = cosf(div_angle);
 	
 	// Start with a unit vector according to a0.
 	float x0 = cosf(a0);
@@ -1241,8 +1241,8 @@ void pax_simple_arc(pax_buf_t *buf, pax_col_t color, float x, float y, float r, 
 	// Draw it as a series of triangles, rotating with what is essentially matrix multiplication.
 	for (int i = 0; i < n_div; i++) {
 		// Perform the rotation.
-		float x1 = x0 * _cos - y0 * _sin;
-		float y1 = x0 * _sin + y0 * _cos;
+		float x1 = x0 * c_cos - y0 * c_sin;
+		float y1 = x0 * c_sin + y0 * c_cos;
 		// We subtract y0 and y1 from y because our up is -y.
 		pax_simple_tri(buf, color, x, y, x + x0 * r, y - y0 * r, x + x1 * r, y - y1 * r);
 		// Assign them yes.

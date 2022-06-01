@@ -53,9 +53,9 @@ void matrix_2d_transform(matrix_2d_t a, float *x, float *y) {
 	// [a b c] [x]  [a]  [b] [c] [ax+by+c]
 	// [d e f]*[y]=x[d]+y[e]+[f]=[dx+ey+f]
 	// [0 0 1] [1]  [0]  [0] [1] [1      ]
-	float _x = *x, _y = *y;
-	*x = a.a0*_x + a.a1*_y + a.a2;
-	*y = a.b0*_x + a.b1*_y + a.b2;
+	float c_x = *x, c_y = *y;
+	*x = a.a0*c_x + a.a1*c_y + a.a2;
+	*y = a.b0*c_x + a.b1*c_y + a.b2;
 }
 
 // 2D vector: unifies a given vector (it's magnitude will be 1).
