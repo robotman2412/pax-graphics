@@ -80,10 +80,12 @@ Text drawing works like normal drawing, but with more characters and UTF-8 suppo
 In PAX, you can draw text as well as calculate it's size.
 
 List of text methods:
-| returns    | name          | arguments                                                                                           | description
-| :--------- | :------------ | :-------------------------------------------------------------------------------------------------- | :----------
-| void       | pax_draw_text | pax_buf_t \*buf, pax_col_t color, pax_font_t \*font, float font_size, float x, float y, char \*text | Draws text with a given font.
-| pax_vec1_t | pax_text_size | pax_font_t \*font, float font_size, char \*text | Calculate the size of the string with the given font.
+| returns    | name               | arguments                                                                                           | description
+| :--------- | :----------------- | :-------------------------------------------------------------------------------------------------- | :----------
+| void       | pax_draw_text      | pax_buf_t \*buf, pax_col_t color, pax_font_t \*font, float font_size, float x, float y, char \*text | Draws text with a given font. Interpolation depends on the font.
+| void       | pax_draw_text_aa   | pax_buf_t \*buf, pax_col_t color, pax_font_t \*font, float font_size, float x, float y, char \*text | Draws text with a given font. Always uses interpolation.
+| void       | pax_draw_text_noaa | pax_buf_t \*buf, pax_col_t color, pax_font_t \*font, float font_size, float x, float y, char \*text | Draws text with a given font. Never uses interpolation.
+| pax_vec1_t | pax_text_size      | pax_font_t \*font, float font_size, char \*text | Calculate the size of the string with the given font.
 
 Of course, there are some font APIs as well.
 
