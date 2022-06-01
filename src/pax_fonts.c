@@ -109,31 +109,37 @@ const pax_font_t pax_fonts_index[] = {
 		.n_ranges     = 6,
 		.ranges       = pax_font_sky_ranges,
 		.default_size = 9,
+		.recommend_aa = false,
 	}, { // Sky mono
 		.name         = "7x9",
 		.n_ranges     = 3,
 		.ranges       = font_7x9_ranges,
 		.default_size = 9,
+		.recommend_aa = false,
 	}, { // Sky mono
 		.name         = "sky mono",
 		.n_ranges     = 3,
 		.ranges       = font_7x9_ranges,
 		.default_size = 9,
+		.recommend_aa = false,
 	}, { // PermanentMarker
 		.name         = "permanentmarker",
 		.n_ranges     = 23,
 		.ranges       = marker_ranges,
 		.default_size = 22,
+		.recommend_aa = true,
 	}, { // Saira condensed
 		.name         = "saira condensed",
 		.n_ranges     = 80,
 		.ranges       = sairacondensed_ranges,
 		.default_size = 45,
+		.recommend_aa = true,
 	}, { // Saira regular
 		.name         = "saira regular",
 		.n_ranges     = 23,
 		.ranges       = sairaregular_ranges,
 		.default_size = 18,
+		.recommend_aa = true,
 	}
 };
 const size_t pax_n_fonts = sizeof(pax_fonts_index) / sizeof(pax_font_t);

@@ -68,6 +68,9 @@ struct pax_font {
 	const pax_font_range_t *ranges;
 	// Default point size.
 	uint16_t                default_size;
+	// Whether or not it is recommended to use antialiasing.
+	// Applies to pax_draw_text, but not it's variants.
+	bool                    recommend_aa;
 };
 
 struct pax_font_range {

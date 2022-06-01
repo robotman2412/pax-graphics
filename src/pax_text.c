@@ -349,7 +349,7 @@ pax_vec1_t pax_draw_text(pax_buf_t *buf, pax_col_t color, const pax_font_t *font
 		.y         = y,
 		.font      = font,
 		.font_size = font_size,
-		.do_aa     = false,
+		.do_aa     = font->recommend_aa,
 	};
 	pax_push_2d (buf);
 	pax_apply_2d(buf, matrix_2d_translate(x, y));
@@ -371,6 +371,27 @@ pax_vec1_t pax_draw_text_aa(pax_buf_t *buf, pax_col_t color, const pax_font_t *f
 		.font      = font,
 		.font_size = font_size,
 		.do_aa     = true,
+	};
+	pax_push_2d (buf);
+	pax_apply_2d(buf, matrix_2d_translate(x, y));
+	pax_vec1_t dims = text_generic(&ctx, text);
+	pax_pop_2d  (buf);
+	return dims;
+}
+
+// Draw a string with the given font.
+// If font is NULL, the default font (7x9) will be used.
+pax_vec1_t pax_draw_text_noaa(pax_buf_t *buf, pax_col_t color, const pax_font_t *font, float font_size, float x, float y, const char *text) {
+	if (!font) font = PAX_FONT_DEFAULT;
+	pax_text_ctx_t ctx = {
+		.do_render = true,
+		.buf       = buf,
+		.color     = color,
+		.x         = x,
+		.y         = y,
+		.font      = font,
+		.font_size = font_size,
+		.do_aa     = false,
 	};
 	pax_push_2d (buf);
 	pax_apply_2d(buf, matrix_2d_translate(x, y));
