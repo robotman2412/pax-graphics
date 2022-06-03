@@ -343,9 +343,9 @@ void pax_buf_destroy(pax_buf_t *buf) {
 	}
 	if (buf->do_free) {
 		free(buf->buf);
-		if (buf->pallette && buf->do_free_pal) {
-			free(buf->pallette);
-		}
+	}
+	if (buf->pallette && buf->do_free_pal) {
+		free(buf->pallette);
 	}
 	buf->buf  = NULL;
 	buf->type = 0;
