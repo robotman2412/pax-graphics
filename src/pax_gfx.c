@@ -308,7 +308,7 @@ void pax_buf_init(pax_buf_t *buf, void *mem, int width, int height, pax_buf_type
 	bool use_alloc = !mem;
 	if (use_alloc) {
 		// Allocate the right amount of bytes.
-		ESP_LOGI(TAG, "Allocating new memory for buffer.");
+		ESP_LOGD(TAG, "Allocating new memory for buffer.");
 		mem = malloc((PAX_GET_BPP(type) * width * height + 7) >> 3);
 		if (!mem) PAX_ERROR("pax_buf_init", PAX_ERR_NOMEM);
 	}
