@@ -857,7 +857,7 @@ void pax_shade_arc(pax_buf_t *buf, pax_col_t color, pax_shader_t *shader,
 	else n_div = (a1 - a0) / M_PI * 16 + 1;
 	
 	// Get the sine and cosine of one division, used for rotation in the loop.
-	float div_angle = (a1 - a0) / (n_div - 1);
+	float div_angle = (a1 - a0) / n_div;
 	float c_sin = sinf(div_angle);
 	float c_cos = cosf(div_angle);
 	
@@ -962,7 +962,7 @@ void pax_draw_arc(pax_buf_t *buf, pax_col_t color, float x,  float y,  float r, 
 	else n_div = (a1 - a0) / M_PI * 16 + 1;
 	
 	// Get the sine and cosine of one division, used for rotation in the loop.
-	float div_angle = (a1 - a0) / (n_div - 1);
+	float div_angle = (a1 - a0) / n_div;
 	float c_sin = sinf(div_angle);
 	float c_cos = cosf(div_angle);
 	
@@ -1230,7 +1230,7 @@ void pax_simple_arc(pax_buf_t *buf, pax_col_t color, float x, float y, float r, 
 	else n_div = (a1 - a0) / M_PI * 8 + 1;
 	
 	// Get the sine and cosine of one division, used for rotation in the loop.
-	float div_angle = (a1 - a0) / (n_div - 1);
+	float div_angle = (a1 - a0) / n_div;
 	float c_sin = sinf(div_angle);
 	float c_cos = cosf(div_angle);
 	
