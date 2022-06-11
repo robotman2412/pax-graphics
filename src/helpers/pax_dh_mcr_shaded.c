@@ -318,7 +318,7 @@ static void paxmcr_rect_shaded1(bool odd_scanline, pax_buf_t *buf, pax_col_t col
 		float part = (buf->clip.x - x) / width;
 		u0 = u0 + (u1 - u0) * part;
 		
-		width += buf->clip.x - x;
+		width -= buf->clip.x - x;
 		x = buf->clip.x;
 	}
 	if (x + width > buf->clip.x + buf->clip.w) {
@@ -331,7 +331,7 @@ static void paxmcr_rect_shaded1(bool odd_scanline, pax_buf_t *buf, pax_col_t col
 		float part = (buf->clip.y - y) / height;
 		v0 = v0 + (v1 - v0) * part;
 		
-		height += buf->clip.y - y;
+		height -= buf->clip.y - y;
 		y = buf->clip.y;
 	}
 	if (y + height > buf->clip.y + buf->clip.h) {
@@ -431,7 +431,7 @@ static void paxmcr_rect_shaded(bool odd_scanline, pax_buf_t *buf, pax_col_t colo
 		u3 = u3 + (u2 - u3) * part;
 		v3 = v3 + (v2 - v3) * part;
 		
-		width += buf->clip.x - x;
+		width -= buf->clip.x - x;
 		x = buf->clip.x;
 	}
 	if (x + width > buf->clip.x + buf->clip.w) {
@@ -450,7 +450,7 @@ static void paxmcr_rect_shaded(bool odd_scanline, pax_buf_t *buf, pax_col_t colo
 		u1 = u1 + (u2 - u1) * part;
 		v1 = v1 + (v2 - v1) * part;
 		
-		height += buf->clip.y - y;
+		height -= buf->clip.y - y;
 		y = buf->clip.y;
 	}
 	if (y + height > buf->clip.y + buf->clip.h) {
