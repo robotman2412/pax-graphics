@@ -28,11 +28,13 @@
 // Uncomment to do cubic interpolation instead of linear interpolation.
 // #define DO_BICUBIC
 
-#ifdef DO_BICUBIC
-static inline float pax_interp_value(float a) {
+static inline float pax_interp_cubic(float a) {
 	// Cubic interpolation: y = -2x³ + 3x²
 	return -2*a*a*a + 3*a*a;
 }
+
+#ifdef DO_BICUBIC
+#define pax_interp_value pax_interp_cubic
 #else
 // Linear interpolation: y = x
 #define pax_interp_value(a) (a)
@@ -246,4 +248,47 @@ pax_col_t pax_shader_texture(pax_col_t tint, int x, int y, float u, float v, voi
 	pax_col_t  color = pax_get_pixel(image, u*image->width, v*image->height);
 	// And return it.
 	return pax_col_tint(color, tint);
+}
+
+// Texture shader. No interpolation.
+pax_col_t pax_shader_texture_aa(pax_col_t tint, int x, int y, float u, float v, void *args) {
+	if (!args) {
+		// Make a default texture.
+		return (u < 0.5) ^ (v >= 0.5) ? 0xffff00ff : 0xff1f1f1f;
+	}
+	
+	// Pointer cast to texture thingy.
+	pax_buf_t *image = (pax_buf_t *) args;
+	
+	// Remap UVs.
+	u *= image->width;
+	v *= image->height;
+	// Correct UVs for the offset caused by filtering.
+	u -= 0.5;
+	v -= 0.5;
+	
+	// Get texture coords, round down instead of round to 0.
+	int tex_x = (float) (u + 1);
+	int tex_y = (float) (v + 1);
+	tex_x --;
+	tex_y --;
+	// Get subpixel coords.
+	float dx = pax_interp_value(u - tex_x);
+	float dy = pax_interp_value(v - tex_y);
+	
+	// Get four pixels.
+	pax_col_t  col0 = pax_get_pixel(image, tex_x,   tex_y);
+	pax_col_t  col1 = pax_get_pixel(image, tex_x+1, tex_y);
+	pax_col_t  col2 = pax_get_pixel(image, tex_x+1, tex_y+1);
+	pax_col_t  col3 = pax_get_pixel(image, tex_x,   tex_y+1);
+	
+	// First stage interpolation.
+	pax_col_t col_a = pax_col_lerp(dx*255, col0, col1);
+	pax_col_t col_b = pax_col_lerp(dx*255, col3, col2);
+	
+	// Second stage interpolation.
+	pax_col_t col   = pax_col_lerp(dy*255, col_a, col_b);
+	
+	// And return it.
+	return pax_col_tint(col, tint);
 }
