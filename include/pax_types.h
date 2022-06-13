@@ -35,7 +35,7 @@ extern "C" {
 
 #ifndef M_PI
 #define M_PI 3.141592653589793
-#endif //M_PI
+#endif
 
 /* ========= ERROR DEFS ========== */
 
@@ -74,6 +74,8 @@ struct pax_vec4;
 struct pax_rect;
 union  matrix_2d;
 struct matrix_stack_2d;
+
+// The way pixel data is to be stored in a buffer.
 enum   pax_buf_type {
 	PAX_BUF_1_PAL       = 0x20000001,
 	PAX_BUF_2_PAL       = 0x20000002,
@@ -125,8 +127,8 @@ typedef struct pax_shader      pax_shader_t;
 typedef enum   pax_task_type   pax_task_type_t;
 typedef struct pax_task        pax_task_t;
 
-typedef int32_t               pax_err_t;
-typedef uint32_t              pax_col_t;
+typedef int32_t                pax_err_t;
+typedef uint32_t               pax_col_t;
 
 // Function pointer for shader callback.
 // Tint is the color parameter to the pax_shade_xxx function.
@@ -160,6 +162,12 @@ struct pax_rect {
 	float x, y, w, h;
 };
 
+// Simplified representation of a 2D matrix.
+// Excludes the bottom row, which is implicit.
+// The matrix looks like this:
+//   a0, a1, a2,
+//   b0, b2, b2,
+//   0,  0,  1
 union matrix_2d {
 	// Named members of the matrix.
 	struct {
@@ -170,11 +178,14 @@ union matrix_2d {
 	float arr[6];
 };
 
+// A simple linked list data structure used to store matrices for later.
 struct matrix_stack_2d {
 	matrix_stack_2d_t *parent;
 	matrix_2d_t        value;
 };
 
+// The main data structure in PAX.
+// Stores pixel data and matrix information among other things.
 struct pax_buf {
 	// Buffer type, color modes, etc.
 	pax_buf_type_t    type;
@@ -215,9 +226,12 @@ struct pax_buf {
 	// Dirty y (bottom right).
 	int               dirty_y1;
 	
-	// Clip rect.
+	// Clip rectangle.
+	// Shapes are only drawn inside the clip rectangle.
+	// This excludes PNG decoding functions.
 	pax_rect_t        clip;
 	// Matrix stack.
+	// The top most entry is used to transform shapes.
 	matrix_stack_2d_t stack_2d;
 };
 

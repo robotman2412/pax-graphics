@@ -33,6 +33,7 @@ extern "C" {
 
 /* ============ TYPES ============ */
 
+// Distinguishes between ways to draw fonts.
 typedef enum {
 	// For monospace bitmapped fonts.
 	PAX_FONT_TYPE_BITMAP_MONO,
@@ -48,6 +49,7 @@ typedef struct pax_bmpv       pax_bmpv_t;
 typedef struct pax_font       pax_font_t;
 typedef struct pax_font_range pax_font_range_t;
 
+// Information relevant to each character of a variable pitch font.
 struct pax_bmpv {
 	// The position of the drawn portion.
 	int8_t draw_x, draw_y;
@@ -59,6 +61,7 @@ struct pax_bmpv {
 	size_t index;
 };
 
+// Information relevant for the entirety of each font.
 struct pax_font {
 	// The searchable name of the font.
 	const char             *name;
@@ -73,6 +76,7 @@ struct pax_font {
 	bool                    recommend_aa;
 };
 
+// Describes a range of glyphs in a font.
 struct pax_font_range {
 	// The type of font range.
 	pax_font_type_t  type;
@@ -108,8 +112,11 @@ struct pax_font_range {
 
 /* ============ INDEX ============ */
 
+// The number of built-in fonts.
 #define PAX_N_FONTS pax_n_fonts
+// The default font ("sky", variable pitch).
 #define PAX_FONT_DEFAULT (&pax_fonts_index[0])
+// A comprehensive index of built-in fonts.
 extern const pax_font_t pax_fonts_index[];
 extern const size_t     pax_n_fonts;
 

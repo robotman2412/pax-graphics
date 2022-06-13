@@ -482,7 +482,7 @@ void pax_outline_shape(pax_buf_t *buf, pax_col_t color, size_t num_points, const
 // Does not work for less then 3 points.
 static bool is_clockwise(int num_points, indexed_point_t *points, int index, int num_test, float dy) {
 	float result = 0;
-	// Simple but not optimisflflflfl loop.
+	// Simple but unoptimised loop.
 	for (int i = index; i < num_test + index; i++) {
 		int index0 = i+index;
 		int index1 = i+index+1;
@@ -605,7 +605,6 @@ void pax_triang_concave(size_t **output, size_t num_points, pax_vec1_t *raw_poin
 		}
 	}
 	
-	// AtThisPoint,,,   wearedone.
 	*output = tris;
 }
 
@@ -622,10 +621,6 @@ void pax_draw_shape(pax_buf_t *buf, pax_col_t color, size_t num_points, pax_vec1
 	}
 	// Then draw all triangles.
 	for (size_t i = 0, tri_index = 0; i < n_tris; i++) {
-		// ESP_LOGE(TAG, "LOG YOU\n%10.5f %10.5f;  %10.5f %10.5f;  %10.5f %10.5f",
-		// 	points[tris[tri_index  ]].x, points[tris[tri_index  ]].y,
-		// 	points[tris[tri_index+1]].x, points[tris[tri_index+1]].y,
-		// 	points[tris[tri_index+2]].x, points[tris[tri_index+2]].y);
 		pax_draw_tri(
 			buf, color, //pax_col_hsv(i / (float) n_tris * 255.0f / 3.0f, 255, 255),
 			points[tris[tri_index  ]].x, points[tris[tri_index  ]].y,

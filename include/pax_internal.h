@@ -39,12 +39,14 @@ extern "C" {
 
 /* =========== HELPERS =========== */
 
+// Name used in log output.
 static const char *TAG   = "pax";
 
 // Helper for setting pixels in drawing routines.
 // Used to allow to optimise away alpha in colors.
 typedef void (*pax_setter_t)(pax_buf_t *buf, pax_col_t color, int x, int y);
 
+// Macros for errors.
 #ifdef PAX_AUTOREPORT
 #define PAX_ERROR(where, errno) { ESP_LOGE(TAG, "@ %s: %s", where, pax_desc_err(errno)); pax_last_error = errno; return; }
 #define PAX_ERROR1(where, errno, retval) { ESP_LOGE(TAG, "@ %s: %s", where, pax_desc_err(errno)); pax_last_error = errno; return retval; }

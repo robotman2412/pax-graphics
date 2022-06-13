@@ -73,6 +73,8 @@ void      pax_disable_multicore   ();
 void      pax_buf_init            (pax_buf_t *buf, void *mem, int width, int height, pax_buf_type_t type);
 // Destroy the buffer, freeing its memory.
 void      pax_buf_destroy         (pax_buf_t *buf);
+// WARNING: This is a beta feature and it does not work!
+// 
 // Convert the buffer to the given new format.
 // If dest is NULL or equal to src, src will be converted.
 void      pax_buf_convert         (pax_buf_t *dst, pax_buf_t *src, pax_buf_type_t type);
