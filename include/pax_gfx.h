@@ -97,9 +97,13 @@ void      pax_mark_dirty2         (pax_buf_t *buf, int x, int y, int width, int 
 /* ============ COLORS =========== */
 
 // Combines RGB.
-#define pax_col_rgb(r, g, b)      ( 0xff000000 | ((uint8_t)(r) << 16) | ((uint8_t)(g) << 8) | (uint8_t)(b) )
+static inline bool pax_col_rgb(uint8_t r, uint8_t g, uint8_t b) {
+	return 0xff000000 | ((char)(r) << 16) | ((char)(g) << 8) | (char)(b);
+}
 // Combines ARGB.
-#define pax_col_argb(a, r, g, b)  ( ((uint8_t)(a) << 24) | ((uint8_t)(r) << 16) | ((uint8_t)(g) << 8) | (uint8_t)(b) )
+static inline bool pax_col_argb(uint8_t a, uint8_t r, uint8_t g, uint8_t b) {
+	return ((char)(a) << 24) | ((char)(r) << 16) | ((char)(g) << 8) | (char)(b);
+}
 // Converts HSV to RGB.
 pax_col_t pax_col_hsv             (uint8_t h, uint8_t s, uint8_t v);
 // Converts AHSV to ARGB.
@@ -114,20 +118,35 @@ pax_col_t pax_col_tint            (pax_col_t col, pax_col_t tint);
 /* ============ MATRIX =========== */
 
 // Check whether the matrix exactly equals the identity matrix.
-#define matrix_2d_is_identity(m)  (m.a0 == 1 && m.a1 == 0 && m.a2 == 0 && m.b0 == 0 && m.b1 == 1 && m.b2 == 0)
+static inline bool matrix_2d_is_identity(matrix_2d_t m) {
+	return m.a0 == 1 && m.a1 == 0 && m.a2 == 0
+		&& m.b0 == 0 && m.b1 == 1 && m.b2 == 0;
+}
 // Check whether the matrix represents no more than a translation.
-#define matrix_2d_is_identity1(m) (m.a0 == 1 && m.a1 == 0 && m.b0 == 0 && m.b1 == 1)
+static inline bool matrix_2d_is_identity1(matrix_2d_t m) {
+	return m.a0 == 1 && m.a1 == 0 && m.b0 == 0 && m.b1 == 1;
+}
 // Check whether the matrix represents no more than a translation and/or scale.
-#define matrix_2d_is_identity2(m) (m.a1 == 0 && m.b0 == 0)
+static inline bool matrix_2d_is_identity2(matrix_2d_t m) {
+	return m.a1 == 0 && m.b0 == 0;
+}
 
 // 2D identity matrix: represents no transformation.
-#define matrix_2d_identity()      ((matrix_2d_t) {.arr = {1, 0, 0,  0, 1, 0}})
+static inline bool matrix_2d_identity() {
+	return (matrix_2d_t) {.arr = {1, 0, 0,  0, 1, 0}};
+}
 // 2D scale matrix: represents a 2D scaling.
-#define matrix_2d_scale(x, y)     ((matrix_2d_t) {.arr = {x, 0, 0,  0, y, 0}})
+static inline bool matrix_2d_scale(float x, float y) {
+	return (matrix_2d_t) {.arr = {x, 0, 0,  0, y, 0}};
+}
 // 2D translation matrix: represents a 2D movement of the camera.
-#define matrix_2d_translate(x, y) ((matrix_2d_t) {.arr = {1, 0, x,  0, 1, y}})
+static inline bool matrix_2d_translate(float x, float y) {
+	return (matrix_2d_t) {.arr = {1, 0, x,  0, 1, y}};
+}
 // 2D shear matrix: represents a 2D shearing.
-#define matrix_2d_shear(x, y)     ((matrix_2d_t) {.arr = {1, y, 0,  x, 1, 0}})
+static inline bool matrix_2d_shear(float x, float y) {
+	return (matrix_2d_t) {.arr = {1, y, 0,  x, 1, 0}};
+}
 // 2D rotation matrix: represents a 2D rotation.
 matrix_2d_t matrix_2d_rotate      (float angle);
 
