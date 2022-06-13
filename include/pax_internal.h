@@ -39,6 +39,9 @@ extern "C" {
 
 /* =========== HELPERS =========== */
 
+// Whether multi-core rendering is enabled.
+extern bool pax_do_multicore;
+
 // Name used in log output.
 static const char *TAG   = "pax";
 

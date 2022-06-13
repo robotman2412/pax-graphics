@@ -46,9 +46,6 @@ void       pax_debug              (pax_buf_t *buf);
 
 /* ===== MULTI-CORE RENDERING ==== */
 
-// Whether multi-core rendering is enabled.
-// You should not modify this variable.
-extern bool pax_do_multicore;
 // If multi-core rendering is enabled, wait for the other core.
 void      pax_join                ();
 // Enable multi-core rendering.
