@@ -345,6 +345,17 @@ static pax_vec1_t text_generic(pax_text_ctx_t *ctx, const char *text) {
 	};
 }
 
+// Draw a string with the given font and return it's size.
+// Text is center-aligned.
+// Size is before matrix transformation.
+// If font is NULL, the default font (sky) will be used.
+// Font is scaled up with method recommended by it (see pax_font_t::recommend_aa).
+pax_vec1_t pax_center_text(pax_buf_t *buf, pax_col_t color, const pax_font_t *font, float font_size, float x, float y, const char *text) {
+	pax_vec1_t dims = pax_text_size(font, font_size, text);
+	pax_draw_text(buf, color, font, font_size, x - dims.x/2, y, text);
+	return dims;
+}
+
 // Draw a string with the given font.
 // If font is NULL, the default font (7x9) will be used.
 pax_vec1_t pax_draw_text(pax_buf_t *buf, pax_col_t color, const pax_font_t *font, float font_size, float x, float y, const char *text) {

@@ -30,6 +30,12 @@
 /* ======= DRAWING: TEXT ======= */
 
 // Draw a string with the given font and return it's size.
+// Text is center-aligned on every line.
+// Size is before matrix transformation.
+// If font is NULL, the default font (sky) will be used.
+// Font is scaled up with method recommended by it (see pax_font_t::recommend_aa).
+pax_vec1_t  pax_center_text         (pax_buf_t *buf, pax_col_t color, const pax_font_t *font, float font_size, float x, float y, const char *text);
+// Draw a string with the given font and return it's size.
 // Size is before matrix transformation.
 // If font is NULL, the default font (sky) will be used.
 // Font is scaled up with method recommended by it (see pax_font_t::recommend_aa).

@@ -129,19 +129,19 @@ static inline bool matrix_2d_is_identity2(matrix_2d_t m) {
 }
 
 // 2D identity matrix: represents no transformation.
-static inline bool matrix_2d_identity() {
+static inline matrix_2d_t matrix_2d_identity() {
 	return (matrix_2d_t) {.arr = {1, 0, 0,  0, 1, 0}};
 }
 // 2D scale matrix: represents a 2D scaling.
-static inline bool matrix_2d_scale(float x, float y) {
+static inline matrix_2d_t matrix_2d_scale(float x, float y) {
 	return (matrix_2d_t) {.arr = {x, 0, 0,  0, y, 0}};
 }
 // 2D translation matrix: represents a 2D movement of the camera.
-static inline bool matrix_2d_translate(float x, float y) {
+static inline matrix_2d_t matrix_2d_translate(float x, float y) {
 	return (matrix_2d_t) {.arr = {1, 0, x,  0, 1, y}};
 }
 // 2D shear matrix: represents a 2D shearing.
-static inline bool matrix_2d_shear(float x, float y) {
+static inline matrix_2d_t matrix_2d_shear(float x, float y) {
 	return (matrix_2d_t) {.arr = {1, y, 0,  x, 1, 0}};
 }
 // 2D rotation matrix: represents a 2D rotation.
