@@ -38,8 +38,8 @@ It also has only one color for the entire shape.
 List of normal drawing methods:
 | name                 | arguments                                                            | description
 | :------------------- | :------------------------------------------------------------------- | :----------
-| pax_draw_image       | pax_buf_t \*buf, pax_buf_t *image, float x, y                        | Draws an image at the image's normal size.
-| pax_draw_image_sized | pax_buf_t \*buf, pax_buf_t *image, float x, y, width, height         | Draw an image with a prespecified size.
+| pax_draw_image       | pax_buf_t \*buf, pax_buf_t \*image, float x, y                       | Draws an image at the image's normal size.
+| pax_draw_image_sized | pax_buf_t \*buf, pax_buf_t \*image, float x, y, width, height        | Draw an image with a prespecified size.
 | pax_draw_rect        | pax_buf_t \*buf, pax_col_t color, float x, y, width, height          | Draws a rectangle with the given dimensions.
 | pax_draw_line        | pax_buf_t \*buf, pax_col_t color, float x0, y0, x1, y1               | Draws a line between two points.
 | pax_draw_tri         | pax_buf_t \*buf, pax_col_t color, float x0, y0, x1, y1, x2, y2       | Draws a triangle between three points.
@@ -82,6 +82,7 @@ In PAX, you can draw text as well as calculate it's size.
 List of text methods:
 | returns    | name               | arguments                                                                                           | description
 | :--------- | :----------------- | :-------------------------------------------------------------------------------------------------- | :----------
+| void       | pax_center_text    | pax_buf_t \*buf, pax_col_t color, pax_font_t \*font, float font_size, float x, float y, char \*text | Draws text with a given font. This text will be horizontally center-aligned.
 | void       | pax_draw_text      | pax_buf_t \*buf, pax_col_t color, pax_font_t \*font, float font_size, float x, float y, char \*text | Draws text with a given font. Interpolation depends on the font.
 | void       | pax_draw_text_aa   | pax_buf_t \*buf, pax_col_t color, pax_font_t \*font, float font_size, float x, float y, char \*text | Draws text with a given font. Always uses interpolation.
 | void       | pax_draw_text_noaa | pax_buf_t \*buf, pax_col_t color, pax_font_t \*font, float font_size, float x, float y, char \*text | Draws text with a given font. Never uses interpolation.
