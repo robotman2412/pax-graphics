@@ -646,5 +646,4 @@ void pax_triang_concave(size_t **output, size_t num_points, pax_vec1_t *points) 
 void pax_draw_shape(pax_buf_t *buf, pax_col_t color, size_t num_points, pax_vec1_t *points) {
 	PAX_ERROR("pax_draw_shape", PAX_ERR_UNSUPPORTED);
 }
-
 #endif
