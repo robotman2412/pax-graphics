@@ -11,6 +11,15 @@ There are two steps to do this:
 PAX allows you to choose which color format to use.
 This allows you to pick one that fits your screen nicely, or just to save on memory.
 
+Palette formats:
+| name            | bits per pixel
+| :-------------- | :-------------
+| PAX_BUF_1_PAL   | 1
+| PAX_BUF_2_PAL   | 2
+| PAX_BUF_4_PAL   | 4
+| PAX_BUF_8_PAL   | 8
+| PAX_BUF_16_PAL  | 16
+
 Greyscale (black/white) formats:
 | name            | bits per pixel
 | :-------------- | :-------------
@@ -56,4 +65,29 @@ If you don't need the buffer anymore, use `pax_buf_destroy`:
 ```c
 // This works regardless of whether you allocated memory manually or not.
 pax_buf_destroy(&buffer);
+```
+
+### With a palette
+
+If you're using one of the palette buffer types, you need to assign the palette before you can use it.
+The relevant variables are `pallette`, `pallette_size` and `do_free_pal` of `pax_buf_t` (Yes, those are typos, I know.):
+```c
+// The color palette to use.
+pax_col_t my_palette[4] = {
+    0xffff0000,
+    0xff00ff00,
+    0xff0000ff,
+    0xff000000,
+};
+
+// Make a buffer.
+pax_buf_t buffer;
+pax_buf_init(&buffer, NULL, 10, 10, PAX_BUF_2_PAL);
+
+// Apply the palette.
+buffer.pallette      = my_palette;
+// There are 4 colors in the palette.
+buffer.pallette_size = 4;
+// The palette is statically allocated, so don't free it when the buffer is destroyed.
+buffer.do_free_pal   = false;
 ```
