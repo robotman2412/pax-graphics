@@ -39,7 +39,7 @@
 // #define PAX_USE_EXPENSIVE_BEZIER
 
 // Compile in triangulation (filling the outline of a shape).
-#define PAX_COMPILE_TRIANGULATE
+// #define PAX_COMPILE_TRIANGULATE
 
 // Compile in multi-core rendering.
 #define PAX_COMPILE_MCR

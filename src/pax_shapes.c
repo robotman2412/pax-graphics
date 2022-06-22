@@ -478,6 +478,7 @@ void pax_outline_shape(pax_buf_t *buf, pax_col_t color, size_t num_points, const
 
 /* ======== TRIANGULATION ======== */
 
+#ifdef PAX_COMPILE_TRIANGULATE
 // Determine whether the points go clockwise or counter-clockwise.
 // Does not work for less then 3 points.
 static bool is_clockwise(int num_points, indexed_point_t *points, int index, int num_test, float dy) {
@@ -632,3 +633,18 @@ void pax_draw_shape(pax_buf_t *buf, pax_col_t color, size_t num_points, pax_vec1
 	// And free el triangles.
 	free(tris);
 }
+#else
+// Stub method because the real one isn't compiled in.
+size_t pax_triang_complete(size_t **output, pax_vec1_t **additional_points, size_t num_points, pax_vec1_t *points) {
+	PAX_ERROR1("pax_draw_shape", PAX_ERR_UNSUPPORTED, 0);
+}
+// Stub method because the real one isn't compiled in.
+void pax_triang_concave(size_t **output, size_t num_points, pax_vec1_t *points) {
+	PAX_ERROR("pax_draw_shape", PAX_ERR_UNSUPPORTED);
+}
+// Stub method because the real one isn't compiled in.
+void pax_draw_shape(pax_buf_t *buf, pax_col_t color, size_t num_points, pax_vec1_t *points) {
+	PAX_ERROR("pax_draw_shape", PAX_ERR_UNSUPPORTED);
+}
+
+#endif
