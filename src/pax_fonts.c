@@ -26,7 +26,7 @@
 #include <strings.h>
 
 extern const pax_font_range_t pax_font_sky_ranges[];
-extern const pax_font_range_t marker_ranges[];
+extern const pax_font_range_t permanentmarker_ranges[];
 extern const pax_font_range_t sairaregular_ranges[];
 extern const pax_font_range_t sairacondensed_ranges[];
 
@@ -125,8 +125,8 @@ const pax_font_t pax_fonts_index[] = {
 	}, { // PermanentMarker
 		.name         = "permanentmarker",
 		.n_ranges     = 23,
-		.ranges       = marker_ranges,
-		.default_size = 22,
+		.ranges       = permanentmarker_ranges,
+		.default_size = 45,
 		.recommend_aa = true,
 	}, { // Saira condensed
 		.name         = "saira condensed",
