@@ -136,7 +136,7 @@ const pax_font_t pax_fonts_index[] = {
 		.recommend_aa = true,
 	}, { // Saira regular
 		.name         = "saira regular",
-		.n_ranges     = 23,
+		.n_ranges     = 27,
 		.ranges       = sairaregular_ranges,
 		.default_size = 18,
 		.recommend_aa = true,
