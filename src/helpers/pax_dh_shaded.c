@@ -23,7 +23,9 @@
 */
 
 #ifndef PAX_GFX_C
+#ifndef ARDUINO
 #pragma message "This file should not be compiled on it's own."
+#endif
 #else
 
 #include "pax_internal.h"
