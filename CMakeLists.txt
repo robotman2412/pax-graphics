@@ -7,10 +7,10 @@ idf_component_register(
 	"src/pax_fonts.c"
 	"src/pax_text.c"
 	
-	"fonts/font_bitmap_7x9.c"
-	"fonts/font_bitmap_sky.c"
-	"fonts/font_bitmap_permanentmarker.c"
-	"fonts/font_bitmap_sairaregular.c"
-	"fonts/font_bitmap_sairacondensed.c"
-	INCLUDE_DIRS include
+	"src/fonts/font_bitmap_7x9.c"
+	"src/fonts/font_bitmap_sky.c"
+	"src/fonts/font_bitmap_permanentmarker.c"
+	"src/fonts/font_bitmap_sairaregular.c"
+	"src/fonts/font_bitmap_sairacondensed.c"
+	INCLUDE_DIRS src
 )
