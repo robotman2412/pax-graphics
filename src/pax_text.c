@@ -71,7 +71,7 @@ typedef struct {
 // Returns the new string pointer.
 // Sets the decoded UTF-8 using a pointer.
 // If the string terminates early or contains invalid unicode, U+FFFD is returned.
-char *utf8_getch(const char *cstr, wchar_t *out) {
+char *utf8_getch(const char *cstr, uint32_t *out) {
 	char len, mask;
 	if (!*cstr) {
 		// Null pointer.
@@ -116,7 +116,7 @@ char *utf8_getch(const char *cstr, wchar_t *out) {
 // Returns how many UTF-8 characters a given c-string contains.
 size_t utf8_strlen(const char *cstr) {
 	const char *end   = cstr + strlen(cstr);
-	wchar_t     dummy = 0;
+	uint32_t     dummy = 0;
 	size_t      len   = 0;
 	while (cstr != end) {
 		len ++;
@@ -130,7 +130,7 @@ size_t utf8_strlen(const char *cstr) {
 /* ======= DRAWING: TEXT ======= */
 
 // Internal method for monospace bitmapped characters.
-pax_vec1_t text_bitmap_mono(pax_text_ctx_t *ctx, const pax_font_range_t *range, wchar_t glyph) {
+pax_vec1_t text_bitmap_mono(pax_text_ctx_t *ctx, const pax_font_range_t *range, uint32_t glyph) {
 	if (ctx->do_render) {
 		// Set up shader.
 		pax_font_bmp_args_t args = {
@@ -188,7 +188,7 @@ pax_vec1_t text_bitmap_mono(pax_text_ctx_t *ctx, const pax_font_range_t *range, 
 }
 
 // Internal method for variable pitch bitmapped characters.
-pax_vec1_t text_bitmap_var(pax_text_ctx_t *ctx, const pax_font_range_t *range, wchar_t glyph) {
+pax_vec1_t text_bitmap_var(pax_text_ctx_t *ctx, const pax_font_range_t *range, uint32_t glyph) {
 	size_t index = (glyph - range->start);
 	const pax_bmpv_t *dims = &range->bitmap_var.dims[index];
 	if (ctx->do_render) {
@@ -249,13 +249,13 @@ pax_vec1_t text_bitmap_var(pax_text_ctx_t *ctx, const pax_font_range_t *range, w
 }
 
 // Determines whether a character lies in a given range.
-static inline bool text_range_includes(const pax_font_range_t *range, wchar_t c) {
+static inline bool text_range_includes(const pax_font_range_t *range, uint32_t c) {
 	return c >= range->start && c <= range->end;
 }
 
 // Internal method for determining the font range to use.
 // Returns NULL if not in any range.
-static const pax_font_range_t *text_get_range(const pax_font_t *font, wchar_t c) {
+static const pax_font_range_t *text_get_range(const pax_font_t *font, uint32_t c) {
 	// Iterate over ranges.
 	for (size_t i = 0; i < font->n_ranges; i++) {
 		// Look for the first including the point.
@@ -292,7 +292,7 @@ static pax_vec1_t text_generic(pax_text_ctx_t *ctx, const char *text) {
 	// Simply loop over all characters.
 	while (text < limit) {
 		// Get a character.
-		wchar_t glyph = 0;
+		uint32_t glyph = 0;
 		text = utf8_getch(text, &glyph);
 		
 		// Is it a newline?

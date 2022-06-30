@@ -81,9 +81,9 @@ struct pax_font_range {
 	// The type of font range.
 	pax_font_type_t  type;
 	// First character in range.
-	wchar_t          start;
+	uint32_t         start;
 	// Last character in range.
-	wchar_t          end;
+	uint32_t         end;
 	union {
 		// Monospace, bitmapped fonts.
 		struct {

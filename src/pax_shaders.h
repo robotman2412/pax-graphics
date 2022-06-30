@@ -42,7 +42,7 @@ typedef struct pax_font_bmp_args {
 	// The range of the font to be drawn.
 	const pax_font_range_t *range;
 	// The glyph to be drawn.
-	wchar_t                 glyph;
+	uint32_t                glyph;
 	// The first byte index of the glyph to be drawn.
 	size_t                  glyph_index;
 	// The bytes per line of the glyph.
