@@ -40,19 +40,19 @@ extern "C" {
 extern pax_err_t pax_last_error;
 
 // Describe error.
-char      *pax_desc_err           (pax_err_t error);
+const char *pax_desc_err           (pax_err_t error);
 // Debug stuff.
-void       pax_debug              (pax_buf_t *buf);
+void        pax_debug              (pax_buf_t *buf);
 
 /* ===== MULTI-CORE RENDERING ==== */
 
 // If multi-core rendering is enabled, wait for the other core.
-void      pax_join                ();
+void       pax_join                ();
 // Enable multi-core rendering.
 // You must specify the core number to use.
-void      pax_enable_multicore    (int core);
+void       pax_enable_multicore    (int core);
 // Disable multi-core rendering.
-void      pax_disable_multicore   ();
+void       pax_disable_multicore   ();
 
 /* ============ BUFFER =========== */
 

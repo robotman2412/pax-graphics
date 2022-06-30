@@ -252,9 +252,9 @@ static inline float pax_flerp4(float x, float y, float e0, float e1, float e2, f
 /* ============ DEBUG ============ */
 
 // Describe error.
-char *pax_desc_err(pax_err_t error) {
-	char *unknown = "Unknown error";
-	char *desc[] = {
+const char *pax_desc_err(pax_err_t error) {
+	const char *unknown = "Unknown error";
+	const char *desc[] = {
 		"Success",
 		"No framebuffer",
 		"No memory",
