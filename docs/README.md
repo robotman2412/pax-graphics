@@ -82,8 +82,8 @@ Here's what it looks like if you write it to the screen:
 ![And a red circle](images/getting_started_i_circle.jpg "And a red circle")
 
 Text is a bit more complicated, because you get to pick a font.
-However, you can pick any font for now. We'll go with the default (and currently only font) "7x9".<br>
-It's point size is 9, which means that a text size of 9 is it's normal look. We'll pick 18.<br>
+However, you can pick any font for now. We'll go with `pax_font_sky_mono`.<br>
+It's point size is 9, which means that a text size of 9 is it's normal look. We'll pick 18 for readability.<br>
 The [`pax_draw_text`](#api-reference-text) method is used to draw text.
 It accepts a font, a point size, a top left corner position and the text to draw:
 ```c
@@ -105,8 +105,8 @@ void my_graphics_function() {
     float text_x     = 0;                   // Top left corner of the screen.
     float text_y     = 0;                   // Top left corner of the screen.
     char *my_text    = "Hello, World!";     // You can pick any message you'd like.
-    float text_size  = 18;                  // Twice the normal size for "7x9".
-    pax_draw_text(&buffer, pax_col_rgb(255, 255, 255), PAX_FONT_DEFAULT, text_size, text_x, text_y, my_text);
+    float text_size  = 18;                  // Twice the normal size for "sky".
+    pax_draw_text(&buffer, pax_col_rgb(255, 255, 255), pax_font_sky_mono, text_size, text_x, text_y, my_text);
 }
 ```
 Here's what it looks like if you write it to the screen:
