@@ -359,7 +359,7 @@ pax_vec1_t pax_center_text(pax_buf_t *buf, pax_col_t color, const pax_font_t *fo
 // Draw a string with the given font.
 // If font is NULL, the default font (7x9) will be used.
 pax_vec1_t pax_draw_text(pax_buf_t *buf, pax_col_t color, const pax_font_t *font, float font_size, float x, float y, const char *text) {
-	if (!font) font = PAX_FONT_DEFAULT;
+	if (!font) PAX_ERROR1("pax_draw_text(font: NULL)", PAX_ERR_PARAM, (pax_vec1_t){0});
 	pax_text_ctx_t ctx = {
 		.do_render = true,
 		.buf       = buf,
@@ -380,7 +380,7 @@ pax_vec1_t pax_draw_text(pax_buf_t *buf, pax_col_t color, const pax_font_t *font
 // Draw a string with the given font.
 // If font is NULL, the default font (7x9) will be used.
 pax_vec1_t pax_draw_text_aa(pax_buf_t *buf, pax_col_t color, const pax_font_t *font, float font_size, float x, float y, const char *text) {
-	if (!font) font = PAX_FONT_DEFAULT;
+	if (!font) PAX_ERROR1("pax_draw_text(font: NULL)", PAX_ERR_PARAM, (pax_vec1_t){0});
 	pax_text_ctx_t ctx = {
 		.do_render = true,
 		.buf       = buf,
@@ -401,7 +401,7 @@ pax_vec1_t pax_draw_text_aa(pax_buf_t *buf, pax_col_t color, const pax_font_t *f
 // Draw a string with the given font.
 // If font is NULL, the default font (7x9) will be used.
 pax_vec1_t pax_draw_text_noaa(pax_buf_t *buf, pax_col_t color, const pax_font_t *font, float font_size, float x, float y, const char *text) {
-	if (!font) font = PAX_FONT_DEFAULT;
+	if (!font) PAX_ERROR1("pax_draw_text(font: NULL)", PAX_ERR_PARAM, (pax_vec1_t){0});
 	pax_text_ctx_t ctx = {
 		.do_render = true,
 		.buf       = buf,
@@ -423,7 +423,7 @@ pax_vec1_t pax_draw_text_noaa(pax_buf_t *buf, pax_col_t color, const pax_font_t 
 // Size is before matrix transformation.
 // If font is NULL, the default font (7x9) will be used.
 pax_vec1_t pax_text_size(const pax_font_t *font, float font_size, const char *text) {
-	if (!font) font = PAX_FONT_DEFAULT;
+	if (!font) PAX_ERROR1("pax_draw_text(font: NULL)", PAX_ERR_PARAM, (pax_vec1_t){0});
 	pax_text_ctx_t ctx = {
 		.do_render = false,
 		.font      = font,

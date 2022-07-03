@@ -159,7 +159,7 @@ const pax_font_t *pax_get_font(char *name) {
 			return pax_fonts_index[i];
 		}
 	}
-	return PAX_FONT_DEFAULT;
+	return NULL;
 }
 #else
 const pax_font_t *pax_get_font(char *name) {
