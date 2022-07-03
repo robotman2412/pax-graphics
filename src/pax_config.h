@@ -41,6 +41,9 @@
 // Compile in triangulation (filling the outline of a shape).
 // #define PAX_COMPILE_TRIANGULATE
 
+// Compile in all fonts and the fonts index.
+// #define PAX_COMPILE_FONT_INDEX
+
 // Compile in multi-core rendering.
 #define PAX_COMPILE_MCR
 

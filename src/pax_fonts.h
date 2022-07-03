@@ -112,13 +112,25 @@ struct pax_font_range {
 
 /* ============ INDEX ============ */
 
+extern const pax_font_t PRIVATE_pax_font_sky;
+extern const pax_font_t PRIVATE_pax_font_sky_mono;
+extern const pax_font_t PRIVATE_pax_font_marker;
+extern const pax_font_t PRIVATE_pax_font_saira_condensed;
+extern const pax_font_t PRIVATE_pax_font_saira_regular;
+
+#define pax_font_sky             (&PRIVATE_pax_font_sky)
+#define pax_font_sky_mono        (&PRIVATE_pax_font_sky_mono)
+#define pax_font_marker          (&PRIVATE_pax_font_marker)
+#define pax_font_saira_condensed (&PRIVATE_pax_font_saira_condensed)
+#define pax_font_saira_regular   (&PRIVATE_pax_font_saira_regular)
+
 // The number of built-in fonts.
 #define PAX_N_FONTS pax_n_fonts
 // The default font ("sky", variable pitch).
-#define PAX_FONT_DEFAULT (&pax_fonts_index[0])
+#define PAX_FONT_DEFAULT pax_font_sky
 // A comprehensive index of built-in fonts.
-extern const pax_font_t pax_fonts_index[];
-extern const size_t     pax_n_fonts;
+extern const pax_font_t *pax_fonts_index[];
+extern const size_t      pax_n_fonts;
 
 /* ========== FUNCTIONS ========== */
 

@@ -23,6 +23,7 @@
 */
 
 #include "pax_fonts.h"
+#include "pax_internal.h"
 #include <strings.h>
 
 extern const pax_font_range_t pax_font_sky_ranges[];
@@ -103,54 +104,67 @@ const pax_font_range_t font_7x9_ranges[] = {
 	}
 };
 
-const pax_font_t pax_fonts_index[] = {
-	{ // Sky
-		.name         = "Sky",
-		.n_ranges     = 6,
-		.ranges       = pax_font_sky_ranges,
-		.default_size = 9,
-		.recommend_aa = false,
-	}, { // Sky mono
-		.name         = "7x9",
-		.n_ranges     = 3,
-		.ranges       = font_7x9_ranges,
-		.default_size = 9,
-		.recommend_aa = false,
-	}, { // Sky mono
-		.name         = "sky mono",
-		.n_ranges     = 3,
-		.ranges       = font_7x9_ranges,
-		.default_size = 9,
-		.recommend_aa = false,
-	}, { // PermanentMarker
-		.name         = "permanentmarker",
-		.n_ranges     = 23,
-		.ranges       = permanentmarker_ranges,
-		.default_size = 45,
-		.recommend_aa = true,
-	}, { // Saira condensed
-		.name         = "saira condensed",
-		.n_ranges     = 80,
-		.ranges       = sairacondensed_ranges,
-		.default_size = 45,
-		.recommend_aa = true,
-	}, { // Saira regular
-		.name         = "saira regular",
-		.n_ranges     = 27,
-		.ranges       = sairaregular_ranges,
-		.default_size = 18,
-		.recommend_aa = true,
-	}
+const pax_font_t *pax_fonts_index[] = {
+#ifdef PAX_COMPILE_FONT_INDEX
+	&PRIVATE_pax_font_sky,
+	&PRIVATE_pax_font_sky_mono,
+	&PRIVATE_pax_font_marker,
+	&PRIVATE_pax_font_saira_condensed,
+	&PRIVATE_pax_font_saira_regular,
+#endif
 };
 const size_t pax_n_fonts = sizeof(pax_fonts_index) / sizeof(pax_font_t);
 
+const pax_font_t PRIVATE_pax_font_sky = { // Sky
+	.name         = "Sky",
+	.n_ranges     = 6,
+	.ranges       = pax_font_sky_ranges,
+	.default_size = 9,
+	.recommend_aa = false,
+};
+const pax_font_t PRIVATE_pax_font_sky_mono = { // Sky mono
+	.name         = "sky mono",
+	.n_ranges     = 3,
+	.ranges       = font_7x9_ranges,
+	.default_size = 9,
+	.recommend_aa = false,
+};
+const pax_font_t PRIVATE_pax_font_marker = { // PermanentMarker
+	.name         = "permanentmarker",
+	.n_ranges     = 23,
+	.ranges       = permanentmarker_ranges,
+	.default_size = 45,
+	.recommend_aa = true,
+};
+const pax_font_t PRIVATE_pax_font_saira_condensed = { // Saira condensed
+	.name         = "saira condensed",
+	.n_ranges     = 80,
+	.ranges       = sairacondensed_ranges,
+	.default_size = 45,
+	.recommend_aa = true,
+};
+const pax_font_t PRIVATE_pax_font_saira_regular = { // Saira regular
+	.name         = "saira regular",
+	.n_ranges     = 27,
+	.ranges       = sairaregular_ranges,
+	.default_size = 18,
+	.recommend_aa = true,
+};
+
+#ifdef PAX_COMPILE_FONT_INDEX
 // Finds the built-in font with the given name.
 const pax_font_t *pax_get_font(char *name) {
 	for (size_t i = 0; i < PAX_N_FONTS; i++) {
-		if (!strcasecmp(pax_fonts_index[i].name, name)) {
-			return &pax_fonts_index[i];
+		if (!strcasecmp(pax_fonts_index[i]->name, name)) {
+			return pax_fonts_index[i];
 		}
 	}
 	return PAX_FONT_DEFAULT;
 }
+#else
+const pax_font_t *pax_get_font(char *name) {
+	// Not compiled in, so ignore this.
+	PAX_ERROR1("pax_get_font", PAX_ERR_UNSUPPORTED, NULL);
+}
+#endif
 

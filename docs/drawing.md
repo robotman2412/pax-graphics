@@ -97,21 +97,14 @@ This value is the size recommended by the font's creator.
 Second, every font has the `recommend_aa` attribute.
 This tells PAX whether to or not to use anti-aliasing (or rather interpolation) by default.
 
-There is also this utility function that finds a font for you:
-| returns       | name         | arguments
-| :------------ | :----------- | :----------
-| pax_font_t \* | pax_get_font | char \*name
-
-If your pick isn't found it returns the default font instead.
-
 Current list of fonts:
-| name             | id                      | default size            | glyphs
-| :--------------- | :---------------------- | :---------------------- | :-----
-| Sky Mono         | `"sky mono"` or `"7x9"` | 7 (width) by 9 (height) | ASCII
-| Sky Variable     | `"sky"`                 | 9 (height)              | ASCII and latin supplements
-| Permanent Marker | `"permanentmarker"`     | 22 (height)             | ASCII and latin supplements
-| Saira Regular    | `"saira regular"`       | 18 (height)             | ASCII and latin supplements
-| Saira Condensed  | `"saira condensed"`     | 45 (height)             | ASCII and latin supplements
+| name             | id                         | default size            | glyphs
+| :--------------- | :------------------------- | :---------------------- | :-----
+| Sky Mono         | `pax_font_sky_mono`        | 7 (width) by 9 (height) | ASCII
+| Sky Variable     | `pax_font_sky`             | 9 (height)              | ASCII and latin supplements
+| Permanent Marker | `pax_font_marker`          | 22 (height)             | ASCII and latin supplements
+| Saira Regular    | `pax_font_saira_regular`   | 18 (height)             | ASCII and latin supplements
+| Saira Condensed  | `pax_font_saira_condensed` | 45 (height)             | ASCII and latin supplements
 
 
 # Background
