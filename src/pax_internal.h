@@ -51,8 +51,8 @@ typedef void (*pax_setter_t)(pax_buf_t *buf, pax_col_t color, int x, int y);
 
 // Macros for errors.
 #ifdef PAX_AUTOREPORT
-#define PAX_ERROR(where, errno) { ESP_LOGE(TAG, "@ %s: %s", where, pax_desc_err(errno)); pax_last_error = errno; return; }
-#define PAX_ERROR1(where, errno, retval) { ESP_LOGE(TAG, "@ %s: %s", where, pax_desc_err(errno)); pax_last_error = errno; return retval; }
+#define PAX_ERROR(where, errno) { pax_report_error(where, errno); pax_last_error = errno; return; }
+#define PAX_ERROR1(where, errno, retval) { pax_report_error(where, errno); pax_last_error = errno; return retval; }
 #else
 #define PAX_ERROR(where, errno) { pax_last_error = errno; return; }
 #define PAX_ERROR1(where, errno, retval) { pax_last_error = errno; return retval; }
@@ -71,6 +71,8 @@ typedef void (*pax_setter_t)(pax_buf_t *buf, pax_col_t color, int x, int y);
 #define PAX_SWAP_POINTS(x0, y0, x1, y1) { float tmp = x1; x1 = x0; x0 = tmp; tmp = y1; y1 = y0; y0 = tmp; }
 // Sort two points represented by floats.
 #define PAX_SORT_POINTS(x0, y0, x1, y1) { if (y1 < y0) PAX_SWAP_POINTS(x0, y0, x1, y1) }
+
+void pax_report_error(const char *where, pax_err_t errno);
 
 #ifdef __cplusplus
 }

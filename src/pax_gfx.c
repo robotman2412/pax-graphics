@@ -25,6 +25,7 @@
 #include "pax_internal.h"
 #include "pax_shaders.h"
 
+#include <esp_timer.h>
 #include <malloc.h>
 #include <string.h>
 #include <math.h>
@@ -250,6 +251,42 @@ static inline float pax_flerp4(float x, float y, float e0, float e1, float e2, f
 
 
 /* ============ DEBUG ============ */
+
+// Print error to console.
+void pax_report_error(const char *where, pax_err_t errno) {
+	// Ignore the "Error: Success" cases.
+	if (errno == PAX_SUCCESS) return;
+	
+	// Number of silenced messages.
+	static uint64_t silenced = 0;
+	// Last spam message time in microseconds.
+	static uint64_t last_spam = 0;
+	// Spam silencing delay in microseconds.
+	static const uint64_t spam_delay = 2 * 1000 * 1000;
+	
+	// Check whether the message migh potentially be spam.
+	bool spam_potential =
+				errno == PAX_ERR_NOBUF
+			|| !strcmp(where, "pax_get_pixel")
+			|| !strcmp(where, "pax_set_pixel");
+	
+	if (spam_potential) {
+		// If so, check time.
+		uint64_t now = esp_timer_get_time();
+		
+		if (now < last_spam + spam_delay) {
+			// It gets blocked.
+			silenced ++;
+		} else {
+			// It goes through, report silenced count.
+			ESP_LOGE(TAG, "%ld silenced errors", silenced);
+			silenced = 0;
+		}
+	}
+	
+	// Log the error.
+	ESP_LOGE(TAG, "@ %s: %s", where, pax_desc_err(errno));
+}
 
 // Describe error.
 const char *pax_desc_err(pax_err_t error) {
