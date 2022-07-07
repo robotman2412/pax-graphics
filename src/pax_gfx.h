@@ -94,12 +94,12 @@ void      pax_mark_dirty2         (pax_buf_t *buf, int x, int y, int width, int 
 /* ============ COLORS =========== */
 
 // Combines RGB.
-static inline bool pax_col_rgb(uint8_t r, uint8_t g, uint8_t b) {
-	return 0xff000000 | ((char)(r) << 16) | ((char)(g) << 8) | (char)(b);
+static inline pax_col_t pax_col_rgb(uint8_t r, uint8_t g, uint8_t b) {
+	return 0xff000000 | (r << 16) | (g << 8) | b;
 }
 // Combines ARGB.
-static inline bool pax_col_argb(uint8_t a, uint8_t r, uint8_t g, uint8_t b) {
-	return ((char)(a) << 24) | ((char)(r) << 16) | ((char)(g) << 8) | (char)(b);
+static inline pax_col_t pax_col_argb(uint8_t a, uint8_t r, uint8_t g, uint8_t b) {
+	return (a << 24) | (r << 16) | (g << 8) | b;
 }
 // Converts HSV to RGB.
 pax_col_t pax_col_hsv             (uint8_t h, uint8_t s, uint8_t v);
