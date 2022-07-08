@@ -255,7 +255,7 @@ static inline float pax_flerp4(float x, float y, float e0, float e1, float e2, f
 // Print error to console.
 void pax_report_error(const char *where, pax_err_t errno) {
 	// Ignore the "Error: Success" cases.
-	if (errno == PAX_SUCCESS) return;
+	if (errno == PAX_OK) return;
 	
 	// Number of silenced messages.
 	static uint64_t silenced = 0;
@@ -264,7 +264,7 @@ void pax_report_error(const char *where, pax_err_t errno) {
 	// Spam silencing delay in microseconds.
 	static const uint64_t spam_delay = 2 * 1000 * 1000;
 	
-	// Check whether the message migh potentially be spam.
+	// Check whether the message might potentially be spam.
 	bool spam_potential =
 				errno == PAX_ERR_NOBUF
 			|| !strcmp(where, "pax_get_pixel")
@@ -272,16 +272,19 @@ void pax_report_error(const char *where, pax_err_t errno) {
 	
 	if (spam_potential) {
 		// If so, check time.
-		uint64_t now = esp_timer_get_time();
+		uint64_t now = esp_timer_get_time() + spam_delay;
 		
 		if (now < last_spam + spam_delay) {
 			// It gets blocked.
 			silenced ++;
-		} else {
+			return;
+		} else if (silenced) {
 			// It goes through, report silenced count.
-			ESP_LOGE(TAG, "%ld silenced errors", silenced);
+			ESP_LOGE(TAG, "%llu silenced errors", silenced);
 			silenced = 0;
 		}
+		
+		last_spam = now;
 	}
 	
 	// Log the error.
@@ -302,6 +305,7 @@ const char *pax_desc_err(pax_err_t error) {
 		"Out of data",
 		"Image decoding error",
 		"Unsupported operation",
+		"Corrupted buffer",
 	};
 	size_t n_desc = sizeof(desc) / sizeof(char *);
 	if (error > 0 || error < -n_desc) return unknown;
@@ -310,10 +314,11 @@ const char *pax_desc_err(pax_err_t error) {
 
 // Debug stuff.
 void pax_debug(pax_buf_t *buf) {
-	pax_col_t c0 = 0xff489be0;
-	uint32_t  c1 = pax_col2buf(buf, c0);
-	uint32_t  c2 = pax_buf2col(buf, c1);
-	ESP_LOGW(TAG, "%06x -> %02x -> %06x", c0, c1, c2);
+	// Try to cause the error flood.
+	pax_buf_t garbage;
+	garbage.buf = NULL;
+	
+	pax_draw_image(buf, &garbage, 2, 2);
 }
 
 
@@ -710,12 +715,13 @@ pax_col_t pax_get_pixel(pax_buf_t *buf, int x, int y) {
 
 // Draws an image at the image's normal size.
 void pax_draw_image(pax_buf_t *buf, pax_buf_t *image, float x, float y) {
-	if (!image) PAX_ERROR("pax_draw_image", PAX_ERR_PARAM);
+	if (!image || !image->buf) PAX_ERROR("pax_draw_image", PAX_ERR_CORRUPT);
 	pax_draw_image_sized(buf, image, x, y, image->width, image->height);
 }
 
 // Draw an image with a prespecified size.
 void pax_draw_image_sized(pax_buf_t *buf, pax_buf_t *image, float x, float y, float width, float height) {
+	if (!image || !image->buf) PAX_ERROR("pax_draw_image", PAX_ERR_CORRUPT);
 	pax_shade_rect(buf, -1, &PAX_SHADER_TEXTURE(image), NULL, x, y, width, height);
 }
 

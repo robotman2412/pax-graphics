@@ -61,6 +61,8 @@ extern "C" {
 #define PAX_ERR_DECODE      -8
 // Unsupported operation (or not compiled in).
 #define PAX_ERR_UNSUPPORTED -9
+// Corruption in buffer.
+#define PAX_ERR_CORRUPT     -10
 
 /* ============ TYPES ============ */
 
