@@ -248,6 +248,138 @@ static inline float pax_flerp4(float x, float y, float e0, float e1, float e2, f
 	return a + (b - a) * y;
 }
 
+// Gets based on index instead of coordinates.
+// Does no bounds checking nor color conversion.
+pax_col_t pax_get_index(pax_buf_t *buf, int index) {
+	uint8_t bpp = buf->bpp;
+	if (bpp == 1) {
+		// 1BPP
+		// uint8_t *ptr = &buf->buf_8bpp[(index) >> 3];
+		// uint8_t mask = 0x01 << (x & 7);
+		// return (*ptr & mask) >> (x & 7);
+	} else if (bpp == 2) {
+		// 2BPP
+		// uint8_t *ptr = &buf->buf_8bpp[(index) >> 2];
+		// uint8_t mask = 0x03 << (x & 3) * 2;
+		// return (*ptr & mask) >> ((x & 3) * 2);
+	} else if (bpp == 4) {
+		// 4BPP
+		// uint8_t *ptr = &buf->buf_8bpp[(index) >> 1];
+		// if (index & 1) {
+		// 	return *ptr >> 4;
+		// } else {
+		// 	return *ptr & 0x0f;
+		// }
+	} else if (bpp == 8) {
+		// 8BPP
+		return buf->buf_8bpp[index];
+	} else if (bpp == 16) {
+		// 16BPP
+		return buf->buf_16bpp[index];
+	} else if (bpp == 32) {
+		// 32BPP
+		return buf->buf_32bpp[index];
+	} else {
+		//PAX_ERROR1("pax_get_pixel_u", PAX_ERR_PARAM, 0);
+		return 0;
+	}
+	return 0;
+}
+
+// Sets based on index instead of coordinates.
+// Does no bounds checking nor color conversion.
+void pax_set_index(pax_buf_t *buf, pax_col_t color, int index) {
+	uint8_t bpp = buf->bpp;
+	if (bpp == 1) {
+		// 1BPP
+		// uint8_t *ptr = &buf->buf_8bpp[(index) >> 3];
+		// uint8_t mask = 0x01 << (x & 7);
+		// *ptr = (*ptr & ~mask) | (color << (index & 7));
+	} else if (bpp == 2) {
+		// 2BPP
+		// uint8_t *ptr = &buf->buf_8bpp[(index) >> 2];
+		// uint8_t mask = 0x03 << (x & 3) * 2;
+		// *ptr = (*ptr & ~mask) | (color << ((index & 3) * 2));
+	} else if (bpp == 4) {
+		// 4BPP
+		// uint8_t *ptr = &buf->buf_8bpp[(index) >> 1];
+		// if (x & 1) {
+		// 	*ptr = (*ptr & 0xf0) | color;
+		// } else {
+		// 	*ptr = (*ptr & 0x0f) | (color << 4);
+		// }
+	} else if (bpp == 8) {
+		// 8BPP
+		buf->buf_8bpp[index] = color;
+	} else if (bpp == 16) {
+		// 16BPP
+		buf->buf_16bpp[index] = color;
+	} else if (bpp == 32) {
+		// 32BPP
+		buf->buf_32bpp[index] = color;
+	} else {
+		// PAX_ERROR("pax_set_pixel_u", PAX_ERR_PARAM);
+	}
+}
+
+// Sets based on index instead of coordinates.
+// Does no bounds checking.
+void pax_set_index_conv(pax_buf_t *buf, pax_col_t col, int index) {
+	pax_set_index(buf, pax_col2buf(buf, col), index);
+}
+
+// Merges based on index instead of coordinates. Does no bounds checking.
+void pax_merge_index(pax_buf_t *buf, pax_col_t col, int index) {
+	pax_col_t base = pax_buf2col(buf, pax_get_index(buf, index));
+	pax_col_t res  = pax_col2buf(buf, pax_col_merge(base, col));
+	pax_set_index(buf, res, index);
+}
+
+// Gets the most efficient index setter for the occasion.
+// Also converts the color, if applicable.
+// Returns NULL when setting is not required.
+pax_index_setter_t pax_get_setter(pax_buf_t *buf, pax_col_t *col_ptr, const pax_shader_t *shader) {
+	pax_col_t col = *col_ptr;
+	
+	if (shader && (shader->callback == pax_shader_texture || shader->callback == pax_shader_texture_aa)) {
+		// We can determine whether to factor in alpha based on buffer type.
+		if (PAX_IS_ALPHA(((pax_buf_t *)shader->callback_args)->type)) {
+			// If alpha needs factoring in, return the merging setter.
+			return col & 0xff000000 ? pax_merge_index : NULL;
+		} else {
+			// If alpha doesn't need factoring in, return the converting setter.
+			return col & 0xff000000 ? pax_set_index_conv : NULL;
+		}
+		
+	} else if (shader) {
+		// More generic shaders, including text.
+		if (!(col & 0xff000000) && shader->alpha_promise_0) {
+			// When a shader promises to have 0 alpha on 0 alpha tint, return NULL.
+			return NULL;
+		} else if ((col & 0xff000000) == 0xff000000 && shader->alpha_promise_255) {
+			// When a shader promises to have 255 alpha on 255 alpha tint, return converting setter.
+			return pax_set_index_conv;
+		} else {
+			// When no promises are made, fall back to the merging setter.
+			return pax_merge_index;
+		}
+		
+	} else if (!(col & 0xff000000)) {
+		// If no shader and alpha is 0, don't set.
+		return NULL;
+		
+	} else if ((col & 0xff000000) == 0xff000000) {
+		// If no shader and 255 alpha, convert color and return raw setter.
+		*col_ptr = pax_col2buf(buf, col);
+		return pax_set_index;
+		
+	} else {
+		// If no shader and partial alpha, return merging setter.
+		return pax_merge_index;
+		
+	}
+}
+
 
 
 /* ============ DEBUG ============ */

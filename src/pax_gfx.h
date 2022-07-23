@@ -64,6 +64,8 @@ void       pax_disable_multicore   ();
 #define PAX_IS_PALETTE(type)      (((type) & 0xf0000000) == 0x20000000)
 // Reflects whether the buffer type is color.
 #define PAX_IS_COLOR(type)        (((type) & 0xf0000000) == 0x00000000)
+// Whether the buffer type potentially has alpha.
+#define PAX_IS_ALPHA(type)        (((type) & 0x00f00000) || PAX_IS_PALETTE(type))
 
 // Create a new buffer.
 // If mem is NULL, a new area is allocated.

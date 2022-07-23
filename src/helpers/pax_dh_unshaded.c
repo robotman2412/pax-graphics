@@ -37,11 +37,8 @@
 static void pax_tri_unshaded(pax_buf_t *buf, pax_col_t color,
 		float x0, float y0, float x1, float y1, float x2, float y2) {
 	
-	if (color < 0x01000000) {
-		PAX_SUCCESS();
-		return;
-	}
-	pax_setter_t setter = color >= 0xff000000 ? pax_set_pixel : pax_merge_pixel;
+	pax_index_setter_t setter = pax_get_setter(buf, &color, NULL);
+	if (!setter) return;
 	
 	// Find the appropriate Y for y0, y1 and y2 inside the triangle.
 	float y_post_0 = (int) (y0 + 0.5) + 0.5;
@@ -80,6 +77,7 @@ static void pax_tri_unshaded(pax_buf_t *buf, pax_col_t color,
 		// Find the X counterparts to the other points we found.
 		float x_a = x0 + x0_x1_dx * (y_post_0 - y0);
 		float x_b = x0 + x0_x2_dx * (y_post_0 - y0);
+		int delta = ((int) y_post_0) * buf->width;
 		for (int y = y_post_0; y < (int) y_post_1; y++) {
 			// Plot the horizontal line.
 			float x_left, x_right;
@@ -99,11 +97,12 @@ static void pax_tri_unshaded(pax_buf_t *buf, pax_col_t color,
 			}
 			for (int x = x_left + 0.5; x < x_right; x ++) {
 				// And simply merge colors accordingly.
-				setter(buf, color, x, y);
+				setter(buf, color, x+delta);
 			}
 			// Move X.
-			x_a += x0_x1_dx;
-			x_b += x0_x2_dx;
+			x_a   += x0_x1_dx;
+			x_b   += x0_x2_dx;
+			delta += buf->width;
 		}
 	}
 	// Draw bottom half.
@@ -112,6 +111,7 @@ static void pax_tri_unshaded(pax_buf_t *buf, pax_col_t color,
 		// Find the X counterparts to the other points we found.
 		float x_a = x1 + x1_x2_dx * (y_post_1 - y1);
 		float x_b = x0 + x0_x2_dx * (y_post_1 - y0);
+		int delta = ((int) y_post_1) * buf->width;
 		for (int y = y_post_1; y <= (int) y_pre_2; y++) {
 			// Plot the horizontal line.
 			float x_left, x_right;
@@ -131,11 +131,12 @@ static void pax_tri_unshaded(pax_buf_t *buf, pax_col_t color,
 			}
 			for (int x = x_left + 0.5; x < x_right; x ++) {
 				// And simply merge colors accordingly.
-				setter(buf, color, x, y);
+				setter(buf, color, x+delta);
 			}
 			// Move X.
-			x_a += x1_x2_dx;
-			x_b += x0_x2_dx;
+			x_a   += x1_x2_dx;
+			x_b   += x0_x2_dx;
+			delta += buf->width;
 		}
 	}
 }
@@ -143,27 +144,27 @@ static void pax_tri_unshaded(pax_buf_t *buf, pax_col_t color,
 // Internal method for rectangle drawing.
 static void pax_rect_unshaded(pax_buf_t *buf, pax_col_t color,
 		float x, float y, float width, float height) {
-	if (color < 0x01000000) {
-		PAX_SUCCESS();
-		return;
-	}
-	pax_setter_t setter = color >= 0xff000000 ? pax_set_pixel : pax_merge_pixel;
+	
+	// pax_setter_t setter = color >= 0xff000000 ? pax_set_pixel : pax_merge_pixel;
+	pax_index_setter_t setter = pax_get_setter(buf, &color, NULL);
+	if (!setter) return;
 	
 	// Pixel time.
+	int delta = (int) (y + 0.5) * buf->width;
 	for (int c_y = y + 0.5; c_y <= y + height - 0.5; c_y ++) {
 		for (int c_x = x + 0.5; c_x <= x + width - 0.5; c_x ++) {
-			setter(buf, color, c_x, c_y);
+			setter(buf, color, c_x+delta);
 		}
+		delta += buf->width;
 	}
 }
 
 // Internal method for line drawing.
 static void pax_line_unshaded(pax_buf_t *buf, pax_col_t color, float x0, float y0, float x1, float y1) {
-	if (color < 0x01000000) {
-		PAX_SUCCESS();
-		return;
-	}
-	pax_setter_t setter = color >= 0xff000000 ? pax_set_pixel : pax_merge_pixel;
+	
+	// pax_setter_t setter = color >= 0xff000000 ? pax_set_pixel : pax_merge_pixel;
+	pax_index_setter_t setter = pax_get_setter(buf, &color, NULL);
+	if (!setter) return;
 	
 	// Determine whether the line is "steep" (dx*dx > dy*dy).
 	float dx = x1 - x0;
@@ -181,7 +182,8 @@ static void pax_line_unshaded(pax_buf_t *buf, pax_col_t color, float x0, float y
 	float x = x0;
 	float y = y0;
 	for (int i = 0; i <= nIter; i++) {
-		setter(buf, color, x, y);
+		// setter(buf, color, x, y);
+		setter(buf, color, x+(int)y*buf->width);
 		x += dx;
 		y += dy;
 	}

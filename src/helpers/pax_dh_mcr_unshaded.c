@@ -38,11 +38,8 @@
 static void paxmcr_tri_unshaded(bool odd_scanline, pax_buf_t *buf, pax_col_t color,
 		float x0, float y0, float x1, float y1, float x2, float y2) {
 	
-	if (color < 0x01000000) {
-		PAX_SUCCESS();
-		return;
-	}
-	pax_setter_t setter = color >= 0xff000000 ? pax_set_pixel : pax_merge_pixel;
+	pax_index_setter_t setter = pax_get_setter(buf, &color, NULL);
+	if (!setter) return;
 	
 	// Find the appropriate Y for y0, y1 and y2 inside the triangle.
 	float y_post_0 = (int) (y0 + 0.5) + 0.5;
@@ -88,6 +85,7 @@ static void paxmcr_tri_unshaded(bool odd_scanline, pax_buf_t *buf, pax_col_t col
 			x_a += x0_x1_dx;
 			x_b += x0_x2_dx;
 		}
+		int delta = y * buf->width;
 		for (; y < (int) y_post_1; y += 2) {
 			// Plot the horizontal line.
 			float x_left, x_right;
@@ -107,11 +105,12 @@ static void paxmcr_tri_unshaded(bool odd_scanline, pax_buf_t *buf, pax_col_t col
 			}
 			for (int x = x_left + 0.5; x < x_right; x ++) {
 				// And simply merge colors accordingly.
-				setter(buf, color, x, y);
+				setter(buf, color, x+delta);
 			}
 			// Move X.
-			x_a += 2*x0_x1_dx;
-			x_b += 2*x0_x2_dx;
+			x_a   += 2*x0_x1_dx;
+			x_b   += 2*x0_x2_dx;
+			delta += 2*buf->width;
 		}
 	}
 	// Draw bottom half.
@@ -127,6 +126,7 @@ static void paxmcr_tri_unshaded(bool odd_scanline, pax_buf_t *buf, pax_col_t col
 			x_a += x1_x2_dx;
 			x_b += x0_x2_dx;
 		}
+		int delta = y * buf->width;
 		for (; y <= (int) y_pre_2; y += 2) {
 			// Plot the horizontal line.
 			float x_left, x_right;
@@ -146,11 +146,12 @@ static void paxmcr_tri_unshaded(bool odd_scanline, pax_buf_t *buf, pax_col_t col
 			}
 			for (int x = x_left + 0.5; x < x_right; x ++) {
 				// And simply merge colors accordingly.
-				setter(buf, color, x, y);
+				setter(buf, color, x+delta);
 			}
 			// Move X.
-			x_a += 2*x1_x2_dx;
-			x_b += 2*x0_x2_dx;
+			x_a   += 2*x1_x2_dx;
+			x_b   += 2*x0_x2_dx;
+			delta += 2*buf->width;
 		}
 	}
 }
@@ -160,11 +161,8 @@ static void paxmcr_tri_unshaded(bool odd_scanline, pax_buf_t *buf, pax_col_t col
 static void paxmcr_rect_unshaded(bool odd_scanline, pax_buf_t *buf, pax_col_t color,
 		float x, float y, float width, float height) {
 	
-	if (color < 0x01000000) {
-		PAX_SUCCESS();
-		return;
-	}
-	pax_setter_t setter = color >= 0xff000000 ? pax_set_pixel : pax_merge_pixel;
+	pax_index_setter_t setter = pax_get_setter(buf, &color, NULL);
+	if (!setter) return;
 	
 	// Snap c_y to the correct line.
 	int c_y = y + 0.5;
@@ -173,10 +171,12 @@ static void paxmcr_rect_unshaded(bool odd_scanline, pax_buf_t *buf, pax_col_t co
 	}
 	
 	// Pixel time.
+	int delta = c_y * buf->width;
 	for (; c_y <= y + height - 0.5; c_y += 2) {
 		for (int c_x = x + 0.5; c_x <= x + width - 0.5; c_x ++) {
-			setter(buf, color, c_x, c_y);
+			setter(buf, color, c_x+delta);
 		}
+		delta += 2*buf->width;
 	}
 }
 

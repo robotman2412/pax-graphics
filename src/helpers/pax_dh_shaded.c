@@ -38,11 +38,8 @@ static void pax_tri_shaded(pax_buf_t *buf, pax_col_t color, const pax_shader_t *
 		float x0, float y0, float x1, float y1, float x2, float y2,
 		float u0, float v0, float u1, float v1, float u2, float v2) {
 	
-	if (color < 0x01000000 && shader->alpha_promise_0) {
-		PAX_SUCCESS();
-		return;
-	}
-	pax_setter_t setter = shader->alpha_promise_255 && (color >= 0xff000000) ? pax_set_pixel : pax_merge_pixel;
+	pax_index_setter_t setter = pax_get_setter(buf, &color, shader);
+	if (!setter) return;
 	
 	// Find the appropriate Y for y0, y1 and y2 inside the triangle.
 	float y_post_0 = (int) (y0 + 0.5) + 0.5;
@@ -95,6 +92,8 @@ static void pax_tri_shaded(pax_buf_t *buf, pax_col_t color, const pax_shader_t *
 		float v_a = v0 + v0_v1_dv * coeff;
 		float u_b = u0 + u0_u2_du * coeff;
 		float v_b = v0 + v0_v2_dv * coeff;
+		// Precalc index stuff.
+		int delta = ((int) y_post_0) * buf->width;
 		for (int y = y_post_0; y < (int) y_post_1; y++) {
 			// Plot the horizontal line.
 			float x_left, x_right;
@@ -141,17 +140,18 @@ static void pax_tri_shaded(pax_buf_t *buf, pax_col_t color, const pax_shader_t *
 				// Apply the shader,
 				pax_col_t result = (shader->callback)(color, x, y, u, v, shader->callback_args);
 				// And simply merge colors accordingly.
-				setter(buf, result, x, y);
+				setter(buf, result, x+delta);
 				u += du;
 				v += dv;
 			}
 			// Move X.
-			x_a += x0_x1_dx;
-			x_b += x0_x2_dx;
-			u_a += u0_u1_du;
-			v_a += v0_v1_dv;
-			u_b += u0_u2_du;
-			v_b += v0_v2_dv;
+			x_a   += x0_x1_dx;
+			x_b   += x0_x2_dx;
+			u_a   += u0_u1_du;
+			v_a   += v0_v1_dv;
+			u_b   += u0_u2_du;
+			v_b   += v0_v2_dv;
+			delta += buf->width;
 		}
 	}
 	// Draw bottom half.
@@ -167,6 +167,8 @@ static void pax_tri_shaded(pax_buf_t *buf, pax_col_t color, const pax_shader_t *
 		float v_a = v1 + v1_v2_dv * coeff1;
 		float u_b = u0 + u0_u2_du * coeff0;
 		float v_b = v0 + v0_v2_dv * coeff0;
+		// Precalc index stuff.
+		int delta = ((int) y_post_1) * buf->width;
 		for (int y = y_post_1; y <= (int) y_pre_2; y++) {
 			// Plot the horizontal line.
 			float x_left, x_right;
@@ -213,17 +215,18 @@ static void pax_tri_shaded(pax_buf_t *buf, pax_col_t color, const pax_shader_t *
 				// Apply the shader,
 				pax_col_t result = (shader->callback)(color, x, y, u, v, shader->callback_args);
 				// And simply merge colors accordingly.
-				setter(buf, result, x, y);
+				setter(buf, result, x+delta);
 				u += du;
 				v += dv;
 			}
 			// Move X.
-			x_a += x1_x2_dx;
-			x_b += x0_x2_dx;
-			u_a += u1_u2_du;
-			v_a += v1_v2_dv;
-			u_b += u0_u2_du;
-			v_b += v0_v2_dv;
+			x_a   += x1_x2_dx;
+			x_b   += x0_x2_dx;
+			u_a   += u1_u2_du;
+			v_a   += v1_v2_dv;
+			u_b   += u0_u2_du;
+			v_b   += v0_v2_dv;
+			delta += buf->width;
 		}
 	}
 }
@@ -251,17 +254,19 @@ static void pax_overlay_buffer(pax_buf_t *base, pax_buf_t *top, int x, int y, in
 	}
 	
 	// Now, let us MAP.
+	int top_delta  = tex_y * top->width;
+	int base_delta = y     * base->width;
 	for (int c_y = 0; c_y < height; c_y++) {
 		for (int c_x = 0; c_x < width; c_x++) {
-			pax_col_t col = pax_get_pixel(top, tex_x, tex_y);
-			pax_merge_pixel(base, col, x, y);
+			pax_col_t col = pax_buf2col(top, pax_get_index(top, tex_x+top_delta));
+			pax_merge_index(base, col, x+base_delta);
 			tex_x ++;
 			x ++;
 		}
-		tex_x -= width;
-		x -= width;
-		tex_y ++;
-		y ++;
+		tex_x      -= width;
+		x          -= width;
+		top_delta  += top->width;
+		base_delta += base->width;
 	}
 }
 
@@ -269,11 +274,8 @@ static void pax_overlay_buffer(pax_buf_t *base, pax_buf_t *top, int x, int y, in
 static void pax_rect_shaded1(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
 		float x, float y, float width, float height, float u0, float v0, float u1, float v1) {
 	
-	if (color < 0x01000000 && shader->alpha_promise_0) {
-		PAX_SUCCESS();
-		return;
-	}
-	pax_setter_t setter = shader->alpha_promise_255 && (color >= 0xff000000) ? pax_set_pixel : pax_merge_pixel;
+	pax_index_setter_t setter = pax_get_setter(buf, &color, shader);
+	if (!setter) return;
 	
 	// Fix width and height.
 	if (width < 0) {
@@ -340,14 +342,16 @@ static void pax_rect_shaded1(pax_buf_t *buf, pax_col_t color, const pax_shader_t
 	float v = v0;
 	
 	// Pixel time.
+	int delta = (int) (y + 0.5) * buf->width;
 	for (int c_y = y + 0.5; c_y <= y + height - 0.5; c_y ++) {
 		float u = u0;
 		for (int c_x = x + 0.5; c_x <= x + width - 0.5; c_x ++) {
 			pax_col_t result = (shader->callback)(color, c_x, c_y, u, v, shader->callback_args);
-			setter(buf, result, c_x, c_y);
+			setter(buf, result, c_x+delta);
 			u += u0_u1_du;
 		}
-		v += v0_v1_dv;
+		v     += v0_v1_dv;
+		delta += buf->width;
 	}
 	
 }
@@ -359,7 +363,7 @@ static void pax_rect_shaded(pax_buf_t *buf, pax_col_t color, const pax_shader_t 
 	
 	bool is_default_uv = u0 == 0 && v0 == 0 && u1 == 1 && v1 == 0 && u2 == 1 && v2 == 1 && u3 == 0 && v3 == 1;
 	// Try to perform a mapping optimisation.
-	if (shader->callback == pax_shader_texture && color == 0xffffffff) {
+	if ((shader->callback == pax_shader_texture || shader->callback == pax_shader_texture_aa) && color == 0xffffffff) {
 		pax_buf_t *top = (pax_buf_t *) shader->callback_args;
 		if (is_default_uv && (int) (width + 0.5) == top->width && (int) (height + 0.5) == top->height) {
 			pax_overlay_buffer(buf, top, x + 0.5, y + 0.5, width + 0.5, height + 0.5);

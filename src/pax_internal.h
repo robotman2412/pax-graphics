@@ -46,8 +46,12 @@ extern bool pax_do_multicore;
 static const char *TAG   = "pax";
 
 // Helper for setting pixels in drawing routines.
-// Used to allow to optimise away alpha in colors.
+// Used to allow optimising away alpha in colors.
 typedef void (*pax_setter_t)(pax_buf_t *buf, pax_col_t color, int x, int y);
+
+// Helper for setting pixels in drawing routines.
+// Used to allow optimising away color conversion.
+typedef void (*pax_index_setter_t)(pax_buf_t *buf, pax_col_t color, int index);
 
 // Macros for errors.
 #ifdef PAX_AUTOREPORT
@@ -71,6 +75,23 @@ typedef void (*pax_setter_t)(pax_buf_t *buf, pax_col_t color, int x, int y);
 #define PAX_SWAP_POINTS(x0, y0, x1, y1) { float tmp = x1; x1 = x0; x0 = tmp; tmp = y1; y1 = y0; y0 = tmp; }
 // Sort two points represented by floats.
 #define PAX_SORT_POINTS(x0, y0, x1, y1) { if (y1 < y0) PAX_SWAP_POINTS(x0, y0, x1, y1) }
+
+// Gets the most efficient index setter for the occasion.
+// Also converts the color, if applicable.
+// Returns NULL when setting is not required.
+pax_index_setter_t pax_get_setter(pax_buf_t *buf, pax_col_t *col, const pax_shader_t *shader);
+// Gets based on index instead of coordinates.
+// Does no bounds checking nor color conversion.
+pax_col_t pax_get_index(pax_buf_t *buf, int index);
+// Sets based on index instead of coordinates.
+// Does no bounds checking nor color conversion.
+void pax_set_index(pax_buf_t *buf, pax_col_t col, int index);
+// Sets based on index instead of coordinates.
+// Does no bounds checking.
+void pax_set_index_conv(pax_buf_t *buf, pax_col_t col, int index);
+// Merges based on index instead of coordinates.
+// Does no bounds checking.
+void pax_merge_index(pax_buf_t *buf, pax_col_t col, int index);
 
 void pax_report_error(const char *where, pax_err_t errno);
 
