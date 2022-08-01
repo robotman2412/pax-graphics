@@ -31,11 +31,15 @@ extern "C" {
 
 #include "pax_gfx.h"
 #include <stdio.h>
+#include <stdint.h>
+#include <stdlib.h>
+
+#if defined(ESP32) || defined(ESP8266)
 #include <esp_system.h>
 #include <sdkconfig.h>
 #include <esp_err.h>
 #include <esp_log.h>
-#include <stdint.h>
+#endif
 
 /* =========== HELPERS =========== */
 

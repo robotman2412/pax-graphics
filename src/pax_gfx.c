@@ -25,15 +25,22 @@
 #include "pax_internal.h"
 #include "pax_shaders.h"
 
-#include <esp_timer.h>
 #include <malloc.h>
 #include <string.h>
 #include <math.h>
 
+#if defined(ESP32) || defined(ESP8266)
+#include <esp_timer.h>
+#endif
+
 #ifdef PAX_COMPILE_MCR
+#if defined(ESP32) || defined(ESP8266)
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <freertos/queue.h>
+#else
+#undef PAX_COMPILE_MCR
+#endif
 #endif
 
 // The last error reported.
@@ -396,28 +403,28 @@ void pax_report_error(const char *where, pax_err_t errno) {
 	// Spam silencing delay in microseconds.
 	static const uint64_t spam_delay = 2 * 1000 * 1000;
 	
-	// Check whether the message might potentially be spam.
-	bool spam_potential =
-				errno == PAX_ERR_NOBUF
-			|| !strcmp(where, "pax_get_pixel")
-			|| !strcmp(where, "pax_set_pixel");
+	// // Check whether the message might potentially be spam.
+	// bool spam_potential =
+	// 			errno == PAX_ERR_NOBUF
+	// 		|| !strcmp(where, "pax_get_pixel")
+	// 		|| !strcmp(where, "pax_set_pixel");
 	
-	if (spam_potential) {
-		// If so, check time.
-		uint64_t now = esp_timer_get_time() + spam_delay;
+	// if (spam_potential) {
+	// 	// If so, check time.
+	// 	uint64_t now = esp_timer_get_time() + spam_delay;
 		
-		if (now < last_spam + spam_delay) {
-			// It gets blocked.
-			silenced ++;
-			return;
-		} else if (silenced) {
-			// It goes through, report silenced count.
-			ESP_LOGE(TAG, "%llu silenced errors", silenced);
-			silenced = 0;
-		}
+	// 	if (now < last_spam + spam_delay) {
+	// 		// It gets blocked.
+	// 		silenced ++;
+	// 		return;
+	// 	} else if (silenced) {
+	// 		// It goes through, report silenced count.
+	// 		ESP_LOGE(TAG, "%llu silenced errors", silenced);
+	// 		silenced = 0;
+	// 	}
 		
-		last_spam = now;
-	}
+	// 	last_spam = now;
+	// }
 	
 	// Log the error.
 	ESP_LOGE(TAG, "@ %s: %s", where, pax_desc_err(errno));
