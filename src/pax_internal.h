@@ -39,6 +39,22 @@ extern "C" {
 #include <sdkconfig.h>
 #include <esp_err.h>
 #include <esp_log.h>
+
+#define PAX_LOGE(...) ESP_LOGE(__VA_ARGS__)
+#define PAX_LOGI(...) ESP_LOGE(__VA_ARGS__)
+#define PAX_LOGD(...) ESP_LOGE(__VA_ARGS__)
+#define PAX_LOGW(...) ESP_LOGE(__VA_ARGS__)
+#else
+#define PRIVATE_PAX_LOG_HELPER(file, prefix, tag, ...) do {\
+		fprintf(file, prefix "%s: ", (tag));\
+		fprintf(file, __VA_ARGS__);\
+		fputs("\033[0m\r\n", file);\
+	} while(0)
+
+#define PAX_LOGE(tag, ...) PRIVATE_PAX_LOG_HELPER(stderr, "\033[91mErr   ", tag, __VA_ARGS__)
+#define PAX_LOGI(tag, ...) PRIVATE_PAX_LOG_HELPER(stdout, "\033[32mInfo  ", tag, __VA_ARGS__)
+#define PAX_LOGD(tag, ...) PRIVATE_PAX_LOG_HELPER(stdout, "\033[94mDebug ", tag, __VA_ARGS__)
+#define PAX_LOGW(tag, ...) PRIVATE_PAX_LOG_HELPER(stderr, "\033[33mWarn  ", tag, __VA_ARGS__)
 #endif
 
 /* =========== HELPERS =========== */

@@ -419,7 +419,7 @@ void pax_report_error(const char *where, pax_err_t errno) {
 	// 		return;
 	// 	} else if (silenced) {
 	// 		// It goes through, report silenced count.
-	// 		ESP_LOGE(TAG, "%llu silenced errors", silenced);
+	// 		PAX_LOGE(TAG, "%llu silenced errors", silenced);
 	// 		silenced = 0;
 	// 	}
 		
@@ -427,7 +427,7 @@ void pax_report_error(const char *where, pax_err_t errno) {
 	// }
 	
 	// Log the error.
-	ESP_LOGE(TAG, "@ %s: %s", where, pax_desc_err(errno));
+	PAX_LOGE(TAG, "@ %s: %s", where, pax_desc_err(errno));
 }
 
 // Describe error.
@@ -489,7 +489,7 @@ void pax_buf_init(pax_buf_t *buf, void *mem, int width, int height, pax_buf_type
 	bool use_alloc = !mem;
 	if (use_alloc) {
 		// Allocate the right amount of bytes.
-		ESP_LOGD(TAG, "Allocating new memory for buffer.");
+		PAX_LOGD(TAG, "Allocating new memory for buffer.");
 		mem = malloc((PAX_GET_BPP(type) * width * height + 7) >> 3);
 		if (!mem) PAX_ERROR("pax_buf_init", PAX_ERR_NOMEM);
 	}
@@ -563,7 +563,7 @@ void pax_buf_convert(pax_buf_t *dst, pax_buf_t *src, pax_buf_type_t type) {
 	if (!dst->do_free) PAX_ERROR("pax_buf_convert", PAX_ERR_PARAM);
 	// Src and dst must match in size.
 	if (src->width != dst->width || src->height != dst->height) {
-		ESP_LOGE(TAG, "size mismatch: %dx%d vs %dx%d", src->width, src->height, dst->width, dst->height);
+		PAX_LOGE(TAG, "size mismatch: %dx%d vs %dx%d", src->width, src->height, dst->width, dst->height);
 		PAX_ERROR("pax_buf_convert", PAX_ERR_BOUNDS);
 	}
 	
@@ -572,7 +572,7 @@ void pax_buf_convert(pax_buf_t *dst, pax_buf_t *src, pax_buf_type_t type) {
 	size_t new_pixels = dst->width * dst->height;
 	size_t new_size = (new_pixels * dst->bpp + 7) / 8;
 	if (dst->bpp > src->bpp) {
-		ESP_LOGI(TAG, "Expanding buffer.");
+		PAX_LOGI(TAG, "Expanding buffer.");
 		// Resize the memory for DST beforehand.
 		dst->buf = realloc(dst->buf, new_size);
 		if (!dst->buf) PAX_ERROR("pax_buf_convert", PAX_ERR_NOMEM);
@@ -584,7 +584,7 @@ void pax_buf_convert(pax_buf_t *dst, pax_buf_t *src, pax_buf_type_t type) {
 			}
 		}
 	} else {
-		ESP_LOGI(TAG, "Shrinking buffer.");
+		PAX_LOGI(TAG, "Shrinking buffer.");
 		// Otherwise, iterate normally.
 		for (int y = 0; y < dst->height; y ++) {
 			for (int x = 0; x < dst->width; x ++) {

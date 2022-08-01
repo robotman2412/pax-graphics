@@ -40,7 +40,7 @@ debug: build/pax_gfx_lib.debug.so
 # Regular files
 build/pax_gfx_lib.so: $(OBJECTS)
 	@mkdir -p $(shell dirname $@)
-	$(LD) $(LDFLAGS) -o $@ $<
+	$(LD) $(PAX_LDOPTIONS) -o $@ $<
 
 build/%.o: src/% $(HEADERS)
 	@mkdir -p $(shell dirname $@)
@@ -49,7 +49,7 @@ build/%.o: src/% $(HEADERS)
 # Debug files
 build/pax_gfx_lib.debug.so: $(OBJECTS_DEBUG)
 	@mkdir -p $(shell dirname $@)
-	$(LD) $(LDFLAGS) -o $@ $<
+	$(LD) $(PAX_LDOPTIONS) -o $@ $<
 
 build/%.debug.o: src/% $(HEADERS)
 	@mkdir -p $(shell dirname $@)

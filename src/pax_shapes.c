@@ -224,7 +224,7 @@ void pax_draw_bezier(pax_buf_t *buf, pax_col_t color, pax_vec4_t control_points)
 static bool bezier_warning = false;
 static void pax_bezier_warn() {
 	if (!bezier_warning) {
-		ESP_LOGE(TAG, "Failed: Bezier curves not compiled, please define PAX_COMPILE_BEZIER.");
+		PAX_LOGE(TAG, "Failed: Bezier curves not compiled, please define PAX_COMPILE_BEZIER.");
 	}
 }
 
@@ -573,16 +573,16 @@ void pax_triang_concave(size_t **output, size_t num_points, pax_vec1_t *raw_poin
 	// Find the funny ordering.
 	bool clockwise = is_clockwise(num_points, points, 0, num_points, dy);
 	
-	ESP_LOGE(TAG, "Shape clockwise: %d", clockwise);
+	PAX_LOGE(TAG, "Shape clockwise: %d", clockwise);
 	
 	// LOCATE all EARS conTINUousLY.
 	for (size_t i = 0; i < n_tris; i++) {
-		ESP_LOGW(TAG, "Tri %zd", i);
+		PAX_LOGW(TAG, "Tri %zd", i);
 		// LOOK for an EAR.
 		for (size_t i = 0; i < num_points; i++) {
 			// bool attempt = is_clockwise3(num_points, points, i);
 			bool attempt = is_clockwise(num_points, points, i, 3, dy);
-			ESP_LOGI(TAG, "Attempt %zd: %d", i, attempt);
+			PAX_LOGI(TAG, "Attempt %zd: %d", i, attempt);
 			bool is_ear = clockwise == attempt;
 			if (is_ear) {
 				// We found an EAR, now we CONVERT IT.
@@ -600,7 +600,7 @@ void pax_triang_concave(size_t **output, size_t num_points, pax_vec1_t *raw_poin
 				memcpy(&points[remove], &points[remove + 1], sizeof(indexed_point_t) * post);
 				num_points --;
 				// Now, we CONTINUE FINIDIGN ERA.
-				ESP_LOGI(TAG, "Success!");
+				PAX_LOGI(TAG, "Success!");
 				break;
 			}
 		}
@@ -616,7 +616,7 @@ void pax_draw_shape(pax_buf_t *buf, pax_col_t color, size_t num_points, pax_vec1
 	size_t *tris   = NULL;
 	size_t  n_tris = num_points - 2;
 	pax_triang_concave(&tris, num_points, points);
-	// ESP_LOGE(TAG, "DRAWING %zd", n_tris);
+	// PAX_LOGE(TAG, "DRAWING %zd", n_tris);
 	if (!tris) {
 		return;
 	}
