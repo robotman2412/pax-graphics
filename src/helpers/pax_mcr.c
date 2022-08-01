@@ -40,7 +40,6 @@
 
 /* ===== MULTI-CORE RENDERING ==== */
 
-#define PAX_COMPILE_MCR
 #ifdef PAX_COMPILE_MCR
 
 // The scheduler for multicore rendering.
