@@ -432,3 +432,16 @@ pax_vec1_t pax_text_size(const pax_font_t *font, float font_size, const char *te
 	return text_generic(&ctx, text);
 }
 
+
+
+// Loads a font using a file descriptor.
+// Allocates the entire font in one go, such that only free(pax_font_t*) is required.
+pax_font_t *pax_load_font(FILE *fd) {
+	return NULL;
+}
+
+// Stores a font to a file descriptor.
+void pax_store_font(FILE *fd, const pax_font_t *font) {
+	
+}
+
