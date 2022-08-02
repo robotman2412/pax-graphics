@@ -33,30 +33,45 @@
 #include <esp_timer.h>
 #endif
 
+// The last error reported.
+pax_err_t              pax_last_error    = PAX_OK;
+// Whether multi-core rendering is enabled.
+// You should not modify this variable.
+bool                   pax_do_multicore  = false;
+
 #ifdef PAX_COMPILE_MCR
+
+// Whether or not the multicore task is currently busy.
+static bool            multicore_busy    = false;
+
 #if defined(ESP32) || defined(ESP8266)
+
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <freertos/queue.h>
-#else
-#undef PAX_COMPILE_MCR
-#endif
-#endif
 
-// The last error reported.
-pax_err_t            pax_last_error   = PAX_OK;
-// Whether multi-core rendering is enabled.
-// You should not modify this variable.
-bool                 pax_do_multicore = false;
-#ifdef PAX_COMPILE_MCR
-// Whether or not the multicore task is currently busy.
-static bool          multicore_busy   = false;
 // The task handle for the main core.
-static TaskHandle_t  main_handle      = NULL;
+static TaskHandle_t    main_handle       = NULL;
 // The task handle for the other core.
-static TaskHandle_t  multicore_handle = NULL;
+static TaskHandle_t    multicore_handle  = NULL;
 // The render queue for the other core.
-static QueueHandle_t queue_handle     = NULL;
+static QueueHandle_t   queue_handle      = NULL;
+
+#elif defined(PAX_STANDALONE)
+
+#include <pthread.h>
+#include <unistd.h>
+#include <ptq.h>
+
+pthread_mutex_t        pax_log_mutex     = PTHREAD_MUTEX_INITIALIZER;
+bool                   pax_log_use_mutex = false;
+
+// The thread for multicore helper stuff.
+static pthread_t       multicore_handle;
+// The render queue for the multicore helper.
+static ptq_queue_t     queue_handle      = NULL;
+
+#endif
 #endif
 
 static inline uint32_t pax_col2buf(pax_buf_t *buf, pax_col_t color) {
@@ -474,10 +489,30 @@ void pax_debug(pax_buf_t *buf) {
 #ifdef PAX_COMPILE_MCR
 #include "helpers/pax_dh_mcr_unshaded.c"
 #include "helpers/pax_dh_mcr_shaded.c"
+
+#if defined(ESP32) || defined(ESP8266)
+
+// ESP32 FreeRTOS multicore implementation
+#include "helpers/pax_mcr_esp32.c"
+
+#elif defined(PAX_STANDALONE)
+
+// Pthread multicore implementation.
+#include "helpers/pax_mcr_pthread.c"
+
+#else
+
+// No valid multicore implementation.
+#error "No valid threading implementation (neither ESP32 nor standalone target)"
+
 #endif
 
-// Always included because of API dependencies.
-#include "helpers/pax_mcr.c"
+#else
+
+// Included because of API dependencies.
+#include "helpers/pax_mcr_dummy.c"
+
+#endif //PAX_COMPILE_MCR
 
 
 
@@ -489,7 +524,6 @@ void pax_buf_init(pax_buf_t *buf, void *mem, int width, int height, pax_buf_type
 	bool use_alloc = !mem;
 	if (use_alloc) {
 		// Allocate the right amount of bytes.
-		PAX_LOGD(TAG, "Allocating new memory for buffer.");
 		mem = malloc((PAX_GET_BPP(type) * width * height + 7) >> 3);
 		if (!mem) PAX_ERROR("pax_buf_init", PAX_ERR_NOMEM);
 	}

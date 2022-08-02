@@ -1,0 +1,3 @@
+[submodule "src/pthreadqueue"]
+	path = src/pthreadqueue
+	url = https://github.com/robotman2412/pthreadqueue
