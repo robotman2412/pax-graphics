@@ -37,6 +37,11 @@
 void pax_tri_unshaded(pax_buf_t *buf, pax_col_t color,
 		float x0, float y0, float x1, float y1, float x2, float y2) {
 	
+	pax_line_unshaded(buf, color, x0, y0, x1, y1);
+	pax_line_unshaded(buf, color, x0, y0, x2, y2);
+	pax_line_unshaded(buf, color, x2, y2, x1, y1);
+	return;
+	
 	pax_index_setter_t setter = pax_get_setter(buf, &color, NULL);
 	if (!setter) return;
 	
@@ -168,6 +173,52 @@ void pax_line_unshaded(pax_buf_t *buf, pax_col_t color, float x0, float y0, floa
 	pax_index_setter_t setter = pax_get_setter(buf, &color, NULL);
 	if (!setter) return;
 	
+	if (y1 < y0) {
+		PAX_SWAP_POINTS(x0, y0, x1, y1);
+	}
+	
+	// Clip: left.
+	if (x0 < x1 && x0 < buf->clip.x) {
+		if (x1 < buf->clip.x) return;
+		// Adjust X0 against left clip.
+		y0 = y0 + (y1 - y0) * (buf->clip.x - x0) / (x1 - x0);
+		x0 = buf->clip.x;
+	} else if (x1 < x0 && x1 < buf->clip.x) {
+		if (x0 < buf->clip.x) return;
+		// Adjust X1 against left clip.
+		y1 = y1 + (y0 - y1) * (buf->clip.x - x1) / (x0 - x1);
+		x1 = buf->clip.x;
+	}
+	
+	// Clip: right.
+	if (x1 > x0 && x1 > buf->clip.x + buf->clip.w - 1) {
+		if (x0 > buf->clip.x + buf->clip.w) return;
+		// Adjust X1 against right of clip.
+		y1 = y0 + (y1 - y0) * (buf->clip.x + buf->clip.w - 1 - x0) / (x1 - x0);
+		x1 = buf->clip.x + buf->clip.w - 1;
+	} else if (x0 > x1 && x0 > buf->clip.x + buf->clip.w - 1) {
+		if (x1 > buf->clip.x + buf->clip.w) return;
+		// Adjust X0 against right of clip.
+		y0 = y1 + (y0 - y1) * (buf->clip.x + buf->clip.w - 1 - x1) / (x0 - x1);
+		x0 = buf->clip.x + buf->clip.w - 1;
+	}
+	
+	// Clip: top.
+	if (y0 < buf->clip.y) {
+		if (y1 < buf->clip.y) return;
+		// Adjust Y0 against top of clip.
+		x0 = x0 + (x1 - x0) * (buf->clip.y - y0) / (y1 - y0);
+		y0 = buf->clip.y;
+	}
+	
+	// Clip: bottom.
+	if (y1 > buf->clip.y + buf->clip.h - 1) {
+		if (y0 > buf->clip.y + buf->clip.h - 1) return;
+		// Adjust Y1 against bottom of clip.
+		x1 = x1 + (x1 - x0) * (buf->clip.y + buf->clip.h - 1 - y1) / (y1 - y0);
+		y1 = buf->clip.y + buf->clip.h - 1;
+	}
+	
 	// Determine whether the line is "steep" (dx*dx > dy*dy).
 	float dx = x1 - x0;
 	float dy = y1 - y0;
@@ -181,13 +232,33 @@ void pax_line_unshaded(pax_buf_t *buf, pax_col_t color, float x0, float y0, floa
 	// Adjust dx and dy.
 	dx /= nIter;
 	dy /= nIter;
-	float x = x0;
-	float y = y0;
-	for (int i = 0; i <= nIter; i++) {
-		// setter(buf, color, x, y);
-		setter(buf, color, x+(int)y*buf->width);
-		x += dx;
-		y += dy;
+	
+	if (y0 == y1) {
+		int index = (int) y0 * buf->width;
+		if (dx < 0) {
+			PAX_SWAP(float, x0, x1);
+		}
+		for (int i = x0; i <= x1; i++) {
+			setter(buf, color, index + i);
+		}
+	} else if (x0 == x1) {
+		int index = x0 + (int) y0 * buf->width;
+		for (int i = y0; i <= y1; i++, index += buf->width) {
+			setter(buf, color, index);
+		}
+	} else {
+		// float x = x0;
+		// float y = y0;
+		long x   = x0 * 0x10000;
+		long y   = y0 * 0x10000;
+		long idx = dx * 0x10000;
+		long idy = dy * 0x10000;
+		for (int i = 0; i <= nIter; i++) {
+			// setter(buf, color, x, y);
+			setter(buf, color, x/0x10000+(int)y/0x10000*buf->width);
+			x += idx;
+			y += idy;
+		}
 	}
 }
 
