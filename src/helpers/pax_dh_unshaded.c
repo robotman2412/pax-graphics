@@ -37,11 +37,6 @@
 void pax_tri_unshaded(pax_buf_t *buf, pax_col_t color,
 		float x0, float y0, float x1, float y1, float x2, float y2) {
 	
-	pax_line_unshaded(buf, color, x0, y0, x1, y1);
-	pax_line_unshaded(buf, color, x0, y0, x2, y2);
-	pax_line_unshaded(buf, color, x2, y2, x1, y1);
-	return;
-	
 	pax_index_setter_t setter = pax_get_setter(buf, &color, NULL);
 	if (!setter) return;
 	
