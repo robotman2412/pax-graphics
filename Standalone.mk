@@ -56,7 +56,7 @@ build/%.o: src/% $(HEADERS) $(HELPERS)
 # Debug files
 build/pax_gfx_lib.debug.so: $(OBJECTS_DEBUG)
 	@mkdir -p $(shell dirname $@)
-	$(CC) $(PAX_LDOPTIONS) -o $@ $^ $(PAX_LIBS)
+	$(CC) $(PAX_LDOPTIONS) -ggdb -o $@ $^ $(PAX_LIBS)
 
 build/%.debug.o: src/% $(HEADERS) $(HELPERS)
 	@mkdir -p $(shell dirname $@)
