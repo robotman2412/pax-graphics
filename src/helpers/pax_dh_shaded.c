@@ -136,7 +136,8 @@ void pax_tri_shaded(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
 			float u = u_left, v = v_left;
 			float du = (u_right - u_left) / nIter;
 			float dv = (v_right - v_left) / nIter;
-			for (; x < x_right; x ++) {
+			x_right -= 0.5;
+			for (; x <= x_right; x ++) {
 				// Apply the shader,
 				pax_col_t result = (shader->callback)(color, x, y, u, v, shader->callback_args);
 				// And simply merge colors accordingly.
@@ -211,7 +212,8 @@ void pax_tri_shaded(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
 			float u = u_left, v = v_left;
 			float du = (u_right - u_left) / nIter;
 			float dv = (v_right - v_left) / nIter;
-			for (; x < x_right; x ++) {
+			x_right -= 0.5;
+			for (; x <= x_right; x ++) {
 				// Apply the shader,
 				pax_col_t result = (shader->callback)(color, x, y, u, v, shader->callback_args);
 				// And simply merge colors accordingly.

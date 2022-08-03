@@ -103,7 +103,8 @@ void paxmcr_tri_unshaded(bool odd_scanline, pax_buf_t *buf, pax_col_t color,
 			if (x_left < buf->clip.x) {
 				x_left = buf->clip.x;
 			}
-			for (int x = x_left + 0.5; x < x_right; x ++) {
+			x_right -= 0.5;
+			for (int x = x_left + 0.5; x <= x_right; x ++) {
 				// And simply merge colors accordingly.
 				setter(buf, color, x+delta);
 			}
@@ -144,7 +145,8 @@ void paxmcr_tri_unshaded(bool odd_scanline, pax_buf_t *buf, pax_col_t color,
 			if (x_left < buf->clip.x) {
 				x_left = buf->clip.x;
 			}
-			for (int x = x_left + 0.5; x < x_right; x ++) {
+			x_right -= 0.5;
+			for (int x = x_left + 0.5; x <= x_right; x ++) {
 				// And simply merge colors accordingly.
 				setter(buf, color, x+delta);
 			}
