@@ -257,9 +257,10 @@ void pax_overlay_buffer(pax_buf_t *base, pax_buf_t *top, int x, int y, int width
 	bool equal = top->type == base->type;
 	
 	if (equal && x == 0 && y == 0 && width == base->width && height == base->height) {
-		// Literally can memcpy() this.
-		// memcpy(base->buf, top->buf, (PAX_GET_BPP(base->type) * width * height + 7) >> 3);
-		// return;
+		// When copying one buffer onto another as a background,
+		// and the types are the same, perform a memcpy() instead.
+		memcpy(base->buf, top->buf, (PAX_GET_BPP(base->type) * width * height + 7) >> 3);
+		return;
 	}
 	
 	// Now, let us MAP.
@@ -270,8 +271,8 @@ void pax_overlay_buffer(pax_buf_t *base, pax_buf_t *top, int x, int y, int width
 			// Equal types and alpha.
 			for (int c_y = 0; c_y < height; c_y++) {
 				for (int c_x = 0; c_x < width; c_x++) {
-					pax_col_t col = pax_get_index(top, tex_x+top_delta);
-					pax_set_index(base, col, x+base_delta);
+					pax_col_t col = top->getter(top, tex_x+top_delta);
+					base->setter(base, col, x+base_delta);
 					tex_x ++;
 					x ++;
 				}
@@ -284,8 +285,8 @@ void pax_overlay_buffer(pax_buf_t *base, pax_buf_t *top, int x, int y, int width
 			// Not equal types, but no alpha.
 			for (int c_y = 0; c_y < height; c_y++) {
 				for (int c_x = 0; c_x < width; c_x++) {
-					pax_col_t col = pax_buf2col(top, pax_get_index(top, tex_x+top_delta));
-					pax_set_index(base, pax_col2buf(base, col), x+base_delta);
+					pax_col_t col = pax_buf2col(top, top->getter(top, tex_x+top_delta));
+					base->setter(base, pax_col2buf(base, col), x+base_delta);
 					tex_x ++;
 					x ++;
 				}
@@ -299,7 +300,7 @@ void pax_overlay_buffer(pax_buf_t *base, pax_buf_t *top, int x, int y, int width
 		// With alpha.
 		for (int c_y = 0; c_y < height; c_y++) {
 			for (int c_x = 0; c_x < width; c_x++) {
-				pax_col_t col = pax_buf2col(top, pax_get_index(top, tex_x+top_delta));
+				pax_col_t col = pax_buf2col(top, top->getter(top, tex_x+top_delta));
 				pax_merge_index(base, col, x+base_delta);
 				tex_x ++;
 				x ++;

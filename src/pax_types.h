@@ -132,6 +132,20 @@ typedef struct pax_task        pax_task_t;
 typedef int32_t                pax_err_t;
 typedef uint32_t               pax_col_t;
 
+// Helper for color conversion.
+// Used for both buffer type to ARGB and vice versa.
+// Buffer argument is mostly used for images with palette.
+typedef pax_col_t (*pax_col_conv_t)(pax_buf_t *buf, pax_col_t color);
+// Helper for setting pixels in drawing routines.
+// Used to allow optimising away alpha in colors.
+typedef void (*pax_setter_t)(pax_buf_t *buf, pax_col_t color, int x, int y);
+// Helper for getting pixels in drawing routines.
+// Used to allow optimising away inline branching.
+typedef pax_col_t (*pax_index_getter_t)(pax_buf_t *buf, int index);
+// Helper for setting pixels in drawing routines.
+// Used to allow optimising away color conversion.
+typedef void (*pax_index_setter_t)(pax_buf_t *buf, pax_col_t color, int index);
+
 // Function pointer for shader callback.
 // Tint is the color parameter to the pax_shade_xxx function.
 typedef pax_col_t (*pax_shader_func_t)(pax_col_t tint, int x, int y, float u, float v, void *args);
@@ -227,6 +241,16 @@ struct pax_buf {
 	int               dirty_x1;
 	// Dirty y (bottom right).
 	int               dirty_y1;
+	
+	// Color to buffer function to use.
+	pax_col_conv_t    col2buf;
+	// Buffer to color function to use.
+	pax_col_conv_t    buf2col;
+	
+	// Setter to use to write a pixel index.
+	pax_index_setter_t setter;
+	// Getter to use to read a pixel index.
+	pax_index_getter_t getter;
 	
 	// Clip rectangle.
 	// Shapes are only drawn inside the clip rectangle.

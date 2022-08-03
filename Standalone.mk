@@ -13,12 +13,13 @@ SOURCES        =src/matrix.c \
 				src/pax_shapes.c \
 				src/pax_fonts.c \
 				src/pax_text.c \
+				src/pax_setters.c \
 				\
 				src/fonts/font_bitmap_7x9.c \
 				src/fonts/font_bitmap_sky.c \
 				src/fonts/font_bitmap_permanentmarker.c \
 				src/fonts/font_bitmap_sairaregular.c \
-				src/fonts/font_bitmap_sairacondensed.c\
+				src/fonts/font_bitmap_sairacondensed.c \
 				\
 				src/pthreadqueue/src/ptq.c
 HELPERS        =$(shell find src/helpers -type f -name '*.c')
@@ -59,4 +60,4 @@ build/pax_gfx_lib.debug.so: $(OBJECTS_DEBUG)
 
 build/%.debug.o: src/% $(HEADERS) $(HELPERS)
 	@mkdir -p $(shell dirname $@)
-	$(CC) $(PAX_CCOPTIONS) -ggdb -o $@ $< $(PAX_LIBS)
+	$(CC) $(PAX_CCOPTIONS) -DPAX_ENABLE_DEBUG_LOGS -ggdb -o $@ $< $(PAX_LIBS)
