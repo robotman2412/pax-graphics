@@ -188,6 +188,21 @@ void pax_debug(pax_buf_t *buf) {
 
 #endif //PAX_COMPILE_MCR
 
+// Dummy UVs used for quad UVs where NULL is provided.
+static const pax_quad_t dummy_quad_uvs = {
+	.x0 = 0, .y0 = 0,
+	.x1 = 1, .y1 = 0,
+	.x2 = 1, .y2 = 1,
+	.x3 = 0, .y3 = 1
+};
+
+// Dummy UVs used for tri UVs where NULL is provided.
+static const pax_tri_t dummy_tri_uvs = {
+	.x0 = 0, .y0 = 0,
+	.x1 = 1, .y1 = 0,
+	.x2 = 0, .y2 = 1
+};
+
 
 
 /* ============ BUFFER =========== */
@@ -605,12 +620,7 @@ void pax_shade_rect(pax_buf_t *buf, pax_col_t color, pax_shader_t *shader,
 	
 	if (!uvs) {
 		// Apply default UVs.
-		uvs = &(pax_quad_t) {
-			.x0 = 0, .y0 = 0,
-			.x1 = 1, .y1 = 0,
-			.x2 = 1, .y2 = 1,
-			.x3 = 0, .y3 = 1
-		};
+		uvs = &dummy_quad_uvs;
 	}
 	
 	// Split UVs into two triangles.
@@ -693,11 +703,7 @@ void pax_shade_tri(pax_buf_t *buf, pax_col_t color, pax_shader_t *shader,
 	
 	if (!uvs) {
 		// Apply default UVs.
-		uvs = &(pax_tri_t) {
-			.x0 = 0, .y0 = 0,
-			.x1 = 1, .y1 = 0,
-			.x2 = 0, .y2 = 1
-		};
+		uvs = &dummy_tri_uvs;
 	}
 	
 	// Sort points by height.
@@ -776,12 +782,7 @@ void pax_shade_arc(pax_buf_t *buf, pax_col_t color, pax_shader_t *shader,
 	PAX_BUF_CHECK("pax_draw_arc");
 	if (!uvs) {
 		// Assign default UVs.
-		uvs = &(pax_quad_t) {
-			.x0 = 0, .y0 = 0,
-			.x1 = 1, .y1 = 0,
-			.x2 = 1, .y2 = 1,
-			.x3 = 0, .y3 = 1
-		};
+		uvs = &dummy_quad_uvs;
 	}
 	
 	// Simplify the angles slightly.

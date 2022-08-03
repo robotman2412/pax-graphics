@@ -279,6 +279,8 @@ void paxmcr_overlay_buffer(bool odd_scanline, pax_buf_t *base, pax_buf_t *top, i
 		height = base->clip.y + base->clip.h - 0.5 - y;
 	}
 	
+	PAX_LOGD(TAG, "paxmcr_overlay_buffer");
+	
 	bool equal = top->type == base->type;
 	if (equal && x == 0 && y == 0 && width == base->width && height == base->height) {
 		// When copying one buffer onto another as a background,
@@ -444,7 +446,7 @@ void paxmcr_rect_shaded(bool odd_scanline, pax_buf_t *buf, pax_col_t color, cons
 	
 	bool is_default_uv = u0 == 0 && v0 == 0 && u1 == 1 && v1 == 0 && u2 == 1 && v2 == 1 && u3 == 0 && v3 == 1;
 	// Try to perform a mapping optimisation.
-	if (shader->callback == pax_shader_texture && color == 0xffffffff) {
+	if ((shader->callback == pax_shader_texture || shader->callback == pax_shader_texture_aa) && color == 0xffffffff) {
 		pax_buf_t *top = (pax_buf_t *) shader->callback_args;
 		if (is_default_uv && (int) (width + 0.5) == top->width && (int) (height + 0.5) == top->height) {
 			paxmcr_overlay_buffer(odd_scanline, buf, top, x + 0.5, y + 0.5, width + 0.5, height + 0.5, shader->alpha_promise_255);
