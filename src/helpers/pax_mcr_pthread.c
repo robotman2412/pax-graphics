@@ -38,6 +38,7 @@
 #include <pthread.h>
 #include <sched.h>
 #include <unistd.h>
+#include <sys/time.h>
 
 
 // The scheduler for multicore rendering.
@@ -67,7 +68,7 @@ static void paxmcr_add_task(pax_task_t *task) {
 	}
 	
 	// Snedt it.
-	if (!ptq_send_block(queue_handle, &copy)) {
+	if (!ptq_send_block(queue_handle, &copy, NULL)) {
 		PAX_LOGE(TAG, "No space in queue!");
 		PAX_LOGW(TAG, "Reverting to disabling MCR.");
 		pax_disable_multicore();
@@ -88,7 +89,7 @@ static void *pax_multicore_task_function(void *args) {
 	
 	while (pax_do_multicore) {
 		// Wait for a task.
-		if (!ptq_receive_block(queue_handle, &tsk)) {
+		if (!ptq_receive_block(queue_handle, &tsk, &multicore_mutex)) {
 			PAX_LOGE(TAG, "Error while receiving from queue!");
 			PAX_LOGW(TAG, "Reverting to disabling MCR.");
 			pax_do_multicore = false;
@@ -152,6 +153,9 @@ static void *pax_multicore_task_function(void *args) {
 			free(tsk.shader);
 		if (tsk.tri_uvs)
 			free(tsk.tri_uvs);
+		
+		// Release the sync mutex.
+		pthread_mutex_unlock(&multicore_mutex);
 	}
 	
 	PAX_LOGI(TAG, "MCR worker stopped.");
@@ -160,9 +164,10 @@ static void *pax_multicore_task_function(void *args) {
 
 // If multi-core rendering is enabled, wait for the other core.
 void pax_join() {
-	while (pax_do_multicore && ptq_get_length(queue_handle)) {
-		// Wait for the other core.
-		sched_yield();
+	if (pax_do_multicore) {
+		// Await queue to be empty.
+		ptq_join(queue_handle, &multicore_mutex);
+		pthread_mutex_unlock(&multicore_mutex);
 	}
 }
 
@@ -176,13 +181,20 @@ void pax_enable_multicore(int core) {
 	// Enable log mutex.
 	int res = pthread_mutex_init(&pax_log_mutex, NULL);
 	if (res) {
-		PAX_LOGE(TAG, "Failed to enable MCR: Mutex creation error.");
+		PAX_LOGE(TAG, "Failed to enable MCR: Log mutex creation error.");
 		return;
 	}
 	pax_log_use_mutex = true;
 	
 	// Mark MCR as enabled.
 	pax_do_multicore  = true;
+	
+	// Create sync mutex.
+	res = pthread_mutex_init(&multicore_mutex, NULL);
+	if (res) {
+		PAX_LOGE(TAG, "Failed to enable MCR: Sync mutex creation error.");
+		return;
+	}
 	
 	// Create queue.
 	queue_handle = ptq_create_max(sizeof(pax_task_t), PAX_QUEUE_SIZE);

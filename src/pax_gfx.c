@@ -68,6 +68,8 @@ bool                   pax_log_use_mutex = false;
 
 // The thread for multicore helper stuff.
 static pthread_t       multicore_handle;
+// The mutex used to determine IDLE.
+static pthread_mutex_t multicore_mutex   = PTHREAD_MUTEX_INITIALIZER;
 // The render queue for the multicore helper.
 static ptq_queue_t     queue_handle      = NULL;
 
