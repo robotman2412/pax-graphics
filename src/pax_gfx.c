@@ -895,7 +895,25 @@ void pax_draw_image(pax_buf_t *buf, pax_buf_t *image, float x, float y) {
 // Draw an image with a prespecified size.
 void pax_draw_image_sized(pax_buf_t *buf, pax_buf_t *image, float x, float y, float width, float height) {
 	if (!image || !image->buf) PAX_ERROR("pax_draw_image", PAX_ERR_CORRUPT);
-	pax_shade_rect(buf, -1, &PAX_SHADER_TEXTURE(image), NULL, x, y, width, height);
+	if (PAX_IS_ALPHA(image->type)) {
+		pax_shade_rect(buf, -1, &PAX_SHADER_TEXTURE_OP(image), NULL, x, y, width, height);
+	} else {
+		pax_shade_rect(buf, -1, &PAX_SHADER_TEXTURE(image), NULL, x, y, width, height);
+	}
+}
+
+// Draws an image at the image's normal size.
+// Assumes the image is completely opaque, any transparent parts are drawn opaque.
+void pax_draw_image_op(pax_buf_t *buf, pax_buf_t *image, float x, float y) {
+	if (!image || !image->buf) PAX_ERROR("pax_draw_image_op", PAX_ERR_CORRUPT);
+	pax_draw_image_sized_op(buf, image, x, y, image->width, image->height);
+}
+
+// Draw an image with a prespecified size.
+// Assumes the image is completely opaque, any transparent parts are drawn opaque.
+void pax_draw_image_sized_op(pax_buf_t *buf, pax_buf_t *image, float x, float y, float width, float height) {
+	if (!image || !image->buf) PAX_ERROR("pax_draw_image", PAX_ERR_CORRUPT);
+	pax_shade_rect(buf, -1, &PAX_SHADER_TEXTURE_OP(image), NULL, x, y, width, height);
 }
 
 // Draw a rectangle with a shader.

@@ -70,7 +70,7 @@ extern bool pax_log_use_mutex;
 #define PAX_LOGW(tag, ...) PRIVATE_PAX_LOG_HELPER(stderr, "\033[33mWarn  ", tag, __VA_ARGS__)
 #endif
 
-/* =========== HELPERS =========== */
+/* ======= GENERIC HELPERS ======= */
 
 // Whether multi-core rendering is enabled.
 extern bool pax_do_multicore;
@@ -125,8 +125,84 @@ void pax_set_index_conv(pax_buf_t *buf, pax_col_t col, int index);
 // Merges based on index instead of coordinates.
 // Does no bounds checking.
 void pax_merge_index(pax_buf_t *buf, pax_col_t col, int index);
-
+// Prints a simple error report of an error code.
 void pax_report_error(const char *where, pax_err_t errno);
+
+
+
+/* ======= DRAWING HALPERS ======= */
+
+// Multi-core method for shaded triangles.
+// Assumes points are sorted by Y.
+// If odd_scanline is true, the odd (counted from 0) lines are drawn, otherwise the even lines are drawn.
+void paxmcr_tri_shaded(bool odd_scanline, pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
+		float x0, float y0, float x1, float y1, float x2, float y2,
+		float u0, float v0, float u1, float v1, float u2, float v2);
+
+//  Multi-core optimisation which maps a buffer directly onto another.
+// If odd_scanline is true, the odd (counted from 0) lines are drawn, otherwise the even lines are drawn.
+void paxmcr_overlay_buffer(bool odd_scanline, pax_buf_t *base, pax_buf_t *top, int x, int y, int width, int height);
+
+//  Multi-core optimisation which makes more assumptions about UVs.
+// If odd_scanline is true, the odd (counted from 0) lines are drawn, otherwise the even lines are drawn.
+void paxmcr_rect_shaded1(bool odd_scanline, pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
+		float x, float y, float width, float height, float u0, float v0, float u1, float v1);
+
+//  Multi-core  method for shaded rects.
+// If odd_scanline is true, the odd (counted from 0) lines are drawn, otherwise the even lines are drawn.
+void paxmcr_rect_shaded(bool odd_scanline, pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
+		float x, float y, float width, float height,
+		float u0, float v0, float u1, float v1, float u2, float v2, float u3, float v3);
+
+
+
+// Multi-core method for unshaded triangles.
+// Assumes points are sorted by Y.
+// If odd_scanline is true, the odd (counted from 0) lines are drawn, otherwise the even lines are drawn.
+void paxmcr_tri_unshaded(bool odd_scanline, pax_buf_t *buf, pax_col_t color,
+		float x0, float y0, float x1, float y1, float x2, float y2);
+
+// Multi-core method for rectangle drawing.
+// If odd_scanline is true, the odd (counted from 0) lines are drawn, otherwise the even lines are drawn.
+void paxmcr_rect_unshaded(bool odd_scanline, pax_buf_t *buf, pax_col_t color,
+		float x, float y, float width, float height);
+
+
+
+// Internal method for shaded triangles.
+// Assumes points are sorted by Y.
+void pax_tri_shaded(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
+		float x0, float y0, float x1, float y1, float x2, float y2,
+		float u0, float v0, float u1, float v1, float u2, float v2);
+
+// Optimisation which maps a buffer directly onto another.
+// If assume_opaque is true, the overlay is done without transparency.
+void pax_overlay_buffer(pax_buf_t *base, pax_buf_t *top, int x, int y, int width, int height, bool assume_opaque);
+
+// Optimisation which makes more assumptions about UVs.
+void pax_rect_shaded1(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
+		float x, float y, float width, float height, float u0, float v0, float u1, float v1);
+
+// Internal method for shaded rects.
+void pax_rect_shaded(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
+		float x, float y, float width, float height,
+		float u0, float v0, float u1, float v1, float u2, float v2, float u3, float v3);
+
+
+
+// Internal method for unshaded triangles.
+// Assumes points are sorted by Y.
+void pax_tri_unshaded(pax_buf_t *buf, pax_col_t color,
+		float x0, float y0, float x1, float y1, float x2, float y2);
+
+// Internal method for rectangle drawing.
+void pax_rect_unshaded(pax_buf_t *buf, pax_col_t color,
+		float x, float y, float width, float height);
+
+// Internal method for line drawing.
+void pax_line_unshaded(pax_buf_t *buf, pax_col_t color, float x0, float y0, float x1, float y1);
+
+
 
 #ifdef __cplusplus
 }

@@ -34,7 +34,7 @@
 
 // Internal method for unshaded triangles.
 // Assumes points are sorted by Y.
-static void pax_tri_unshaded(pax_buf_t *buf, pax_col_t color,
+void pax_tri_unshaded(pax_buf_t *buf, pax_col_t color,
 		float x0, float y0, float x1, float y1, float x2, float y2) {
 	
 	pax_index_setter_t setter = pax_get_setter(buf, &color, NULL);
@@ -142,7 +142,7 @@ static void pax_tri_unshaded(pax_buf_t *buf, pax_col_t color,
 }
 
 // Internal method for rectangle drawing.
-static void pax_rect_unshaded(pax_buf_t *buf, pax_col_t color,
+void pax_rect_unshaded(pax_buf_t *buf, pax_col_t color,
 		float x, float y, float width, float height) {
 	
 	// pax_setter_t setter = color >= 0xff000000 ? pax_set_pixel : pax_merge_pixel;
@@ -160,7 +160,7 @@ static void pax_rect_unshaded(pax_buf_t *buf, pax_col_t color,
 }
 
 // Internal method for line drawing.
-static void pax_line_unshaded(pax_buf_t *buf, pax_col_t color, float x0, float y0, float x1, float y1) {
+void pax_line_unshaded(pax_buf_t *buf, pax_col_t color, float x0, float y0, float x1, float y1) {
 	
 	// pax_setter_t setter = color >= 0xff000000 ? pax_set_pixel : pax_merge_pixel;
 	pax_index_setter_t setter = pax_get_setter(buf, &color, NULL);
