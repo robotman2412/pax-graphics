@@ -141,6 +141,9 @@ static void pax_tri_unshaded(pax_buf_t *buf, pax_col_t color,
 	}
 }
 
+#define PDHG_NAME pax_rect_unshaded
+#include "pax_dh_generic_rect.h"
+/*
 // Internal method for rectangle drawing.
 static void pax_rect_unshaded(pax_buf_t *buf, pax_col_t color,
 		float x, float y, float width, float height) {
@@ -158,6 +161,7 @@ static void pax_rect_unshaded(pax_buf_t *buf, pax_col_t color,
 		delta += buf->width;
 	}
 }
+*/
 
 // Internal method for line drawing.
 static void pax_line_unshaded(pax_buf_t *buf, pax_col_t color, float x0, float y0, float x1, float y1) {

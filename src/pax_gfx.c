@@ -481,6 +481,8 @@ void pax_debug(pax_buf_t *buf) {
 
 /* ======= DRAWING HELPERS ======= */
 
+bool pax_enable_shape_aa = false;
+
 #define PAX_GFX_C
 
 // Single-core rendering.

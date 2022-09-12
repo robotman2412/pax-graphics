@@ -51,7 +51,6 @@ extern "C" {
 extern pthread_mutex_t pax_log_mutex;
 extern bool pax_log_use_mutex;
 
-
 #define PRIVATE_PAX_LOG_HELPER(file, prefix, tag, ...) do {\
 		if (pax_log_use_mutex) {\
 			pthread_mutex_lock(&pax_log_mutex);\

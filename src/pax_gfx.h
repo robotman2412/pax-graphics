@@ -56,6 +56,8 @@ void       pax_disable_multicore   ();
 
 /* ============ BUFFER =========== */
 
+extern bool pax_enable_shape_aa;
+
 // Get the bits per pixel for the given buffer type.
 #define PAX_GET_BPP(type)         ((type) & 0xff)
 // Reflects whether the buffer type is greyscale.
@@ -95,6 +97,10 @@ void      pax_mark_dirty2         (pax_buf_t *buf, int x, int y, int width, int 
 
 /* ============ COLORS =========== */
 
+// Multiplicatively decreases alpha based on a float.
+static inline pax_col_t pax_col_reduce_alpha(pax_col_t in, float coeff) {
+	return ((pax_col_t) ((in & 0xff000000) * coeff)) & 0xff000000 | (in & 0x00ffffff);
+}
 // Combines RGB.
 static inline pax_col_t pax_col_rgb(uint8_t r, uint8_t g, uint8_t b) {
 	return 0xff000000 | (r << 16) | (g << 8) | b;
