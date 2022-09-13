@@ -411,12 +411,12 @@ void pax_report_error(const char *where, pax_err_t errno) {
 	// Ignore the "Error: Success" cases.
 	if (errno == PAX_OK) return;
 	
-	// Number of silenced messages.
-	static uint64_t silenced = 0;
-	// Last spam message time in microseconds.
-	static uint64_t last_spam = 0;
-	// Spam silencing delay in microseconds.
-	static const uint64_t spam_delay = 2 * 1000 * 1000;
+	// // Number of silenced messages.
+	// static uint64_t silenced = 0;
+	// // Last spam message time in microseconds.
+	// static uint64_t last_spam = 0;
+	// // Spam silencing delay in microseconds.
+	// static const uint64_t spam_delay = 2 * 1000 * 1000;
 	
 	// // Check whether the message might potentially be spam.
 	// bool spam_potential =
