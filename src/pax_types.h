@@ -37,6 +37,8 @@ extern "C" {
 #define M_PI 3.141592653589793
 #endif
 
+#define PAX_FONT_LOADER_VERSION 1
+
 /* ========= ERROR DEFS ========== */
 
 // Unknown error.
@@ -274,6 +276,9 @@ struct pax_task {
 	// Number of floats in the shape array.
 	size_t          shape_len;
 };
+
+// The absolute minimum possible size a valid font can be in memory.
+#define PAX_FONT_LOADER_MINUMUM_SIZE (sizeof(pax_font_t) + sizeof(pax_font_range_t) + 3)
 
 #ifdef __cplusplus
 }

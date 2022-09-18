@@ -66,7 +66,7 @@ struct pax_font {
 	// The searchable name of the font.
 	const char             *name;
 	// The number of ranges included in the font.
-	const size_t            n_ranges;
+	size_t                  n_ranges;
 	// The ranges included in the font.
 	const pax_font_range_t *ranges;
 	// Default point size.
@@ -90,11 +90,11 @@ struct pax_font_range {
 			// The raw glyph bytes.
 			const uint8_t *glyphs;
 			// The width of all glyphs.
-			const uint8_t  width;
+			uint8_t        width;
 			// The height of all glyphs.
-			const uint8_t  height;
+			uint8_t        height;
 			// The Bits Per Pixel of all glyphs.
-			const uint8_t  bpp;
+			uint8_t        bpp;
 		} bitmap_mono;
 		// Variable pitch, bitmapped fonts.
 		struct {
@@ -103,9 +103,9 @@ struct pax_font_range {
 			// Additional dimensions defined per glyph.
 			const pax_bmpv_t *dims;
 			// The height of all glyphs.
-			const uint8_t     height;
+			uint8_t           height;
 			// The Bits Per Pixel of all glyphs.
-			const uint8_t     bpp;
+			uint8_t           bpp;
 		} bitmap_var;
 	};
 };

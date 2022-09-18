@@ -34,6 +34,7 @@
 // Allocates the entire font in one go, such that only free(pax_font_t*) is required.
 pax_font_t *pax_load_font           (FILE *fd);
 // Stores a font to a file descriptor.
+// This is a memory intensive operation and might not succeed on embedded targets.
 void        pax_store_font          (FILE *fd, const pax_font_t *font);
 
 // Draw a string with the given font and return it's size.
