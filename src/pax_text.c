@@ -568,15 +568,37 @@ pax_font_t *pax_load_font(FILE *fd) {
 	}
 	
 	/* ==== READ METADATA ==== */
+	// Number of stored pax_bmpv_t.
+	uint64_t n_bmpv;
+	xreadnum_assert(&n_bmpv,   sizeof(uint64_t), fd);
+	
+	// Size of the combined bitmaps.
+	uint64_t n_bitmap;
+	xreadnum_assert(&n_bitmap, sizeof(uint64_t), fd);
+	
+	// Size of the font name.
+	uint64_t n_name;
+	xreadnum_assert(&n_name,   sizeof(uint64_t), fd);
+	
+	// Number of ranges in the font.
+	uint64_t n_ranges;
+	xreadnum_assert(&n_ranges, sizeof(uint64_t), fd);
+	
+	// Calculate required size.
+	size_t required_size = sizeof(pax_font_t)
+						+ n_ranges * sizeof(pax_font_range_t)
+						+ n_bmpv * sizeof(pax_bmpv_t)
+						+ n_bitmap
+						+ n_name + 1;
+	
 	// Validate required size.
-	xreadnum_assert(&tmpint, sizeof(uint64_t), fd);
-	size_t required_size = tmpint;
 	if (required_size < PAX_FONT_LOADER_MINUMUM_SIZE) {
 		// The size is suspiciously small.
 		PAX_LOGE(TAG, "File corruption: Font size reported is too small (metadata; %zu < %zu)", required_size, PAX_FONT_LOADER_MINUMUM_SIZE);
 		pax_last_error = PAX_ERR_UNSUPPORTED;
 		return NULL;
 	}
+	
 	// Allocate memory.
 	out = malloc(required_size);
 	out_addr = (size_t) out;
@@ -586,9 +608,7 @@ pax_font_t *pax_load_font(FILE *fd) {
 		return NULL;
 	}
 	
-	// Number of ranges in the font.
-	xreadnum_assert(&tmpint, sizeof(uint64_t), fd);
-	out->n_ranges = tmpint;
+	out->n_ranges = n_ranges;
 	
 	// Default point size.
 	xreadnum_assert(&tmpint, sizeof(uint16_t), fd);
@@ -763,16 +783,28 @@ void pax_store_font(FILE *fd, const pax_font_t *font) {
 	xwritenum_assert(PAX_FONT_LOADER_VERSION, sizeof(uint16_t), fd);
 	
 	/* ==== DETERMINE TOTAL SIZE ==== */
-	// Calculate total size including name.
-	size_t total_size = sizeof(pax_font_t) + strlen(font->name) + 1;
+	// Calculate total bitmap size.
+	size_t total_bitmap = 0;
 	for (size_t i = 0; i < font->n_ranges; i++) {
-		total_size += pax_calc_range_total_size(&font->ranges[i]);
+		total_bitmap += pax_calc_range_bitmap_size(&font->ranges[i]);
 	}
-	PAX_LOGD(TAG, "Determined total size: %zu", total_size);
+	// Calculate number of pax_bmpv_t stored.
+	size_t total_bmpv = 0;
+	for (size_t i = 0; i < font->n_ranges; i++) {
+		const pax_font_range_t *range = &font->ranges[i];
+		
+		if (range->type == PAX_FONT_TYPE_BITMAP_VAR) {
+			total_bmpv += range->end - range->start + 1;
+		}
+	}
 	
 	/* ==== FONT METADATA ==== */
-	// Total size required to load the font.
-	xwritenum_assert(total_size,         sizeof(uint64_t), fd);
+	// Total number of pax_bmpv_t.
+	xwritenum_assert(total_bmpv,         sizeof(uint64_t), fd);
+	// Total size of the bitmap data.
+	xwritenum_assert(total_bitmap,       sizeof(uint64_t), fd);
+	// Length excluding null terminator of the name.
+	xwritenum_assert(strlen(font->name), sizeof(uint64_t), fd);
 	// Number of ranges in the font.
 	xwritenum_assert(font->n_ranges,     sizeof(uint64_t), fd);
 	// Default size of the font in pixels.
