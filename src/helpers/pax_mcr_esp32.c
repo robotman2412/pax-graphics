@@ -30,6 +30,9 @@
 
 #include "pax_internal.h"
 
+
+/* ===== MULTI-CORE RENDERING ==== */
+
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <freertos/queue.h>
@@ -37,10 +40,6 @@
 #include <esp_timer.h>
 #include <esp_pm.h>
 
-
-/* ===== MULTI-CORE RENDERING ==== */
-
-#ifdef PAX_COMPILE_MCR
 
 // The scheduler for multicore rendering.
 static void paxmcr_add_task(pax_task_t *task) {
@@ -71,8 +70,8 @@ static void paxmcr_add_task(pax_task_t *task) {
 	// Snedt it.
 	esp_err_t res = xQueueSend(queue_handle, &copy, pdMS_TO_TICKS(100));
 	if (res != pdTRUE) {
-		ESP_LOGE(TAG, "No space in queue after 100ms!");
-		ESP_LOGW(TAG, "Reverting to disabling MCR.");
+		PAX_LOGE(TAG, "No space in queue after 100ms!");
+		PAX_LOGW(TAG, "Reverting to disabling MCR.");
 		pax_disable_multicore();
 	}
 }
@@ -80,7 +79,7 @@ static void paxmcr_add_task(pax_task_t *task) {
 // The actual task for multicore rendering.
 static void pax_multicore_task_function(void *args) {
 	const char *TAG = "pax-mcr-worker";
-	ESP_LOGI(TAG, "MCR worker started.");
+	PAX_LOGI(TAG, "MCR worker started.");
 	
 	// Up the frequency.
 	esp_pm_lock_handle_t pm_lock;
@@ -156,27 +155,22 @@ static void pax_multicore_task_function(void *args) {
 	esp_pm_lock_release(pm_lock);
 	esp_pm_lock_delete(pm_lock);
 	
-	ESP_LOGI(TAG, "MCR worker stopped.");
+	PAX_LOGI(TAG, "MCR worker stopped.");
 	vTaskDelete(NULL);
 }
 
-#endif //PAX_COMPILE_MCR
-
 // If multi-core rendering is enabled, wait for the other core.
 void pax_join() {
-	#ifdef PAX_COMPILE_MCR
 	while ((multicore_handle && eTaskGetState(multicore_handle) == eRunning) || (queue_handle && uxQueueMessagesWaiting(queue_handle))) {
 		// Wait for the other core.
 		taskYIELD();
 	}
-	#endif
 }
 
 // Enable multi-core rendering.
 void pax_enable_multicore(int core) {
-	#ifdef PAX_COMPILE_MCR
 	if (pax_do_multicore) {
-		ESP_LOGW(TAG, "No need to enable MCR: MCR was already enabled.");
+		PAX_LOGW(TAG, "No need to enable MCR: MCR was already enabled.");
 		return;
 	}
 	
@@ -187,7 +181,7 @@ void pax_enable_multicore(int core) {
 	if (!queue_handle) {
 		queue_handle = xQueueCreate(PAX_QUEUE_SIZE, sizeof(pax_task_t));
 		if (!queue_handle) {
-			ESP_LOGE(TAG, "Failed to enable MCR: Queue creation error.");
+			PAX_LOGE(TAG, "Failed to enable MCR: Queue creation error.");
 			return;
 		}
 	}
@@ -201,24 +195,20 @@ void pax_enable_multicore(int core) {
 	);
 	if (result != pdPASS) {
 		multicore_handle = NULL;
-		ESP_LOGE(TAG, "Failed to enable MCR: Task creation error %s (%x).", esp_err_to_name(result), result);
+		PAX_LOGE(TAG, "Failed to enable MCR: Task creation error %s (%x).", esp_err_to_name(result), result);
 		pax_do_multicore = false;
 	} else {
-		ESP_LOGI(TAG, "Successfully enabled MCR.");
+		PAX_LOGI(TAG, "Successfully enabled MCR.");
 	}
-	#else
-	ESP_LOGE(TAG, "Failed to enable MCR: MCR not compiled, please define PAX_COMPILE_MCR.");
-	#endif
 }
 
 // Disable multi-core rendering.
 void pax_disable_multicore() {
-	#ifdef PAX_COMPILE_MCR
 	if (!pax_do_multicore) {
-		ESP_LOGW(TAG, "No need to disable MCR: MCR was not enabled.");
+		PAX_LOGW(TAG, "No need to disable MCR: MCR was not enabled.");
 		return;
 	}
-	ESP_LOGI(TAG, "Disabling MCR...");
+	PAX_LOGI(TAG, "Disabling MCR...");
 	
 	// Notify that multicore is disabled.
 	pax_do_multicore = false;
@@ -236,11 +226,8 @@ void pax_disable_multicore() {
 	vQueueDelete(queue_handle);
 	queue_handle = NULL;
 	
-	ESP_LOGI(TAG, "MCR successfully disabled.");
+	PAX_LOGI(TAG, "MCR successfully disabled.");
 	multicore_handle = NULL;
-	#else
-	ESP_LOGE(TAG, "No need to disable MCR: MCR not compiled, please define PAX_COMPILE_MCR.");
-	#endif
 }
 
 #endif

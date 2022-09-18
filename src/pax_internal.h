@@ -31,11 +31,43 @@ extern "C" {
 
 #include "pax_gfx.h"
 #include <stdio.h>
+#include <stdint.h>
+#include <stdlib.h>
+
+#if defined(ESP32) || defined(ESP8266)
 #include <esp_system.h>
 #include <sdkconfig.h>
 #include <esp_err.h>
 #include <esp_log.h>
-#include <stdint.h>
+
+#define PAX_LOGE(...) ESP_LOGE(__VA_ARGS__)
+#define PAX_LOGI(...) ESP_LOGE(__VA_ARGS__)
+#define PAX_LOGD(...) ESP_LOGE(__VA_ARGS__)
+#define PAX_LOGW(...) ESP_LOGE(__VA_ARGS__)
+#else
+
+#include <pthread.h>
+
+extern pthread_mutex_t pax_log_mutex;
+extern bool pax_log_use_mutex;
+
+#define PRIVATE_PAX_LOG_HELPER(file, prefix, tag, ...) do {\
+		if (pax_log_use_mutex) {\
+			pthread_mutex_lock(&pax_log_mutex);\
+		}\
+		fprintf(file, prefix "%s: ", (tag));\
+		fprintf(file, __VA_ARGS__);\
+		fputs("\033[0m\r\n", file);\
+		if (pax_log_use_mutex) {\
+			pthread_mutex_unlock(&pax_log_mutex);\
+		}\
+	} while(0)
+
+#define PAX_LOGE(tag, ...) PRIVATE_PAX_LOG_HELPER(stderr, "\033[91mError ", tag, __VA_ARGS__)
+#define PAX_LOGI(tag, ...) PRIVATE_PAX_LOG_HELPER(stdout, "\033[32mInfo  ", tag, __VA_ARGS__)
+#define PAX_LOGD(tag, ...) PRIVATE_PAX_LOG_HELPER(stdout, "\033[94mDebug ", tag, __VA_ARGS__)
+#define PAX_LOGW(tag, ...) PRIVATE_PAX_LOG_HELPER(stderr, "\033[33mWarn  ", tag, __VA_ARGS__)
+#endif
 
 /* =========== HELPERS =========== */
 

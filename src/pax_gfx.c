@@ -25,31 +25,55 @@
 #include "pax_internal.h"
 #include "pax_shaders.h"
 
-#include <esp_timer.h>
 #include <malloc.h>
 #include <string.h>
 #include <math.h>
 
-#ifdef PAX_COMPILE_MCR
-#include <freertos/FreeRTOS.h>
-#include <freertos/task.h>
-#include <freertos/queue.h>
+#if defined(ESP32) || defined(ESP8266)
+#include <esp_timer.h>
 #endif
 
 // The last error reported.
-pax_err_t            pax_last_error   = PAX_OK;
+pax_err_t              pax_last_error    = PAX_OK;
 // Whether multi-core rendering is enabled.
 // You should not modify this variable.
-bool                 pax_do_multicore = false;
+bool                   pax_do_multicore  = false;
+
 #ifdef PAX_COMPILE_MCR
+
 // Whether or not the multicore task is currently busy.
-static bool          multicore_busy   = false;
+static bool            multicore_busy    = false;
+
+#if defined(ESP32) || defined(ESP8266)
+
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
+#include <freertos/queue.h>
+
 // The task handle for the main core.
-static TaskHandle_t  main_handle      = NULL;
+static TaskHandle_t    main_handle       = NULL;
 // The task handle for the other core.
-static TaskHandle_t  multicore_handle = NULL;
+static TaskHandle_t    multicore_handle  = NULL;
 // The render queue for the other core.
-static QueueHandle_t queue_handle     = NULL;
+static QueueHandle_t   queue_handle      = NULL;
+
+#elif defined(PAX_STANDALONE)
+
+#include <pthread.h>
+#include <unistd.h>
+#include <ptq.h>
+
+pthread_mutex_t        pax_log_mutex     = PTHREAD_MUTEX_INITIALIZER;
+bool                   pax_log_use_mutex = false;
+
+// The thread for multicore helper stuff.
+static pthread_t       multicore_handle;
+// The mutex used to determine IDLE.
+static pthread_mutex_t multicore_mutex   = PTHREAD_MUTEX_INITIALIZER;
+// The render queue for the multicore helper.
+static ptq_queue_t     queue_handle      = NULL;
+
+#endif
 #endif
 
 static inline uint32_t pax_col2buf(pax_buf_t *buf, pax_col_t color) {
@@ -396,31 +420,31 @@ void pax_report_error(const char *where, pax_err_t errno) {
 	// Spam silencing delay in microseconds.
 	static const uint64_t spam_delay = 2 * 1000 * 1000;
 	
-	// Check whether the message might potentially be spam.
-	bool spam_potential =
-				errno == PAX_ERR_NOBUF
-			|| !strcmp(where, "pax_get_pixel")
-			|| !strcmp(where, "pax_set_pixel");
+	// // Check whether the message might potentially be spam.
+	// bool spam_potential =
+	// 			errno == PAX_ERR_NOBUF
+	// 		|| !strcmp(where, "pax_get_pixel")
+	// 		|| !strcmp(where, "pax_set_pixel");
 	
-	if (spam_potential) {
-		// If so, check time.
-		uint64_t now = esp_timer_get_time() + spam_delay;
+	// if (spam_potential) {
+	// 	// If so, check time.
+	// 	uint64_t now = esp_timer_get_time() + spam_delay;
 		
-		if (now < last_spam + spam_delay) {
-			// It gets blocked.
-			silenced ++;
-			return;
-		} else if (silenced) {
-			// It goes through, report silenced count.
-			ESP_LOGE(TAG, "%llu silenced errors", silenced);
-			silenced = 0;
-		}
+	// 	if (now < last_spam + spam_delay) {
+	// 		// It gets blocked.
+	// 		silenced ++;
+	// 		return;
+	// 	} else if (silenced) {
+	// 		// It goes through, report silenced count.
+	// 		PAX_LOGE(TAG, "%llu silenced errors", silenced);
+	// 		silenced = 0;
+	// 	}
 		
-		last_spam = now;
-	}
+	// 	last_spam = now;
+	// }
 	
 	// Log the error.
-	ESP_LOGE(TAG, "@ %s: %s", where, pax_desc_err(errno));
+	PAX_LOGE(TAG, "@ %s: %s", where, pax_desc_err(errno));
 }
 
 // Describe error.
@@ -457,6 +481,8 @@ void pax_debug(pax_buf_t *buf) {
 
 /* ======= DRAWING HELPERS ======= */
 
+bool pax_enable_shape_aa = false;
+
 #define PAX_GFX_C
 
 // Single-core rendering.
@@ -467,10 +493,30 @@ void pax_debug(pax_buf_t *buf) {
 #ifdef PAX_COMPILE_MCR
 #include "helpers/pax_dh_mcr_unshaded.c"
 #include "helpers/pax_dh_mcr_shaded.c"
+
+#if defined(ESP32) || defined(ESP8266)
+
+// ESP32 FreeRTOS multicore implementation
+#include "helpers/pax_mcr_esp32.c"
+
+#elif defined(PAX_STANDALONE)
+
+// Pthread multicore implementation.
+#include "helpers/pax_mcr_pthread.c"
+
+#else
+
+// No valid multicore implementation.
+#error "No valid threading implementation (neither ESP32 nor standalone target)"
+
 #endif
 
-// Always included because of API dependencies.
-#include "helpers/pax_mcr.c"
+#else
+
+// Included because of API dependencies.
+#include "helpers/pax_mcr_dummy.c"
+
+#endif //PAX_COMPILE_MCR
 
 
 
@@ -482,7 +528,6 @@ void pax_buf_init(pax_buf_t *buf, void *mem, int width, int height, pax_buf_type
 	bool use_alloc = !mem;
 	if (use_alloc) {
 		// Allocate the right amount of bytes.
-		ESP_LOGD(TAG, "Allocating new memory for buffer.");
 		mem = malloc((PAX_GET_BPP(type) * width * height + 7) >> 3);
 		if (!mem) PAX_ERROR("pax_buf_init", PAX_ERR_NOMEM);
 	}
@@ -556,7 +601,7 @@ void pax_buf_convert(pax_buf_t *dst, pax_buf_t *src, pax_buf_type_t type) {
 	if (!dst->do_free) PAX_ERROR("pax_buf_convert", PAX_ERR_PARAM);
 	// Src and dst must match in size.
 	if (src->width != dst->width || src->height != dst->height) {
-		ESP_LOGE(TAG, "size mismatch: %dx%d vs %dx%d", src->width, src->height, dst->width, dst->height);
+		PAX_LOGE(TAG, "size mismatch: %dx%d vs %dx%d", src->width, src->height, dst->width, dst->height);
 		PAX_ERROR("pax_buf_convert", PAX_ERR_BOUNDS);
 	}
 	
@@ -565,7 +610,7 @@ void pax_buf_convert(pax_buf_t *dst, pax_buf_t *src, pax_buf_type_t type) {
 	size_t new_pixels = dst->width * dst->height;
 	size_t new_size = (new_pixels * dst->bpp + 7) / 8;
 	if (dst->bpp > src->bpp) {
-		ESP_LOGI(TAG, "Expanding buffer.");
+		PAX_LOGI(TAG, "Expanding buffer.");
 		// Resize the memory for DST beforehand.
 		dst->buf = realloc(dst->buf, new_size);
 		if (!dst->buf) PAX_ERROR("pax_buf_convert", PAX_ERR_NOMEM);
@@ -577,7 +622,7 @@ void pax_buf_convert(pax_buf_t *dst, pax_buf_t *src, pax_buf_type_t type) {
 			}
 		}
 	} else {
-		ESP_LOGI(TAG, "Shrinking buffer.");
+		PAX_LOGI(TAG, "Shrinking buffer.");
 		// Otherwise, iterate normally.
 		for (int y = 0; y < dst->height; y ++) {
 			for (int x = 0; x < dst->width; x ++) {
