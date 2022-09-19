@@ -652,10 +652,6 @@ pax_font_t *pax_load_font(FILE *fd) {
 		size_t range_size = range->end - range->start + 1;
 		
 		if (range->type == PAX_FONT_TYPE_BITMAP_MONO) {
-			// Raw glyph blob index.
-			xreadnum_assert(&tmpint, sizeof(uint64_t), fd);
-			range->bitmap_mono.glyphs = (uint8_t *) tmpint;
-			
 			// Glyph width.
 			xreadnum_assert(&tmpint, sizeof(uint8_t), fd);
 			range->bitmap_mono.width  = tmpint;
@@ -669,10 +665,6 @@ pax_font_t *pax_load_font(FILE *fd) {
 			range->bitmap_mono.bpp    = tmpint;
 			
 		} else if (range->type == PAX_FONT_TYPE_BITMAP_VAR) {
-			// Raw glyph blob index.
-			xreadnum_assert(&tmpint, sizeof(uint64_t), fd);
-			range->bitmap_var.glyphs = (uint8_t *) tmpint;
-			
 			// Read later: Additional glyph dimensions.
 			// Calculate the address.
 			range->bitmap_var.dims   = (void *) (out_addr + output_offset);
@@ -826,8 +818,6 @@ void pax_store_font(FILE *fd, const pax_font_t *font) {
 		xwritenum_assert(range->end,   sizeof(uint32_t), fd);
 		
 		if (range->type == PAX_FONT_TYPE_BITMAP_MONO) {
-			// Glyph blob index.
-			xwritenum_assert(raw_data_offs,             sizeof(uint64_t), fd);
 			// Range width.
 			xwritenum_assert(range->bitmap_mono.width,  sizeof(uint8_t),  fd);
 			// Range height.
@@ -835,14 +825,12 @@ void pax_store_font(FILE *fd, const pax_font_t *font) {
 			// Range bit per pixel.
 			xwritenum_assert(range->bitmap_mono.bpp,    sizeof(uint8_t),  fd);
 		} else {
-			// Glyph blob index.
-			xwritenum_assert(raw_data_offs,             sizeof(uint64_t), fd);
 			// Range height.
 			xwritenum_assert(range->bitmap_var.height,  sizeof(uint8_t),  fd);
 			// Range bit per pixel.
 			xwritenum_assert(range->bitmap_var.bpp,     sizeof(uint8_t),  fd);
 			
-			// Range bitmap snippets.
+			// Range bitmap dimensions.
 			for (size_t x = 0; x < range_size; x++) {
 				pax_bmpv_t bmpv = range->bitmap_var.dims[x];
 				
