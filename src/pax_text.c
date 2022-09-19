@@ -434,7 +434,7 @@ pax_vec1_t pax_text_size(const pax_font_t *font, float font_size, const char *te
 
 
 
-#pragma region
+#if 1
 // Calculates the size of the region's raw data.
 static size_t pax_calc_range_size(const pax_font_range_t *range, bool include_structs) {
 	size_t range_size = range->end - range->start + 1;
@@ -533,7 +533,7 @@ static inline bool xfread(void *restrict __ptr, size_t __size, size_t __n, FILE 
 	do { \
 		if (!xfwrite(__VA_ARGS__)) goto fd_error; \
 	} while(0)
-#pragma endregion
+#endif
 
 // Loads a font using a file descriptor.
 // Allocates the entire font in one go, such that only free(pax_font_t*) is required.
@@ -543,9 +543,9 @@ pax_font_t *pax_load_font(FILE *fd) {
 		pax_last_error = PAX_ERR_NODATA;
 		return NULL;
 	}
-	pax_font_t *out;
+	pax_font_t *out = NULL;
 	size_t      out_addr;
-	size_t      tmpint;
+	uint64_t    tmpint;
 	
 	/* ==== DETERMINE COMPATIBILITY ==== */
 	// Validate magic.

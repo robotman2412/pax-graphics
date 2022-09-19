@@ -29,7 +29,7 @@
 #include <string.h>
 #include <math.h>
 
-#if defined(ESP32) || defined(ESP8266)
+#ifdef PAX_ESP_IDF
 #include <esp_timer.h>
 #endif
 
@@ -44,7 +44,7 @@ bool                   pax_do_multicore  = false;
 // Whether or not the multicore task is currently busy.
 static bool            multicore_busy    = false;
 
-#if defined(ESP32) || defined(ESP8266)
+#ifdef PAX_ESP_IDF
 
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
@@ -413,12 +413,12 @@ void pax_report_error(const char *where, pax_err_t errno) {
 	// Ignore the "Error: Success" cases.
 	if (errno == PAX_OK) return;
 	
-	// Number of silenced messages.
-	static uint64_t silenced = 0;
-	// Last spam message time in microseconds.
-	static uint64_t last_spam = 0;
-	// Spam silencing delay in microseconds.
-	static const uint64_t spam_delay = 2 * 1000 * 1000;
+	// // Number of silenced messages.
+	// static uint64_t silenced = 0;
+	// // Last spam message time in microseconds.
+	// static uint64_t last_spam = 0;
+	// // Spam silencing delay in microseconds.
+	// static const uint64_t spam_delay = 2 * 1000 * 1000;
 	
 	// // Check whether the message might potentially be spam.
 	// bool spam_potential =
@@ -494,7 +494,7 @@ bool pax_enable_shape_aa = false;
 #include "helpers/pax_dh_mcr_unshaded.c"
 #include "helpers/pax_dh_mcr_shaded.c"
 
-#if defined(ESP32) || defined(ESP8266)
+#ifdef PAX_ESP_IDF
 
 // ESP32 FreeRTOS multicore implementation
 #include "helpers/pax_mcr_esp32.c"

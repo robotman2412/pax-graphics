@@ -99,7 +99,7 @@ void      pax_mark_dirty2         (pax_buf_t *buf, int x, int y, int width, int 
 
 // Multiplicatively decreases alpha based on a float.
 static inline pax_col_t pax_col_reduce_alpha(pax_col_t in, float coeff) {
-	return ((pax_col_t) ((in & 0xff000000) * coeff)) & 0xff000000 | (in & 0x00ffffff);
+	return ((pax_col_t) (((in & 0xff000000) * coeff)) & 0xff000000) | (in & 0x00ffffff);
 }
 // Combines RGB.
 static inline pax_col_t pax_col_rgb(uint8_t r, uint8_t g, uint8_t b) {
