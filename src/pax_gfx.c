@@ -29,7 +29,7 @@
 #include <string.h>
 #include <math.h>
 
-#if defined(ESP32) || defined(ESP8266)
+#ifdef PAX_ESP_IDF
 #include <esp_timer.h>
 #endif
 
@@ -44,7 +44,7 @@ bool                   pax_do_multicore  = false;
 // Whether or not the multicore task is currently busy.
 static bool            multicore_busy    = false;
 
-#if defined(ESP32) || defined(ESP8266)
+#ifdef PAX_ESP_IDF
 
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
@@ -68,6 +68,8 @@ bool                   pax_log_use_mutex = false;
 
 // The thread for multicore helper stuff.
 static pthread_t       multicore_handle;
+// The mutex used to determine IDLE.
+static pthread_mutex_t multicore_mutex   = PTHREAD_MUTEX_INITIALIZER;
 // The render queue for the multicore helper.
 static ptq_queue_t     queue_handle      = NULL;
 
@@ -479,6 +481,8 @@ void pax_debug(pax_buf_t *buf) {
 
 /* ======= DRAWING HELPERS ======= */
 
+bool pax_enable_shape_aa = false;
+
 #define PAX_GFX_C
 
 // Single-core rendering.
@@ -490,7 +494,7 @@ void pax_debug(pax_buf_t *buf) {
 #include "helpers/pax_dh_mcr_unshaded.c"
 #include "helpers/pax_dh_mcr_shaded.c"
 
-#if defined(ESP32) || defined(ESP8266)
+#ifdef PAX_ESP_IDF
 
 // ESP32 FreeRTOS multicore implementation
 #include "helpers/pax_mcr_esp32.c"

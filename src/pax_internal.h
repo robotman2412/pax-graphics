@@ -34,23 +34,26 @@ extern "C" {
 #include <stdint.h>
 #include <stdlib.h>
 
-#if defined(ESP32) || defined(ESP8266)
+#if (defined(ESP32) || defined(ESP8266) || defined(ESP_PLATFORM)) && !defined(PAX_ESP_IDF)
+#define PAX_ESP_IDF
+#endif
+
+#ifdef PAX_ESP_IDF
 #include <esp_system.h>
 #include <sdkconfig.h>
 #include <esp_err.h>
 #include <esp_log.h>
 
 #define PAX_LOGE(...) ESP_LOGE(__VA_ARGS__)
-#define PAX_LOGI(...) ESP_LOGE(__VA_ARGS__)
+#define PAX_LOGI(...) ESP_LOGI(__VA_ARGS__)
 #define PAX_LOGD(...) ESP_LOGE(__VA_ARGS__)
-#define PAX_LOGW(...) ESP_LOGE(__VA_ARGS__)
+#define PAX_LOGW(...) ESP_LOGW(__VA_ARGS__)
 #else
 
 #include <pthread.h>
 
 extern pthread_mutex_t pax_log_mutex;
 extern bool pax_log_use_mutex;
-
 
 #define PRIVATE_PAX_LOG_HELPER(file, prefix, tag, ...) do {\
 		if (pax_log_use_mutex) {\
