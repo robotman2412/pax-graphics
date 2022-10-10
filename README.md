@@ -2,10 +2,12 @@
 An MIT graphics library for the MCH2022 badge firmware.
 ESP-IDF module and Arduino library.
 
+Version: v1.1.0-snapshot
+
 # Documentation
 Documentation can be found [here](docs).
 
-# TODO list
+# Target v1.1.0 TODO list
 - [ ] Built-in word-wrap support
 - [ ] Import more fonts
 - [x] Leave this box unchecked
