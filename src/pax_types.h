@@ -37,7 +37,23 @@ extern "C" {
 #define M_PI 3.141592653589793
 #endif
 
+/* ===== VERSION INFORMATION =====*/
+
+// The version of PAX font files used by the font loader.
 #define PAX_FONT_LOADER_VERSION 1
+
+// A human-readable representation of the current version number.
+#define PAX_VERSION_STR "1.1.0-snapshot"
+// A numeric representation of the version, one decimal digit per version part (ab.cd.ef).
+#define PAX_VERSION_NUMBER 110
+// Whether this is a prerelease version of PAX.
+#define PAX_VERSION_IS_SNAPSHOT true
+// The MAJOR part of the version (MAJOR.MINOR.PATCH).
+#define PAX_VERSION_MAJOR 1
+// The MINOR part of the version (MAJOR.MINOR.PATCH).
+#define PAX_VERSION_MINOR 1
+// The PATCH part of the version (MAJOR.MINOR.PATCH).
+#define PAX_VERSION_PATCH 0
 
 /* ========= ERROR DEFS ========== */
 
@@ -184,7 +200,7 @@ struct pax_rect {
 // Excludes the bottom row, which is implicit.
 // The matrix looks like this:
 //   a0, a1, a2,
-//   b0, b2, b2,
+//   b0, b1, b2,
 //   0,  0,  1
 union matrix_2d {
 	// Named members of the matrix.
@@ -196,7 +212,7 @@ union matrix_2d {
 	float arr[6];
 };
 
-// A simple linked list data structure used to store matrices for later.
+// A simple linked list data structure used to store matrices in a stack.
 struct matrix_stack_2d {
 	matrix_stack_2d_t *parent;
 	matrix_2d_t        value;
@@ -263,6 +279,7 @@ struct pax_buf {
 	matrix_stack_2d_t stack_2d;
 };
 
+// A shader definition, used by pax_shade_ methods.
 struct pax_shader {
 	// Shader callback.
 	pax_shader_func_t callback;
@@ -274,7 +291,7 @@ struct pax_shader {
 	bool              alpha_promise_255;
 };
 
-// A task to perform.
+// A task to perform, used by multicore rendering.
 // Every task has pre-transformed co-ordinates.
 // If you change the shader object's content (AKA the value that args points to),
 // You should ran pax_join before making the change.

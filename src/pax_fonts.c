@@ -105,7 +105,7 @@ const pax_font_range_t font_7x9_ranges[] = {
 };
 
 const pax_font_t *pax_fonts_index[] = {
-#ifdef PAX_COMPILE_FONT_INDEX
+#if PAX_COMPILE_FONT_INDEX
 	&PRIVATE_pax_font_sky,
 	&PRIVATE_pax_font_sky_mono,
 	&PRIVATE_pax_font_marker,
@@ -151,7 +151,7 @@ const pax_font_t PRIVATE_pax_font_saira_regular = { // Saira regular
 	.recommend_aa = true,
 };
 
-#ifdef PAX_COMPILE_FONT_INDEX
+#if PAX_COMPILE_FONT_INDEX
 // Finds the built-in font with the given name.
 const pax_font_t *pax_get_font(char *name) {
 	for (size_t i = 0; i < PAX_N_FONTS; i++) {

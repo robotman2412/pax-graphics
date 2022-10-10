@@ -25,15 +25,12 @@
 #include "pax_shaders.h"
 #include <math.h>
 
-// Uncomment to do cubic interpolation instead of linear interpolation.
-// #define DO_BICUBIC
-
 static inline float pax_interp_cubic(float a) {
 	// Cubic interpolation: y = -2x³ + 3x²
 	return -2*a*a*a + 3*a*a;
 }
 
-#ifdef DO_BICUBIC
+#if PAX_DO_BICUBIC
 #define pax_interp_value pax_interp_cubic
 #else
 // Linear interpolation: y = x

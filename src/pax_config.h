@@ -29,25 +29,44 @@
 #include <stddef.h>
 #include <stdbool.h>
 
+#ifndef PAX_DO_BICUBIC
+// Perform bicubic interpolation in text and images.
+	#define PAX_DO_BICUBIC false
+#endif
+
+#ifndef PAX_AUTOREPORT
 // Log errors instead of just setting pax_last_error.
-#define PAX_AUTOREPORT
+	#define PAX_AUTOREPORT true
+#endif
 
+#ifndef PAX_COMPILE_BEZIER
 // Compile in bezier curves.
-#define PAX_COMPILE_BEZIER
+	#define PAX_COMPILE_BEZIER true
+#endif
 
+#ifndef PAX_USE_EXPENSIVE_BEZIER
 // Use the more expensive, but more accurate algorithm in pax_draw_bezier.
-// #define PAX_USE_EXPENSIVE_BEZIER
+	#define PAX_USE_EXPENSIVE_BEZIER false
+#endif
 
+#ifndef PAX_COMPILE_TRIANGULATE
 // Compile in triangulation (filling the outline of a shape).
-// #define PAX_COMPILE_TRIANGULATE
+	#define PAX_COMPILE_TRIANGULATE false
+#endif
 
+#ifndef PAX_COMPILE_FONT_INDEX
 // Compile in all fonts and the fonts index.
-// #define PAX_COMPILE_FONT_INDEX
+	#define PAX_COMPILE_FONT_INDEX false
+#endif
 
+#ifndef PAX_COMPILE_MCR
 // Compile in multi-core rendering.
-#define PAX_COMPILE_MCR
+	#define PAX_COMPILE_MCR true
+#endif
 
+#ifndef PAX_QUEUE_SIZE
 // Queue size to use for multi-core rendering.
-#define PAX_QUEUE_SIZE 128
+	#define PAX_QUEUE_SIZE 128
+#endif
 
 #endif //PAX_CONFIG_H

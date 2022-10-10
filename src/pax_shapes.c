@@ -116,7 +116,7 @@ static int bezier_point_t_comp(const void *e0, const void *e1) {
 
 /* ============ CURVES =========== */
 
-#ifdef PAX_COMPILE_BEZIER
+#if PAX_COMPILE_BEZIER
 
 // Convert a cubic bezier curve to line segments, with the given number of points.
 // From and to are from 0 to 1, but any value is accepted.
@@ -187,7 +187,7 @@ void pax_draw_bezier_part(pax_buf_t *buf, pax_col_t color, pax_vec4_t control_po
 	if (to < from) {
 		PAX_SWAP(float, to, from);
 	}
-#ifdef PAX_USE_EXPENSIVE_BEZIER
+#if PAX_USE_EXPENSIVE_BEZIER
 	// Vectorise the bezier curve first.
 	pax_vec1_t *points;
 	pax_vectorise_bezier(&points, n_points, control_points);
@@ -478,7 +478,7 @@ void pax_outline_shape(pax_buf_t *buf, pax_col_t color, size_t num_points, const
 
 /* ======== TRIANGULATION ======== */
 
-#ifdef PAX_COMPILE_TRIANGULATE
+#if PAX_COMPILE_TRIANGULATE
 // Determine whether the points go clockwise or counter-clockwise.
 // Does not work for less then 3 points.
 static bool is_clockwise(int num_points, indexed_point_t *points, int index, int num_test, float dy) {

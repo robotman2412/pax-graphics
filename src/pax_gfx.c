@@ -41,7 +41,7 @@ pax_err_t              pax_last_error    = PAX_OK;
 // You should not modify this variable.
 bool                   pax_do_multicore  = false;
 
-#ifdef PAX_COMPILE_MCR
+#if PAX_COMPILE_MCR
 
 // Whether or not the multicore task is currently busy.
 static bool            multicore_busy    = false;
@@ -164,7 +164,7 @@ bool pax_enable_shape_aa = false;
 #include "helpers/pax_dh_shaded.c"
 
 // Multi-core rendering.
-#ifdef PAX_COMPILE_MCR
+#if PAX_COMPILE_MCR
 #include "helpers/pax_dh_mcr_unshaded.c"
 #include "helpers/pax_dh_mcr_shaded.c"
 
@@ -645,7 +645,7 @@ void pax_shade_rect(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
 		width  *= buf->stack_2d.value.a0;
 		height *= buf->stack_2d.value.b1;
 		pax_mark_dirty2(buf, x - 0.5, y - 0.5, width + 1, height + 1);
-		#ifdef PAX_COMPILE_MCR
+		#if PAX_COMPILE_MCR
 		if (pax_do_multicore) {
 			// Assign worker task.
 			float shape[4] = {
@@ -725,7 +725,7 @@ void pax_shade_tri(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
 	pax_mark_dirty1(buf, x1 + 0.5, y1 + 0.5);
 	pax_mark_dirty1(buf, x2 + 0.5, y2 + 0.5);
 	
-	#ifdef PAX_COMPILE_MCR
+	#if PAX_COMPILE_MCR
 	if (pax_do_multicore) {
 		// Assign worker task.
 		float shape[6] = {
@@ -943,7 +943,7 @@ void pax_draw_circle(pax_buf_t *buf, pax_col_t color, float x,  float y,  float 
 void pax_background(pax_buf_t *buf, pax_col_t color) {
 	PAX_BUF_CHECK("pax_background");
 	
-	#ifdef PAX_COMPILE_MCR
+	#if PAX_COMPILE_MCR
 	pax_join();
 	#endif
 	
@@ -1021,7 +1021,7 @@ void pax_simple_rect(pax_buf_t *buf, pax_col_t color, float x, float y, float wi
 	
 	// Mark dirty area.
 	pax_mark_dirty2(buf, x - 0.5, y - 0.5, width + 1, height + 1);
-	#ifdef PAX_COMPILE_MCR
+	#if PAX_COMPILE_MCR
 	if (pax_do_multicore) {
 		// Assign worker task.
 		float shape[4] = {
@@ -1099,7 +1099,7 @@ void pax_simple_line(pax_buf_t *buf, pax_col_t color, float x0, float y0, float 
 	
 	pax_mark_dirty1(buf, x0, y0);
 	pax_mark_dirty1(buf, x1, y1);
-	#ifdef PAX_COMPILE_MCR
+	#if PAX_COMPILE_MCR
 	// Because a line isn't drawn in alternating scanlines, we need to sync up with the worker.
 	pax_join();
 	#endif
@@ -1139,7 +1139,7 @@ void pax_simple_tri(pax_buf_t *buf, pax_col_t color, float x0, float y0, float x
 	pax_mark_dirty1(buf, x1 + 0.5, y1 + 0.5);
 	pax_mark_dirty1(buf, x2 + 0.5, y2 + 0.5);
 	
-	#ifdef PAX_COMPILE_MCR
+	#if PAX_COMPILE_MCR
 	if (pax_do_multicore) {
 		// Add worker task.
 		float shape[6] = {
