@@ -35,7 +35,7 @@
 // Multi-core method for unshaded triangles.
 // Assumes points are sorted by Y.
 // If odd_scanline is true, the odd (counted from 0) lines are drawn, otherwise the even lines are drawn.
-static void paxmcr_tri_unshaded(bool odd_scanline, pax_buf_t *buf, pax_col_t color,
+void paxmcr_tri_unshaded(bool odd_scanline, pax_buf_t *buf, pax_col_t color,
 		float x0, float y0, float x1, float y1, float x2, float y2) {
 	
 	pax_index_setter_t setter = pax_get_setter(buf, &color, NULL);
@@ -103,7 +103,8 @@ static void paxmcr_tri_unshaded(bool odd_scanline, pax_buf_t *buf, pax_col_t col
 			if (x_left < buf->clip.x) {
 				x_left = buf->clip.x;
 			}
-			for (int x = x_left + 0.5; x < x_right; x ++) {
+			x_right -= 0.5;
+			for (int x = x_left + 0.5; x <= x_right; x ++) {
 				// And simply merge colors accordingly.
 				setter(buf, color, x+delta);
 			}
@@ -144,7 +145,8 @@ static void paxmcr_tri_unshaded(bool odd_scanline, pax_buf_t *buf, pax_col_t col
 			if (x_left < buf->clip.x) {
 				x_left = buf->clip.x;
 			}
-			for (int x = x_left + 0.5; x < x_right; x ++) {
+			x_right -= 0.5;
+			for (int x = x_left + 0.5; x <= x_right; x ++) {
 				// And simply merge colors accordingly.
 				setter(buf, color, x+delta);
 			}
@@ -158,7 +160,7 @@ static void paxmcr_tri_unshaded(bool odd_scanline, pax_buf_t *buf, pax_col_t col
 
 // Multi-core method for rectangle drawing.
 // If odd_scanline is true, the odd (counted from 0) lines are drawn, otherwise the even lines are drawn.
-static void paxmcr_rect_unshaded(bool odd_scanline, pax_buf_t *buf, pax_col_t color,
+void paxmcr_rect_unshaded(bool odd_scanline, pax_buf_t *buf, pax_col_t color,
 		float x, float y, float width, float height) {
 	
 	pax_index_setter_t setter = pax_get_setter(buf, &color, NULL);

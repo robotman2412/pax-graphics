@@ -6,6 +6,7 @@ idf_component_register(
 	"src/pax_shapes.c"
 	"src/pax_fonts.c"
 	"src/pax_text.c"
+	"src/pax_setters.c"
 	
 	"src/fonts/font_bitmap_7x9.c"
 	"src/fonts/font_bitmap_sky.c"

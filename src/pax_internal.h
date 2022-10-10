@@ -46,8 +46,14 @@ extern "C" {
 
 #define PAX_LOGE(...) ESP_LOGE(__VA_ARGS__)
 #define PAX_LOGI(...) ESP_LOGI(__VA_ARGS__)
-#define PAX_LOGD(...) ESP_LOGE(__VA_ARGS__)
 #define PAX_LOGW(...) ESP_LOGW(__VA_ARGS__)
+
+#ifdef PAX_ENABLE_DEBUG_LOGS
+#define PAX_LOGD(...) ESP_LOGD(__VA_ARGS__)
+#else
+#define PAX_LOGD(...)
+#endif
+
 #else
 
 #include <pthread.h>
@@ -69,25 +75,23 @@ extern bool pax_log_use_mutex;
 
 #define PAX_LOGE(tag, ...) PRIVATE_PAX_LOG_HELPER(stderr, "\033[91mError ", tag, __VA_ARGS__)
 #define PAX_LOGI(tag, ...) PRIVATE_PAX_LOG_HELPER(stdout, "\033[32mInfo  ", tag, __VA_ARGS__)
-#define PAX_LOGD(tag, ...) PRIVATE_PAX_LOG_HELPER(stdout, "\033[94mDebug ", tag, __VA_ARGS__)
 #define PAX_LOGW(tag, ...) PRIVATE_PAX_LOG_HELPER(stderr, "\033[33mWarn  ", tag, __VA_ARGS__)
+
+#ifdef PAX_ENABLE_DEBUG_LOGS
+#define PAX_LOGD(tag, ...) PRIVATE_PAX_LOG_HELPER(stdout, "\033[94mDebug ", tag, __VA_ARGS__)
+#else
+#define PAX_LOGD(...)
 #endif
 
-/* =========== HELPERS =========== */
+#endif
+
+/* ======= GENERIC HELPERS ======= */
 
 // Whether multi-core rendering is enabled.
 extern bool pax_do_multicore;
 
 // Name used in log output.
-static const char *TAG   = "pax";
-
-// Helper for setting pixels in drawing routines.
-// Used to allow optimising away alpha in colors.
-typedef void (*pax_setter_t)(pax_buf_t *buf, pax_col_t color, int x, int y);
-
-// Helper for setting pixels in drawing routines.
-// Used to allow optimising away color conversion.
-typedef void (*pax_index_setter_t)(pax_buf_t *buf, pax_col_t color, int index);
+static const char *TAG = "pax";
 
 // Macros for errors.
 #ifdef PAX_AUTOREPORT
@@ -112,24 +116,406 @@ typedef void (*pax_index_setter_t)(pax_buf_t *buf, pax_col_t color, int index);
 // Sort two points represented by floats.
 #define PAX_SORT_POINTS(x0, y0, x1, y1) { if (y1 < y0) PAX_SWAP_POINTS(x0, y0, x1, y1) }
 
+// Prints a simple error report of an error code.
+void pax_report_error(const char *where, pax_err_t errno);
+
+
+
+/* ===== GETTERS AND SETTERS ===== */
+
+// Gets the index getters and setters for the given buffer.
+void pax_get_setters(pax_buf_t *buf, pax_index_getter_t *getter, pax_index_setter_t *setter);
+
 // Gets the most efficient index setter for the occasion.
 // Also converts the color, if applicable.
 // Returns NULL when setting is not required.
 pax_index_setter_t pax_get_setter(pax_buf_t *buf, pax_col_t *col, const pax_shader_t *shader);
+
+// Gets a raw value from a 1BPP buffer.
+pax_col_t pax_index_getter_1bpp(pax_buf_t *buf, int index);
+// Gets a raw value from a 2BPP buffer.
+pax_col_t pax_index_getter_2bpp(pax_buf_t *buf, int index);
+// Gets a raw value from a 4BPP buffer.
+pax_col_t pax_index_getter_4bpp(pax_buf_t *buf, int index);
+// Gets a raw value from a 8BPP buffer.
+pax_col_t pax_index_getter_8bpp(pax_buf_t *buf, int index);
+// Gets a raw value from a 16BPP buffer.
+pax_col_t pax_index_getter_16bpp(pax_buf_t *buf, int index);
+// Gets a raw value from a 32BPP buffer.
+pax_col_t pax_index_getter_32bpp(pax_buf_t *buf, int index);
+
+// Sets a raw value from a 1BPP buffer.
+void pax_index_setter_1bpp(pax_buf_t *buf, pax_col_t color, int index);
+// Sets a raw value from a 2BPP buffer.
+void pax_index_setter_2bpp(pax_buf_t *buf, pax_col_t color, int index);
+// Sets a raw value from a 4BPP buffer.
+void pax_index_setter_4bpp(pax_buf_t *buf, pax_col_t color, int index);
+// Sets a raw value from a 8BPP buffer.
+void pax_index_setter_8bpp(pax_buf_t *buf, pax_col_t color, int index);
+// Sets a raw value from a 16BPP buffer.
+void pax_index_setter_16bpp(pax_buf_t *buf, pax_col_t color, int index);
+// Sets a raw value from a 32BPP buffer.
+void pax_index_setter_32bpp(pax_buf_t *buf, pax_col_t color, int index);
+
 // Gets based on index instead of coordinates.
 // Does no bounds checking nor color conversion.
 pax_col_t pax_get_index(pax_buf_t *buf, int index);
+
 // Sets based on index instead of coordinates.
 // Does no bounds checking nor color conversion.
 void pax_set_index(pax_buf_t *buf, pax_col_t col, int index);
+
 // Sets based on index instead of coordinates.
 // Does no bounds checking.
 void pax_set_index_conv(pax_buf_t *buf, pax_col_t col, int index);
+
 // Merges based on index instead of coordinates.
 // Does no bounds checking.
 void pax_merge_index(pax_buf_t *buf, pax_col_t col, int index);
 
-void pax_report_error(const char *where, pax_err_t errno);
+
+
+/* ======= COLOR CONVERSION ====== */
+
+// Get the correct color conversion methods for the buffer type.
+void pax_get_col_conv(pax_buf_t *buf, pax_col_conv_t *col2buf, pax_col_conv_t *buf2col);
+
+// Dummy color converter, returns color input directly.
+pax_col_t pax_col_conv_dummy(pax_buf_t *buf, pax_col_t color);
+
+// Truncates input to 1 bit.
+pax_col_t pax_trunc_to_1(pax_buf_t *buf, pax_col_t color);
+// Truncates input to 2 bit.
+pax_col_t pax_trunc_to_2(pax_buf_t *buf, pax_col_t color);
+// Truncates input to 4 bit.
+pax_col_t pax_trunc_to_4(pax_buf_t *buf, pax_col_t color);
+// Truncates input to 8 bit.
+pax_col_t pax_trunc_to_8(pax_buf_t *buf, pax_col_t color);
+// Truncates input to 16 bit.
+pax_col_t pax_trunc_to_16(pax_buf_t *buf, pax_col_t color);
+
+// Converts ARGB to 1-bit greyscale (AKA black/white).
+pax_col_t pax_col_to_1_grey(pax_buf_t *buf, pax_col_t color);
+// Converts ARGB to 2-bit greyscale.
+pax_col_t pax_col_to_2_grey(pax_buf_t *buf, pax_col_t color);
+// Converts ARGB to 4-bit greyscale.
+pax_col_t pax_col_to_4_grey(pax_buf_t *buf, pax_col_t color);
+// Converts ARGB to 8-bit greyscale.
+pax_col_t pax_col_to_8_grey(pax_buf_t *buf, pax_col_t color);
+
+// Converts ARGB to 3, 3, 2 bit RGB.
+pax_col_t pax_col_to_332_rgb(pax_buf_t *buf, pax_col_t color);
+// Converts ARGB to 5, 6, 5 bit RGB.
+pax_col_t pax_col_to_565_rgb(pax_buf_t *buf, pax_col_t color);
+
+// Converts ARGB to 1 bit per channel ARGB.
+pax_col_t pax_col_to_1111_argb(pax_buf_t *buf, pax_col_t color);
+// Converts ARGB to 2 bit per channel ARGB.
+pax_col_t pax_col_to_2222_argb(pax_buf_t *buf, pax_col_t color);
+// Converts ARGB to 4 bit per channel ARGB.
+pax_col_t pax_col_to_4444_argb(pax_buf_t *buf, pax_col_t color);
+
+// Performs a palette lookup based on the input.
+pax_col_t pax_pal_lookup(pax_buf_t *buf, pax_col_t color);
+
+// Converts 1-bit greyscale (AKA black/white) to ARGB.
+pax_col_t pax_1_grey_to_col(pax_buf_t *buf, pax_col_t color);
+// Converts 2-bit greyscale to ARGB.
+pax_col_t pax_2_grey_to_col(pax_buf_t *buf, pax_col_t color);
+// Converts 4-bit greyscale to ARGB.
+pax_col_t pax_4_grey_to_col(pax_buf_t *buf, pax_col_t color);
+// Converts 8-bit greyscale to ARGB.
+pax_col_t pax_8_grey_to_col(pax_buf_t *buf, pax_col_t color);
+
+// Converts 3, 3, 2 bit RGB to ARGB.
+pax_col_t pax_332_rgb_to_col(pax_buf_t *buf, pax_col_t color);
+// Converts 5, 6, 5 bit RGB to ARGB.
+pax_col_t pax_565_rgb_to_col(pax_buf_t *buf, pax_col_t color);
+
+// Converts 1 bit per channel ARGB to ARGB.
+pax_col_t pax_1111_argb_to_col(pax_buf_t *buf, pax_col_t color);
+// Converts 2 bit per channel ARGB to ARGB.
+pax_col_t pax_2222_argb_to_col(pax_buf_t *buf, pax_col_t color);
+// Converts 4 bit per channel ARGB to ARGB.
+pax_col_t pax_4444_argb_to_col(pax_buf_t *buf, pax_col_t color);
+
+
+
+/* ======= INLINE INTERNAL ======= */
+
+// Convert a color from ARGB to the buffer's native format.
+static inline uint32_t pax_col2buf(pax_buf_t *buf, pax_col_t color) {
+	uint8_t bpp = buf->bpp;
+	if (PAX_IS_GREY(buf->type)) {
+		// Greyscale.
+		uint16_t grey = ((color >> 16) & 0xff) + ((color >> 8) & 0xff) + (color & 0xff);
+		grey /= 3;
+		return ((uint8_t) grey >> (8 - bpp));
+	} else if (buf->type == PAX_BUF_4_1111ARGB) {
+		// 4BPP 1111-ARGB
+		// From: Aaaa aaaa Rrrr rrrr Gggg gggg Bbbb bbbb
+		// To:                                      ARGB
+		uint16_t value = ((color >> 28) & 0x8) | ((color >> 21) & 0x4) | ((color >> 14) & 0x2) | ((color >> 7) & 0x1);
+		return value;
+	} else if (buf->type == PAX_BUF_8_332RGB) {
+		// 8BPP 332-RGB
+		// From: Aaaa aaaa Rrrr rrrr Gggg gggg Bbbb bbbb
+		// To:                                 RrrG ggBb
+		uint16_t value = ((color >> 16) & 0xe0) | ((color >> 11) & 0x1c) | ((color >> 6) & 0x03);
+		return value;
+	} else if (buf->type == PAX_BUF_8_2222ARGB) {
+		// 8BPP 2222-ARGB
+		// From: Aaaa aaaa Rrrr rrrr Gggg gggg Bbbb bbbb
+		// To:                                 AaRr GgBb
+		uint16_t value = ((color >> 24) & 0xc0) | ((color >> 18) & 0x30) | ((color >> 12) & 0x0c) | ((color >> 6) & 0x03);
+		return value;
+	} else if (buf->type == PAX_BUF_16_4444ARGB) {
+		// 16BPP 4444-ARGB
+		// From: Aaaa aaaa Rrrr rrrr Gggg gggg Bbbb bbbb
+		// To:                       Aaaa Rrrr Gggg Bbbb
+		uint16_t value = ((color >> 16) & 0xf000) | ((color >> 12) & 0x0f00) | ((color >> 8) & 0x00f0) | ((color >> 4) & 0x000f);
+		return (value >> 8) | ((value << 8) & 0xff00);
+	} else if (buf->type == PAX_BUF_16_565RGB) {
+		// 16BPP 565-RGB
+		// From: Aaaa aaaa Rrrr rrrr Gggg gggg Bbbb bbbb
+		// To:                       Rrrr rGgg gggB bbbb
+		uint16_t value = ((color >> 8) & 0xf800) | ((color >> 5) & 0x07e0) | ((color >> 3) & 0x001f);
+		return (value >> 8) | ((value << 8) & 0xff00);
+	} else if (buf->type == PAX_BUF_32_8888ARGB) {
+		// Default color format, no conversion.
+		return color;
+	}
+	PAX_ERROR1("pax_col2buf", PAX_ERR_PARAM, 0);
+}
+
+// Convert a color from the buffer's native format to ARGB.
+static inline uint32_t pax_buf2col(pax_buf_t *buf, uint32_t value) {
+	uint8_t bpp = buf->bpp;
+	if (PAX_IS_GREY(buf->type)) {
+		// Greyscale.
+		//uint8_t grey_bits = (buf->type >> 8) & 0xf;
+		uint8_t grey = value << (8 - bpp);
+		if      (bpp == 7) grey |= grey >> 7;
+		else if (bpp == 6) grey |= grey >> 6;
+		else if (bpp == 5) grey |= grey >> 5;
+		else if (bpp == 4) grey |= grey >> 4;
+		else if (bpp == 3) grey = (value * 0x49) >> 1;
+		else if (bpp == 2) grey =  value * 0x55;
+		else if (bpp == 1) grey = -value;
+		return 0xff000000 | (grey << 16) | (grey << 8) | grey;
+	} else if (buf->type == PAX_BUF_4_1111ARGB) {
+		// 4BPP 1111-ARGB
+		// From:                                    ARGB
+		// To:   Aaaa aaaa Rrrr rrrr Gggg gggg Bbbb bbbb
+		pax_col_t color = ((value << 28) & 0x80000000) | ((value << 21) & 0x00800000) | ((value << 14) & 0x00008000) | ((value << 7) & 0x00000080);
+		color |= color >> 1;
+		color |= color >> 2;
+		color |= color >> 4;
+		return color;
+	} else if (buf->type == PAX_BUF_8_332RGB) {
+		// 8BPP 332-RGB
+		// From:                               RrrG ggBb
+		// To:   .... .... Rrr. .... Ggg. .... .... ....
+		// Add:  .... .... ...R rrRr ...Gg gGg .... ....
+		// Add:  .... .... .... .... .... .... BbBb BbBb
+		pax_col_t color = ((value << 16) & 0x00e00000) | ((value << 11) & 0x0000e000);
+		color |= (color >> 3) | ((color >> 6) & 0x000f0f00);
+		pax_col_t temp  = (value & 0x03);
+		temp |= temp << 2;
+		color |= temp | (temp << 4);
+		return color | 0xff000000;
+	} else if (buf->type == PAX_BUF_8_2222ARGB) {
+		// 8BPP 2222-ARGB
+		// From:                               AaRr GgBb
+		// To:   Aaaa aaaa Rrrr rrrr Gggg gggg Bbbb bbbb
+		pax_col_t color = ((value << 24) & 0xc0000000) | ((value << 18) & 0x00c00000) | ((value << 12) & 0x0000c000) | ((value << 6) & 0x000000c0);
+		color |= color >> 2;
+		color |= color >> 4;
+		return color;
+	} else if (buf->type == PAX_BUF_16_4444ARGB) {
+		// 16BPP 4444-ARGB
+		// From:                     Aaaa Rrrr Gggg Bbbb
+		// To:   Aaaa .... Rrrr .... Gggg .... Bbbb ....
+		// Add:  .... Aaaa .... Rrrr .... Gggg .... Bbbb
+		pax_col_t color = ((value << 16) & 0xf0000000) | ((value << 12) & 0x00f00000) | ((value << 8) & 0x0000f000) | ((value << 4) & 0x000000f0);
+		color |= color >> 4;
+		return color;
+	} else if (buf->type == PAX_BUF_16_565RGB) {
+		value = ((value << 8) & 0xff00) | ((value >> 8) & 0x00ff);
+		// 16BPP 565-RGB
+		// From:                     Rrrr rGgg gggB bbbb
+		// To:   .... .... Rrrr r... Gggg gg.. Bbbb b...
+		// Add:  .... .... .... .Rrr .... ..Gg .... .Bbb
+		// Take the existing information.
+		pax_col_t color = ((value << 8) & 0x00f80000) | ((value << 5) & 0x0000fc00) | ((value << 3) & 0x000000f8);
+		// Now, fill in some missing bits.
+		color |= ((value << 3) & 0x00070000) | ((value >> 1) & 0x00000300) | ((value >> 2) & 0x00000007);
+		return color | 0xff000000;
+	} else if (buf->type == PAX_BUF_32_8888ARGB) {
+		// Default color format, no conversion.
+		return value;
+	} else if (PAX_IS_PALETTE(buf->type)) {
+		// Pallette lookup.
+		if (buf->pallette) {
+			if (value >= buf->pallette_size) return *buf->pallette;
+			else return buf->pallette[value];
+		} else {
+			// TODO: Warn of?
+			return 0xffff00ff;
+		}
+	}
+	PAX_ERROR1("pax_buf2col", PAX_ERR_PARAM, 0);
+}
+
+// Set a pixel, unsafe (don't check bounds or buffer, no color conversion).
+static inline void pax_set_pixel_u(pax_buf_t *buf, uint32_t color, int x, int y) {
+	uint8_t bpp = buf->bpp;
+	if (bpp == 1) {
+		// 1BPP
+		uint8_t *ptr = &buf->buf_8bpp[(x + y * buf->width) >> 3];
+		uint8_t mask = 0x01 << (x & 7);
+		*ptr = (*ptr & ~mask) | (color << (x & 7));
+	} else if (bpp == 2) {
+		// 2BPP
+		uint8_t *ptr = &buf->buf_8bpp[(x + y * buf->width) >> 2];
+		uint8_t mask = 0x03 << (x & 3) * 2;
+		*ptr = (*ptr & ~mask) | (color << ((x & 3) * 2));
+	} else if (bpp == 4) {
+		// 4BPP
+		uint8_t *ptr = &buf->buf_8bpp[(x + y * buf->width) >> 1];
+		uint8_t mask = (x & 1) ? 0xf0 : 0x0f;
+		*ptr = (*ptr & ~mask) | (color << ((x & 1) * 4));
+	} else if (bpp == 8) {
+		// 8BPP
+		buf->buf_8bpp[x + y * buf->width] = color;
+	} else if (bpp == 16) {
+		// 16BPP
+		buf->buf_16bpp[x + y * buf->width] = color;
+	} else if (bpp == 32) {
+		// 32BPP
+		buf->buf_32bpp[x + y * buf->width] = color;
+	} else {
+		PAX_ERROR("pax_set_pixel_u", PAX_ERR_PARAM);
+	}
+}
+
+// Get a pixel, unsafe (don't check bounds or buffer, no color conversion).
+static inline uint32_t pax_get_pixel_u(pax_buf_t *buf, int x, int y) {
+	uint8_t bpp = buf->bpp;
+	if (bpp == 1) {
+		// 1BPP
+		uint8_t *ptr = &buf->buf_8bpp[(x + y * buf->width) >> 3];
+		uint8_t mask = 0x01 << (x & 7);
+		return (*ptr & mask) >> (x & 7);
+	} else if (bpp == 2) {
+		// 2BPP
+		uint8_t *ptr = &buf->buf_8bpp[(x + y * buf->width) >> 2];
+		uint8_t mask = 0x03 << (x & 3) * 2;
+		return (*ptr & mask) >> ((x & 3) * 2);
+	} else if (bpp == 4) {
+		// 4BPP
+		uint8_t *ptr = &buf->buf_8bpp[(x + y * buf->width) >> 1];
+		uint8_t mask = (x & 1) ? 0xf0 : 0x0f;
+		return (*ptr & mask) >> ((x & 1) * 4);
+	} else if (bpp == 8) {
+		// 8BPP
+		return buf->buf_8bpp[x + y * buf->width];
+	} else if (bpp == 16) {
+		// 16BPP
+		return buf->buf_16bpp[x + y * buf->width];
+	} else if (bpp == 32) {
+		// 32BPP
+		return buf->buf_32bpp[x + y * buf->width];
+	} else {
+		//PAX_ERROR1("pax_get_pixel_u", PAX_ERR_PARAM, 0);
+		return 0;
+	}
+}
+
+// UV interpolation helper for the circle methods.
+static inline float pax_flerp4(float x, float y, float e0, float e1, float e2, float e3) {
+	x = x *  0.5 + 0.5;
+	y = y * -0.5 + 0.5;
+	float a = e0 + (e1 - e0) * x;
+	float b = e2 + (e3 - e2) * x;
+	return a + (b - a) * y;
+}
+
+
+
+/* ======= DRAWING HALPERS ======= */
+
+// Multi-core method for shaded triangles.
+// Assumes points are sorted by Y.
+// If odd_scanline is true, the odd (counted from 0) lines are drawn, otherwise the even lines are drawn.
+void paxmcr_tri_shaded(bool odd_scanline, pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
+		float x0, float y0, float x1, float y1, float x2, float y2,
+		float u0, float v0, float u1, float v1, float u2, float v2);
+
+//  Multi-core optimisation which maps a buffer directly onto another.
+// If odd_scanline is true, the odd (counted from 0) lines are drawn, otherwise the even lines are drawn.
+void paxmcr_overlay_buffer(bool odd_scanline, pax_buf_t *base, pax_buf_t *top, int x, int y, int width, int height, bool assume_opaque);
+
+//  Multi-core optimisation which makes more assumptions about UVs.
+// If odd_scanline is true, the odd (counted from 0) lines are drawn, otherwise the even lines are drawn.
+void paxmcr_rect_shaded1(bool odd_scanline, pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
+		float x, float y, float width, float height, float u0, float v0, float u1, float v1);
+
+//  Multi-core  method for shaded rects.
+// If odd_scanline is true, the odd (counted from 0) lines are drawn, otherwise the even lines are drawn.
+void paxmcr_rect_shaded(bool odd_scanline, pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
+		float x, float y, float width, float height,
+		float u0, float v0, float u1, float v1, float u2, float v2, float u3, float v3);
+
+
+
+// Multi-core method for unshaded triangles.
+// Assumes points are sorted by Y.
+// If odd_scanline is true, the odd (counted from 0) lines are drawn, otherwise the even lines are drawn.
+void paxmcr_tri_unshaded(bool odd_scanline, pax_buf_t *buf, pax_col_t color,
+		float x0, float y0, float x1, float y1, float x2, float y2);
+
+// Multi-core method for rectangle drawing.
+// If odd_scanline is true, the odd (counted from 0) lines are drawn, otherwise the even lines are drawn.
+void paxmcr_rect_unshaded(bool odd_scanline, pax_buf_t *buf, pax_col_t color,
+		float x, float y, float width, float height);
+
+
+
+// Internal method for shaded triangles.
+// Assumes points are sorted by Y.
+void pax_tri_shaded(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
+		float x0, float y0, float x1, float y1, float x2, float y2,
+		float u0, float v0, float u1, float v1, float u2, float v2);
+
+// Optimisation which maps a buffer directly onto another.
+// If assume_opaque is true, the overlay is done without transparency.
+void pax_overlay_buffer(pax_buf_t *base, pax_buf_t *top, int x, int y, int width, int height, bool assume_opaque);
+
+// Optimisation which makes more assumptions about UVs.
+void pax_rect_shaded1(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
+		float x, float y, float width, float height, float u0, float v0, float u1, float v1);
+
+// Internal method for shaded rects.
+void pax_rect_shaded(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
+		float x, float y, float width, float height,
+		float u0, float v0, float u1, float v1, float u2, float v2, float u3, float v3);
+
+
+
+// Internal method for unshaded triangles.
+// Assumes points are sorted by Y.
+void pax_tri_unshaded(pax_buf_t *buf, pax_col_t color,
+		float x0, float y0, float x1, float y1, float x2, float y2);
+
+// Internal method for rectangle drawing.
+void pax_rect_unshaded(pax_buf_t *buf, pax_col_t color,
+		float x, float y, float width, float height);
+
+// Internal method for line drawing.
+void pax_line_unshaded(pax_buf_t *buf, pax_col_t color, float x0, float y0, float x1, float y1);
+
+
 
 #ifdef __cplusplus
 }

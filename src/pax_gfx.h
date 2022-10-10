@@ -202,6 +202,12 @@ void        pax_shade_circle        (pax_buf_t *buf, pax_col_t color, pax_shader
 void        pax_draw_image          (pax_buf_t *buf, pax_buf_t *image, float x, float y);
 // Draw an image with a prespecified size.
 void        pax_draw_image_sized    (pax_buf_t *buf, pax_buf_t *image, float x, float y, float width, float height);
+// Draws an image at the image's normal size.
+// Assumes the image is completely opaque, any transparent parts are drawn opaque.
+void        pax_draw_image_op       (pax_buf_t *buf, pax_buf_t *image, float x, float y);
+// Draw an image with a prespecified size.
+// Assumes the image is completely opaque, any transparent parts are drawn opaque.
+void        pax_draw_image_sized_op (pax_buf_t *buf, pax_buf_t *image, float x, float y, float width, float height);
 // Draw a rectangle.
 void        pax_draw_rect           (pax_buf_t *buf, pax_col_t color, float x, float y, float width, float height);
 // Draw a line.

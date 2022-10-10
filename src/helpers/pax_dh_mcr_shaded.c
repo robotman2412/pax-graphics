@@ -32,9 +32,10 @@
 
 /* ======== SHADED DRAWING ======= */
 
-// Internal method for shaded triangles.
+// Multi-core method for shaded triangles.
 // Assumes points are sorted by Y.
-static void paxmcr_tri_shaded(bool odd_scanline, pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
+// If odd_scanline is true, the odd (counted from 0) lines are drawn, otherwise the even lines are drawn.
+void paxmcr_tri_shaded(bool odd_scanline, pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
 		float x0, float y0, float x1, float y1, float x2, float y2,
 		float u0, float v0, float u1, float v1, float u2, float v2) {
 	
@@ -147,7 +148,8 @@ static void paxmcr_tri_shaded(bool odd_scanline, pax_buf_t *buf, pax_col_t color
 			float u = u_left, v = v_left;
 			float du = (u_right - u_left) / nIter;
 			float dv = (v_right - v_left) / nIter;
-			for (; x < x_right; x ++) {
+			x_right -= 0.5;
+			for (; x <= x_right; x ++) {
 				// Apply the shader,
 				pax_col_t result = (shader->callback)(color, x, y, u, v, shader->callback_args);
 				// And simply merge colors accordingly.
@@ -233,7 +235,8 @@ static void paxmcr_tri_shaded(bool odd_scanline, pax_buf_t *buf, pax_col_t color
 			float u = u_left, v = v_left;
 			float du = (u_right - u_left) / nIter;
 			float dv = (v_right - v_left) / nIter;
-			for (; x < x_right; x ++) {
+			x_right -= 0.5;
+			for (; x <= x_right; x ++) {
 				// Apply the shader,
 				pax_col_t result = (shader->callback)(color, x, y, u, v, shader->callback_args);
 				// And simply merge colors accordingly.
@@ -253,8 +256,9 @@ static void paxmcr_tri_shaded(bool odd_scanline, pax_buf_t *buf, pax_col_t color
 	}
 }
 
-// Optimisation which maps a buffer directly onto another.
-static void paxmcr_overlay_buffer(bool odd_scanline, pax_buf_t *base, pax_buf_t *top, int x, int y, int width, int height) {
+// Multi-core optimisation which maps a buffer directly onto another.
+// If odd_scanline is true, the odd (counted from 0) lines are drawn, otherwise the even lines are drawn.
+void paxmcr_overlay_buffer(bool odd_scanline, pax_buf_t *base, pax_buf_t *top, int x, int y, int width, int height, bool assume_opaque) {
 	int tex_x = 0, tex_y = 0;
 	
 	// Perform clipping.
@@ -275,6 +279,15 @@ static void paxmcr_overlay_buffer(bool odd_scanline, pax_buf_t *base, pax_buf_t 
 		height = base->clip.y + base->clip.h - 0.5 - y;
 	}
 	
+	PAX_LOGD(TAG, "paxmcr_overlay_buffer");
+	
+	bool equal = top->type == base->type;
+	if (equal && x == 0 && y == 0 && width == base->width && height == base->height) {
+		// When copying one buffer onto another as a background,
+		// and the types are the same, perform a memcpy() instead.
+		// memcpy(base->buf, top->buf, (PAX_GET_BPP(base->type) * width * height + 7) >> 3);
+		// return;
+	}
 	// Fix Y co-ordinates.
 	if ((y & 1) != odd_scanline) {
 		y ++;
@@ -284,22 +297,56 @@ static void paxmcr_overlay_buffer(bool odd_scanline, pax_buf_t *base, pax_buf_t 
 	// Now, let us MAP.
 	int top_delta  = tex_y * top->width;
 	int base_delta = y     * base->width;
-	for (int c_y = odd_scanline; c_y < height; c_y += 2) {
-		for (int c_x = 0; c_x < width; c_x++) {
-			pax_col_t col = pax_buf2col(top, pax_get_index(top, tex_x+top_delta));
-			pax_merge_index(base, col, x+base_delta);
-			tex_x ++;
-			x ++;
+	if (assume_opaque) {
+		if (equal) {
+			// Equal types and alpha.
+			for (int c_y = odd_scanline; c_y < height; c_y += 2) {
+				for (int c_x = 0; c_x < width; c_x++) {
+					pax_col_t col = top->getter(top, tex_x+top_delta);
+					base->setter(base, col, x+base_delta);
+					tex_x ++;
+					x ++;
+				}
+				tex_x      -= width;
+				x          -= width;
+				top_delta  += 2*top->width;
+				base_delta += 2*base->width;
+			}
+		} else {
+			// Not equal types, but no alpha.
+			for (int c_y = odd_scanline; c_y < height; c_y += 2) {
+				for (int c_x = 0; c_x < width; c_x++) {
+					pax_col_t col = pax_buf2col(top, top->getter(top, tex_x+top_delta));
+					base->setter(base, pax_col2buf(base, col), x+base_delta);
+					tex_x ++;
+					x ++;
+				}
+				tex_x      -= width;
+				x          -= width;
+				top_delta  += 2*top->width;
+				base_delta += 2*base->width;
+			}
 		}
-		tex_x      -= width;
-		x          -= width;
-		top_delta  += 2*top->width;
-		base_delta += 2*base->width;
+	} else {
+		// With alpha.
+		for (int c_y = odd_scanline; c_y < height; c_y += 2) {
+			for (int c_x = 0; c_x < width; c_x++) {
+				pax_col_t col = pax_buf2col(top, top->getter(top, tex_x+top_delta));
+				pax_merge_index(base, col, x+base_delta);
+				tex_x ++;
+				x ++;
+			}
+			tex_x      -= width;
+			x          -= width;
+			top_delta  += 2*top->width;
+			base_delta += 2*base->width;
+		}
 	}
 }
 
-// Optimisation which makes more assumptions about UVs.
-static void paxmcr_rect_shaded1(bool odd_scanline, pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
+// Multi-core optimisation which makes more assumptions about UVs.
+// If odd_scanline is true, the odd (counted from 0) lines are drawn, otherwise the even lines are drawn.
+void paxmcr_rect_shaded1(bool odd_scanline, pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
 		float x, float y, float width, float height, float u0, float v0, float u1, float v1) {
 	
 	pax_index_setter_t setter = pax_get_setter(buf, &color, shader);
@@ -391,17 +438,18 @@ static void paxmcr_rect_shaded1(bool odd_scanline, pax_buf_t *buf, pax_col_t col
 	
 }
 
-// Internal method for shaded rects.
-static void paxmcr_rect_shaded(bool odd_scanline, pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
+// Multi-core method for shaded rects.
+// If odd_scanline is true, the odd (counted from 0) lines are drawn, otherwise the even lines are drawn.
+void paxmcr_rect_shaded(bool odd_scanline, pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
 		float x, float y, float width, float height,
 		float u0, float v0, float u1, float v1, float u2, float v2, float u3, float v3) {
 	
 	bool is_default_uv = u0 == 0 && v0 == 0 && u1 == 1 && v1 == 0 && u2 == 1 && v2 == 1 && u3 == 0 && v3 == 1;
 	// Try to perform a mapping optimisation.
-	if (shader->callback == pax_shader_texture && color == 0xffffffff) {
+	if ((shader->callback == pax_shader_texture || shader->callback == pax_shader_texture_aa) && color == 0xffffffff) {
 		pax_buf_t *top = (pax_buf_t *) shader->callback_args;
 		if (is_default_uv && (int) (width + 0.5) == top->width && (int) (height + 0.5) == top->height) {
-			paxmcr_overlay_buffer(odd_scanline, buf, top, x + 0.5, y + 0.5, width + 0.5, height + 0.5);
+			paxmcr_overlay_buffer(odd_scanline, buf, top, x + 0.5, y + 0.5, width + 0.5, height + 0.5, shader->alpha_promise_255);
 			return;
 		}
 	} else if (is_default_uv || (v0 == v1 && v2 == v3 && u0 == u3 && u1 == u2)) {
