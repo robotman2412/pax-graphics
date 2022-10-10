@@ -41,6 +41,17 @@ void paxmcr_tri_unshaded(bool odd_scanline, pax_buf_t *buf, pax_col_t color,
 	pax_index_setter_t setter = pax_get_setter(buf, &color, NULL);
 	if (!setter) return;
 	
+	// Sort points by height.
+	if (y1 < y0) {
+		PAX_SWAP_POINTS(x0, y0, x1, y1);
+	}
+	if (y2 < y0) {
+		PAX_SWAP_POINTS(x0, y0, x2, y2);
+	}
+	if (y2 < y1) {
+		PAX_SWAP_POINTS(x1, y1, x2, y2);
+	}
+	
 	// Find the appropriate Y for y0, y1 and y2 inside the triangle.
 	float y_post_0 = (int) (y0 + 0.5) + 0.5;
 	float y_post_1 = (int) (y1 + 0.5) + 0.5;

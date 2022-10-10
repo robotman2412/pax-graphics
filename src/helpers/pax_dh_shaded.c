@@ -33,10 +33,23 @@
 /* ======== SHADED DRAWING ======= */
 
 // Internal method for shaded triangles.
-// Assumes points are sorted by Y.
 void pax_tri_shaded(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
 		float x0, float y0, float x1, float y1, float x2, float y2,
 		float u0, float v0, float u1, float v1, float u2, float v2) {
+	
+	// Sort points by height.
+	if (y1 < y0) {
+		PAX_SWAP_POINTS(x0, y0, x1, y1);
+		PAX_SWAP_POINTS(u0, v0, u1, v1);
+	}
+	if (y2 < y0) {
+		PAX_SWAP_POINTS(x0, y0, x2, y2);
+		PAX_SWAP_POINTS(u0, v0, u2, v2);
+	}
+	if (y2 < y1) {
+		PAX_SWAP_POINTS(x1, y1, x2, y2);
+		PAX_SWAP_POINTS(u1, v1, u2, v2);
+	}
 	
 	pax_index_setter_t setter = pax_get_setter(buf, &color, shader);
 	if (!setter) return;

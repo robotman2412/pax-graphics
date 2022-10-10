@@ -22,6 +22,8 @@
 	SOFTWARE.
 */
 
+static const char *TAG = "pax_text";
+
 #include "pax_internal.h"
 #include "pax_gfx.h"
 #include "pax_shaders.h"
@@ -712,7 +714,8 @@ pax_font_t *pax_load_font(FILE *fd) {
 				bmpv->measured_width = tmpint;
 				
 				// Bitmap index.
-				xreadnum_assert(&bmpv->index, sizeof(uint64_t), fd);
+				xreadnum_assert(&tmpint, sizeof(uint64_t), fd);
+				bmpv->index = tmpint;
 			}
 			
 		} else {
@@ -764,7 +767,6 @@ void pax_store_font(FILE *fd, const pax_font_t *font) {
 		pax_last_error = PAX_ERR_NODATA;
 		return;
 	}
-	size_t tmpint;
 	
 	/* ==== MAGIC BYTES ==== */
 	fwrite_assert("pax_font_t", 1, 11, fd);

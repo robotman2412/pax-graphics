@@ -2,7 +2,7 @@
 #include "pax_internal.h"
 
 // Generic rectangle drawing code, assuming some defines are made.
-static void PDHG_NAME(pax_buf_t *buf, pax_col_t color, float x, float y, float width, float height) {
+void PDHG_NAME(pax_buf_t *buf, pax_col_t color, float x, float y, float width, float height) {
 	
 	// pax_setter_t setter = color >= 0xff000000 ? pax_set_pixel : pax_merge_pixel;
 	pax_col_t fill_color = color;
@@ -37,16 +37,6 @@ static void PDHG_NAME(pax_buf_t *buf, pax_col_t color, float x, float y, float w
 			do_down_edge = false;
 			up_alpha = height;
 		}
-		// if (!do_right_edge && !do_down_edge) {
-			
-		// } else {
-		// 	if (!do_right_edge) {
-				
-		// 	}
-		// 	if (!do_down_edge) {
-				
-		// 	}
-		// }
 		
 		// Calculate edge colors.
 		pax_col_t up_color    = pax_col_reduce_alpha(color, up_alpha);

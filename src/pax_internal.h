@@ -90,9 +90,6 @@ extern bool pax_log_use_mutex;
 // Whether multi-core rendering is enabled.
 extern bool pax_do_multicore;
 
-// Name used in log output.
-static const char *TAG = "pax";
-
 // Macros for errors.
 #ifdef PAX_AUTOREPORT
 #define PAX_ERROR(where, errno) { pax_report_error(where, errno); pax_last_error = errno; return; }

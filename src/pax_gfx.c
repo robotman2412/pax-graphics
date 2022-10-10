@@ -22,6 +22,8 @@
 	SOFTWARE.
 */
 
+static const char *TAG = "pax_gfx";
+
 #include "pax_internal.h"
 #include "pax_shaders.h"
 
@@ -612,8 +614,8 @@ void pax_draw_image_sized_op(pax_buf_t *buf, pax_buf_t *image, float x, float y,
 
 // Draw a rectangle with a shader.
 // If uvs is NULL, a default will be used (0,0; 1,0; 1,1; 0,1).
-void pax_shade_rect(pax_buf_t *buf, pax_col_t color, pax_shader_t *shader,
-		pax_quad_t *uvs, float x, float y, float width, float height) {
+void pax_shade_rect(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
+		const pax_quad_t *uvs, float x, float y, float width, float height) {
 	if (!shader) {
 		// If shader is NULL, simplify this.
 		pax_draw_rect(buf, color, x, y, width, height);
@@ -649,13 +651,14 @@ void pax_shade_rect(pax_buf_t *buf, pax_col_t color, pax_shader_t *shader,
 			float shape[4] = {
 				x, y, width, height
 			};
+			// Copies are made by paxmcr_add_task.
 			pax_task_t task = {
 				.buffer    = buf,
 				.type      = PAX_TASK_RECT,
 				.color     = color,
-				.shader    = shader,
-				.quad_uvs  = uvs,
-				.shape     = shape,
+				.shader    = (pax_shader_t *) shader,
+				.quad_uvs  = (pax_quad_t *) uvs,
+				.shape     = (float *) shape,
 				.shape_len = 4
 			};
 			paxmcr_add_task(&task);
@@ -684,8 +687,8 @@ void pax_shade_rect(pax_buf_t *buf, pax_col_t color, pax_shader_t *shader,
 
 // Draw a triangle with a shader.
 // If uvs is NULL, a default will be used (0,0; 1,0; 0,1).
-void pax_shade_tri(pax_buf_t *buf, pax_col_t color, pax_shader_t *shader,
-		pax_tri_t *uvs, float x0, float y0, float x1, float y1, float x2, float y2) {
+void pax_shade_tri(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
+		const pax_tri_t *uvs, float x0, float y0, float x1, float y1, float x2, float y2) {
 	if (!shader) {
 		// If shader is NULL, simplify this.
 		pax_draw_tri(buf, color, x0, y0, x1, y1, x2, y2);
@@ -708,20 +711,6 @@ void pax_shade_tri(pax_buf_t *buf, pax_col_t color, pax_shader_t *shader,
 		uvs = &dummy_tri_uvs;
 	}
 	
-	// Sort points by height.
-	if (y1 < y0) {
-		PAX_SWAP_POINTS(x0, y0, x1, y1);
-		PAX_SWAP_POINTS(uvs->x0, uvs->y0, uvs->x1, uvs->y1);
-	}
-	if (y2 < y0) {
-		PAX_SWAP_POINTS(x0, y0, x2, y2);
-		PAX_SWAP_POINTS(uvs->x0, uvs->y0, uvs->x2, uvs->y2);
-	}
-	if (y2 < y1) {
-		PAX_SWAP_POINTS(x1, y1, x2, y2);
-		PAX_SWAP_POINTS(uvs->x1, uvs->y1, uvs->x2, uvs->y2);
-	}
-	
 	if (y2 == y0 || (x2 == x0 && x1 == x0)) {
 		// We can't draw a flat triangle.
 		PAX_SUCCESS();
@@ -742,13 +731,14 @@ void pax_shade_tri(pax_buf_t *buf, pax_col_t color, pax_shader_t *shader,
 		float shape[6] = {
 			x0, y0, x1, y1, x2, y2
 		};
+			// Copies are made by paxmcr_add_task.
 		pax_task_t task = {
 			.buffer    = buf,
 			.type      = PAX_TASK_TRI,
 			.color     = color,
-			.shader    = shader,
-			.tri_uvs   = uvs,
-			.shape     = shape,
+			.shader    = (pax_shader_t *) shader,
+			.tri_uvs   = (pax_tri_t *) uvs,
+			.shape     = (float *) shape,
 			.shape_len = 6
 		};
 		paxmcr_add_task(&task);
@@ -773,8 +763,8 @@ void pax_shade_tri(pax_buf_t *buf, pax_col_t color, pax_shader_t *shader,
 
 // Draw an arc with a shader, angles in radians.
 // If uvs is NULL, a default will be used (0,0; 1,0; 1,1; 0,1).
-void pax_shade_arc(pax_buf_t *buf, pax_col_t color, pax_shader_t *shader,
-		pax_quad_t *uvs, float x,  float y,  float r,  float a0, float a1) {
+void pax_shade_arc(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
+		const pax_quad_t *uvs, float x,  float y,  float r,  float a0, float a1) {
 	if (!shader) {
 		// If shader is NULL, simplify this.
 		pax_draw_arc(buf, color, x, y, r, a0, a1);
@@ -843,8 +833,8 @@ void pax_shade_arc(pax_buf_t *buf, pax_col_t color, pax_shader_t *shader,
 
 // Draw a circle with a shader.
 // If uvs is NULL, a default will be used (0,0; 1,0; 1,1; 0,1).
-void pax_shade_circle(pax_buf_t *buf, pax_col_t color, pax_shader_t *shader,
-		pax_quad_t *uvs, float x,  float y,  float r) {
+void pax_shade_circle(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
+		const pax_quad_t *uvs, float x,  float y,  float r) {
 	pax_shade_arc(buf, color, shader, uvs, x, y, r, 0, 2*M_PI);
 }
 
@@ -1131,9 +1121,9 @@ void pax_simple_tri(pax_buf_t *buf, pax_col_t color, float x0, float y0, float x
 	}
 	
 	// Sort points by height.
-	PAX_SORT_POINTS(x0, y0, x1, y1);
-	PAX_SORT_POINTS(x0, y0, x2, y2);
-	PAX_SORT_POINTS(x1, y1, x2, y2);
+	// PAX_SORT_POINTS(x0, y0, x1, y1);
+	// PAX_SORT_POINTS(x0, y0, x2, y2);
+	// PAX_SORT_POINTS(x1, y1, x2, y2);
 	
 	if (y2 == y0 || (x2 == x0 && x1 == x0)) {
 		// We can't draw a flat triangle.
