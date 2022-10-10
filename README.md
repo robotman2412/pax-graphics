@@ -8,6 +8,8 @@ Version: v1.1.0-snapshot
 Documentation can be found [here](docs).
 
 # Target v1.1.0 TODO list
+- [ ] Fix all remaining build warnings
+- [ ] Integrate codecs?
 - [ ] Built-in word-wrap support
 - [ ] Import more fonts
 - [x] Leave this box unchecked
