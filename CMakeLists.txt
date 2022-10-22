@@ -1,5 +1,7 @@
 idf_component_register(
 	SRCS
+	"src/cpp/pax_cxx.cpp"
+	
 	"src/matrix.c"
 	"src/pax_gfx.c"
 	"src/pax_shaders.c"
@@ -13,5 +15,5 @@ idf_component_register(
 	"src/fonts/font_bitmap_permanentmarker.c"
 	"src/fonts/font_bitmap_sairaregular.c"
 	"src/fonts/font_bitmap_sairacondensed.c"
-	INCLUDE_DIRS src
+	INCLUDE_DIRS src src/cpp
 )
