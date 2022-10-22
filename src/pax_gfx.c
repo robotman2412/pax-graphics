@@ -31,6 +31,8 @@ static const char *TAG = "pax_gfx";
 #include <string.h>
 #include <math.h>
 
+#include <helpers/precalculated.c>
+
 #ifdef PAX_ESP_IDF
 #include <esp_timer.h>
 #endif
@@ -496,10 +498,8 @@ pax_col_t pax_col_lerp(uint8_t part, pax_col_t from, pax_col_t to) {
 
 // Merges the two colors, based on alpha.
 pax_col_t pax_col_merge(pax_col_t base, pax_col_t top) {
-	// If top is transparent, return base.
-	if (!(top >> 24)) return base;
-	// If top is opaque, return top.
-	if ((top >> 24) == 255) return top;
+	// It is not more optimal to add exceptions for full or zero alpha due to linearity.
+	
 	// Otherwise, do a full alpha blend.
 	uint8_t part = top >> 24;
 	return (pax_lerp(part, base >> 24, 255)       << 24)
@@ -510,10 +510,8 @@ pax_col_t pax_col_merge(pax_col_t base, pax_col_t top) {
 
 // Tints the color, commonly used for textures.
 pax_col_t pax_col_tint(pax_col_t col, pax_col_t tint) {
-	// If tint is 0, return 0.
-	if (!tint) return 0;
-	// If tint is opaque white, return input.
-	if (tint == -1) return col;
+	// It is not more optimal to add exceptions for full or zero alpha due to linearity.
+	
 	// Otherwise, do a full tint.
 	return (pax_lerp(tint >> 24, 0, col >> 24) << 24)
 		 | (pax_lerp(tint >> 16, 0, col >> 16) << 16)
@@ -592,9 +590,9 @@ void pax_draw_image(pax_buf_t *buf, pax_buf_t *image, float x, float y) {
 void pax_draw_image_sized(pax_buf_t *buf, pax_buf_t *image, float x, float y, float width, float height) {
 	if (!image || !image->buf) PAX_ERROR("pax_draw_image", PAX_ERR_CORRUPT);
 	if (PAX_IS_ALPHA(image->type)) {
-		pax_shade_rect(buf, -1, &PAX_SHADER_TEXTURE_OP(image), NULL, x, y, width, height);
-	} else {
 		pax_shade_rect(buf, -1, &PAX_SHADER_TEXTURE(image), NULL, x, y, width, height);
+	} else {
+		pax_shade_rect(buf, -1, &PAX_SHADER_TEXTURE_OP(image), NULL, x, y, width, height);
 	}
 }
 
@@ -711,7 +709,7 @@ void pax_shade_tri(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
 		uvs = &dummy_tri_uvs;
 	}
 	
-	if (y2 == y0 || (x2 == x0 && x1 == x0)) {
+	if ((y2 == y0 && y1 == y0) || (x2 == x0 && x1 == x0)) {
 		// We can't draw a flat triangle.
 		PAX_SUCCESS();
 		return;
@@ -835,7 +833,55 @@ void pax_shade_arc(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
 // If uvs is NULL, a default will be used (0,0; 1,0; 1,1; 0,1).
 void pax_shade_circle(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
 		const pax_quad_t *uvs, float x,  float y,  float r) {
-	pax_shade_arc(buf, color, shader, uvs, x, y, r, 0, 2*M_PI);
+	// Use precalcualted circles for speed because the user can't tell anyway.
+	const pax_vec1_t *preset;
+	const pax_tri_t  *uv_set;
+	size_t size;
+	
+	// Pick a suitable number of subdivisions.
+	matrix_2d_t matrix = buf->stack_2d.value;
+	float c_r = r * sqrtf(matrix.a0*matrix.a0 + matrix.b0*matrix.b0) * sqrtf(matrix.a1*matrix.a1 + matrix.b1*matrix.b1);
+	
+	if (c_r > 30) {
+		preset = pax_precalc_circle_24;
+		uv_set = pax_precalc_uv_circle_24;
+		size   = 24;
+	} else if (c_r > 7) {
+		preset = pax_precalc_circle_16;
+		uv_set = pax_precalc_uv_circle_16;
+		size   = 16;
+	} else {
+		preset = pax_precalc_circle_4;
+		uv_set = pax_precalc_uv_circle_4;
+		size   = 4;
+	}
+	
+	// Use the builtin matrix stuff to our advantage.
+	pax_push_2d(buf);
+	pax_apply_2d(buf, matrix_2d_translate(x, y));
+	pax_apply_2d(buf, matrix_2d_scale(r, r));
+	if (uvs) {
+		// UV interpolation required.
+		pax_tri_t uv_res;
+		uv_res.x0 = (uvs->x1 + uvs->x2) * 0.5;
+		uv_res.y0 = (uvs->y1 + uvs->y2) * 0.5;
+		uv_res.x1 = pax_flerp4(preset[1].x, -preset[1].y, uvs->x0, uvs->x1, uvs->x3, uvs->x2);
+		uv_res.y1 = pax_flerp4(preset[1].x, -preset[1].y, uvs->y0, uvs->y1, uvs->y3, uvs->y2);
+		for (size_t i = 0; i < size - 1; i++) {
+			uv_res.x2 = pax_flerp4(preset[i+1].x, -preset[i+1].y, uvs->x0, uvs->x1, uvs->x3, uvs->x2);
+			uv_res.y2 = pax_flerp4(preset[i+1].x, -preset[i+1].y, uvs->y0, uvs->y1, uvs->y3, uvs->y2);
+			pax_shade_tri(buf, color, shader, &uv_res, preset[0].x, preset[0].y, preset[i].x, preset[i].y, preset[i+1].x, preset[i+1].y);
+			uv_res.x1 = uv_res.x2;
+			uv_res.y1 = uv_res.y2;
+		}
+		
+	} else {
+		// No UV interpolation needed.
+		for (size_t i = 0; i < size - 1; i++) {
+			pax_shade_tri(buf, color, shader, &uv_set[i], preset[0].x, preset[0].y, preset[i].x, preset[i].y, preset[i+1].x, preset[i+1].y);
+		}
+	}
+	pax_pop_2d(buf);
 }
 
 // Draw a rectangle.
@@ -932,7 +978,34 @@ void pax_draw_arc(pax_buf_t *buf, pax_col_t color, float x,  float y,  float r, 
 
 // Draw a circle.
 void pax_draw_circle(pax_buf_t *buf, pax_col_t color, float x,  float y,  float r) {
-	pax_draw_arc(buf, color, x, y, r, 0, M_PI * 2);
+	// Use precalcualted circles for speed because the user can't tell anyway.
+	const pax_vec1_t *preset;
+	size_t size;
+	
+	// Pick a suitable number of subdivisions.
+	matrix_2d_t matrix = buf->stack_2d.value;
+	float c_r = r * sqrtf(matrix.a0*matrix.a0 + matrix.b0*matrix.b0) * sqrtf(matrix.a1*matrix.a1 + matrix.b1*matrix.b1);
+	
+	if (c_r > 30) {
+		preset = pax_precalc_circle_24;
+		size   = 24;
+	} else if (c_r > 7) {
+		preset = pax_precalc_circle_16;
+		size   = 16;
+	} else {
+		preset = pax_precalc_circle_4;
+		size   = 4;
+	}
+	
+	// Use the builtin matrix stuff to our advantage.
+	pax_push_2d(buf);
+	pax_apply_2d(buf, matrix_2d_translate(x, y));
+	pax_apply_2d(buf, matrix_2d_scale(r, r));
+	// Plot all the triangles in the ROM.
+	for (size_t i = 0; i < size - 1; i++) {
+		pax_draw_tri(buf, color, preset[0].x, preset[0].y, preset[i].x, preset[i].y, preset[i+1].x, preset[i+1].y);
+	}
+	pax_pop_2d(buf);
 }
 
 
@@ -940,7 +1013,7 @@ void pax_draw_circle(pax_buf_t *buf, pax_col_t color, float x,  float y,  float 
 /* ======= DRAWING: SIMPLE ======= */
 
 // Fill the background.
-void pax_background(pax_buf_t *buf, pax_col_t color) {
+PAX_PERF_CRITICAL_ATTR void pax_background(pax_buf_t *buf, pax_col_t color) {
 	PAX_BUF_CHECK("pax_background");
 	
 	#if PAX_COMPILE_MCR
@@ -955,7 +1028,9 @@ void pax_background(pax_buf_t *buf, pax_col_t color) {
 		value = pax_col2buf(buf, color);
 	}
 	
-	if (buf->bpp == 16) {
+	if (value == 0) {
+		memset(buf->buf, 0, (PAX_GET_BPP(buf->type) * buf->width * buf->height + 7) >> 3);
+	} else if (buf->bpp == 16) {
 		// Fill 16bpp parts.
 		for (size_t i = 0; i < buf->width * buf->height; i++) {
 			buf->buf_16bpp[i] = value;
@@ -1125,7 +1200,7 @@ void pax_simple_tri(pax_buf_t *buf, pax_col_t color, float x0, float y0, float x
 	// PAX_SORT_POINTS(x0, y0, x2, y2);
 	// PAX_SORT_POINTS(x1, y1, x2, y2);
 	
-	if (y2 == y0 || (x2 == x0 && x1 == x0)) {
+	if ((y2 == y0 && y1 == y0) || (x2 == x0 && x1 == x0)) {
 		// We can't draw a flat triangle.
 		PAX_SUCCESS();
 		return;

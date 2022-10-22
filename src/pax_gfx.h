@@ -26,7 +26,7 @@
 #define PAX_GFX_H
 
 #ifdef __cplusplus
-#include <pax_cxx.hpp>
+#include "cpp/pax_cxx.hpp"
 
 extern "C" {
 #endif //__cplusplus

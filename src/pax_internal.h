@@ -44,6 +44,8 @@ extern "C" {
 #include <esp_err.h>
 #include <esp_log.h>
 
+#define PAX_PERF_CRITICAL_ATTR IRAM_ATTR
+
 #define PAX_LOGE(...) ESP_LOGE(__VA_ARGS__)
 #define PAX_LOGI(...) ESP_LOGI(__VA_ARGS__)
 #define PAX_LOGW(...) ESP_LOGW(__VA_ARGS__)
@@ -55,6 +57,8 @@ extern "C" {
 #endif
 
 #else
+
+#define PAX_PERF_CRITICAL_ATTR __attribute__((hot))
 
 #include <pthread.h>
 

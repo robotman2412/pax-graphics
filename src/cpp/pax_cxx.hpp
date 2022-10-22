@@ -22,6 +22,8 @@
 	SOFTWARE.
 */
 
+#pragma once
+
 #include <pax_types.h>
 
 #ifdef __cplusplus
@@ -96,6 +98,9 @@ class Buffer {
 		// Deletion operator.
 		~Buffer();
 		
+		// Fills the entire buffer with the given color.
+		void background(pax_col_t color);
+		
 		// Draws a rectangle with the default color.
 		void drawRect(float x, float y, float width, float height);
 		// Draws a rectangle with a custom color.
@@ -160,7 +165,85 @@ class Buffer {
 		void drawLine(float x0, float y0, float x1, float y1);
 		// Draws a line with a custom outline color.
 		void drawLine(pax_col_t color, float x0, float y0, float x1, float y1);
+		
+		// Push the matrix stack.
+		void pushMatrix();
+		// Pop the matrix stack.
+		void popMatrix();
+		// Clear the matrix stack (no mode popMatix calls left) and reset the current matrix to identity (no transformation).
+		void clearMatrix();
+		// If full: clears the entire matrix stack,
+		// Otherwise clears just the current matrix.
+		void clearMatrix(bool full);
+		
+		// Applies a given 2D matrix to the current by matrix multiplication.
+		void applyMatrix(matrix_2d_t matrix);
+		// Scales the current view.
+		void scale(float x, float y);
+		// Scales the current view.
+		void scale(float factor);
+		// Moves around the current view.
+		void translate(float x, float y);
+		// Shears the current view.
+		// Positive X causes the points above the origin to move to the right.
+		// Positive Y causes the points to the right of the origin to move down.
+		void shear(float x, float y);
+		// Rotates the current view around the origin, angles in radians.
+		void rotate(float angle);
+		// Rotates the current view around a given point.
+		void rotateAround(float x, float y, float angle);
+		
+		// Gets color at the given point.
+		pax_col_t getPixel(int x, int y);
+		// Sets color at the given point.
+		void setPixel(pax_col_t color, int x, int y);
+		// Overlays the color at the given point (for transparent drawing).
+		void mergePixel(pax_col_t color, int x, int y);
+		
+		// Whether or not there has been drawing since last markClean call.
+		bool isDirty();
+		// Gets the rectangle in which it is dirty.
+		pax_rect_t getDirtyRect();
+		// Mark the buffer as clean.
+		void markClean();
+		// Mark the entire buffer as dirty.
+		void markDirty();
+		// Mark a single pixel as dirty.
+		void markDirty(int x, int y);
+		// Mark a rectangular region as dirty.
+		void markDirty(int x, int y, int width, int height);
+		
+		// Apply a clip rectangle to the buffer.
+		// Anothing outside of the clip will not be drawn.
+		// This is an operation that ignores matrix transforms (translate, rotate, etc.).
+		void clip(int x, int y, int width, int height);
+		// Disable clipping.
+		// Any effects of previous clip calls are nullified.
+		void noClip();
 };
+
+// Multiplicatively decreases alpha based on a float.
+static inline pax_col_t reduceAlpha(pax_col_t in, float coeff) {
+	return ((pax_col_t) (((in & 0xff000000) * coeff)) & 0xff000000) | (in & 0x00ffffff);
+}
+// Combines RGB.
+static inline pax_col_t rgb(uint8_t r, uint8_t g, uint8_t b) {
+	return 0xff000000 | (r << 16) | (g << 8) | b;
+}
+// Combines ARGB.
+static inline pax_col_t argb(uint8_t a, uint8_t r, uint8_t g, uint8_t b) {
+	return (a << 24) | (r << 16) | (g << 8) | b;
+}
+// Converts HSV to RGB.
+pax_col_t hsv             (uint8_t h, uint8_t s, uint8_t v);
+// Converts AHSV to ARGB.
+pax_col_t ahsv            (uint8_t a, uint8_t h, uint8_t s, uint8_t v);
+// Linearly interpolates between from and to, including alpha.
+pax_col_t lerp            (uint8_t part, pax_col_t from, pax_col_t to);
+// Merges the two colors, based on alpha.
+pax_col_t merge           (pax_col_t base, pax_col_t top);
+// Tints the color, commonly used for textures.
+pax_col_t tint            (pax_col_t col, pax_col_t tint);
 
 }
 #endif // __cplusplus

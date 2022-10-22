@@ -145,7 +145,7 @@ pax_index_setter_t pax_get_setter(pax_buf_t *buf, pax_col_t *col_ptr, const pax_
 			return NULL;
 		} else if ((col & 0xff000000) == 0xff000000 && shader->alpha_promise_255) {
 			// When a shader promises to have 255 alpha on 255 alpha tint, return converting setter.
-			return buf->setter;
+			return pax_set_index_conv;
 		} else {
 			// When no promises are made, fall back to the merging setter.
 			return pax_merge_index;
