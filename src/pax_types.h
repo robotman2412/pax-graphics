@@ -44,7 +44,7 @@ extern "C" {
 
 // A human-readable representation of the current version number.
 #define PAX_VERSION_STR "1.1.0-snapshot"
-// A numeric representation of the version, one decimal digit per version part (ab.cd.ef).
+// A numeric representation of the version, one decimal digit per version part (MAJOR.MINOR.PATCH).
 #define PAX_VERSION_NUMBER 110
 // Whether this is a prerelease version of PAX.
 #define PAX_VERSION_IS_SNAPSHOT true
