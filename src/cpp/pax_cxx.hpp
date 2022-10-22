@@ -24,6 +24,8 @@
 
 #include <pax_types.h>
 
+#ifdef __cplusplus
+
 #include <functional>
 
 // This serves as a C++ wrapper which is fully compatible with the normal C version of PAX graphics.
@@ -161,3 +163,4 @@ class Buffer {
 };
 
 }
+#endif // __cplusplus

@@ -25,6 +25,7 @@
 #include "pax_cxx.hpp"
 #include "pax_gfx.h"
 
+#ifdef __cplusplus
 namespace pax {
 
 
@@ -187,3 +188,4 @@ void Buffer::drawLine(pax_col_t color, float x0, float y0, float x1, float y1) {
 }
 
 } // namespace pax
+#endif // __cplusplus
