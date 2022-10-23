@@ -51,7 +51,7 @@
 
 #ifndef PAX_COMPILE_TRIANGULATE
 // Compile in triangulation (filling the outline of a shape).
-	#define PAX_COMPILE_TRIANGULATE false
+	#define PAX_COMPILE_TRIANGULATE true
 #endif
 
 #ifndef PAX_COMPILE_FONT_INDEX

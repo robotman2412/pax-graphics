@@ -27,6 +27,8 @@
 #include <string.h>
 #include <malloc.h>
 
+static const char *TAG = "pax-shapes";
+
 // This is only applicable during shape triangulation.
 typedef struct indexed_point {
 	union {
@@ -483,42 +485,100 @@ void pax_outline_shape(pax_buf_t *buf, pax_col_t color, size_t num_points, const
 // Does not work for less then 3 points.
 static bool is_clockwise(int num_points, indexed_point_t *points, int index, int num_test, float dy) {
 	float result = 0;
+	
 	// Simple but unoptimised loop.
-	for (int i = index; i < num_test + index; i++) {
+	for (int i = 0; i < num_test; i++) {
 		int index0 = i+index;
-		int index1 = i+index+1;
+		int index1 = (i+1) % num_test +index;
 		index0 %= num_points;
 		index1 %= num_points;
 		result += (points[index1].x - points[index0].x) * (points[index1].y + points[index0].y + dy);
 	}
+	
 	// Clockwise if result < 0.
 	return result < 0;
 }
 
-/*
-static bool is_clockwise3(int num_points, indexed_point_t *points, int index) {
-	// COPY NOW!
-	indexed_point_t test[3];
-	for (int i = 0; i < 3; i++) {
-		test[i] = points[(i+index)%num_points];
-	}
-	// DERIVE!
-	float rc0 = (test[1].x - test[0].x) / (test[1].y - test[0].y);
-	float rc1 = (test[2].x - test[1].x) / (test[2].y - test[1].y);
-	// COMPARE!
-	if (rc0 == rc1) return true;
-	// X DIRECTION!
-	bool dir0 = test[1].x > test[0].x;
-	bool dir1 = test[2].x > test[1].x;
-	
-	// WHAT?!?
-	if (dir0 == dir1) {
-		return (rc0 > rc1) ^ !dir0;
-	} else {
-		return (points[0].y > points[2].y) ^ dir1;
-	}
+// Gets the slope of a line.
+// Returns +/- infinity for vertical lines.
+static inline float line_slope(pax_vec2_t line) {
+	return (line.y1 - line.y0) / (line.x1 - line.x0);
 }
-*/
+
+// Creates a bounding rectangle for a line.
+static pax_rect_t line_bounding_box(pax_vec2_t line) {
+	// Create a simple bounding box.
+	pax_rect_t box = {
+		.x = line.x0,
+		.y = line.y0,
+		.w = line.x1 - line.x0,
+		.h = line.y1 - line.y0,
+	};
+	
+	// Fix width/height so they are positive.
+	if (box.w < 0) {
+		box.x += box.w;
+		box.w = -box.w;
+	}
+	if (box.h < 0) {
+		box.y += box.h;
+		box.h = -box.h;
+	}
+	
+	return box;
+}
+
+// Determines whether a point is in the bounding box, but not on it's edge.
+static inline bool bounding_box_contains(pax_rect_t box, pax_vec1_t point) {
+	return point.x > box.x && point.y > box.y && point.x < box.x + box.w && point.y < box.y + box.h;
+}
+
+// Tests whether lines A and B intersect.
+// Does not consider touching lines to intersect.
+static bool line_intersects_line(pax_vec2_t line_a, pax_vec2_t line_b) {
+	// If slopes are equal, then it will never intersect.
+	float rc_a = line_slope(line_a);
+	float rc_b = line_slope(line_b);
+	if (rc_a == rc_b || (isinf(rc_a) && isinf(rc_b))) return false;
+	
+	// Determine b in Y=a*X+b line formulas.
+	float dy_a = line_a.y0 - rc_a * line_a.x0;
+	float dy_b = line_b.y0 - rc_b * line_b.x0;
+	
+	// Determine bounding boxes.
+	pax_rect_t box_a = line_bounding_box(line_a);
+	pax_rect_t box_b = line_bounding_box(line_b);
+	
+	// Special cases for one of two lines is vertical.
+	if (isinf(rc_a)) {
+		float y = rc_b * line_a.x0 + dy_b;
+		if (y > box_a.y && y < box_a.y + box_a.h) return true;
+	}
+	if (isinf(rc_b)) {
+		float y = rc_a * line_b.x0 + dy_a;
+		if (y > box_b.y && y < box_b.y + box_b.h) return true;
+	}
+	
+	// Find the intersection point, assuming infinitely long lines.
+	float x = (dy_b - dy_a) / (rc_a - rc_b);
+	float y = x * rc_a + dy_a;
+	
+	// If this lies within both bounding boxes, the lines intersect.
+	return bounding_box_contains(box_a, (pax_vec1_t) {x, y}) && bounding_box_contains(box_b, (pax_vec1_t) {x, y});
+}
+
+// Tests whether a line intersects any of the lines in the dataset.
+// Intersection is NOT counted when only the end points touch.
+static bool line_intersects_outline(size_t num_points, pax_vec1_t *raw_points, pax_vec1_t start, pax_vec1_t end) {
+	for (size_t i = 0; i < num_points; i++) {
+		size_t index1 = (i + 1) % num_points;
+		if (line_intersects_line(
+			(pax_vec2_t) {start.x, start.y, end.x, end.y},
+			(pax_vec2_t) {raw_points[i].x, raw_points[i].y, raw_points[index1].x, raw_points[index1].y}
+		)) return true;
+	}
+	return false;
+}
 
 // Triangulates a shape based on an outline (any shape).
 // In effect, this creates triangles which completely fill the shape.
@@ -541,9 +601,9 @@ size_t pax_triang_complete(size_t **output, pax_vec1_t **additional_points, size
 //
 // Stores triangles as triple-index pairs in output, which is a dynamically allocated size_t array.
 // The number of triangles created is num_points - 2.
-void pax_triang_concave(size_t **output, size_t num_points, pax_vec1_t *raw_points) {
+void pax_triang_concave(size_t **output, size_t raw_num_points, pax_vec1_t *raw_points) {
 	// Cannot triangulate with less than 3 points.
-	if (num_points < 3) {
+	if (raw_num_points < 3) {
 		*output = NULL;
 		return;
 	}
@@ -551,6 +611,7 @@ void pax_triang_concave(size_t **output, size_t num_points, pax_vec1_t *raw_poin
 	// Find an annoying variable.
 	float dy = 0;
 	// Create another handy dandy points array which includes their original index.
+	size_t num_points = raw_num_points;
 	indexed_point_t *points = malloc(sizeof(indexed_point_t) * num_points);
 	for (size_t i = 0; i < num_points; i++) {
 		points[i] = (indexed_point_t) {
@@ -573,8 +634,6 @@ void pax_triang_concave(size_t **output, size_t num_points, pax_vec1_t *raw_poin
 	// Find the funny ordering.
 	bool clockwise = is_clockwise(num_points, points, 0, num_points, dy);
 	
-	PAX_LOGE(TAG, "Shape clockwise: %d", clockwise);
-	
 	// LOCATE all EARS conTINUousLY.
 	for (size_t i = 0; i < n_tris; i++) {
 		PAX_LOGW(TAG, "Tri %zd", i);
@@ -582,8 +641,9 @@ void pax_triang_concave(size_t **output, size_t num_points, pax_vec1_t *raw_poin
 		for (size_t i = 0; i < num_points; i++) {
 			// bool attempt = is_clockwise3(num_points, points, i);
 			bool attempt = is_clockwise(num_points, points, i, 3, dy);
-			PAX_LOGI(TAG, "Attempt %zd: %d", i, attempt);
-			bool is_ear = clockwise == attempt;
+			
+			// It is an ear when the clockwisedness matches and the line does not intersect any of the source lines.
+			bool is_ear = clockwise == attempt && !line_intersects_outline(raw_num_points, raw_points, points[i].vector, points[(i+2)%num_points].vector);
 			if (is_ear) {
 				// We found an EAR, now we CONVERT IT.
 				tris[tri_index] = points[ i    % num_points].index;
@@ -600,7 +660,6 @@ void pax_triang_concave(size_t **output, size_t num_points, pax_vec1_t *raw_poin
 				memcpy(&points[remove], &points[remove + 1], sizeof(indexed_point_t) * post);
 				num_points --;
 				// Now, we CONTINUE FINIDIGN ERA.
-				PAX_LOGI(TAG, "Success!");
 				break;
 			}
 		}
@@ -616,14 +675,13 @@ void pax_draw_shape(pax_buf_t *buf, pax_col_t color, size_t num_points, pax_vec1
 	size_t *tris   = NULL;
 	size_t  n_tris = num_points - 2;
 	pax_triang_concave(&tris, num_points, points);
-	// PAX_LOGE(TAG, "DRAWING %zd", n_tris);
 	if (!tris) {
 		return;
 	}
 	// Then draw all triangles.
 	for (size_t i = 0, tri_index = 0; i < n_tris; i++) {
 		pax_draw_tri(
-			buf, color, //pax_col_hsv(i / (float) n_tris * 255.0f / 3.0f, 255, 255),
+			buf, color,
 			points[tris[tri_index  ]].x, points[tris[tri_index  ]].y,
 			points[tris[tri_index+1]].x, points[tris[tri_index+1]].y,
 			points[tris[tri_index+2]].x, points[tris[tri_index+2]].y
