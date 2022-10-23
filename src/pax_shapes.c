@@ -478,6 +478,47 @@ void pax_outline_shape(pax_buf_t *buf, pax_col_t color, size_t num_points, const
 
 
 
+/* ===== POLYGON MANIPULATION ==== */
+
+// Transforms a list of points using a given 2D matrix.
+// Overwrites the list's contents.
+void pax_transform_shape(size_t num_points, pax_vec1_t *points, matrix_2d_t matrix) {
+	for (size_t i = 0; i < num_points; i++) {
+		matrix_2d_transform(matrix, &points[i].x, &points[i].y);
+	}
+}
+
+// Rounds a polygon with a uniform radius applied to all corners.
+// Each corner can be rounded up to 50% of the edges it is part of.
+// Capable of dealing with self-intersecting shapes.
+// Returns the amount of points created.
+size_t pax_round_shape_uniform(pax_vec1_t **output, size_t num_points, pax_vec1_t *points, float radius) {
+	// Fill out an array with the same radius.
+	float *radii = malloc(sizeof(float) * num_points);
+	if (!radii) {
+		PAX_ERROR("pax_round_shape_uniform", PAX_ERR_NOMEM);
+		return 0;
+	}
+	for (size_t i = 0; i < num_points; i++) {
+		radii[i] = radius;
+	}
+	
+	// Just use the more specific operation with simpler parameters.
+	size_t n_out = pax_round_shape(output, num_points, points, radii);
+	free(radii);
+	return n_out;
+}
+
+// Rounds a polygon with a specific radius per corner.
+// Each corner can be rounded up to 50% of the edges it is part of.
+// Capable of dealing with self-intersecting shapes.
+// Returns the amount of points created.
+size_t pax_round_shape(pax_vec1_t **output, size_t num_points, pax_vec1_t *points, float *radii) {
+	return 0;
+}
+
+
+
 /* ======== TRIANGULATION ======== */
 
 #if PAX_COMPILE_TRIANGULATE
@@ -530,12 +571,20 @@ static pax_rect_t line_bounding_box(pax_vec2_t line) {
 
 // Determines whether a point is in the bounding box, but not on it's edge.
 static inline bool bounding_box_contains(pax_rect_t box, pax_vec1_t point) {
-	return point.x > box.x && point.y > box.y && point.x < box.x + box.w && point.y < box.y + box.h;
+	if (box.w == 0 && box.h == 0) {
+		return point.x == box.x && point.x == box.y;
+	} else if (box.w == 0) {
+		return point.x >= box.x && point.y > box.y && point.x <= box.x + box.w && point.y < box.y + box.h;
+	} else if (box.h == 0) {
+		return point.x > box.x && point.y >= box.y && point.x < box.x + box.w && point.y <= box.y + box.h;
+	} else {
+		return point.x > box.x && point.y > box.y && point.x < box.x + box.w && point.y < box.y + box.h;
+	}
 }
 
 // Tests whether lines A and B intersect.
 // Does not consider touching lines to intersect.
-static bool line_intersects_line(pax_vec2_t line_a, pax_vec2_t line_b) {
+static bool line_intersects_line(pax_vec2_t line_a, pax_vec2_t line_b, pax_vec1_t *intersection) {
 	// If slopes are equal, then it will never intersect.
 	float rc_a = line_slope(line_a);
 	float rc_b = line_slope(line_b);
@@ -552,11 +601,21 @@ static bool line_intersects_line(pax_vec2_t line_a, pax_vec2_t line_b) {
 	// Special cases for one of two lines is vertical.
 	if (isinf(rc_a)) {
 		float y = rc_b * line_a.x0 + dy_b;
-		if (y > box_a.y && y < box_a.y + box_a.h) return true;
+		if (y > box_a.y && y < box_a.y + box_a.h) {
+			if (intersection) {
+				*intersection = (pax_vec1_t) {box_a.x, y};
+			}
+			return true;
+		}
 	}
 	if (isinf(rc_b)) {
 		float y = rc_a * line_b.x0 + dy_a;
-		if (y > box_b.y && y < box_b.y + box_b.h) return true;
+		if (y > box_b.y && y < box_b.y + box_b.h) {
+			if (intersection) {
+				*intersection = (pax_vec1_t) {box_b.x, y};
+			}
+			return true;
+		}
 	}
 	
 	// Find the intersection point, assuming infinitely long lines.
@@ -564,7 +623,11 @@ static bool line_intersects_line(pax_vec2_t line_a, pax_vec2_t line_b) {
 	float y = x * rc_a + dy_a;
 	
 	// If this lies within both bounding boxes, the lines intersect.
-	return bounding_box_contains(box_a, (pax_vec1_t) {x, y}) && bounding_box_contains(box_b, (pax_vec1_t) {x, y});
+	bool intersects = bounding_box_contains(box_a, (pax_vec1_t) {x, y}) && bounding_box_contains(box_b, (pax_vec1_t) {x, y});
+	if (intersects && intersection) {
+		*intersection = (pax_vec1_t) {x, y};
+	}
+	return intersects;
 }
 
 // Tests whether a line intersects any of the lines in the dataset.
@@ -574,7 +637,8 @@ static bool line_intersects_outline(size_t num_points, pax_vec1_t *raw_points, p
 		size_t index1 = (i + 1) % num_points;
 		if (line_intersects_line(
 			(pax_vec2_t) {start.x, start.y, end.x, end.y},
-			(pax_vec2_t) {raw_points[i].x, raw_points[i].y, raw_points[index1].x, raw_points[index1].y}
+			(pax_vec2_t) {raw_points[i].x, raw_points[i].y, raw_points[index1].x, raw_points[index1].y},
+			NULL
 		)) return true;
 	}
 	return false;

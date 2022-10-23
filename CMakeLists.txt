@@ -1,6 +1,7 @@
 idf_component_register(
 	SRCS
 	"src/cpp/pax_cxx.cpp"
+	"src/cpp/pax_cxx_shape.cpp"
 	
 	"src/matrix.c"
 	"src/pax_gfx.c"

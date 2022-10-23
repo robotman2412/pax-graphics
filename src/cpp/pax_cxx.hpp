@@ -28,7 +28,12 @@
 
 #ifdef __cplusplus
 
+namespace pax {
+class Buffer;
+}
+
 #include <functional>
+#include <pax_cxx_shape.hpp>
 
 // This serves as a C++ wrapper which is fully compatible with the normal C version of PAX graphics.
 namespace pax {
