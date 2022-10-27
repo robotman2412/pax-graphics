@@ -41,6 +41,13 @@ extern "C" {
 
 // The version of PAX font files used by the font loader.
 #define PAX_FONT_LOADER_VERSION 1
+// The version of the shader schema.
+// Currently, schema version 0 is accepted and is interpreted as shaders as of v1.0.0.
+#define PAX_SHADER_VERSION 1
+// The identifier used by shaders for software rendering.
+// A different ID is interpreted as belonging to an incompatble method of rendering.
+// IDs at and above 0x80 are distributed to third party renderers.
+#define PAX_RENDERER_ID_SWR 0x00
 
 // A human-readable representation of the current version number.
 #define PAX_VERSION_STR "1.1.0-snapshot"
@@ -89,12 +96,6 @@ extern "C" {
 // More verbose way of saying reset the whole matrix stack.
 #define PAX_RESET_ALL 1
 
-struct pax_vec3;
-struct pax_vec4;
-struct pax_rect;
-union  matrix_2d;
-struct matrix_stack_2d;
-
 // The way pixel data is to be stored in a buffer.
 enum   pax_buf_type {
 	PAX_BUF_1_PAL       = 0x20000001,
@@ -117,8 +118,6 @@ enum   pax_buf_type {
 	PAX_BUF_32_8888ARGB = 0x00888820
 };
 
-struct pax_buf;
-struct pax_shader;
 // Type of task to do.
 // Things like text and arcs will decompose to rects and triangles.
 enum pax_task_type {
@@ -129,6 +128,26 @@ enum pax_task_type {
 	// Stop MCR workder.
 	PAX_TASK_STOP,
 };
+
+// Promises that the shape will be fully opaque when drawn.
+#define PAX_PROMISE_OPAQUE		0x01
+// Promises that the shape will be fully transparent when drawn.
+#define PAX_PROMISE_INVISIBLE	0x02
+// Promises that the shape will be drawn as a cutout (either fully opaque or fully transparent for a given pixel).
+#define PAX_PROMISE_CUTOUT		0x03
+// Promises that the shader does not need the UVs.
+#define PAX_PROMISE_IGNORE_UVS	0x04
+// Promises that the shader ignores the existing color.
+#define PAX_PROMISE_IGNORE_BASE	0x08
+
+struct pax_vec3;
+struct pax_vec4;
+struct pax_rect;
+union  matrix_2d;
+struct matrix_stack_2d;
+
+struct pax_buf;
+struct pax_shader;
 
 struct pax_task;
 
@@ -164,9 +183,16 @@ typedef pax_col_t (*pax_index_getter_t)(pax_buf_t *buf, int index);
 // Used to allow optimising away color conversion.
 typedef void (*pax_index_setter_t)(pax_buf_t *buf, pax_col_t color, int index);
 
+// Function pointer for shader promises.
+// The promise function will provide a bitfield answer to contextual questions where false is the safe option.
+typedef uint64_t (*pax_promise_func_t)(pax_buf_t *buf, pax_col_t tint, void *args);
 // Function pointer for shader callback.
 // Tint is the color parameter to the pax_shade_xxx function.
-typedef pax_col_t (*pax_shader_func_t)(pax_col_t tint, int x, int y, float u, float v, void *args);
+typedef pax_col_t (*pax_shader_func_v0_t)(pax_col_t tint, int x, int y, float u, float v, void *args);
+// Function pointer for shader callback.
+// Tint is the color parameter to the pax_shade_xxx function.
+// It is assumed that color math is done by the shader based on the "existing" parameter.
+typedef pax_col_t (*pax_shader_func_v1_t)(pax_col_t tint, pax_col_t existing, int x, int y, float u, float v, void *args);
 // Function pointer for transformer callback.
 // It's job is to optionally move the triangle vertices.
 typedef void (*pax_transf_func_t)(pax_tri_t *tri, pax_tri_t *uvs, void *args);
@@ -281,14 +307,22 @@ struct pax_buf {
 
 // A shader definition, used by pax_shade_ methods.
 struct pax_shader {
-	// Shader callback.
-	pax_shader_func_t callback;
+	// Version of the shader schema this was made for.
+	uint8_t  schema_version;
+	// Bitwise inversion of schema version.
+	uint8_t  schema_complement;
+	// Rendering type of this shader.
+	uint8_t  renderer_id;
+	// Optional callback which is used to make contextual promises.
+	void    *promise_callback;
+	// Callback which defines the colors to output.
+	void    *callback;
 	// Shader arguments.
-	void             *callback_args;
+	void    *callback_args;
 	// Whether to promise that an alpha of 0 in tint will return a fully transparent.
-	bool              alpha_promise_0;
+	bool     alpha_promise_0;
 	// Whether to promise that an alpha of 255 in tint will return a fully opaque.
-	bool              alpha_promise_255;
+	bool     alpha_promise_255;
 };
 
 // A task to perform, used by multicore rendering.

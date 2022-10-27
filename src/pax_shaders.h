@@ -41,6 +41,8 @@ typedef struct pax_font_bmp_args {
 	const pax_font_t       *font;
 	// The range of the font to be drawn.
 	const pax_font_range_t *range;
+	// Whether or not to do antialiasing, used by the promise callback.
+	bool                    do_aa;
 	// The glyph to be drawn.
 	uint32_t                glyph;
 	// The first byte index of the glyph to be drawn.
@@ -75,10 +77,10 @@ pax_col_t pax_shader_font_bmp_aa(pax_col_t tint, int x, int y, float u, float v,
 
 // Create a shader_t of the given texture.
 // Texture format is pax_but_t*.
-#define PAX_SHADER_TEXTURE(texture) (pax_shader_t) { .callback = pax_shader_texture_aa, .callback_args = texture, .alpha_promise_0=true, .alpha_promise_255=false }
+#define PAX_SHADER_TEXTURE(texture) (pax_shader_t) { .schema_version = 0, .schema_complement = ~0, .renderer_id = PAX_RENDERER_ID_SWR, .promise_callback = NULL, .callback = pax_shader_texture_aa, .callback_args = texture, .alpha_promise_0=true, .alpha_promise_255=false }
 // Create a shader_t of the given texture, assumes the texture is opaque.
 // Texture format is pax_but_t*.
-#define PAX_SHADER_TEXTURE_OP(texture) (pax_shader_t) { .callback = pax_shader_texture_aa, .callback_args = texture, .alpha_promise_0=true, .alpha_promise_255=true }
+#define PAX_SHADER_TEXTURE(texture) (pax_shader_t) { .schema_version = 0, .schema_complement = ~0, .renderer_id = PAX_RENDERER_ID_SWR, .promise_callback = NULL, .callback = pax_shader_texture_aa, .callback_args = texture, .alpha_promise_0=true, .alpha_promise_255=true }
 // Texture shader. No interpolation.
 pax_col_t pax_shader_texture(pax_col_t tint, int x, int y, float u, float v, void *args);
 // Texture shader with interpolation.

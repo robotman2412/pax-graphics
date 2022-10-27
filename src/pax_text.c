@@ -131,6 +131,12 @@ size_t utf8_strlen(const char *cstr) {
 
 /* ======= DRAWING: TEXT ======= */
 
+uint64_t text_promise_callback(pax_buf_t *buf, pax_col_t tint, void *args0) {
+	pax_font_bmp_args_t *args = args0;
+	return !(tint & 0xff000000) ? PAX_PROMISE_INVISIBLE :
+			(args->bpp == 1 && !args->do_aa) ? PAX_PROMISE_CUTOUT : 0;
+}
+
 // Internal method for monospace bitmapped characters.
 pax_vec1_t text_bitmap_mono(pax_text_ctx_t *ctx, const pax_font_range_t *range, uint32_t glyph) {
 	if (ctx->do_render) {
@@ -144,6 +150,7 @@ pax_vec1_t text_bitmap_mono(pax_text_ctx_t *ctx, const pax_font_range_t *range, 
 			.glyph_h     = range->bitmap_mono.height,
 			.bpp         = range->bitmap_mono.bpp,
 			.ppb         = 8 / range->bitmap_mono.bpp,
+			.do_aa       = ctx->do_aa,
 		};
 		args.mask        = (1 << args.bpp) - 1;
 		
@@ -151,6 +158,10 @@ pax_vec1_t text_bitmap_mono(pax_text_ctx_t *ctx, const pax_font_range_t *range, 
 		args.glyph_index = glyph_len * (glyph - range->start);
 		
 		pax_shader_t shader = {
+			.schema_version    =  0,
+			.schema_complement = ~0,
+			.renderer_id       = PAX_RENDERER_ID_SWR,
+			.promise_callback  = text_promise_callback,
 			.callback_args     = &args,
 			.alpha_promise_0   = true,
 			.alpha_promise_255 = false,
@@ -204,11 +215,16 @@ pax_vec1_t text_bitmap_var(pax_text_ctx_t *ctx, const pax_font_range_t *range, u
 			.glyph_h     = dims->draw_h,
 			.bpp         = range->bitmap_var.bpp,
 			.ppb         = 8 / range->bitmap_var.bpp,
+			.do_aa       = ctx->do_aa,
 		};
 		args.mask        = (1 << args.bpp) - 1;
 		args.glyph_index = dims->index;
 		
 		pax_shader_t shader = {
+			.schema_version    =  0,
+			.schema_complement = ~0,
+			.renderer_id       = PAX_RENDERER_ID_SWR,
+			.promise_callback  = text_promise_callback,
 			.callback_args     = &args,
 			.alpha_promise_0   = true,
 			.alpha_promise_255 = false,
