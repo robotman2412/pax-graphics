@@ -179,7 +179,6 @@ void pax_rect_unshaded(pax_buf_t *buf, pax_col_t color,
 // Internal method for line drawing.
 void pax_line_unshaded(pax_buf_t *buf, pax_col_t color, float x0, float y0, float x1, float y1) {
 	
-	// pax_setter_t setter = color >= 0xff000000 ? pax_set_pixel : pax_merge_pixel;
 	pax_index_setter_t setter = pax_get_setter(buf, &color, NULL);
 	if (!setter) return;
 	

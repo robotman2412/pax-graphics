@@ -165,6 +165,7 @@ typedef struct pax_buf         pax_buf_t;
 typedef struct pax_shader      pax_shader_t;
 typedef enum   pax_task_type   pax_task_type_t;
 typedef struct pax_task        pax_task_t;
+typedef struct pax_shader_ctx  pax_shader_ctx_t;
 
 typedef int32_t                pax_err_t;
 typedef uint32_t               pax_col_t;
@@ -350,6 +351,16 @@ struct pax_task {
 	float          *shape;
 	// Number of floats in the shape array.
 	size_t          shape_len;
+};
+
+// Context used at drawing time for shaders.
+struct pax_shader_ctx {
+	// The callback internally used per pixel.
+	pax_shader_func_v1_t callback;
+	// Whether to skip drawing.
+	bool                 skip;
+	// Whether to do a get the pixel value for merging.
+	bool                 do_getter;
 };
 
 // The absolute minimum possible size a valid font can be in memory.

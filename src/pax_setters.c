@@ -718,8 +718,9 @@ void pax_set_pixel_u(pax_buf_t *buf, uint32_t color, int x, int y) {
 	} else if (bpp == 32) {
 		// 32BPP
 		buf->buf_32bpp[x + y * buf->width] = color;
+	} else {
+		pax_last_error = PAX_ERR_CORRUPT;
 	}
-	pax_last_error = PAX_ERR_CORRUPT;
 }
 
 // Get a pixel, unsafe (don't check bounds or buffer, no color conversion).

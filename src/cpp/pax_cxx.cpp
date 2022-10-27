@@ -55,7 +55,7 @@ Shader::Shader(ShaderFunc callback, void *args) {
 	cxxShaderCtx.callback = new ShaderFunc(callback);
 	cxxShaderCtx.args     = args;
 	internal    = (pax_shader_t) {
-		.callback          = wrapperCallback,
+		.callback          = (void*) wrapperCallback,
 		.callback_args     = &cxxShaderCtx,
 		.alpha_promise_0   = false,
 		.alpha_promise_255 = false,
@@ -77,7 +77,9 @@ Shader::~Shader() {
 pax_col_t Shader::apply(pax_col_t tint, int x, int y, float u, float v) {
 	if (active) {
 		// Pass through to the C callback function.
-		return internal.callback(tint, x, y, u, v, internal.callback_args);
+		// TODO
+		// return internal.callback(tint, x, y, u, v, internal.callback_args);
+		return 0;
 	} else {
 		return tint;
 	}

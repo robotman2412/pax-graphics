@@ -157,6 +157,28 @@ void pax_debug(pax_buf_t *buf) {
 
 /* ======= DRAWING HELPERS ======= */
 
+// A wrapper callback to support V0 shader callbacks.
+static pax_col_t pax_shader_wrapper_for_v0(pax_col_t tint, pax_col_t existing, int x, int y, float u, float v, void *args0) {
+	pax_shader_t *args = args0;
+	pax_shader_func_v0_t v0 = args->callback;
+	return pax_col_merge(existing, v0(tint, x, y, u, v, args->callback_args));
+}
+
+// Gets the correct callback function for the shader.
+static pax_shader_ctx_t pax_get_shader_ctx(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader) {
+	if (shader->schema_version != ~shader->schema_complement) {
+		// TODO: Bad.
+	}
+	pax_shader_func_v1_t callback = shader->schema_version == 0 ? pax_shader_wrapper_for_v0 : shader->callback;
+	
+	// Fall back to the safe version.
+	return (pax_shader_ctx_t) {
+		.callback  = callback,
+		.do_getter = true,
+		.skip      = false,
+	};
+}
+
 bool pax_enable_shape_aa = false;
 
 #define PAX_GFX_C
@@ -681,6 +703,76 @@ void pax_shade_rect(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
 		pax_shade_tri(buf, color, shader, &uv0, x, y, x + width, y, x + width, y + height);
 		pax_shade_tri(buf, color, shader, &uv1, x, y, x, y + height, x + width, y + height);
 	}
+}
+
+// Draw a line with a shader.
+// Beta feature: UVs are not currently available.
+void pax_shade_line (pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
+		float x0, float y0, float x1, float y1) {
+	PAX_BUF_CHECK("pax_shade_line");
+	
+	// Apply transforms.
+	matrix_2d_transform(buf->stack_2d.value, &x0, &y0);
+	matrix_2d_transform(buf->stack_2d.value, &x1, &y1);
+	
+	if (!isfinite(x0) || !isfinite(y0) || !isfinite(x1) || !isfinite(y1)) {
+		// We can't draw to infinity.
+		pax_last_error = PAX_ERR_INF;
+		return;
+	}
+	
+	// Sort points vertially.
+	if (y0 > y1) PAX_SWAP_POINTS(x0, y0, x1, y1);
+	
+	// Determine whether the line might fall within the clip rect.
+	if (!buf->clip.w || !buf->clip.h) goto noneed;
+	if (y1 < buf->clip.y || y0 > buf->clip.y + buf->clip.h - 1) goto noneed;
+	if (x0 == x1 && (x0 < buf->clip.x || x0 > buf->clip.x + buf->clip.w - 1)) goto noneed;
+	if (x0 < buf->clip.x && x1 < buf->clip.x) goto noneed;
+	if (x0 > buf->clip.x + buf->clip.w - 1 && x1 > buf->clip.x + buf->clip.w - 1) goto noneed;
+	
+	// Clip top.
+	if (y0 < buf->clip.y) {
+		x0 = x0 + (x1 - x0) * (buf->clip.y - y0) / (y1 - y0);
+		y0 = buf->clip.y;
+	}
+	// Clip bottom.
+	if (y1 > buf->clip.y + buf->clip.h - 1) {
+		x1 = x0 + (x1 - x0) * (buf->clip.y + buf->clip.h - 1 - y0) / (y1 - y0);
+		y1 = buf->clip.y + buf->clip.h - 1;
+	}
+	// Clip left.
+	if (x1 < buf->clip.x) {
+		y1 = y0 + (y1 - y0) * (buf->clip.x - x0) / (x1 - x0);
+		x1 = buf->clip.x;
+	} else if (x0 < buf->clip.x) {
+		y0 = y0 + (y1 - y0) * (buf->clip.x - x0) / (x1 - x0);
+		x0 = buf->clip.x;
+	}
+	// Clip right.
+	if (x1 > buf->clip.x + buf->clip.w - 1) {
+		y1 = y0 + (y1 - y0) * (buf->clip.x + buf->clip.w - 1 - x0) / (x1 - x0);
+		x1 = buf->clip.x + buf->clip.w - 1;
+	} else if (x0 > buf->clip.x + buf->clip.w - 1) {
+		y0 = y0 + (y1 - y0) * (buf->clip.x + buf->clip.w - 1 - x0) / (x1 - x0);
+		x0 = buf->clip.x + buf->clip.w - 1;
+	}
+	
+	// If any point is outside clip now, we don't draw a line.
+	if (y0 < buf->clip.y || y1 > buf->clip.y + buf->clip.h - 1) goto noneed;
+	
+	pax_mark_dirty1(buf, x0, y0);
+	pax_mark_dirty1(buf, x1, y1);
+	#if PAX_COMPILE_MCR
+	// Because a line isn't drawn in alternating scanlines, we need to sync up with the worker.
+	pax_join();
+	#endif
+	if (shader) pax_line_shaded(buf, color, shader, x0, y0, x1, y1);
+	else pax_line_unshaded(buf, color, x0, y0, x1, y1);
+	
+	// This label is used if there's no need to try to draw a line.
+	noneed:
+	PAX_SUCCESS();
 }
 
 // Draw a triangle with a shader.

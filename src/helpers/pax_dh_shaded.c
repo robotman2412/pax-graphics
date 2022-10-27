@@ -51,8 +51,8 @@ void pax_tri_shaded(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
 		PAX_SWAP_POINTS(u1, v1, u2, v2);
 	}
 	
-	pax_index_setter_t setter = pax_get_setter(buf, &color, shader);
-	if (!setter) return;
+	pax_shader_ctx_t shader_ctx = pax_get_shader_ctx(buf, color, shader);
+	if (shader_ctx.skip) return;
 	
 	// Find the appropriate Y for y0, y1 and y2 inside the triangle.
 	float y_post_0 = (int) (y0 + 0.5) + 0.5;
@@ -152,9 +152,9 @@ void pax_tri_shaded(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
 			x_right -= 0.5;
 			for (; x <= x_right; x ++) {
 				// Apply the shader,
-				pax_col_t result = (shader->callback)(color, x, y, u, v, shader->callback_args);
+				pax_col_t result = (shader_ctx.callback)(color, shader_ctx.do_getter ? pax_buf2col(buf, buf->getter(buf, x+delta)) : 0, x, y, u, v, shader->callback_args);
 				// And simply merge colors accordingly.
-				setter(buf, result, x+delta);
+				pax_set_index_conv(buf, result, x+delta);
 				u += du;
 				v += dv;
 			}
@@ -228,9 +228,9 @@ void pax_tri_shaded(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
 			x_right -= 0.5;
 			for (; x <= x_right; x ++) {
 				// Apply the shader,
-				pax_col_t result = (shader->callback)(color, x, y, u, v, shader->callback_args);
+				pax_col_t result = (shader_ctx.callback)(color, shader_ctx.do_getter ? pax_buf2col(buf, buf->getter(buf, x+delta)) : 0, x, y, u, v, shader->callback_args);
 				// And simply merge colors accordingly.
-				setter(buf, result, x+delta);
+				pax_set_index_conv(buf, result, x+delta);
 				u += du;
 				v += dv;
 			}
@@ -332,8 +332,8 @@ void pax_overlay_buffer(pax_buf_t *base, pax_buf_t *top, int x, int y, int width
 void pax_rect_shaded1(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
 		float x, float y, float width, float height, float u0, float v0, float u1, float v1) {
 	
-	pax_index_setter_t setter = pax_get_setter(buf, &color, shader);
-	if (!setter) return;
+	pax_shader_ctx_t shader_ctx = pax_get_shader_ctx(buf, color, shader);
+	if (shader_ctx.skip) return;
 	
 	// Fix width and height.
 	if (width < 0) {
@@ -404,8 +404,8 @@ void pax_rect_shaded1(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shade
 	for (int c_y = y + 0.5; c_y <= y + height - 0.5; c_y ++) {
 		float u = u0;
 		for (int c_x = x + 0.5; c_x <= x + width - 0.5; c_x ++) {
-			pax_col_t result = (shader->callback)(color, c_x, c_y, u, v, shader->callback_args);
-			setter(buf, result, c_x+delta);
+			pax_col_t result = (shader_ctx.callback)(color, shader_ctx.do_getter ? pax_buf2col(buf, buf->getter(buf, c_x+delta)) : 0, x, y, u, v, shader->callback_args);
+			pax_set_index_conv(buf, result, c_x+delta);
 			u += u0_u1_du;
 		}
 		v     += v0_v1_dv;
@@ -432,11 +432,8 @@ void pax_rect_shaded(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader
 		return;
 	}
 	
-	if (color < 0x01000000 && shader->alpha_promise_0) {
-		PAX_SUCCESS();
-		return;
-	}
-	pax_setter_t setter = shader->alpha_promise_255 && (color >= 0xff000000) ? pax_set_pixel : pax_merge_pixel;
+	pax_shader_ctx_t shader_ctx = pax_get_shader_ctx(buf, color, shader);
+	if (shader_ctx.skip) return;
 	
 	// Fix width and height.
 	if (width < 0) {
@@ -550,22 +547,121 @@ void pax_rect_shaded(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader
 	float u_b = u1, v_b = v1;
 	
 	// Pixel time.
+	int delta = (int) (y + 0.5) * buf->width;
 	for (int c_y = y + 0.5; c_y <= y + height - 0.5; c_y ++) {
-		float ua_ub_du = (u_b - u_a) / (width - 1);
-		float va_vb_dv = (v_b - v_a) / (width - 1);
+		float ua_ub_du = (u_b - u_a) / (max_x - min_x);
+		float va_vb_dv = (v_b - v_a) / (max_x - min_x);
 		float u = u_a, v = v_a;
 		for (int c_x = x + 0.5; c_x <= x + width - 0.5; c_x ++) {
-			pax_col_t result = (shader->callback)(color, c_x, c_y, u, v, shader->callback_args);
-			setter(buf, result, c_x, c_y);
+			pax_col_t result = (shader_ctx.callback)(color, shader_ctx.do_getter ? pax_buf2col(buf, buf->getter(buf, c_x+delta)) : 0, c_x, c_y, u, v, shader->callback_args);
+			pax_set_index_conv(buf, result, c_x+delta);
 			u += ua_ub_du;
 			v += va_vb_dv;
 		}
-		u_a += u0_u3_du;
-		v_a += v0_v3_dv;
-		u_b += u1_u2_du;
-		v_b += v1_v2_dv;
+		u_a   += u0_u3_du;
+		v_a   += v0_v3_dv;
+		u_b   += u1_u2_du;
+		v_b   += v1_v2_dv;
+		delta += buf->width;
+	}
+}
+
+// Internal method for line drawing.
+void pax_line_shaded(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader, float x0, float y0, float x1, float y1) {
+	
+	pax_shader_ctx_t shader_ctx = pax_get_shader_ctx(buf, color, shader);
+	if (shader_ctx.skip) return;
+	
+	if (y1 < y0) {
+		PAX_SWAP_POINTS(x0, y0, x1, y1);
 	}
 	
+	// Clip: left.
+	if (x0 < x1 && x0 < buf->clip.x) {
+		if (x1 < buf->clip.x) return;
+		// Adjust X0 against left clip.
+		y0 = y0 + (y1 - y0) * (buf->clip.x - x0) / (x1 - x0);
+		x0 = buf->clip.x;
+	} else if (x1 < x0 && x1 < buf->clip.x) {
+		if (x0 < buf->clip.x) return;
+		// Adjust X1 against left clip.
+		y1 = y1 + (y0 - y1) * (buf->clip.x - x1) / (x0 - x1);
+		x1 = buf->clip.x;
+	}
+	
+	// Clip: right.
+	if (x1 > x0 && x1 > buf->clip.x + buf->clip.w - 1) {
+		if (x0 > buf->clip.x + buf->clip.w) return;
+		// Adjust X1 against right of clip.
+		y1 = y0 + (y1 - y0) * (buf->clip.x + buf->clip.w - 1 - x0) / (x1 - x0);
+		x1 = buf->clip.x + buf->clip.w - 1;
+	} else if (x0 > x1 && x0 > buf->clip.x + buf->clip.w - 1) {
+		if (x1 > buf->clip.x + buf->clip.w) return;
+		// Adjust X0 against right of clip.
+		y0 = y1 + (y0 - y1) * (buf->clip.x + buf->clip.w - 1 - x1) / (x0 - x1);
+		x0 = buf->clip.x + buf->clip.w - 1;
+	}
+	
+	// Clip: top.
+	if (y0 < buf->clip.y) {
+		if (y1 < buf->clip.y) return;
+		// Adjust Y0 against top of clip.
+		x0 = x0 + (x1 - x0) * (buf->clip.y - y0) / (y1 - y0);
+		y0 = buf->clip.y;
+	}
+	
+	// Clip: bottom.
+	if (y1 > buf->clip.y + buf->clip.h - 1) {
+		if (y0 > buf->clip.y + buf->clip.h - 1) return;
+		// Adjust Y1 against bottom of clip.
+		x1 = x1 + (x1 - x0) * (buf->clip.y + buf->clip.h - 1 - y1) / (y1 - y0);
+		y1 = buf->clip.y + buf->clip.h - 1;
+	}
+	
+	// Determine whether the line is "steep" (dx*dx > dy*dy).
+	float dx = x1 - x0;
+	float dy = y1 - y0;
+	bool is_steep = fabsf(dx) < fabsf(dy);
+	int nIter;
+	
+	// Determine the number of iterations.
+	nIter = ceilf(fabsf(is_steep ? dy : dx));
+	if (nIter < 1) nIter = 1;
+	
+	// Adjust dx and dy.
+	dx /= nIter;
+	dy /= nIter;
+	
+	if (y0 == y1) {
+		int index = (int) y0 * buf->width;
+		if (dx < 0) {
+			PAX_SWAP(float, x0, x1);
+		}
+		for (int i = x0; i <= x1; i++) {
+			pax_col_t result = (shader_ctx.callback)(color, shader_ctx.do_getter ? pax_buf2col(buf, buf->getter(buf, index + i)) : 0, i, y0, 0, 0, shader->callback_args);
+			pax_set_index_conv(buf, result, index + i);
+		}
+	} else if (x0 == x1) {
+		int index = x0 + (int) y0 * buf->width;
+		for (int i = y0; i <= y1; i++, index += buf->width) {
+			pax_col_t result = (shader_ctx.callback)(color, shader_ctx.do_getter ? pax_buf2col(buf, buf->getter(buf, index)) : 0, x0, i, 0, 0, shader->callback_args);
+			pax_set_index_conv(buf, result, index);
+		}
+	} else {
+		// float x = x0;
+		// float y = y0;
+		long x   = x0 * 0x10000;
+		long y   = y0 * 0x10000;
+		long idx = dx * 0x10000;
+		long idy = dy * 0x10000;
+		for (int i = 0; i <= nIter; i++) {
+			size_t    delta  = x/0x10000+(int)y/0x10000*buf->width;
+			pax_col_t result = (shader_ctx.callback)(color, shader_ctx.do_getter ? pax_buf2col(buf, buf->getter(buf, delta)) : 0, x, y, 0, 0, shader->callback_args);
+			pax_set_index_conv(buf, result, delta);
+			x += idx;
+			y += idy;
+		}
+	}
 }
 
 #endif

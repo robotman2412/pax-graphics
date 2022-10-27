@@ -38,8 +38,8 @@ void paxmcr_tri_shaded(bool odd_scanline, pax_buf_t *buf, pax_col_t color, const
 		float x0, float y0, float x1, float y1, float x2, float y2,
 		float u0, float v0, float u1, float v1, float u2, float v2) {
 	
-	pax_index_setter_t setter = pax_get_setter(buf, &color, shader);
-	if (!setter) return;
+	pax_shader_ctx_t shader_ctx = pax_get_shader_ctx(buf, color, shader);
+	if (shader_ctx.skip) return;
 	
 	// Sort points by height.
 	if (y1 < y0) {
@@ -164,9 +164,9 @@ void paxmcr_tri_shaded(bool odd_scanline, pax_buf_t *buf, pax_col_t color, const
 			x_right -= 0.5;
 			for (; x <= x_right; x ++) {
 				// Apply the shader,
-				pax_col_t result = (shader->callback)(color, x, y, u, v, shader->callback_args);
+				pax_col_t result = (shader_ctx.callback)(color, shader_ctx.do_getter ? pax_buf2col(buf, buf->getter(buf, x+delta)) : 0, x, y, u, v, shader->callback_args);
 				// And simply merge colors accordingly.
-				setter(buf, result, x+delta);
+				pax_set_index_conv(buf, result, x+delta);
 				u += du;
 				v += dv;
 			}
@@ -251,9 +251,9 @@ void paxmcr_tri_shaded(bool odd_scanline, pax_buf_t *buf, pax_col_t color, const
 			x_right -= 0.5;
 			for (; x <= x_right; x ++) {
 				// Apply the shader,
-				pax_col_t result = (shader->callback)(color, x, y, u, v, shader->callback_args);
+				pax_col_t result = (shader_ctx.callback)(color, shader_ctx.do_getter ? pax_buf2col(buf, buf->getter(buf, x+delta)) : 0, x, y, u, v, shader->callback_args);
 				// And simply merge colors accordingly.
-				setter(buf, result, x+delta);
+				pax_set_index_conv(buf, result, x+delta);
 				u += du;
 				v += dv;
 			}
@@ -362,8 +362,8 @@ void paxmcr_overlay_buffer(bool odd_scanline, pax_buf_t *base, pax_buf_t *top, i
 void paxmcr_rect_shaded1(bool odd_scanline, pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
 		float x, float y, float width, float height, float u0, float v0, float u1, float v1) {
 	
-	pax_index_setter_t setter = pax_get_setter(buf, &color, shader);
-	if (!setter) return;
+	pax_shader_ctx_t shader_ctx = pax_get_shader_ctx(buf, color, shader);
+	if (shader_ctx.skip) return;
 	
 	// Fix width and height.
 	if (width < 0) {
@@ -441,8 +441,8 @@ void paxmcr_rect_shaded1(bool odd_scanline, pax_buf_t *buf, pax_col_t color, con
 	for (; c_y <= y + height - 0.5; c_y += 2) {
 		float u = u0;
 		for (int c_x = x + 0.5; c_x <= x + width - 0.5; c_x ++) {
-			pax_col_t result = (shader->callback)(color, c_x, c_y, u, v, shader->callback_args);
-			setter(buf, result, c_x+delta);
+			pax_col_t result = (shader_ctx.callback)(color, shader_ctx.do_getter ? pax_buf2col(buf, buf->getter(buf, c_x+delta)) : 0, c_x, c_y, u, v, shader->callback_args);
+			pax_set_index_conv(buf, result, c_x+delta);
 			u += u0_u1_du;
 		}
 		v     += 2*v0_v1_dv;
@@ -470,8 +470,8 @@ void paxmcr_rect_shaded(bool odd_scanline, pax_buf_t *buf, pax_col_t color, cons
 		return;
 	}
 	
-	pax_index_setter_t setter = pax_get_setter(buf, &color, shader);
-	if (!setter) return;
+	pax_shader_ctx_t shader_ctx = pax_get_shader_ctx(buf, color, shader);
+	if (shader_ctx.skip) return;
 	
 	// Fix width and height.
 	if (width < 0) {
@@ -601,8 +601,8 @@ void paxmcr_rect_shaded(bool odd_scanline, pax_buf_t *buf, pax_col_t color, cons
 		float va_vb_dv = (v_b - v_a) / (max_x - min_x);
 		float u = u_a, v = v_a;
 		for (int c_x = x + 0.5; c_x <= x + width - 0.5; c_x ++) {
-			pax_col_t result = (shader->callback)(color, c_x, c_y, u, v, shader->callback_args);
-			setter(buf, result, c_x+delta);
+			pax_col_t result = (shader_ctx.callback)(color, shader_ctx.do_getter ? pax_buf2col(buf, buf->getter(buf, c_x+delta)) : 0, c_x, c_y, u, v, shader->callback_args);
+			pax_set_index_conv(buf, result, c_x+delta);
 			u += ua_ub_du;
 			v += va_vb_dv;
 		}
