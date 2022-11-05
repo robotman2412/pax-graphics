@@ -192,8 +192,8 @@ pax_col_t   pax_get_pixel           (pax_buf_t *buf, int x, int y);
 // If uvs is NULL, a default will be used (0,0; 1,0; 1,1; 0,1).
 void        pax_shade_rect          (pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader, const pax_quad_t *uvs, float x, float y, float width, float height);
 // Draw a line with a shader.
-// Beta feature: UVs are not currently available.
-void        pax_shade_line          (pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader, float x0, float y0, float x1, float y1);
+// If uvs is NULL, a default will be used (0,0; 1,0).
+void        pax_shade_line          (pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader, const pax_line_t *uvs, float x0, float y0, float x1, float y1);
 // Draw a triangle with a shader.
 // If uvs is NULL, a default will be used (0,0; 1,0; 0,1).
 void        pax_shade_tri           (pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader, const pax_tri_t  *uvs, float x0, float y0, float x1, float y1, float x2, float y2);

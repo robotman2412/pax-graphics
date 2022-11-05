@@ -169,13 +169,22 @@ static pax_shader_ctx_t pax_get_shader_ctx(pax_buf_t *buf, pax_col_t color, cons
 	if (shader->schema_version != ~shader->schema_complement) {
 		// TODO: Bad.
 	}
-	pax_shader_func_v1_t callback = shader->schema_version == 0 ? pax_shader_wrapper_for_v0 : shader->callback;
+	if (shader->schema_version == 0) {
+		// Use the old version.
+		return (pax_shader_ctx_t) {
+			.callback      = pax_shader_wrapper_for_v0,
+			.callback_args = shader,
+			.do_getter     = true,
+			.skip          = false,
+		};
+	}
 	
-	// Fall back to the safe version.
+	// Use the new version.
 	return (pax_shader_ctx_t) {
-		.callback  = callback,
-		.do_getter = true,
-		.skip      = false,
+		.callback      = shader->callback,
+		.callback_args = shader->callback_args,
+		.do_getter     = true,
+		.skip          = false,
 	};
 }
 
@@ -707,9 +716,28 @@ void pax_shade_rect(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
 
 // Draw a line with a shader.
 // Beta feature: UVs are not currently available.
-void pax_shade_line (pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
-		float x0, float y0, float x1, float y1) {
+void pax_shade_line(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
+		const pax_line_t *uvs, float x0, float y0, float x1, float y1) {
 	PAX_BUF_CHECK("pax_shade_line");
+	
+	if (!shader) {
+		pax_draw_line(buf, color, x0, y0, x1, y1);
+		return;
+	}
+	
+	float u0, v0, u1, v1;
+	
+	if (uvs) {
+		u0 = uvs->x0;
+		v0 = uvs->y0;
+		u1 = uvs->x1;
+		v1 = uvs->y1;
+	} else {
+		u0 = 0;
+		v0 = 0;
+		u1 = 1;
+		v1 = 0;
+	}
 	
 	// Apply transforms.
 	matrix_2d_transform(buf->stack_2d.value, &x0, &y0);
@@ -722,7 +750,10 @@ void pax_shade_line (pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader
 	}
 	
 	// Sort points vertially.
-	if (y0 > y1) PAX_SWAP_POINTS(x0, y0, x1, y1);
+	if (y0 > y1) {
+		PAX_SWAP_POINTS(x0, y0, x1, y1);
+		PAX_SWAP_POINTS(u0, v0, u1, v1);
+	}
 	
 	// Determine whether the line might fall within the clip rect.
 	if (!buf->clip.w || !buf->clip.h) goto noneed;
@@ -733,28 +764,48 @@ void pax_shade_line (pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader
 	
 	// Clip top.
 	if (y0 < buf->clip.y) {
-		x0 = x0 + (x1 - x0) * (buf->clip.y - y0) / (y1 - y0);
+		float coeff = (buf->clip.y - y0) / (y1 - y0);
+		u0 = u0 + (u1 - u0) * coeff;
+		v0 = v0 + (v1 - v0) * coeff;
+		x0 = x0 + (x1 - x0) * coeff;
 		y0 = buf->clip.y;
 	}
 	// Clip bottom.
 	if (y1 > buf->clip.y + buf->clip.h - 1) {
-		x1 = x0 + (x1 - x0) * (buf->clip.y + buf->clip.h - 1 - y0) / (y1 - y0);
+		float coeff = (buf->clip.y + buf->clip.h - 1 - y0) / (y1 - y0);
+		u1 = u0 + (u1 - u0) * coeff;
+		v1 = v0 + (v1 - v0) * coeff;
+		x1 = x0 + (x1 - x0) * coeff;
 		y1 = buf->clip.y + buf->clip.h - 1;
 	}
 	// Clip left.
 	if (x1 < buf->clip.x) {
-		y1 = y0 + (y1 - y0) * (buf->clip.x - x0) / (x1 - x0);
+		float coeff = (buf->clip.x - x0) / (x1 - x0);
+		u1 = u0 + (u1 - u0) * coeff;
+		v1 = v0 + (v1 - v0) * coeff;
+		y1 = y0 + (y1 - y0) * coeff;
 		x1 = buf->clip.x;
+		
 	} else if (x0 < buf->clip.x) {
-		y0 = y0 + (y1 - y0) * (buf->clip.x - x0) / (x1 - x0);
+		float coeff = (buf->clip.x - x0) / (x1 - x0);
+		u0 = u0 + (u1 - u0) * coeff;
+		v0 = v0 + (v1 - v0) * coeff;
+		y0 = y0 + (y1 - y0) * coeff;
 		x0 = buf->clip.x;
 	}
 	// Clip right.
 	if (x1 > buf->clip.x + buf->clip.w - 1) {
-		y1 = y0 + (y1 - y0) * (buf->clip.x + buf->clip.w - 1 - x0) / (x1 - x0);
+		float coeff = (buf->clip.x + buf->clip.w - 1 - x0) / (x1 - x0);
+		u1 = u0 + (u1 - u0) * coeff;
+		v1 = v0 + (v1 - v0) * coeff;
+		y1 = y0 + (y1 - y0) * coeff;
 		x1 = buf->clip.x + buf->clip.w - 1;
+		
 	} else if (x0 > buf->clip.x + buf->clip.w - 1) {
-		y0 = y0 + (y1 - y0) * (buf->clip.x + buf->clip.w - 1 - x0) / (x1 - x0);
+		float coeff = (buf->clip.x + buf->clip.w - 1 - x0) / (x1 - x0);
+		u0 = u0 + (u1 - u0) * coeff;
+		v0 = v0 + (v1 - v0) * coeff;
+		y0 = y0 + (y1 - y0) * coeff;
 		x0 = buf->clip.x + buf->clip.w - 1;
 	}
 	
@@ -767,8 +818,7 @@ void pax_shade_line (pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader
 	// Because a line isn't drawn in alternating scanlines, we need to sync up with the worker.
 	pax_join();
 	#endif
-	if (shader) pax_line_shaded(buf, color, shader, x0, y0, x1, y1);
-	else pax_line_unshaded(buf, color, x0, y0, x1, y1);
+	pax_line_shaded(buf, color, shader, u0, v0, u1, v1, x0, y0, x1, y1);
 	
 	// This label is used if there's no need to try to draw a line.
 	noneed:

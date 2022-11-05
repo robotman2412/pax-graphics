@@ -110,12 +110,12 @@ size_t pax_triang_complete(size_t **output, pax_vec1_t **additional_points, size
 //
 // Stores triangles as triple-index pairs in output, which is a dynamically allocated size_t array.
 // The number of triangles created is num_points - 2.
-void pax_triang_concave       (size_t **output, size_t num_points, pax_vec1_t *points);
+void pax_triang_concave       (size_t **output, size_t num_points, const pax_vec1_t *points);
 // WARNING: Does not work for self-intersecting polygons.
 // 
 // Draw a shape based on an outline.
 // Closes the shape: no need to have the last point overlap the first.
-void pax_draw_shape           (pax_buf_t *buf, pax_col_t color, size_t num_points, pax_vec1_t *points);
+void pax_draw_shape           (pax_buf_t *buf, pax_col_t color, size_t num_points, const pax_vec1_t *points);
 
 #ifdef __cplusplus
 }

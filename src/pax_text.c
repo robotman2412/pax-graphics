@@ -239,10 +239,10 @@ pax_vec1_t text_bitmap_var(pax_text_ctx_t *ctx, const pax_font_range_t *range, u
 		
 		// And UVs.
 		pax_quad_t uvs = {
-			.x0 = 0,                  .y0 = 0,
+			.x0 = 0,                 .y0 = 0,
 			.x1 = dims->draw_w-0.00, .y1 = 0,
 			.x2 = dims->draw_w-0.00, .y2 = dims->draw_h-0.00,
-			.x3 = 0,                  .y3 = dims->draw_h-0.00,
+			.x3 = 0,                 .y3 = dims->draw_h-0.00,
 		};
 		
 		// Start drawing, boy!

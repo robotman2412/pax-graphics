@@ -631,7 +631,7 @@ static bool line_intersects_line(pax_vec2_t line_a, pax_vec2_t line_b, pax_vec1_
 
 // Tests whether a line intersects any of the lines in the dataset.
 // Intersection is NOT counted when only the end points touch.
-static bool line_intersects_outline(size_t num_points, pax_vec1_t *raw_points, pax_vec1_t start, pax_vec1_t end) {
+static bool line_intersects_outline(size_t num_points, const pax_vec1_t *raw_points, pax_vec1_t start, pax_vec1_t end) {
 	for (size_t i = 0; i < num_points; i++) {
 		size_t index1 = (i + 1) % num_points;
 		if (line_intersects_line(
@@ -664,7 +664,7 @@ size_t pax_triang_complete(size_t **output, pax_vec1_t **additional_points, size
 //
 // Stores triangles as triple-index pairs in output, which is a dynamically allocated size_t array.
 // The number of triangles created is num_points - 2.
-void pax_triang_concave(size_t **output, size_t raw_num_points, pax_vec1_t *raw_points) {
+void pax_triang_concave(size_t **output, size_t raw_num_points, const pax_vec1_t *raw_points) {
 	// Cannot triangulate with less than 3 points.
 	if (raw_num_points < 3) {
 		*output = NULL;
@@ -733,7 +733,7 @@ void pax_triang_concave(size_t **output, size_t raw_num_points, pax_vec1_t *raw_
 
 // Draw a shape based on an outline.
 // Closes the shape: no need to have the last point overlap the first.
-void pax_draw_shape(pax_buf_t *buf, pax_col_t color, size_t num_points, pax_vec1_t *points) {
+void pax_draw_shape(pax_buf_t *buf, pax_col_t color, size_t num_points, const pax_vec1_t *points) {
 	// Simply outsource the triangulation.
 	size_t *tris   = NULL;
 	size_t  n_tris = num_points - 2;
@@ -757,11 +757,11 @@ void pax_draw_shape(pax_buf_t *buf, pax_col_t color, size_t num_points, pax_vec1
 #else
 // Stub method because the real one isn't compiled in.
 size_t pax_triang_complete(size_t **output, pax_vec1_t **additional_points, size_t num_points, pax_vec1_t *points) {
-	PAX_ERROR1("pax_draw_shape", PAX_ERR_UNSUPPORTED, 0);
+	PAX_ERROR1("pax_triang_complete", PAX_ERR_UNSUPPORTED, 0);
 }
 // Stub method because the real one isn't compiled in.
 void pax_triang_concave(size_t **output, size_t num_points, pax_vec1_t *points) {
-	PAX_ERROR("pax_draw_shape", PAX_ERR_UNSUPPORTED);
+	PAX_ERROR("pax_triang_concave", PAX_ERR_UNSUPPORTED);
 }
 // Stub method because the real one isn't compiled in.
 void pax_draw_shape(pax_buf_t *buf, pax_col_t color, size_t num_points, pax_vec1_t *points) {

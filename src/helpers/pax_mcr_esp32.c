@@ -49,21 +49,36 @@ static void paxmcr_add_task(pax_task_t *task) {
 	// Of the shape,
 	if (copy.shape) {
 		copy.shape     = malloc(copy.shape_len * sizeof(float));
+		if (!copy.shape) goto abort;
 		memcpy(copy.shape, task->shape, copy.shape_len * sizeof(float));
 	}
 	
 	// The shader,
 	if (copy.shader) {
 		copy.shader    = malloc(sizeof(pax_shader_t));
+		if (!copy.shader) {
+			if (copy.shape) free(copy.shape);
+			goto abort;
+		}
 		*copy.shader   = *task->shader;
 	}
 	
 	// And the UVs.
 	if (copy.type == PAX_TASK_TRI && copy.tri_uvs) {
 		copy.tri_uvs   = malloc(sizeof(pax_tri_t));
+		if (!copy.tri_uvs) {
+			if (copy.shape) free(copy.shape);
+			if (copy.shader) free(copy.shape);
+			goto abort;
+		}
 		*copy.tri_uvs  = *task->tri_uvs;
 	} else if (copy.type == PAX_TASK_RECT && copy.quad_uvs) {
 		copy.quad_uvs  = malloc(sizeof(pax_quad_t));
+		if (!copy.quad_uvs) {
+			if (copy.shape) free(copy.shape);
+			if (copy.shader) free(copy.shape);
+			goto abort;
+		}
 		*copy.quad_uvs = *task->quad_uvs;
 	}
 	
@@ -74,6 +89,12 @@ static void paxmcr_add_task(pax_task_t *task) {
 		PAX_LOGW(TAG, "Reverting to disabling MCR.");
 		pax_disable_multicore();
 	}
+	return;
+	
+	abort:
+	PAX_LOGE(TAG, "Out of memory for MCR operation!");
+	PAX_LOGW(TAG, "Reverting to disabling MCR.");
+	pax_disable_multicore();
 }
 
 // The actual task for multicore rendering.

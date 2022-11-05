@@ -155,6 +155,7 @@ typedef struct pax_vec1        pax_vec1_t;
 typedef struct pax_vec2        pax_vec2_t;
 typedef struct pax_vec3        pax_vec3_t;
 typedef struct pax_vec4        pax_vec4_t;
+typedef struct pax_vec2        pax_line_t;
 typedef struct pax_vec3        pax_tri_t;
 typedef struct pax_vec4        pax_quad_t;
 typedef struct pax_rect        pax_rect_t;
@@ -357,6 +358,8 @@ struct pax_task {
 struct pax_shader_ctx {
 	// The callback internally used per pixel.
 	pax_shader_func_v1_t callback;
+	// The args to throw at the callback.
+	void                *callback_args;
 	// Whether to skip drawing.
 	bool                 skip;
 	// Whether to do a get the pixel value for merging.
