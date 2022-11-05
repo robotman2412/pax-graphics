@@ -110,7 +110,7 @@ static int bezier_point_t_comp(const void *e0, const void *e1) {
 	const bezier_point_t *a = e0;
 	const bezier_point_t *b = e1;
 	// Comparing is the same as subtracting.
-	float delta = b->part - a->part;
+	float delta = a->part - b->part;
 	return delta / fabs(delta);
 }
 
@@ -128,6 +128,8 @@ void pax_vectorise_bezier_part(pax_vec1_t *ptr, size_t max_points, pax_vec4_t co
 		PAX_ERROR("pax_vectorise_bezier_part", PAX_ERR_PARAM);
 		return;
 	}
+	
+#if PAX_USE_EXPENSIVE_BEZIER
 	
 	// Start with just three points: start, T=0.5 and end.
 	bezier_point_t *points = malloc(sizeof(bezier_point_t) * max_points);
@@ -174,6 +176,18 @@ void pax_vectorise_bezier_part(pax_vec1_t *ptr, size_t max_points, pax_vec4_t co
 	}
 	free(points);
 	free(lines);
+	
+#else
+	
+	float delta = (t_to - t_from) / (max_points - 1);
+	float part  = t_from;
+	for (size_t i = 0; i < max_points; i++) {
+		bezier_point_t point = pax_calc_bezier(part, control_points);
+		ptr[i] = (pax_vec1_t) {point.x, point.y};
+		part += delta;
+	}
+	
+#endif
 	
 	PAX_SUCCESS();
 }
@@ -676,6 +690,11 @@ void pax_triang_concave(size_t **output, size_t raw_num_points, const pax_vec1_t
 	// Create another handy dandy points array which includes their original index.
 	size_t num_points = raw_num_points;
 	indexed_point_t *points = malloc(sizeof(indexed_point_t) * num_points);
+	if (points == NULL) {
+		*output = NULL;
+		return;
+	}
+	
 	for (size_t i = 0; i < num_points; i++) {
 		points[i] = (indexed_point_t) {
 			.vector = raw_points[i],
@@ -699,7 +718,6 @@ void pax_triang_concave(size_t **output, size_t raw_num_points, const pax_vec1_t
 	
 	// LOCATE all EARS conTINUousLY.
 	for (size_t i = 0; i < n_tris; i++) {
-		PAX_LOGW(TAG, "Tri %zd", i);
 		// LOOK for an EAR.
 		for (size_t i = 0; i < num_points; i++) {
 			// bool attempt = is_clockwise3(num_points, points, i);
@@ -728,20 +746,22 @@ void pax_triang_concave(size_t **output, size_t raw_num_points, const pax_vec1_t
 		}
 	}
 	
-	*output = tris;
+	// Did we find everything?
+	if (tri_index < n_tris*3) {
+		// No, abort.
+		PAX_LOGE(TAG, "Cannot handle shape for triangulation!");
+		free(tris);
+		*output = NULL;
+	} else {
+		*output = tris;
+	}
 }
 
-// Draw a shape based on an outline.
-// Closes the shape: no need to have the last point overlap the first.
-void pax_draw_shape(pax_buf_t *buf, pax_col_t color, size_t num_points, const pax_vec1_t *points) {
-	// Simply outsource the triangulation.
-	size_t *tris   = NULL;
-	size_t  n_tris = num_points - 2;
-	pax_triang_concave(&tris, num_points, points);
-	if (!tris) {
-		return;
-	}
+// Draws a shape which has been previously triangulated.
+// The number of triangles is num_points - 2.
+void pax_draw_shape_triang(pax_buf_t *buf, pax_col_t color, size_t num_points, const pax_vec1_t *points, const size_t *tris) {
 	// Then draw all triangles.
+	size_t  n_tris = num_points - 2;
 	for (size_t i = 0, tri_index = 0; i < n_tris; i++) {
 		pax_draw_tri(
 			buf, color,
@@ -751,6 +771,18 @@ void pax_draw_shape(pax_buf_t *buf, pax_col_t color, size_t num_points, const pa
 		);
 		tri_index += 3;
 	}
+}
+
+// Draw a shape based on an outline.
+// Closes the shape: no need to have the last point overlap the first.
+void pax_draw_shape(pax_buf_t *buf, pax_col_t color, size_t num_points, const pax_vec1_t *points) {
+	// Simply outsource the triangulation.
+	size_t *tris   = NULL;
+	pax_triang_concave(&tris, num_points, points);
+	if (!tris) {
+		return;
+	}
+	pax_draw_shape_triang(buf, color, num_points, points, tris);
 	// And free el triangles.
 	free(tris);
 }

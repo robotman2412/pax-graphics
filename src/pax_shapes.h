@@ -117,6 +117,10 @@ void pax_triang_concave       (size_t **output, size_t num_points, const pax_vec
 // Closes the shape: no need to have the last point overlap the first.
 void pax_draw_shape           (pax_buf_t *buf, pax_col_t color, size_t num_points, const pax_vec1_t *points);
 
+// Draws a shape which has been previously triangulated.
+// The number of triangles is num_points - 2.
+void pax_draw_shape_triang    (pax_buf_t *buf, pax_col_t color, size_t num_points, const pax_vec1_t *points, const size_t *indices);
+
 #ifdef __cplusplus
 }
 #endif //__cplusplus
