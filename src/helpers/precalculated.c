@@ -1,6 +1,13 @@
 // WARNING: This is a generated file, do not edit it!
 // This file contains precalculated math operations.
 
+#define PAX_GFX_C
+#ifndef PAX_GFX_C
+#ifndef ARDUINO
+#pragma message "This file should not be compiled on it's own."
+#endif
+#else
+
 #include "../pax_internal.h"
 
 // Circle: 4 segments
@@ -187,3 +194,4 @@ const pax_tri_t pax_precalc_uv_circle_32[30] = {
 	{1, 0.5, 0.9619397662556433, 0.3086582838174548, 0.9903926402016152, 0.4024548389919356},
 };
 
+#endif
