@@ -39,7 +39,7 @@ class Buffer;
 namespace pax {
 
 // A C++ ShaderFunc thing for use with lambdas and such.
-typedef std::function<pax_col_t(pax_col_t tint, int x, int y, float u, float v, void *args)> ShaderFunc;
+typedef std::function<pax_col_t(pax_col_t existing, pax_col_t tint, int x, int y, float u, float v, void *args)> ShaderFunc;
 
 // A helper data structure for C++ shaders.
 typedef struct {

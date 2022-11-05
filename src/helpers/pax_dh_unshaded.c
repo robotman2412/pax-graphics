@@ -256,14 +256,11 @@ void pax_line_unshaded(pax_buf_t *buf, pax_col_t color, float x0, float y0, floa
 			setter(buf, color, index);
 		}
 	} else {
-		// float x = x0;
-		// float y = y0;
 		long x   = x0 * 0x10000;
 		long y   = y0 * 0x10000;
 		long idx = dx * 0x10000;
 		long idy = dy * 0x10000;
 		for (int i = 0; i <= nIter; i++) {
-			// setter(buf, color, x, y);
 			setter(buf, color, x/0x10000+(int)y/0x10000*buf->width);
 			x += idx;
 			y += idy;

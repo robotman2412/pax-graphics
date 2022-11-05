@@ -572,50 +572,64 @@ void pax_line_shaded(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader
 	pax_shader_ctx_t shader_ctx = pax_get_shader_ctx(buf, color, shader);
 	if (shader_ctx.skip) return;
 	
-	if (y1 < y0) {
+	// Sort points vertially.
+	if (y0 > y1) {
 		PAX_SWAP_POINTS(x0, y0, x1, y1);
+		PAX_SWAP_POINTS(u0, v0, u1, v1);
 	}
 	
-	// Clip: left.
-	if (x0 < x1 && x0 < buf->clip.x) {
-		if (x1 < buf->clip.x) return;
-		// Adjust X0 against left clip.
-		y0 = y0 + (y1 - y0) * (buf->clip.x - x0) / (x1 - x0);
-		x0 = buf->clip.x;
-	} else if (x1 < x0 && x1 < buf->clip.x) {
-		if (x0 < buf->clip.x) return;
-		// Adjust X1 against left clip.
-		y1 = y1 + (y0 - y1) * (buf->clip.x - x1) / (x0 - x1);
-		x1 = buf->clip.x;
-	}
+	// Determine whether the line might fall within the clip rect.
+	if (!buf->clip.w || !buf->clip.h) return;
+	if (y1 < buf->clip.y || y0 > buf->clip.y + buf->clip.h - 1) return;
+	if (x0 == x1 && (x0 < buf->clip.x || x0 > buf->clip.x + buf->clip.w - 1)) return;
+	if (x0 < buf->clip.x && x1 < buf->clip.x) return;
+	if (x0 > buf->clip.x + buf->clip.w - 1 && x1 > buf->clip.x + buf->clip.w - 1) return;
 	
-	// Clip: right.
-	if (x1 > x0 && x1 > buf->clip.x + buf->clip.w - 1) {
-		if (x0 > buf->clip.x + buf->clip.w) return;
-		// Adjust X1 against right of clip.
-		y1 = y0 + (y1 - y0) * (buf->clip.x + buf->clip.w - 1 - x0) / (x1 - x0);
-		x1 = buf->clip.x + buf->clip.w - 1;
-	} else if (x0 > x1 && x0 > buf->clip.x + buf->clip.w - 1) {
-		if (x1 > buf->clip.x + buf->clip.w) return;
-		// Adjust X0 against right of clip.
-		y0 = y1 + (y0 - y1) * (buf->clip.x + buf->clip.w - 1 - x1) / (x0 - x1);
-		x0 = buf->clip.x + buf->clip.w - 1;
-	}
-	
-	// Clip: top.
+	// Clip top.
 	if (y0 < buf->clip.y) {
-		if (y1 < buf->clip.y) return;
-		// Adjust Y0 against top of clip.
-		x0 = x0 + (x1 - x0) * (buf->clip.y - y0) / (y1 - y0);
+		float coeff = (buf->clip.y - y0) / (y1 - y0);
+		u0 = u0 + (u1 - u0) * coeff;
+		v0 = v0 + (v1 - v0) * coeff;
+		x0 = x0 + (x1 - x0) * coeff;
 		y0 = buf->clip.y;
 	}
-	
-	// Clip: bottom.
+	// Clip bottom.
 	if (y1 > buf->clip.y + buf->clip.h - 1) {
-		if (y0 > buf->clip.y + buf->clip.h - 1) return;
-		// Adjust Y1 against bottom of clip.
-		x1 = x1 + (x1 - x0) * (buf->clip.y + buf->clip.h - 1 - y1) / (y1 - y0);
+		float coeff = (buf->clip.y + buf->clip.h - 1 - y0) / (y1 - y0);
+		u1 = u0 + (u1 - u0) * coeff;
+		v1 = v0 + (v1 - v0) * coeff;
+		x1 = x0 + (x1 - x0) * coeff;
 		y1 = buf->clip.y + buf->clip.h - 1;
+	}
+	// Clip left.
+	if (x1 < buf->clip.x) {
+		float coeff = (buf->clip.x - x0) / (x1 - x0);
+		u1 = u0 + (u1 - u0) * coeff;
+		v1 = v0 + (v1 - v0) * coeff;
+		y1 = y0 + (y1 - y0) * coeff;
+		x1 = buf->clip.x;
+		
+	} else if (x0 < buf->clip.x) {
+		float coeff = (buf->clip.x - x0) / (x1 - x0);
+		u0 = u0 + (u1 - u0) * coeff;
+		v0 = v0 + (v1 - v0) * coeff;
+		y0 = y0 + (y1 - y0) * coeff;
+		x0 = buf->clip.x;
+	}
+	// Clip right.
+	if (x1 > buf->clip.x + buf->clip.w - 1) {
+		float coeff = (buf->clip.x + buf->clip.w - 1 - x0) / (x1 - x0);
+		u1 = u0 + (u1 - u0) * coeff;
+		v1 = v0 + (v1 - v0) * coeff;
+		y1 = y0 + (y1 - y0) * coeff;
+		x1 = buf->clip.x + buf->clip.w - 1;
+		
+	} else if (x0 > buf->clip.x + buf->clip.w - 1) {
+		float coeff = (buf->clip.x + buf->clip.w - 1 - x0) / (x1 - x0);
+		u0 = u0 + (u1 - u0) * coeff;
+		v0 = v0 + (v1 - v0) * coeff;
+		y0 = y0 + (y1 - y0) * coeff;
+		x0 = buf->clip.x + buf->clip.w - 1;
 	}
 	
 	// Determine whether the line is "steep" (dx*dx > dy*dy).
@@ -636,30 +650,49 @@ void pax_line_shaded(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader
 		int index = (int) y0 * buf->width;
 		if (dx < 0) {
 			PAX_SWAP(float, x0, x1);
+			PAX_SWAP_POINTS(u0, v0, u1, v1);
 		}
+		nIter = (int) x1 - (int) x0 + 1;
+		float u = u0, v = v0;
+		float du = (u1 - u0) / nIter;
+		float dv = (v1 - v0) / nIter;
 		for (int i = x0; i <= x1; i++) {
-			pax_col_t result = (shader_ctx.callback)(color, shader_ctx.do_getter ? pax_buf2col(buf, buf->getter(buf, index + i)) : 0, i, y0, 0, 0, shader_ctx.callback_args);
+			pax_col_t result = (shader_ctx.callback)(color, shader_ctx.do_getter ? pax_buf2col(buf, buf->getter(buf, index + i)) : 0, i, y0, u, v, shader_ctx.callback_args);
 			pax_set_index_conv(buf, result, index + i);
+			u += du;
+			v += dv;
 		}
 	} else if (x0 == x1) {
 		int index = x0 + (int) y0 * buf->width;
+		nIter = (int) y1 - (int) y0 + 1;
+		float u = u0, v = v0;
+		float du = (u1 - u0) / nIter;
+		float dv = (v1 - v0) / nIter;
 		for (int i = y0; i <= y1; i++, index += buf->width) {
-			pax_col_t result = (shader_ctx.callback)(color, shader_ctx.do_getter ? pax_buf2col(buf, buf->getter(buf, index)) : 0, x0, i, 0, 0, shader_ctx.callback_args);
+			pax_col_t result = (shader_ctx.callback)(color, shader_ctx.do_getter ? pax_buf2col(buf, buf->getter(buf, index)) : 0, x0, i, u, v, shader_ctx.callback_args);
 			pax_set_index_conv(buf, result, index);
+			u += du;
+			v += dv;
 		}
 	} else {
-		// float x = x0;
-		// float y = y0;
+		float du = (u1 - u0) / nIter;
+		float dv = (v1 - v0) / nIter;
 		long x   = x0 * 0x10000;
 		long y   = y0 * 0x10000;
 		long idx = dx * 0x10000;
 		long idy = dy * 0x10000;
+		long u   = u0 * 0x10000;
+		long v   = v0 * 0x10000;
+		long idu = du * 0x10000;
+		long idv = dv * 0x10000;
 		for (int i = 0; i <= nIter; i++) {
 			size_t    delta  = x/0x10000+(int)y/0x10000*buf->width;
-			pax_col_t result = (shader_ctx.callback)(color, shader_ctx.do_getter ? pax_buf2col(buf, buf->getter(buf, delta)) : 0, x, y, 0, 0, shader_ctx.callback_args);
+			pax_col_t result = (shader_ctx.callback)(color, shader_ctx.do_getter ? pax_buf2col(buf, buf->getter(buf, delta)) : 0, x/0x10000, y/0x10000, u/(float)0x10000, v/(float)0x10000, shader_ctx.callback_args);
 			pax_set_index_conv(buf, result, delta);
 			x += idx;
 			y += idy;
+			u += idu;
+			v += idv;
 		}
 	}
 }

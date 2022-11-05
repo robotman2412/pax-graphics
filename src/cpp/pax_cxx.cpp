@@ -31,9 +31,9 @@ namespace pax {
 
 
 // C wrapper function for using C++ shaders.
-extern "C" pax_col_t wrapperCallback(pax_col_t tint, int x, int y, float u, float v, void *args) {
+extern "C" pax_col_t wrapperCallback(pax_col_t existing, pax_col_t tint, int x, int y, float u, float v, void *args) {
 	ShaderContent *ctx = (ShaderContent *) args;
-	return (*ctx->callback)(tint, x, y, u, v, ctx->args);
+	return (*ctx->callback)(existing, tint, x, y, u, v, ctx->args);
 }
 
 // Make an empty shader.
