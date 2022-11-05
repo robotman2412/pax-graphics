@@ -55,6 +55,10 @@ Shader::Shader(ShaderFunc callback, void *args) {
 	cxxShaderCtx.callback = new ShaderFunc(callback);
 	cxxShaderCtx.args     = args;
 	internal    = (pax_shader_t) {
+		.schema_version    = (uint8_t)  1,
+		.schema_complement = (uint8_t) ~1,
+		.renderer_id       = PAX_RENDERER_ID_SWR,
+		.promise_callback  = NULL,
 		.callback          = (void*) wrapperCallback,
 		.callback_args     = &cxxShaderCtx,
 		.alpha_promise_0   = false,

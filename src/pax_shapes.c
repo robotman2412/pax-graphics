@@ -496,8 +496,7 @@ size_t pax_round_shape_uniform(pax_vec1_t **output, size_t num_points, pax_vec1_
 	// Fill out an array with the same radius.
 	float *radii = malloc(sizeof(float) * num_points);
 	if (!radii) {
-		PAX_ERROR("pax_round_shape_uniform", PAX_ERR_NOMEM);
-		return 0;
+		PAX_ERROR1("pax_round_shape_uniform", PAX_ERR_NOMEM, 0);
 	}
 	for (size_t i = 0; i < num_points; i++) {
 		radii[i] = radius;

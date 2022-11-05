@@ -15,7 +15,7 @@ def precalcCircle(fd, resolution, id):
 	
 	# Precalculate UVs.
 	fd.write("// Circle UVs: " + str(resolution) + " segments\n")
-	fd.write("const pax_tri_t pax_precalc_uv_" + id + "[" + str(resolution - 2) + "] = {\n")
+	fd.write("const pax_tri_t pax_precalc_uv_" + id + "[" + str(resolution - 1) + "] = {\n")
 	for i in range(resolution - 1):
 		a1 =  i      * delta
 		a2 = (i + 1) * delta
