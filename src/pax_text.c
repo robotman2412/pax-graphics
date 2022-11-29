@@ -63,7 +63,7 @@ typedef struct {
 	uint8_t           vertical_offs;
 	// Whether to do anti-aliasing and/or interpolation.
 	bool              do_aa;
-} pax_text_ctx_t;
+} pax_text_render_t;
 
 
 
@@ -138,7 +138,7 @@ uint64_t text_promise_callback(pax_buf_t *buf, pax_col_t tint, void *args0) {
 }
 
 // Internal method for monospace bitmapped characters.
-pax_vec1_t text_bitmap_mono(pax_text_ctx_t *ctx, const pax_font_range_t *range, uint32_t glyph) {
+pax_vec1_t text_bitmap_mono(pax_text_render_t *ctx, const pax_font_range_t *range, uint32_t glyph) {
 	if (ctx->do_render) {
 		// Set up shader.
 		pax_font_bmp_args_t args = {
@@ -201,7 +201,7 @@ pax_vec1_t text_bitmap_mono(pax_text_ctx_t *ctx, const pax_font_range_t *range, 
 }
 
 // Internal method for variable pitch bitmapped characters.
-pax_vec1_t text_bitmap_var(pax_text_ctx_t *ctx, const pax_font_range_t *range, uint32_t glyph) {
+pax_vec1_t text_bitmap_var(pax_text_render_t *ctx, const pax_font_range_t *range, uint32_t glyph) {
 	size_t index = (glyph - range->start);
 	const pax_bmpv_t *dims = &range->bitmap_var.dims[index];
 	if (ctx->do_render) {
@@ -285,7 +285,7 @@ static const pax_font_range_t *text_get_range(const pax_font_t *font, uint32_t c
 }
 
 // Internal method for rendering text and calculating text size.
-static pax_vec1_t text_generic(pax_text_ctx_t *ctx, const char *text) {
+static pax_vec1_t text_generic(pax_text_render_t *ctx, const char *text) {
 	// Sanity checks.
 	if (!text || !*text) {
 		return (pax_vec1_t) { .x=0, .y=0, };
@@ -378,7 +378,7 @@ pax_vec1_t pax_center_text(pax_buf_t *buf, pax_col_t color, const pax_font_t *fo
 // If font is NULL, the default font (7x9) will be used.
 pax_vec1_t pax_draw_text(pax_buf_t *buf, pax_col_t color, const pax_font_t *font, float font_size, float x, float y, const char *text) {
 	if (!font) PAX_ERROR1("pax_draw_text(font: NULL)", PAX_ERR_PARAM, (pax_vec1_t){0});
-	pax_text_ctx_t ctx = {
+	pax_text_render_t ctx = {
 		.do_render = true,
 		.buf       = buf,
 		.color     = color,
@@ -399,7 +399,7 @@ pax_vec1_t pax_draw_text(pax_buf_t *buf, pax_col_t color, const pax_font_t *font
 // If font is NULL, the default font (7x9) will be used.
 pax_vec1_t pax_draw_text_aa(pax_buf_t *buf, pax_col_t color, const pax_font_t *font, float font_size, float x, float y, const char *text) {
 	if (!font) PAX_ERROR1("pax_draw_text(font: NULL)", PAX_ERR_PARAM, (pax_vec1_t){0});
-	pax_text_ctx_t ctx = {
+	pax_text_render_t ctx = {
 		.do_render = true,
 		.buf       = buf,
 		.color     = color,
@@ -420,7 +420,7 @@ pax_vec1_t pax_draw_text_aa(pax_buf_t *buf, pax_col_t color, const pax_font_t *f
 // If font is NULL, the default font (7x9) will be used.
 pax_vec1_t pax_draw_text_noaa(pax_buf_t *buf, pax_col_t color, const pax_font_t *font, float font_size, float x, float y, const char *text) {
 	if (!font) PAX_ERROR1("pax_draw_text(font: NULL)", PAX_ERR_PARAM, (pax_vec1_t){0});
-	pax_text_ctx_t ctx = {
+	pax_text_render_t ctx = {
 		.do_render = true,
 		.buf       = buf,
 		.color     = color,
@@ -442,7 +442,7 @@ pax_vec1_t pax_draw_text_noaa(pax_buf_t *buf, pax_col_t color, const pax_font_t 
 // If font is NULL, the default font (7x9) will be used.
 pax_vec1_t pax_text_size(const pax_font_t *font, float font_size, const char *text) {
 	if (!font) PAX_ERROR1("pax_draw_text(font: NULL)", PAX_ERR_PARAM, (pax_vec1_t){0});
-	pax_text_ctx_t ctx = {
+	pax_text_render_t ctx = {
 		.do_render = false,
 		.font      = font,
 		.font_size = font_size,
@@ -450,6 +450,10 @@ pax_vec1_t pax_text_size(const pax_font_t *font, float font_size, const char *te
 	return text_generic(&ctx, text);
 }
 
+// An advanced text drawing method which is far more flexible than the others.
+void pax_text(pax_buf_t *buf, pax_col_t color, pax_text_ctx_t *ctx, const pax_font_t *font, float font_size, const char *text) {
+	
+}
 
 
 #if 1

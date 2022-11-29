@@ -103,6 +103,13 @@ class Buffer {
 		// Deletion operator.
 		~Buffer();
 		
+		// Get the width, in pixels, of the buffer.
+		int width();
+		// Get the height, in pixels, of the buffer.
+		int height();
+		// Get the type of the buffer.
+		pax_buf_type_t type();
+		
 		// Fills the entire buffer with the given color.
 		void background(pax_col_t color);
 		
@@ -170,6 +177,32 @@ class Buffer {
 		void drawLine(float x0, float y0, float x1, float y1);
 		// Draws a line with a custom outline color.
 		void drawLine(pax_col_t color, float x0, float y0, float x1, float y1);
+		
+		// Outlines an arbitrary shape.
+		void outline(float x, float y, Shape &shape);
+		// Outlines an arbitrary shape.
+		void outline(float x, float y, Shape *shape);
+		// Outlines an arbitrary shape.
+		void outline(pax_col_t color, float x, float y, Shape &shape);
+		// Outlines an arbitrary shape.
+		void outline(pax_col_t color, float x, float y, Shape *shape);
+		// Outlines an arbitrary shape.
+		void outline(pax_col_t color, Shader *shader, float x, float y, Shape &shape);
+		// Outlines an arbitrary shape.
+		void outline(pax_col_t color, Shader *shader, float x, float y, Shape *shape);
+		
+		// Draws an arbitrary shape.
+		void draw(float x, float y, Shape &shape);
+		// Draws an arbitrary shape.
+		void draw(float x, float y, Shape *shape);
+		// Draws an arbitrary shape.
+		void draw(pax_col_t color, float x, float y, Shape &shape);
+		// Draws an arbitrary shape.
+		void draw(pax_col_t color, float x, float y, Shape *shape);
+		// Draws an arbitrary shape.
+		void draw(pax_col_t color, Shader *shader, float x, float y, Shape &shape);
+		// Draws an arbitrary shape.
+		void draw(pax_col_t color, Shader *shader, float x, float y, Shape *shape);
 		
 		// Push the matrix stack.
 		void pushMatrix();

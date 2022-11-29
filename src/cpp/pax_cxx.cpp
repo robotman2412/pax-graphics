@@ -107,6 +107,9 @@ Buffer::Buffer() {
 Buffer::Buffer(pax_buf_t *existing) {
 	internal       = existing;
 	deleteInternal = false;
+	// Default colors.
+	fillColor      = 0xffffffff;
+	lineColor      = 0xffffffff;
 }
 
 // Make a wrapper of a new buffer.
@@ -116,6 +119,9 @@ Buffer::Buffer(int width, int height, pax_buf_type_t type) {
 	deleteInternal = true;
 	// Create buffer.
 	pax_buf_init(internal, NULL, width, height, type);
+	// Default colors.
+	fillColor      = 0xffffffff;
+	lineColor      = 0xffffffff;
 }
 
 // Make a wrapper of a new buffer, with preallocated memory.
@@ -126,6 +132,9 @@ Buffer::Buffer(void *preallocated, int width, int height, pax_buf_type_t type) {
 	deleteInternal = true;
 	// Create buffer.
 	pax_buf_init(internal, preallocated, width, height, type);
+	// Default colors.
+	fillColor      = 0xffffffff;
+	lineColor      = 0xffffffff;
 }
 
 // Deletion operator.
@@ -140,6 +149,16 @@ Buffer::~Buffer() {
 	internal       = NULL;
 	deleteInternal = false;
 }
+
+
+
+// Get the width, in pixels, of the buffer.
+int Buffer::width() { return internal ? internal->width : -1; }
+// Get the height, in pixels, of the buffer.
+int Buffer::height() { return internal ? internal->height : -1; }
+// Get the type of the buffer.
+pax_buf_type_t Buffer::type() { return internal ? internal->type : (pax_buf_type_t) -1; }
+
 
 
 #define COMMA ,
@@ -187,6 +206,46 @@ GENERIC_WRAPPER_IMPL(Rect,   rect,   pax_quad_t, float x COMMA float y COMMA flo
 GENERIC_WRAPPER_IMPL(Tri,    tri,    pax_tri_t,  float x0 COMMA float y0 COMMA float x1 COMMA float y1 COMMA float x2 COMMA float y2, x0 COMMA y0 COMMA x1 COMMA y1 COMMA x2 COMMA y2)
 GENERIC_WRAPPER_IMPL(Circle, circle, pax_quad_t, float x COMMA float y COMMA float radius, x COMMA y COMMA radius)
 GENERIC_WRAPPER_IMPL(Arc,    arc,    pax_quad_t, float x COMMA float y COMMA float radius COMMA float startAngle COMMA float endAngle, x COMMA y COMMA radius COMMA startAngle COMMA endAngle)
+
+// Outlines an arbitrary shape.
+void Buffer::outline(float x, float y, Shape &shape) { outline(lineColor, NULL, x, y, &shape); }
+// Outlines an arbitrary shape.
+void Buffer::outline(float x, float y, Shape *shape) { outline(lineColor, NULL, x, y, shape); }
+// Outlines an arbitrary shape.
+void Buffer::outline(pax_col_t color, float x, float y, Shape &shape) { outline(color, NULL, x, y, &shape); }
+// Outlines an arbitrary shape.
+void Buffer::outline(pax_col_t color, float x, float y, Shape *shape) { outline(color, NULL, x, y, shape); }
+// Outlines an arbitrary shape.
+void Buffer::outline(pax_col_t color, Shader *shader, float x, float y, Shape &shape) { outline(color, shader, x, y, &shape); }
+// Outlines an arbitrary shape.
+void Buffer::outline(pax_col_t color, Shader *shader, float x, float y, Shape *shape) {
+	if (shape) {
+		pax_push_2d(internal);
+		pax_apply_2d(internal, matrix_2d_translate(x, y));
+		shape->_int_draw(internal, color, shader ? shader->getInternal() : NULL, true);
+		pax_pop_2d(internal);
+	}
+}
+
+// Draws an arbitrary shape.
+void Buffer::draw(float x, float y, Shape &shape) { draw(fillColor, NULL, x, y, &shape); }
+// Draws an arbitrary shape.
+void Buffer::draw(float x, float y, Shape *shape) { draw(fillColor, NULL, x, y, shape); }
+// Draws an arbitrary shape.
+void Buffer::draw(pax_col_t color, float x, float y, Shape &shape) { draw(color, NULL, x, y, &shape); }
+// Draws an arbitrary shape.
+void Buffer::draw(pax_col_t color, float x, float y, Shape *shape) { draw(color, NULL, x, y, shape); }
+// Draws an arbitrary shape.
+void Buffer::draw(pax_col_t color, Shader *shader, float x, float y, Shape &shape) { draw(color, shader, x, y, &shape); }
+// Draws an arbitrary shape.
+void Buffer::draw(pax_col_t color, Shader *shader, float x, float y, Shape *shape) {
+	if (shape) {
+		pax_push_2d(internal);
+		pax_apply_2d(internal, matrix_2d_translate(x, y));
+		shape->_int_draw(internal, color, shader ? shader->getInternal() : NULL, false);
+		pax_pop_2d(internal);
+	}
+}
 
 // Draws a line with the default outline color.
 void Buffer::drawLine(float x0, float y0, float x1, float y1) {
@@ -429,7 +488,7 @@ pax_col_t merge(pax_col_t base, pax_col_t top) {
 }
 
 // Tints the color, commonly used for textures.
-pax_col_t pax_col_tint(pax_col_t col, pax_col_t tint) {
+pax_col_t tint(pax_col_t col, pax_col_t tint) {
 	// If tint is 0, return 0.
 	if (!tint) return 0;
 	// If tint is opaque white, return input.

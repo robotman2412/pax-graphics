@@ -97,7 +97,7 @@ extern "C" {
 #define PAX_RESET_ALL 1
 
 // The way pixel data is to be stored in a buffer.
-enum   pax_buf_type {
+enum pax_buf_type {
 	PAX_BUF_1_PAL       = 0x20000001,
 	PAX_BUF_2_PAL       = 0x20000002,
 	PAX_BUF_4_PAL       = 0x20000004,
@@ -118,6 +118,18 @@ enum   pax_buf_type {
 	PAX_BUF_32_8888ARGB = 0x00888820
 };
 
+// A way in which to perform word wrap.
+enum pax_word_wrap {
+	// Do not perform word wrap.
+	PAX_WW_NONE,
+	// Word wrap by the letter.
+	PAX_WW_LETTER,
+	// Word wrap by the word.
+	PAX_WW_WORD,
+	// Word wrap with inter-word justfication.
+	PAX_WW_JUSTIFY,
+};
+
 // Type of task to do.
 // Things like text and arcs will decompose to rects and triangles.
 enum pax_task_type {
@@ -128,6 +140,10 @@ enum pax_task_type {
 	// Stop MCR workder.
 	PAX_TASK_STOP,
 };
+
+typedef enum   pax_buf_type    pax_buf_type_t;
+typedef enum   pax_word_wrap   pax_word_wrap_t;
+typedef enum   pax_task_type   pax_task_type_t;
 
 // Promises that the shape will be fully opaque when drawn.
 #define PAX_PROMISE_OPAQUE		0x01
@@ -149,6 +165,9 @@ struct matrix_stack_2d;
 struct pax_buf;
 struct pax_shader;
 
+struct pax_text_ctx;
+struct pax_text_style;
+
 struct pax_task;
 
 typedef struct pax_vec1        pax_vec1_t;
@@ -161,12 +180,12 @@ typedef struct pax_vec4        pax_quad_t;
 typedef struct pax_rect        pax_rect_t;
 typedef union  matrix_2d       matrix_2d_t;
 typedef struct matrix_stack_2d matrix_stack_2d_t;
-typedef enum   pax_buf_type    pax_buf_type_t;
 typedef struct pax_buf         pax_buf_t;
 typedef struct pax_shader      pax_shader_t;
-typedef enum   pax_task_type   pax_task_type_t;
 typedef struct pax_task        pax_task_t;
 typedef struct pax_shader_ctx  pax_shader_ctx_t;
+typedef struct pax_text_ctx    pax_text_ctx_t;
+typedef struct pax_text_style  pax_text_style_t;
 
 typedef int32_t                pax_err_t;
 typedef uint32_t               pax_col_t;
@@ -325,6 +344,32 @@ struct pax_shader {
 	bool     alpha_promise_0;
 	// Whether to promise that an alpha of 255 in tint will return a fully opaque.
 	bool     alpha_promise_255;
+};
+
+// Style information for drawing text.
+struct pax_text_style {
+	// To draw an underline.
+	bool underline;
+	// To draw a line through.
+	bool strikethrough;
+	// To draw italicised.
+	bool italic;
+};
+
+// Context used for advanced text drawing.
+struct pax_text_ctx {
+	// The bounding box to draw text in.
+	// If word wrap is disabled, width and height are ignored.
+	pax_rect_t       bounds;
+	
+	// The (relative to bounds) cursor position.
+	pax_vec1_t       cursor;
+	
+	// Whether to use word-wrap, and if so, which type.
+	pax_word_wrap_t  word_wrap;
+	
+	// Information relevant to style.
+	pax_text_style_t style;
 };
 
 // A task to perform, used by multicore rendering.

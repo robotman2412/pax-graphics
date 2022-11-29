@@ -402,6 +402,21 @@ void pax_outline_circle(pax_buf_t *buf, pax_col_t color, float x, float y, float
 // From and to range from 0 to 1, outside this range is ignored.
 // Does not close the shape: this must be done manually.
 void pax_outline_shape_part(pax_buf_t *buf, pax_col_t color, size_t num_points, const pax_vec1_t *points, float from, float to) {
+	pax_outline_shape_part_cl(buf, color, num_points, points, false, from, to);
+}
+
+// Outline a shape defined by a list of points.
+// Does not close the shape: this must be done manually.
+void pax_outline_shape(pax_buf_t *buf, pax_col_t color, size_t num_points, const pax_vec1_t *points) {
+	for (size_t i = 0; i < num_points - 1; i++) {
+		pax_draw_line(buf, color, points[i].x, points[i].y, points[i + 1].x, points[i + 1].y);
+	}
+}
+
+// Partially outline a shape defined by a list of points.
+// From and to range from 0 to 1, outside this range is ignored.
+// Closes the shape: there is a line from the first to last point.
+void pax_outline_shape_part_cl(pax_buf_t *buf, pax_col_t color, size_t num_points, const pax_vec1_t *points, bool close, float from, float to) {
 	// El simplify.
 	if (to < from) {
 		PAX_SWAP(float, to, from);
@@ -412,7 +427,7 @@ void pax_outline_shape_part(pax_buf_t *buf, pax_col_t color, size_t num_points, 
 	}
 	
 	// Calculate total distance.
-	float *dist       = malloc(sizeof(float) * (num_points - 1));
+	float *dist       = malloc(sizeof(float) * num_points);
 	float  total_dist = 0;
 	float  start_dist = 0;
 	if (!dist) {
@@ -424,18 +439,26 @@ void pax_outline_shape_part(pax_buf_t *buf, pax_col_t color, size_t num_points, 
 		dist[i]     = sqrtf(dx*dx + dy*dy);
 		total_dist += dist[i];
 	}
+	// Count the returning line if the shape is closed.
+	if (close && num_points >= 2) {
+		float dx    = points[num_points - 1].x - points[0].x;
+		float dy    = points[num_points - 1].y - points[0].y;
+		dist[num_points-1] = sqrtf(dx*dx + dy*dy);
+		total_dist += dist[num_points-1];
+	}
 	
 	// Do distance calculations.
 	start_dist  = total_dist * from;
 	total_dist *= to;
 	
 	// Draw until the maximum length is reached.
-	for (size_t i = 0; i < num_points - 1; i++) {
+	for (size_t i = 0; i < num_points - !close; i++) {
+		size_t i1 = (i + 1) % num_points;
 		if (start_dist > dist[i]) {
 			// Skip the line segment.
 		} else if (start_dist > 0) {
-			float dx    = points[i + 1].x - points[i].x;
-			float dy    = points[i + 1].y - points[i].y;
+			float dx    = points[i1].x - points[i].x;
+			float dy    = points[i1].y - points[i].y;
 			float part0 = start_dist / dist[i];
 			if (total_dist > dist[i]) {
 				// Draw the end of a segment.
@@ -443,8 +466,8 @@ void pax_outline_shape_part(pax_buf_t *buf, pax_col_t color, size_t num_points, 
 					buf, color,
 					points[i].x + dx * part0,
 					points[i].y + dy * part0,
-					points[i + 1].x,
-					points[i + 1].y
+					points[i1].x,
+					points[i1].y
 				);
 			} else {
 				// Draw the middle of a segment.
@@ -459,11 +482,11 @@ void pax_outline_shape_part(pax_buf_t *buf, pax_col_t color, size_t num_points, 
 			}
 		} else if (dist[i] < total_dist) {
 			// Draw the entire segment.
-			pax_draw_line(buf, color, points[i].x, points[i].y, points[i + 1].x, points[i + 1].y);
+			pax_draw_line(buf, color, points[i].x, points[i].y, points[i1].x, points[i1].y);
 		} else {
 			// Draw the start of a segment.
-			float dx    = points[i + 1].x - points[i].x;
-			float dy    = points[i + 1].y - points[i].y;
+			float dx    = points[i1].x - points[i].x;
+			float dy    = points[i1].y - points[i].y;
 			float part  = total_dist / dist[i];
 			pax_draw_line(
 				buf, color,
@@ -483,10 +506,13 @@ void pax_outline_shape_part(pax_buf_t *buf, pax_col_t color, size_t num_points, 
 }
 
 // Outline a shape defined by a list of points.
-// Does not close the shape: this must be done manually.
-void pax_outline_shape(pax_buf_t *buf, pax_col_t color, size_t num_points, const pax_vec1_t *points) {
+// Closes the shape: there is a line from the first to last point.
+void pax_outline_shape_cl(pax_buf_t *buf, pax_col_t color, size_t num_points, const pax_vec1_t *points, bool close) {
 	for (size_t i = 0; i < num_points - 1; i++) {
 		pax_draw_line(buf, color, points[i].x, points[i].y, points[i + 1].x, points[i + 1].y);
+	}
+	if (close && num_points >= 2) {
+		pax_draw_line(buf, color, points[0].x, points[0].y, points[num_points - 1].x, points[num_points - 1].y);
 	}
 }
 
@@ -677,12 +703,12 @@ size_t pax_triang_complete(size_t **output, pax_vec1_t **additional_points, size
 // Assumes the shape does not intersect itself.
 //
 // Stores triangles as triple-index pairs in output, which is a dynamically allocated size_t array.
-// The number of triangles created is num_points - 2.
-void pax_triang_concave(size_t **output, size_t raw_num_points, const pax_vec1_t *raw_points) {
+// Returns the number of triangles created.
+size_t pax_triang_concave(size_t **output, size_t raw_num_points, const pax_vec1_t *raw_points) {
 	// Cannot triangulate with less than 3 points.
 	if (raw_num_points < 3) {
 		*output = NULL;
-		return;
+		return 0;
 	}
 	
 	// Find an annoying variable.
@@ -692,7 +718,7 @@ void pax_triang_concave(size_t **output, size_t raw_num_points, const pax_vec1_t
 	indexed_point_t *points = malloc(sizeof(indexed_point_t) * num_points);
 	if (points == NULL) {
 		*output = NULL;
-		return;
+		return 0;
 	}
 	
 	for (size_t i = 0; i < num_points; i++) {
@@ -711,7 +737,9 @@ void pax_triang_concave(size_t **output, size_t raw_num_points, const pax_vec1_t
 	int    tri_index = 0;
 	size_t *tris     = malloc(sizeof(size_t) * n_tris * 3);
 	if (!tris) {
-		PAX_ERROR("pax_triangulate_shape", PAX_ERR_NOMEM);
+		PAX_LOGE(TAG, "Out of memory for triangulation!");
+		*output = NULL;
+		return 0;
 	}
 	// Find the funny ordering.
 	bool clockwise = is_clockwise(num_points, points, 0, num_points, dy);
@@ -748,20 +776,23 @@ void pax_triang_concave(size_t **output, size_t raw_num_points, const pax_vec1_t
 	
 	// Did we find everything?
 	if (tri_index < n_tris*3) {
-		// No, abort.
+		// No; abort.
 		PAX_LOGE(TAG, "Cannot handle shape for triangulation!");
 		free(tris);
 		*output = NULL;
+		return 0;
+		
 	} else {
+		// Yes.
 		*output = tris;
+		return n_tris;
 	}
 }
 
 // Draws a shape which has been previously triangulated.
 // The number of triangles is num_points - 2.
-void pax_draw_shape_triang(pax_buf_t *buf, pax_col_t color, size_t num_points, const pax_vec1_t *points, const size_t *tris) {
+void pax_draw_shape_triang(pax_buf_t *buf, pax_col_t color, size_t num_points, const pax_vec1_t *points, size_t n_tris, const size_t *tris) {
 	// Then draw all triangles.
-	size_t  n_tris = num_points - 2;
 	for (size_t i = 0, tri_index = 0; i < n_tris; i++) {
 		pax_draw_tri(
 			buf, color,
@@ -778,11 +809,11 @@ void pax_draw_shape_triang(pax_buf_t *buf, pax_col_t color, size_t num_points, c
 void pax_draw_shape(pax_buf_t *buf, pax_col_t color, size_t num_points, const pax_vec1_t *points) {
 	// Simply outsource the triangulation.
 	size_t *tris   = NULL;
-	pax_triang_concave(&tris, num_points, points);
+	size_t  n_tris = pax_triang_concave(&tris, num_points, points);
 	if (!tris) {
 		return;
 	}
-	pax_draw_shape_triang(buf, color, num_points, points, tris);
+	pax_draw_shape_triang(buf, color, num_points, points, n_tris, tris);
 	// And free el triangles.
 	free(tris);
 }

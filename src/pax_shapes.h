@@ -68,6 +68,13 @@ void pax_outline_shape_part   (pax_buf_t *buf, pax_col_t color, size_t num_point
 // Outline a shape defined by a list of points.
 // Does not close the shape: this must be done manually.
 void pax_outline_shape        (pax_buf_t *buf, pax_col_t color, size_t num_points, const pax_vec1_t *points);
+// Partially outline a shape defined by a list of points.
+// From and to range from 0 to 1, outside this range is ignored.
+// When close is true, closes the shape; there is a line from the first to last point.
+void pax_outline_shape_part_cl(pax_buf_t *buf, pax_col_t color, size_t num_points, const pax_vec1_t *points, bool close, float from, float to);
+// Outline a shape defined by a list of points.
+// When close is true, closes the shape; there is a line from the first to last point.
+void pax_outline_shape_cl     (pax_buf_t *buf, pax_col_t color, size_t num_points, const pax_vec1_t *points, bool close);
 
 /* ===== POLYGON MANIPULATION ==== */
 
@@ -109,8 +116,8 @@ size_t pax_triang_complete(size_t **output, pax_vec1_t **additional_points, size
 // Assumes the shape does not intersect itself.
 //
 // Stores triangles as triple-index pairs in output, which is a dynamically allocated size_t array.
-// The number of triangles created is num_points - 2.
-void pax_triang_concave       (size_t **output, size_t num_points, const pax_vec1_t *points);
+// Returns the number of triangles created.
+size_t pax_triang_concave     (size_t **output, size_t num_points, const pax_vec1_t *points);
 // WARNING: Does not work for self-intersecting polygons.
 // 
 // Draw a shape based on an outline.
@@ -119,7 +126,7 @@ void pax_draw_shape           (pax_buf_t *buf, pax_col_t color, size_t num_point
 
 // Draws a shape which has been previously triangulated.
 // The number of triangles is num_points - 2.
-void pax_draw_shape_triang    (pax_buf_t *buf, pax_col_t color, size_t num_points, const pax_vec1_t *points, const size_t *indices);
+void pax_draw_shape_triang    (pax_buf_t *buf, pax_col_t color, size_t num_points, const pax_vec1_t *points, size_t num_tris, const size_t *indices);
 
 #ifdef __cplusplus
 }

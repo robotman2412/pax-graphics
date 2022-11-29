@@ -32,30 +32,50 @@
 
 // Loads a font using a file descriptor.
 // Allocates the entire font in one go, such that only free(pax_font_t*) is required.
-pax_font_t *pax_load_font           (FILE *fd);
+pax_font_t *pax_load_font     (FILE *fd);
 // Stores a font to a file descriptor.
 // This is a memory intensive operation and might not succeed on embedded targets.
-void        pax_store_font          (FILE *fd, const pax_font_t *font);
+void        pax_store_font    (FILE *fd, const pax_font_t *font);
 
 // Draw a string with the given font and return it's size.
 // Text is center-aligned on every line.
 // Size is before matrix transformation.
 // Font is scaled up with method recommended by it (see pax_font_t::recommend_aa).
-pax_vec1_t  pax_center_text         (pax_buf_t *buf, pax_col_t color, const pax_font_t *font, float font_size, float x, float y, const char *text);
+pax_vec1_t  pax_center_text   (pax_buf_t *buf, pax_col_t color, const pax_font_t *font, float font_size, float x, float y, const char *text);
 // Draw a string with the given font and return it's size.
 // Size is before matrix transformation.
 // Font is scaled up with method recommended by it (see pax_font_t::recommend_aa).
-pax_vec1_t  pax_draw_text           (pax_buf_t *buf, pax_col_t color, const pax_font_t *font, float font_size, float x, float y, const char *text);
+pax_vec1_t  pax_draw_text     (pax_buf_t *buf, pax_col_t color, const pax_font_t *font, float font_size, float x, float y, const char *text);
 // Draw a string with the given font and return it's size.
 // Size is before matrix transformation.
 // Font is scaled up without interpolation.
-pax_vec1_t  pax_draw_text_noaa      (pax_buf_t *buf, pax_col_t color, const pax_font_t *font, float font_size, float x, float y, const char *text);
+pax_vec1_t  pax_draw_text_noaa(pax_buf_t *buf, pax_col_t color, const pax_font_t *font, float font_size, float x, float y, const char *text);
 // Draw a string with the given font and return it's size.
 // Size is before matrix transformation.
 // Font is scaled up with interpolation.
-pax_vec1_t  pax_draw_text_aa        (pax_buf_t *buf, pax_col_t color, const pax_font_t *font, float font_size, float x, float y, const char *text);
+pax_vec1_t  pax_draw_text_aa  (pax_buf_t *buf, pax_col_t color, const pax_font_t *font, float font_size, float x, float y, const char *text);
 // Calculate the size of the string with the given font.
 // Size is before matrix transformation.
-pax_vec1_t  pax_text_size           (const pax_font_t *font, float font_size, const char *text);
+pax_vec1_t  pax_text_size     (const pax_font_t *font, float font_size, const char *text);
+
+static inline pax_text_style_t pax_text_style_default() {
+	return (pax_text_style_t) {
+		.underline     = false,
+		.strikethrough = false,
+		.italic        = false,
+	};
+}
+
+static inline pax_text_ctx_t pax_text_ctx_default(float x, float y) {
+	return (pax_text_ctx_t) {
+		.bounds    = { x, y, 0, 0 },
+		.cursor    = { 0, 0 },
+		.word_wrap = PAX_WW_NONE,
+		.style     = pax_text_style_default(),
+	};
+}
+
+// An advanced text drawing method which is far more flexible than the others.
+void        pax_text          (pax_buf_t *buf, pax_col_t color, pax_text_ctx_t *ctx, const pax_font_t *font, float font_size, const char *text);
 
 #endif //PAX_TEXT_H
