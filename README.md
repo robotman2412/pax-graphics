@@ -9,13 +9,22 @@ Documentation can be found [here](docs).
 
 # Target v1.1.0 TODO list
 - [ ] Fix all remaining build warnings
-- [ ] Integrate codecs?
-- [ ] Built-in word-wrap support
+- [ ] More advanced text options
 - [ ] Import more fonts
+- [ ] Comprehensive C++ wrapper
+- [ ] Triangulation that can handle any shape
 - [x] Leave this box unchecked
 
+# Target v1.2.0 TODO list
+- [ ] Support for outline-based (.ttf or similar) fonts
+
+# Feature wishlist
+- GPU acceleration
+- Support for holes in triangulated shapes
+- Built-in simple GUI library
+
 ## MCH2022?
-[MCH2022](https://mch2022.org/) is a hackercamp starting this summer.
+[MCH2022](https://mch2022.org/) was a hackercamp in the summer of 2022.
 MCH is the successor of SHA2017, where [Badge.Team](https://badge.team/) made their first badge.
 
 The badge is an electronic event badge which can do much more than just show your name.
