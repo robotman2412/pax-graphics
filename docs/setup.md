@@ -57,13 +57,14 @@ Or allocate memory yourself:
 // 256x256 with 32 bits per pixel (4 bytes)
 uint8_t my_memory[256*256*4];
 pax_but_t buffer;
-// You must be more careful with what you tell PAX about the buffer here.
-pax_buf_init(&buffer, NULL, 256, 256, PAX_BUF_32_8888ARGB);
+// You must be more careful with what you tell PAX about the buffer here, it will assume you know the exact size requirement.
+pax_buf_init(&buffer, my_memory, 256, 256, PAX_BUF_32_8888ARGB);
 ```
 
 If you don't need the buffer anymore, use `pax_buf_destroy`:
 ```c
 // This works regardless of whether you allocated memory manually or not.
+// Manually allocated memory will not be released.
 pax_buf_destroy(&buffer);
 ```
 
