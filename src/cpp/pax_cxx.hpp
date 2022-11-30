@@ -54,7 +54,7 @@ class Shader {
 		pax_shader_t internal;
 		// Optional C++ shader function.
 		ShaderContent cxxShaderCtx;
-		// Wehther this is a C++ type shader.
+		// Whether this is a C++ type shader.
 		bool isCxx;
 		// Whether this shader actually does anything.
 		bool active;

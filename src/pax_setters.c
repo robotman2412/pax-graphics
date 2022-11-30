@@ -171,76 +171,12 @@ pax_index_setter_t pax_get_setter(pax_buf_t *buf, pax_col_t *col_ptr, const pax_
 // Does no bounds checking nor color conversion.
 pax_col_t pax_get_index(pax_buf_t *buf, int index) {
 	return buf->getter(buf, index);
-	// uint8_t bpp = buf->bpp;
-	// if (bpp == 1) {
-	// 	// 1BPP
-	// 	// uint8_t *ptr = &buf->buf_8bpp[(index) >> 3];
-	// 	// uint8_t mask = 0x01 << (x & 7);
-	// 	// return (*ptr & mask) >> (x & 7);
-	// } else if (bpp == 2) {
-	// 	// 2BPP
-	// 	// uint8_t *ptr = &buf->buf_8bpp[(index) >> 2];
-	// 	// uint8_t mask = 0x03 << (x & 3) * 2;
-	// 	// return (*ptr & mask) >> ((x & 3) * 2);
-	// } else if (bpp == 4) {
-	// 	// 4BPP
-	// 	// uint8_t *ptr = &buf->buf_8bpp[(index) >> 1];
-	// 	// if (index & 1) {
-	// 	// 	return *ptr >> 4;
-	// 	// } else {
-	// 	// 	return *ptr & 0x0f;
-	// 	// }
-	// } else if (bpp == 8) {
-	// 	// 8BPP
-	// 	return buf->buf_8bpp[index];
-	// } else if (bpp == 16) {
-	// 	// 16BPP
-	// 	return buf->buf_16bpp[index];
-	// } else if (bpp == 32) {
-	// 	// 32BPP
-	// 	return buf->buf_32bpp[index];
-	// } else {
-	// 	//PAX_ERROR1("pax_get_pixel_u", PAX_ERR_PARAM, 0);
-	// 	return 0;
-	// }
-	// return 0;
 }
 
 // Sets based on index instead of coordinates.
 // Does no bounds checking nor color conversion.
 void pax_set_index(pax_buf_t *buf, pax_col_t color, int index) {
 	buf->setter(buf, color, index);
-	// uint8_t bpp = buf->bpp;
-	// if (bpp == 1) {
-	// 	// 1BPP
-	// 	// uint8_t *ptr = &buf->buf_8bpp[(index) >> 3];
-	// 	// uint8_t mask = 0x01 << (x & 7);
-	// 	// *ptr = (*ptr & ~mask) | (color << (index & 7));
-	// } else if (bpp == 2) {
-	// 	// 2BPP
-	// 	// uint8_t *ptr = &buf->buf_8bpp[(index) >> 2];
-	// 	// uint8_t mask = 0x03 << (x & 3) * 2;
-	// 	// *ptr = (*ptr & ~mask) | (color << ((index & 3) * 2));
-	// } else if (bpp == 4) {
-	// 	// 4BPP
-	// 	// uint8_t *ptr = &buf->buf_8bpp[(index) >> 1];
-	// 	// if (x & 1) {
-	// 	// 	*ptr = (*ptr & 0xf0) | color;
-	// 	// } else {
-	// 	// 	*ptr = (*ptr & 0x0f) | (color << 4);
-	// 	// }
-	// } else if (bpp == 8) {
-	// 	// 8BPP
-	// 	buf->buf_8bpp[index] = color;
-	// } else if (bpp == 16) {
-	// 	// 16BPP
-	// 	buf->buf_16bpp[index] = color;
-	// } else if (bpp == 32) {
-	// 	// 32BPP
-	// 	buf->buf_32bpp[index] = color;
-	// } else {
-	// 	// PAX_ERROR("pax_set_pixel_u", PAX_ERR_PARAM);
-	// }
 }
 
 // Sets based on index instead of coordinates.

@@ -34,14 +34,18 @@ namespace pax {
 void Shape::updateBounds() {
 	float x0 = infinityf(), y0 = infinityf(), x1 = -infinityf(), y1 = -infinityf();
 	
+	// Iterate over outline points.
 	for (size_t i = 0; i < outline.size(); i++) {
 		pax_vec1_t p = outline[i];
+		// Find minimum and maximum X.
 		if (p.x < x0) x0 = p.x;
 		if (p.x > x1) x1 = p.x;
+		// Find minimum and maximum Y.
 		if (p.y < y0) y0 = p.y;
 		if (p.y > y1) y1 = p.y;
 	}
 	
+	// Calculate rectangle from extremes.
 	bounds = (pax_rect_t) {
 		x0,
 		y0,
@@ -67,27 +71,35 @@ void Shape::updateTriang() {
 }
 
 
-// The default shape, a rectangle.
+// The default shape is a rectangle.
 Shape::Shape() {
+	// Construct a 2x2 rectangle outline centered around (0,0).
 	outline.push_back((pax_vec1_t) {-1, -1});
 	outline.push_back((pax_vec1_t) { 1, -1});
 	outline.push_back((pax_vec1_t) { 1,  1});
 	outline.push_back((pax_vec1_t) {-1,  1});
+	// With associated bounds, which are constant.
 	bounds = (pax_rect_t) { -1, -1, 2, 2 };
+	// First triangle.
 	triang.push_back(0);
 	triang.push_back(1);
 	triang.push_back(2);
+	// Second triangle.
 	triang.push_back(0);
 	triang.push_back(2);
 	triang.push_back(3);
+	// Mark as triangulated.
 	triangSuccess = true;
 	triangDone    = true;
 }
 
 // Make a shape from an outline.
 Shape::Shape(Outline outline) {
+	// Copy the outline.
 	this->outline = outline;
+	// Compute bounds.
 	updateBounds();
+	// Not triangulated by default.
 	triangDone = false;
 }
 
@@ -96,7 +108,7 @@ Shape::~Shape() {}
 
 // Get a bounding box for this shape.
 pax_rect_t Shape::getBounds() {
-	return (pax_rect_t) {0, 0, 0, 0};
+	return bounds;
 }
 
 // Get a copy of the outline that represents this shape.
@@ -108,23 +120,36 @@ Outline Shape::getOutline() {
 // Internal method used for drawing.
 void Shape::_int_draw(pax_buf_t *to, pax_col_t color, const pax_shader_t *shader, bool asOutline) {
 	// TODO: Shader support.
+	
+	// If drawing as filled, try to triangulate.
 	if (!asOutline && !triangDone) updateTriang();
+	
 	if (asOutline || (triangDone && !triangSuccess)) {
+		// When explicitly drawing as outline, or when triangulation fails.
 		pax_outline_shape_cl(to, color, outline.size(), outline.data(), true);
 	} else {
-		if (triangDone && triangSuccess) pax_draw_shape_triang(to, color, outline.size(), outline.data(), triang.size()/3, triang.data());
+		// When drawing as filled and triangulation success.
+		pax_draw_shape_triang(to, color, outline.size(), outline.data(), triang.size()/3, triang.data());
 	}
 }
 
 
 // Equality operator.
 bool Shape::operator==(Shape const &other) {
+	// Because pax_vec1_t does not have an equality operator, this must be manually implemented.
+	
+	// Enforce outline size matches.
 	if (other.outline.size() != outline.size()) return false;
 	
+	// Enforce each point matches.
 	for (size_t i = 0; i < outline.size(); i++) {
-		if (outline[i].x != other.outline[i].x || outline[i].y != outline[i].y) return false;
+		if (outline[i].x != other.outline[i].x || outline[i].y != outline[i].y) {
+			// A point is not equal.
+			return false;
+		}
 	}
 	
+	// It is equal.
 	return true;
 }
 
@@ -142,7 +167,7 @@ void Circle::init(float radius, size_t resolution) {
 	size_t n_tri = resolution-2;
 	triang.resize(n_tri*3);
 	
-	// Simple triangulation.
+	// Simple triangulation because a circle is convex.
 	for (size_t i = 0; i < n_tri; i++) {
 		triang[i*3+0] = 0;
 		triang[i*3+1] = i;
@@ -167,19 +192,16 @@ void Circle::init(float radius, size_t resolution) {
 // The default is a unit circle.
 Circle::Circle() {
 	init(1, 32);
-	triangDone = false;
 }
 
 // Create a circle with a certain radius.
 Circle::Circle(float radius) {
 	init(radius, 32);
-	triangDone = false;
 }
 
 // Create a circle with a certain radius.
 Circle::Circle(float radius, size_t resolution) {
 	init(radius, resolution);
-	triangDone = false;
 }
 
 // Get the radius of this circle.
@@ -215,12 +237,15 @@ void Rectangle::init(float x, float y, float w, float h) {
 	
 	// Generate a triangulation.
 	triang.clear();
+	// First triangle.
 	triang.push_back(0);
 	triang.push_back(1);
 	triang.push_back(2);
+	// Second triangle.
 	triang.push_back(0);
 	triang.push_back(2);
 	triang.push_back(3);
+	// Mark as triangulated.
 	triangDone    = true;
 	triangSuccess = true;
 }
@@ -253,15 +278,20 @@ void Rectangle::_int_draw(pax_buf_t *to, pax_col_t color, const pax_shader_t *sh
 
 // Inserts a number of interpolated points at a given index.
 void LerpShape::insertPoints(Outline &outline, size_t index, size_t count) {
+	// Find the point after which to insert.
 	pax_vec1_t last  = outline[index];
+	// And the point before which to insert.
 	pax_vec1_t first = outline[(index + 1) % outline.size()];
 	
 	for (size_t i = 0; i < count; i++) {
+		// Calculate interpolation coefficient.
 		float      coeff  = (i + 1) / (float) (count + 1);
+		// Linearly interpolate between last and first.
 		pax_vec1_t center = {
 			last.x + (first.x - last.x) * coeff,
 			last.y + (first.y - last.y) * coeff,
 		};
+		// Insert calculated point into the outline.
 		outline.insert(outline.begin() + index + i + 1, center);
 	}
 }
@@ -296,20 +326,7 @@ void LerpShape::setShapes() {
 	
 	// Calculate points to interpolate.
 	size_t interp_count = labs(originalOutline.size() - targetOutline.size());
-	// insertPoints(shorter, shorter.size() - 1, interp_count);
 	distributePoints(shorter, interp_count);
-	// pax_vec1_t last  = shorter[shorter.size() - 1];
-	// pax_vec1_t first = shorter[0];
-	
-	// // Expand the shorter by interpolating some points.
-	// for (size_t i = 0; i < interp_count; i++) {
-	// 	float      coeff  = (i + 1) / (float) (interp_count + 1);
-	// 	pax_vec1_t center = {
-	// 		last.x + (first.x - last.x) * coeff,
-	// 		last.y + (first.y - last.y) * coeff,
-	// 	};
-	// 	shorter.push_back(center);
-	// }
 }
 
 // Sets the current outline to an interpolated form of the source outlines.
