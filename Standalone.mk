@@ -2,9 +2,9 @@
 # Options
 CC            ?=/usr/bin/gcc
 PAX_BUILD_DIR ?=build
-PAX_CCOPTIONS ?=-c -fPIC -DPAX_STANDALONE -Isrc -Isrc/pthreadqueue/src
+PAX_CCOPTIONS ?=-c -fPIC -DPAX_STANDALONE -Isrc -Isrc/cpp -Isrc/pthreadqueue/src
 PAX_LDOPTIONS ?=-shared
-PAX_LIBS      ?=-lpthread
+PAX_LIBS      ?=-lpthread -lstdc++
 
 # Sources
 SOURCES        =src/matrix.c \
@@ -15,6 +15,9 @@ SOURCES        =src/matrix.c \
 				src/pax_text.c \
 				src/pax_setters.c \
 				\
+				src/cpp/pax_cxx_shape.cpp \
+				src/cpp/pax_cxx.cpp \
+				\
 				src/fonts/font_bitmap_7x9.c \
 				src/fonts/font_bitmap_sky.c \
 				src/fonts/font_bitmap_permanentmarker.c \
@@ -23,7 +26,7 @@ SOURCES        =src/matrix.c \
 				\
 				src/pthreadqueue/src/ptq.c
 HELPERS        =$(shell find src/helpers -type f -name '*.c')
-HEADERS        =$(shell find src -type f -name '*.h')
+HEADERS        =$(shell find src -type f -name '*.h' -o -name '*.hpp')
 
 # Outputs
 OBJECTS        =$(shell echo " $(SOURCES)" | sed -e 's/ src/ $(PAX_BUILD_DIR)/g;s/\.c/.c.o/g')
