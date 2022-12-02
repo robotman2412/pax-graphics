@@ -66,16 +66,19 @@ static inline pax_text_style_t pax_text_style_default() {
 	};
 }
 
-static inline pax_text_ctx_t pax_text_ctx_default(float x, float y) {
+static inline pax_text_ctx_t pax_text_ctx_default(float x, float y, const pax_font_t *font, float font_size) {
 	return (pax_text_ctx_t) {
 		.bounds    = { x, y, 0, 0 },
 		.cursor    = { 0, 0 },
 		.word_wrap = PAX_WW_NONE,
+		.align     = PAX_ALIGN_LEFT,
 		.style     = pax_text_style_default(),
+		.font      = font,
+		.font_size = font_size,
 	};
 }
 
 // An advanced text drawing method which is far more flexible than the others.
-void        pax_text          (pax_buf_t *buf, pax_col_t color, pax_text_ctx_t *ctx, const pax_font_t *font, float font_size, const char *text);
+void pax_text(pax_buf_t *buf, pax_col_t color, pax_text_ctx_t *ctx, const char *text);
 
 #endif //PAX_TEXT_H

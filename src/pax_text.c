@@ -118,7 +118,7 @@ char *utf8_getch(const char *cstr, uint32_t *out) {
 // Returns how many UTF-8 characters a given c-string contains.
 size_t utf8_strlen(const char *cstr) {
 	const char *end   = cstr + strlen(cstr);
-	uint32_t     dummy = 0;
+	uint32_t    dummy = 0;
 	size_t      len   = 0;
 	while (cstr != end) {
 		len ++;
@@ -450,8 +450,13 @@ pax_vec1_t pax_text_size(const pax_font_t *font, float font_size, const char *te
 	return text_generic(&ctx, text);
 }
 
+// Handles one row of text for pax_text, usually called multiple times per row.
+static pax_vec1_t pax_text_row(pax_buf_t *buf, pax_col_t color, pax_text_ctx_t *ctx, const char *text, bool draw) {
+	return (pax_vec1_t) {0,0};
+}
+
 // An advanced text drawing method which is far more flexible than the others.
-void pax_text(pax_buf_t *buf, pax_col_t color, pax_text_ctx_t *ctx, const pax_font_t *font, float font_size, const char *text) {
+void pax_text(pax_buf_t *buf, pax_col_t color, pax_text_ctx_t *ctx, const char *text) {
 	
 }
 

@@ -141,9 +141,30 @@ enum pax_task_type {
 	PAX_TASK_STOP,
 };
 
+// Text alignment property.
+// Less obvious when justify is enabled.
+enum pax_align {
+	// Left-aligned text (Default).
+	PAX_ALIGN_LEFT,
+	// Center-aligned text.
+	PAX_ALIGN_CENTER,
+	// Right-aligned text.
+	PAX_ALIGN_RIGHT,
+};
+
+// Distinguishes between ways to draw fonts.
+enum pax_font_type {
+	// For monospace bitmapped fonts.
+	PAX_FONT_TYPE_BITMAP_MONO,
+	// For variable pitch bitmapped fonts.
+	PAX_FONT_TYPE_BITMAP_VAR,
+};
+
 typedef enum   pax_buf_type    pax_buf_type_t;
 typedef enum   pax_word_wrap   pax_word_wrap_t;
 typedef enum   pax_task_type   pax_task_type_t;
+typedef enum   pax_align       pax_align_t;
+typedef enum   pax_font_type   pax_font_type_t;
 
 // Promises that the shape will be fully opaque when drawn.
 #define PAX_PROMISE_OPAQUE		0x01
@@ -165,6 +186,10 @@ struct matrix_stack_2d;
 struct pax_buf;
 struct pax_shader;
 
+struct pax_bmpv;
+struct pax_font;
+struct pax_font_range;
+
 struct pax_text_ctx;
 struct pax_text_style;
 
@@ -184,6 +209,9 @@ typedef struct pax_buf         pax_buf_t;
 typedef struct pax_shader      pax_shader_t;
 typedef struct pax_task        pax_task_t;
 typedef struct pax_shader_ctx  pax_shader_ctx_t;
+typedef struct pax_bmpv        pax_bmpv_t;
+typedef struct pax_font        pax_font_t;
+typedef struct pax_font_range  pax_font_range_t;
 typedef struct pax_text_ctx    pax_text_ctx_t;
 typedef struct pax_text_style  pax_text_style_t;
 
@@ -346,6 +374,67 @@ struct pax_shader {
 	bool     alpha_promise_255;
 };
 
+// Information relevant to each character of a variable pitch font.
+struct pax_bmpv {
+	// The position of the drawn portion.
+	int8_t draw_x, draw_y;
+	// The size of the drawn portion.
+	uint8_t draw_w, draw_h;
+	// The measured width of the glyph.
+	uint8_t measured_width;
+	// The index in the glyphs data for this glyph.
+	size_t index;
+};
+
+// Information relevant for the entirety of each font.
+struct pax_font {
+	// The searchable name of the font.
+	const char             *name;
+	// The number of ranges included in the font.
+	size_t                  n_ranges;
+	// The ranges included in the font.
+	const pax_font_range_t *ranges;
+	// Default point size.
+	uint16_t                default_size;
+	// Whether or not it is recommended to use antialiasing.
+	// Applies to pax_draw_text, but not it's variants.
+	bool                    recommend_aa;
+};
+
+// Describes a range of glyphs in a font.
+struct pax_font_range {
+	// The type of font range.
+	pax_font_type_t  type;
+	// First character in range.
+	uint32_t         start;
+	// Last character in range.
+	uint32_t         end;
+	union {
+		// Monospace, bitmapped fonts.
+		struct {
+			// The raw glyph bytes.
+			const uint8_t *glyphs;
+			// The width of all glyphs.
+			uint8_t        width;
+			// The height of all glyphs.
+			uint8_t        height;
+			// The Bits Per Pixel of all glyphs.
+			uint8_t        bpp;
+		} bitmap_mono;
+		// Variable pitch, bitmapped fonts.
+		struct {
+			// The raw glyph bytes.
+			const uint8_t    *glyphs;
+			// Additional dimensions defined per glyph.
+			const pax_bmpv_t *dims;
+			// The height of all glyphs.
+			uint8_t           height;
+			// The Bits Per Pixel of all glyphs.
+			uint8_t           bpp;
+		} bitmap_var;
+	};
+};
+
 // Style information for drawing text.
 struct pax_text_style {
 	// To draw an underline.
@@ -360,22 +449,30 @@ struct pax_text_style {
 struct pax_text_ctx {
 	// The bounding box to draw text in.
 	// If word wrap is disabled, width and height are ignored.
-	pax_rect_t       bounds;
+	pax_rect_t        bounds;
 	
 	// The (relative to bounds) cursor position.
-	pax_vec1_t       cursor;
+	pax_vec1_t        cursor;
 	
 	// Whether to use word-wrap, and if so, which type.
-	pax_word_wrap_t  word_wrap;
+	pax_word_wrap_t   word_wrap;
+	
+	// Text alignment options.
+	// Ignored if word wrap is disabled.
+	pax_align_t       align;
 	
 	// Information relevant to style.
-	pax_text_style_t style;
+	pax_text_style_t  style;
+	// Font to use.
+	const pax_font_t *font;
+	// Font size to use.
+	float             font_size;
 };
 
 // A task to perform, used by multicore rendering.
 // Every task has pre-transformed co-ordinates.
 // If you change the shader object's content (AKA the value that args points to),
-// You should ran pax_join before making the change.
+// You should run pax_join before making the change.
 struct pax_task {
 	// The buffer to apply this task to.
 	pax_buf_t      *buffer;

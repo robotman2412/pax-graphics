@@ -173,7 +173,7 @@ static pax_shader_ctx_t pax_get_shader_ctx(pax_buf_t *buf, pax_col_t color, cons
 		// Use the old version.
 		return (pax_shader_ctx_t) {
 			.callback      = pax_shader_wrapper_for_v0,
-			.callback_args = shader,
+			.callback_args = (void *) shader,
 			.do_getter     = true,
 			.skip          = false,
 		};
