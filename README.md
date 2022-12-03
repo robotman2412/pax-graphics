@@ -16,11 +16,11 @@ Documentation can be found [here](docs).
 - [x] Leave this box unchecked
 
 # Target v1.2.0 TODO list
-- [ ] Support for outline-based (.ttf or similar) fonts
 
 # Feature wishlist
 - GPU acceleration
 - Support for holes in triangulated shapes
+- Support for outline-based (.ttf or similar) fonts
 - Built-in simple GUI library
 
 ## MCH2022?

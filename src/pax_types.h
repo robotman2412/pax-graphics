@@ -191,6 +191,7 @@ struct pax_font;
 struct pax_font_range;
 
 struct pax_text_ctx;
+struct pax_text_part;
 struct pax_text_style;
 
 struct pax_task;
@@ -213,6 +214,7 @@ typedef struct pax_bmpv        pax_bmpv_t;
 typedef struct pax_font        pax_font_t;
 typedef struct pax_font_range  pax_font_range_t;
 typedef struct pax_text_ctx    pax_text_ctx_t;
+typedef struct pax_text_part   pax_text_part_t;
 typedef struct pax_text_style  pax_text_style_t;
 
 typedef int32_t                pax_err_t;
@@ -438,11 +440,17 @@ struct pax_font_range {
 // Style information for drawing text.
 struct pax_text_style {
 	// To draw an underline.
-	bool underline;
+	bool              underline;
 	// To draw a line through.
-	bool strikethrough;
+	bool              strikethrough;
 	// To draw italicised.
-	bool italic;
+	bool              italic;
+	// Color to draw.
+	pax_col_t         color;
+	// Font to use.
+	const pax_font_t *font;
+	// Font size to use.
+	float             font_size;
 };
 
 // Context used for advanced text drawing.
@@ -461,12 +469,21 @@ struct pax_text_ctx {
 	// Ignored if word wrap is disabled.
 	pax_align_t       align;
 	
-	// Information relevant to style.
-	pax_text_style_t  style;
-	// Font to use.
-	const pax_font_t *font;
-	// Font size to use.
-	float             font_size;
+	// Size of tabs.
+	float             tab_size;
+};
+
+struct pax_text_part {
+	// Text string to draw.
+	const char *text;
+	// Appearance of the text string.
+	pax_text_style_t style;
+	// Calculated ascent.
+	float ascent;
+	// Calculated descent.
+	float descent;
+	// Calculated width.
+	float width;
 };
 
 // A task to perform, used by multicore rendering.

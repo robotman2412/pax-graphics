@@ -65,6 +65,36 @@ typedef struct {
 	bool              do_aa;
 } pax_text_render_t;
 
+typedef enum {
+	// A string of text.
+	PAX_TC_TEXT,
+	// A tab.
+	PAX_TC_TAB,
+	// A newline.
+	PAX_TC_NEWLINE,
+	// Word wrap goes here.
+	PAX_TC_WORDWRAP,
+} pax_tc_type_t;
+
+typedef struct {
+	// Previous link.
+	pax_text_cmd_t *prev;
+	// Next link.
+	pax_text_cmd_t *next;
+	
+	// Type of command to use.
+	pax_tc_type_t type;
+	// Text part to render.
+	pax_text_part_t part;
+} pax_text_cmd_t;
+
+typedef struct {
+	// First link.
+	pax_text_cmd_t *first;
+	// Last link.
+	pax_text_cmd_t *last;
+} pax_tc_list_t;
+
 
 
 /* ====== UTF-8 UTILITIES ====== */
@@ -364,18 +394,16 @@ static pax_vec1_t text_generic(pax_text_render_t *ctx, const char *text) {
 }
 
 // Draw a string with the given font and return it's size.
-// Text is center-aligned.
+// Text is center-aligned on every line.
 // Size is before matrix transformation.
-// If font is NULL, the default font (sky) will be used.
-// Font is scaled up with method recommended by it (see pax_font_t::recommend_aa).
 pax_vec1_t pax_center_text(pax_buf_t *buf, pax_col_t color, const pax_font_t *font, float font_size, float x, float y, const char *text) {
 	pax_vec1_t dims = pax_text_size(font, font_size, text);
 	pax_draw_text(buf, color, font, font_size, x - dims.x/2, y, text);
 	return dims;
 }
 
-// Draw a string with the given font.
-// If font is NULL, the default font (7x9) will be used.
+// Draw a string with the given font and return it's size.
+// Size is before matrix transformation.
 pax_vec1_t pax_draw_text(pax_buf_t *buf, pax_col_t color, const pax_font_t *font, float font_size, float x, float y, const char *text) {
 	if (!font) PAX_ERROR1("pax_draw_text(font: NULL)", PAX_ERR_PARAM, (pax_vec1_t){0});
 	pax_text_render_t ctx = {
@@ -395,7 +423,10 @@ pax_vec1_t pax_draw_text(pax_buf_t *buf, pax_col_t color, const pax_font_t *font
 	return dims;
 }
 
-// Draw a string with the given font.
+// DEPRECATION NOTICE: This function is subject to be removed
+// Draw a string with the given font and return it's size.
+// Size is before matrix transformation.
+// Font is scaled up with interpolation, overriding it's default.
 // If font is NULL, the default font (7x9) will be used.
 pax_vec1_t pax_draw_text_aa(pax_buf_t *buf, pax_col_t color, const pax_font_t *font, float font_size, float x, float y, const char *text) {
 	if (!font) PAX_ERROR1("pax_draw_text(font: NULL)", PAX_ERR_PARAM, (pax_vec1_t){0});
@@ -416,8 +447,10 @@ pax_vec1_t pax_draw_text_aa(pax_buf_t *buf, pax_col_t color, const pax_font_t *f
 	return dims;
 }
 
-// Draw a string with the given font.
-// If font is NULL, the default font (7x9) will be used.
+// DEPRECATION NOTICE: This function is subject to be removed
+// Draw a string with the given font and return it's size.
+// Size is before matrix transformation.
+// Font is scaled up without interpolation, overriding it's default.
 pax_vec1_t pax_draw_text_noaa(pax_buf_t *buf, pax_col_t color, const pax_font_t *font, float font_size, float x, float y, const char *text) {
 	if (!font) PAX_ERROR1("pax_draw_text(font: NULL)", PAX_ERR_PARAM, (pax_vec1_t){0});
 	pax_text_render_t ctx = {
@@ -450,13 +483,105 @@ pax_vec1_t pax_text_size(const pax_font_t *font, float font_size, const char *te
 	return text_generic(&ctx, text);
 }
 
-// Handles one row of text for pax_text, usually called multiple times per row.
-static pax_vec1_t pax_text_row(pax_buf_t *buf, pax_col_t color, pax_text_ctx_t *ctx, const char *text, bool draw) {
-	return (pax_vec1_t) {0,0};
+
+
+// Append to pax_tc_list_t.
+static void pax_tcl_append(pax_tc_list_t *list, pax_text_cmd_t item) {
+	pax_text_cmd_t *ptr = malloc(sizeof(pax_text_cmd_t));
+	*ptr = item;
+	
+	if (list->first) {
+		list->last->next = ptr;
+		ptr->prev        = list->last;
+		ptr->next        = NULL;
+		list->last       = ptr;
+	} else {
+		list->first = ptr;
+		list->last  = ptr;
+		ptr->prev   = NULL;
+		ptr->next   = NULL;
+	}
 }
 
-// An advanced text drawing method which is far more flexible than the others.
-void pax_text(pax_buf_t *buf, pax_col_t color, pax_text_ctx_t *ctx, const char *text) {
+// Delete a pax_tc_list_t.
+static void pax_tcl_delete(pax_tc_list_t *list) {
+	pax_text_cmd_t *cur = list->first;
+	while (cur) {
+		if (cur->type == PAX_TC_TEXT) {
+			free(cur->part.text);
+		}
+		void *mem = cur;
+		cur = cur->next;
+		free(mem);
+	}
+	list->first = NULL;
+	list->last  = NULL;
+}
+
+// Insert in after a link in pax_tc_list_t.
+static void pax_tcl_insert_after(pax_tc_list_t *list, pax_text_cmd_t *link, pax_text_cmd_t insert) {
+	pax_text_cmd_t *ptr = malloc(sizeof(pax_text_cmd_t));
+	*ptr = insert;
+	
+	ptr->next = link->next;
+	ptr->prev = link;
+	if (link->next) {
+		link->next->prev = ptr;
+	} else {
+		list->last = ptr;
+	}
+	link->next = ptr;
+}
+
+// Preprocessing pass for a text part.
+// Appends one or more commands to the output list.
+static void pax_text_preproc(pax_text_ctx_t *ctx, pax_tc_list_t *list, pax_text_part_t part) {
+	const char *start  = part.text;
+	const char *end    = part.text;
+	const char *search = part.text;
+	
+	while (*search) {
+		bool term = !search[1];
+		
+		if (*search == '\t') {
+			end = search;
+			term = true;
+			pax_tcl_append(list, (pax_text_cmd_t) {
+				.type = PAX_TC_TAB,
+			});
+		} else if (*search == '\r' || search == '\n') {
+			end = search;
+			if (*search == '\r' && search[1] == '\n') search ++;
+			term = true;
+			pax_tcl_append(list, (pax_text_cmd_t) {
+				.type = PAX_TC_NEWLINE,
+			});
+		}
+		
+		if (term && end > start) {
+			// Duplicate the normal text.
+			char *mem = strndup(start, end - start);
+			pax_text_cmd_t cmd = {
+				.type = PAX_TC_TEXT,
+				.part = part,
+			};
+			cmd.part.text    = mem;
+			cmd.part.ascent  = part.style.font_size;
+			cmd.part.descent = 0;
+			cmd.part.width   = pax_text_size(part.style.font, part.style.font_size, cmd.part.text).x;
+		}
+	}
+}
+
+// Draws parts using context clues, word-wrap, etc.
+void pax_text(pax_buf_t *buf, pax_text_ctx_t *ctx, size_t n_parts, const pax_text_part_t *parts) {
+	// List of text commands to run.
+	pax_tc_list_t list = {NULL, NULL};
+	
+	// Preprocess text parts.
+	for (size_t i = 0; i < n_parts; i++) {
+		pax_text_preproc(ctx, &list, parts[i]);
+	}
 	
 }
 
