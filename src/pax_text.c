@@ -76,7 +76,8 @@ typedef enum {
 	PAX_TC_WORDWRAP,
 } pax_tc_type_t;
 
-typedef struct {
+typedef struct pax_text_cmd pax_text_cmd_t;
+struct pax_text_cmd {
 	// Previous link.
 	pax_text_cmd_t *prev;
 	// Next link.
@@ -86,7 +87,7 @@ typedef struct {
 	pax_tc_type_t type;
 	// Text part to render.
 	pax_text_part_t part;
-} pax_text_cmd_t;
+};
 
 typedef struct {
 	// First link.
