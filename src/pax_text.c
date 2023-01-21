@@ -394,13 +394,55 @@ static pax_vec1_t text_generic(pax_text_render_t *ctx, const char *text) {
 	};
 }
 
+// A single line of `pax_center_text`.
+static pax_vec1_t pax_center_line(pax_buf_t *buf, pax_col_t color, const pax_font_t *font, float font_size, float x, float y, const char *text) {
+	pax_vec1_t dims = pax_text_size(font, font_size, text);
+	pax_draw_text(buf, color, font, font_size, x-dims.x/2.0f, y, text);
+	return dims;
+}
+
 // Draw a string with the given font and return it's size.
 // Text is center-aligned on every line.
 // Size is before matrix transformation.
 pax_vec1_t pax_center_text(pax_buf_t *buf, pax_col_t color, const pax_font_t *font, float font_size, float x, float y, const char *text) {
-	pax_vec1_t dims = pax_text_size(font, font_size, text);
-	pax_draw_text(buf, color, font, font_size, x - dims.x/2, y, text);
-	return dims;
+	float width = 0, height = 0;
+	
+	// Allocate a buffer since we might go splitting up lines.
+	char *buffer = malloc(strlen(text) + 1);
+	
+	// Continuously look for newlines.
+	while (*text) {
+		// Look for newline characters.
+		char *cr = strchr(text, '\r');
+		char *lf = strchr(text, '\n');
+		// Determine which comes earlier.
+		char *found = cr && (!lf || cr < lf) ? cr : lf;
+		// Determine where to keep going afterwards.
+		char *next  = cr && lf && (lf == cr + 1) ? lf+1 : found+1;
+		
+		if (!cr && !lf) {
+			// Nothing special left to do.
+			pax_center_line(buf, color, font, font_size, x, y+height, text);
+			break;
+			
+		} else {
+			// Copy string segment into buffer.
+			memcpy(buffer, text, found-text);
+			buffer[found-text] = 0;
+			
+			// Draw this line individually.
+			pax_vec1_t dims = pax_center_line(buf, color, font, font_size, x, y+height, buffer);
+			if (dims.x > width) width = dims.x;
+			height += dims.y;
+			
+			// Set text pointer to next line.
+			text = next;
+		}
+	}
+	
+	// Clean up and return total size.
+	free(buffer);
+	return (pax_vec1_t) {width, height};
 }
 
 // Draw a string with the given font and return it's size.

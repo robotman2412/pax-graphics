@@ -52,7 +52,7 @@ void        pax_debug              (pax_buf_t *buf);
 // If multi-core rendering is enabled, wait for the other core.
 void       pax_join                ();
 // Enable multi-core rendering.
-// You must specify the core number to use.
+// You can specify the core number to use, though this may be irrelevant on some platforms.
 void       pax_enable_multicore    (int core);
 // Disable multi-core rendering.
 void       pax_disable_multicore   ();

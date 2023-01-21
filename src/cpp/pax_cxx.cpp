@@ -207,6 +207,17 @@ GENERIC_WRAPPER_IMPL(Tri,    tri,    pax_tri_t,  float x0 COMMA float y0 COMMA f
 GENERIC_WRAPPER_IMPL(Circle, circle, pax_quad_t, float x COMMA float y COMMA float radius, x COMMA y COMMA radius)
 GENERIC_WRAPPER_IMPL(Arc,    arc,    pax_quad_t, float x COMMA float y COMMA float radius COMMA float startAngle COMMA float endAngle, x COMMA y COMMA radius COMMA startAngle COMMA endAngle)
 
+// Draws a line with the default outline color.
+void Buffer::drawLine(float x0, float y0, float x1, float y1) {
+	GENERIC_VALIDITY_CHECK()
+	pax_draw_line(internal, lineColor, x0, y0, x1, y1);
+}
+// Draws a line with a custom outline color.
+void Buffer::drawLine(Color color, float x0, float y0, float x1, float y1) {
+	GENERIC_VALIDITY_CHECK()
+	pax_draw_line(internal, color, x0, y0, x1, y1);
+}
+
 // Outlines an arbitrary shape.
 void Buffer::outline(float x, float y, Shape &shape) { outline(lineColor, NULL, x, y, &shape); }
 // Outlines an arbitrary shape.
@@ -247,38 +258,51 @@ void Buffer::draw(Color color, Shader *shader, float x, float y, Shape *shape) {
 	}
 }
 
-// Draws a line with the default outline color.
-void Buffer::drawLine(float x0, float y0, float x1, float y1) {
-	GENERIC_VALIDITY_CHECK()
-	pax_draw_line(internal, lineColor, x0, y0, x1, y1);
+// Calculate the size of the string with the given font.
+// Size is before matrix transformation.
+Vec2f Buffer::stringSize(const pax_font_t *font, float font_size, std::string text) {
+	return pax_text_size(font, font_size, text.c_str());
 }
-
-// Draws a line with a custom outline color.
-void Buffer::drawLine(Color color, float x0, float y0, float x1, float y1) {
-	GENERIC_VALIDITY_CHECK()
-	pax_draw_line(internal, color, x0, y0, x1, y1);
+// Draw a string with the given font and return it's size.
+// Size is before matrix transformation.
+Vec2f Buffer::drawString(const pax_font_t *font, float font_size, float x, float y, std::string text) {
+	GENERIC_VALIDITY_CHECK(Vec2f())
+	return pax_draw_text(internal, fillColor, font, font_size, x, y, text.c_str());
 }
-
-
+// Draw a string with the given font and return it's size.
+// Size is before matrix transformation.
+Vec2f Buffer::drawString(Color color, const pax_font_t *font, float font_size, float x, float y, std::string text) {
+	GENERIC_VALIDITY_CHECK(Vec2f())
+	return pax_draw_text(internal, color, font, font_size, x, y, text.c_str());
+}
+// Draw a string with the given font and return it's size, center-aligning every line individually.
+// Size is before matrix transformation.
+Vec2f Buffer::drawStringCentered(const pax_font_t *font, float font_size, float x, float y, std::string text) {
+	GENERIC_VALIDITY_CHECK(Vec2f())
+	return pax_center_text(internal, fillColor, font, font_size, x, y, text.c_str());
+}
+// Draw a string with the given font and return it's size, center-aligning every line individually.
+// Size is before matrix transformation.
+Vec2f Buffer::drawStringCentered(Color color, const pax_font_t *font, float font_size, float x, float y, std::string text) {
+	GENERIC_VALIDITY_CHECK(Vec2f())
+	return pax_center_text(internal, color, font, font_size, x, y, text.c_str());
+}
 
 // Push the matrix stack.
 void Buffer::pushMatrix() {
 	GENERIC_VALIDITY_CHECK()
 	pax_push_2d(internal);
 }
-
 // Pop the matrix stack.
 void Buffer::popMatrix() {
 	GENERIC_VALIDITY_CHECK()
 	pax_pop_2d(internal);
 }
-
 // Clear the matrix stack (no mode popMatix calls left) and reset the current matrix to identity (no transformation).
 void Buffer::clearMatrix() {
 	GENERIC_VALIDITY_CHECK()
 	pax_reset_2d(internal, true);
 }
-
 // If full: clears the entire matrix stack,
 // Otherwise clears just the current matrix.
 void Buffer::clearMatrix(bool full) {
@@ -286,31 +310,26 @@ void Buffer::clearMatrix(bool full) {
 	pax_reset_2d(internal, full);
 }
 
-
 // Applies a given 2D matrix to the current by matrix multiplication.
 void Buffer::applyMatrix(matrix_2d_t matrix) {
 	GENERIC_VALIDITY_CHECK()
 	pax_apply_2d(internal, matrix);
 }
-
 // Scales the current view.
 void Buffer::scale(float x, float y) {
 	GENERIC_VALIDITY_CHECK()
 	pax_apply_2d(internal, matrix_2d_scale(x, y));
 }
-
 // Scales the current view.
 void Buffer::scale(float factor) {
 	GENERIC_VALIDITY_CHECK()
 	pax_apply_2d(internal, matrix_2d_scale(factor, factor));
 }
-
 // Moves around the current view.
 void Buffer::translate(float x, float y) {
 	GENERIC_VALIDITY_CHECK()
 	pax_apply_2d(internal, matrix_2d_translate(x, y));
 }
-
 // Shears the current view.
 // Positive X causes the points above the origin to move to the right.
 // Positive Y causes the points to the right of the origin to move down.
@@ -318,13 +337,11 @@ void Buffer::shear(float x, float y) {
 	GENERIC_VALIDITY_CHECK()
 	pax_apply_2d(internal, matrix_2d_shear(x, y));
 }
-
 // Rotates the current view around the origin, angles in radians.
 void Buffer::rotate(float angle) {
 	GENERIC_VALIDITY_CHECK()
 	pax_apply_2d(internal, matrix_2d_rotate(angle));
 }
-
 // Rotates the current view around a given point.
 void Buffer::rotateAround(float x, float y, float angle) {
 	GENERIC_VALIDITY_CHECK()
@@ -332,8 +349,6 @@ void Buffer::rotateAround(float x, float y, float angle) {
 	pax_apply_2d(internal, matrix_2d_rotate(angle));
 	pax_apply_2d(internal, matrix_2d_translate(x, y));
 }
-
-
 
 // Gets color at the given point.
 Color Buffer::getPixel(int x, int y) {
@@ -356,7 +371,6 @@ bool Buffer::isDirty() {
 	GENERIC_VALIDITY_CHECK(false)
 	return pax_is_dirty(internal);
 }
-
 // Gets the rectangle in which it is dirty.
 Rectf Buffer::getDirtyRect() {
 	GENERIC_VALIDITY_CHECK(Rectf())
@@ -367,31 +381,26 @@ Rectf Buffer::getDirtyRect() {
 		(float) internal->dirty_y1 - internal->dirty_y0,
 	};
 }
-
 // Mark the buffer as clean.
 void Buffer::markClean() {
 	GENERIC_VALIDITY_CHECK()
 	pax_mark_clean(internal);
 }
-
 // Mark the entire buffer as dirty.
 void Buffer::markDirty() {
 	GENERIC_VALIDITY_CHECK()
 	pax_mark_dirty0(internal);
 }
-
 // Mark a single pixel as dirty.
 void Buffer::markDirty(int x, int y) {
 	GENERIC_VALIDITY_CHECK()
 	pax_mark_dirty1(internal, x, y);
 }
-
 // Mark a rectangular region as dirty.
 void Buffer::markDirty(int x, int y, int width, int height) {
 	GENERIC_VALIDITY_CHECK()
 	pax_mark_dirty2(internal, x, y, width, height);
 }
-
 
 // Apply a clip rectangle to the buffer.
 // Anothing outside of the clip will not be drawn.
@@ -400,7 +409,6 @@ void Buffer::clip(int x, int y, int width, int height) {
 	GENERIC_VALIDITY_CHECK()
 	pax_clip(internal, x, y, width, height);
 }
-
 // Disable clipping.
 // Any effects of previous clip calls are nullified.
 void Buffer::noClip() {
@@ -416,12 +424,10 @@ static inline uint8_t pax_lerp(uint8_t part, uint8_t from, uint8_t to) {
 	// Then, it applies an integer multiplication and the result is shifted right by 8.
 	return from + (( (to - from) * (part + (part >> 7)) ) >> 8);
 }
-
 // Converts HSV to ARGB.
 Color hsv(uint8_t h, uint8_t s, uint8_t v) {
 	return ahsv(255, h, s, v);
 }
-
 // Converts AHSV to ARGB.
 Color ahsv(uint8_t a, uint8_t c_h, uint8_t s, uint8_t v) {
 	uint16_t h     = c_h * 6;
@@ -464,7 +470,6 @@ Color ahsv(uint8_t a, uint8_t c_h, uint8_t s, uint8_t v) {
 	// Merge.
 	return (a << 24) | (r << 16) | (g << 8) | b;
 }
-
 // Linearly interpolates between from and to, including alpha.
 Color lerp(uint8_t part, Color from, Color to) {
 	return (pax_lerp(part, from >> 24, to >> 24) << 24)
@@ -472,7 +477,6 @@ Color lerp(uint8_t part, Color from, Color to) {
 		 | (pax_lerp(part, from >>  8, to >>  8) <<  8)
 		 |  pax_lerp(part, from,       to);
 }
-
 // Merges the two colors, based on alpha.
 Color merge(Color base, Color top) {
 	// If top is transparent, return base.
@@ -486,7 +490,6 @@ Color merge(Color base, Color top) {
 		 | (pax_lerp(part, base >>  8, top >>  8) <<  8)
 		 |  pax_lerp(part, base,       top);
 }
-
 // Tints the color, commonly used for textures.
 Color tint(Color col, Color tint) {
 	// If tint is 0, return 0.

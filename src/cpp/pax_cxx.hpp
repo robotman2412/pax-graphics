@@ -207,13 +207,27 @@ class Buffer {
 		// Draws an arbitrary shape.
 		void draw(Color color, Shader *shader, float x, float y, Shape *shape);
 		
-		Vec2f drawText(pax_buf_t *buf, Color color, const pax_font_t *font, float font_size, float x, float y, const char *text);
+		// Calculate the size of the string with the given font.
+		// Size is before matrix transformation.
+		static Vec2f stringSize(const pax_font_t *font, float font_size, std::string text);
+		// Draw a string with the given font and return it's size.
+		// Size is before matrix transformation.
+		Vec2f drawString(const pax_font_t *font, float font_size, float x, float y, std::string text);
+		// Draw a string with the given font and return it's size.
+		// Size is before matrix transformation.
+		Vec2f drawString(Color color, const pax_font_t *font, float font_size, float x, float y, std::string text);
+		// Draw a string with the given font and return it's size, center-aligning every line individually.
+		// Size is before matrix transformation.
+		Vec2f drawStringCentered(const pax_font_t *font, float font_size, float x, float y, std::string text);
+		// Draw a string with the given font and return it's size, center-aligning every line individually.
+		// Size is before matrix transformation.
+		Vec2f drawStringCentered(Color color, const pax_font_t *font, float font_size, float x, float y, std::string text);
 		
 		// Push the matrix stack.
 		void pushMatrix();
 		// Pop the matrix stack.
 		void popMatrix();
-		// Clear the matrix stack (no mode popMatix calls left) and reset the current matrix to identity (no transformation).
+		// Clear the matrix stack (no more popMatix required) and reset the current matrix to identity (no transformation).
 		void clearMatrix();
 		// If full: clears the entire matrix stack,
 		// Otherwise clears just the current matrix.
@@ -278,15 +292,15 @@ static inline Color argb(uint8_t a, uint8_t r, uint8_t g, uint8_t b) {
 	return (a << 24) | (r << 16) | (g << 8) | b;
 }
 // Converts HSV to RGB.
-Color hsv             (uint8_t h, uint8_t s, uint8_t v);
+Color hsv  (uint8_t h, uint8_t s, uint8_t v);
 // Converts AHSV to ARGB.
-Color ahsv            (uint8_t a, uint8_t h, uint8_t s, uint8_t v);
+Color ahsv (uint8_t a, uint8_t h, uint8_t s, uint8_t v);
 // Linearly interpolates between from and to, including alpha.
-Color lerp            (uint8_t part, Color from, Color to);
+Color lerp (uint8_t part, Color from, Color to);
 // Merges the two colors, based on alpha.
-Color merge           (Color base, Color top);
+Color merge(Color base, Color top);
 // Tints the color, commonly used for textures.
-Color tint            (Color col, Color tint);
+Color tint (Color col, Color tint);
 
 }
 #endif // __cplusplus
