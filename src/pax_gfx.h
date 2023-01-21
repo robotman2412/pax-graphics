@@ -125,48 +125,6 @@ pax_col_t pax_col_tint            (pax_col_t col, pax_col_t tint);
 
 /* ============ MATRIX =========== */
 
-// Check whether the matrix exactly equals the identity matrix.
-static inline bool matrix_2d_is_identity(matrix_2d_t m) {
-	return m.a0 == 1 && m.a1 == 0 && m.a2 == 0
-		&& m.b0 == 0 && m.b1 == 1 && m.b2 == 0;
-}
-// Check whether the matrix represents no more than a translation.
-static inline bool matrix_2d_is_identity1(matrix_2d_t m) {
-	return m.a0 == 1 && m.a1 == 0 && m.b0 == 0 && m.b1 == 1;
-}
-// Check whether the matrix represents no more than a translation and/or scale.
-static inline bool matrix_2d_is_identity2(matrix_2d_t m) {
-	return m.a1 == 0 && m.b0 == 0;
-}
-
-// 2D identity matrix: represents no transformation.
-static inline matrix_2d_t matrix_2d_identity() {
-	return (matrix_2d_t) {.arr = {1, 0, 0,  0, 1, 0}};
-}
-// 2D scale matrix: represents a 2D scaling.
-static inline matrix_2d_t matrix_2d_scale(float x, float y) {
-	return (matrix_2d_t) {.arr = {x, 0, 0,  0, y, 0}};
-}
-// 2D translation matrix: represents a 2D movement of the camera.
-static inline matrix_2d_t matrix_2d_translate(float x, float y) {
-	return (matrix_2d_t) {.arr = {1, 0, x,  0, 1, y}};
-}
-// 2D shear matrix: represents a 2D shearing.
-static inline matrix_2d_t matrix_2d_shear(float x, float y) {
-	return (matrix_2d_t) {.arr = {1, y, 0,  x, 1, 0}};
-}
-// 2D rotation matrix: represents a 2D rotation.
-matrix_2d_t matrix_2d_rotate      (float angle);
-
-// 2D matrix: applies the transformation that b represents on to a.
-matrix_2d_t matrix_2d_multiply    (matrix_2d_t a, matrix_2d_t b);
-// 2D matrix: applies the transformation that a represents on to a point.
-void        matrix_2d_transform   (matrix_2d_t a, float *x, float *y);
-
-// 2D vector: unifies a given vector (it's magnitude will be 1).
-// Does not work for vectors with all zero.
-pax_vec1_t  vec1_unify            (pax_vec1_t vec);
-
 // Apply the given matrix to the stack.
 void        pax_apply_2d          (pax_buf_t *buf, matrix_2d_t a);
 // Push the current matrix up the stack.

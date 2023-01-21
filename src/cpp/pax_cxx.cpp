@@ -31,7 +31,7 @@ namespace pax {
 
 
 // C wrapper function for using C++ shaders.
-extern "C" pax_col_t wrapperCallback(pax_col_t existing, pax_col_t tint, int x, int y, float u, float v, void *args) {
+extern "C" Color wrapperCallback(Color existing, Color tint, int x, int y, float u, float v, void *args) {
 	ShaderContent *ctx = (ShaderContent *) args;
 	return (*ctx->callback)(existing, tint, x, y, u, v, ctx->args);
 }
@@ -78,7 +78,7 @@ Shader::~Shader() {
 
 
 // Apply this shader to a pixel.
-pax_col_t Shader::apply(pax_col_t tint, int x, int y, float u, float v) {
+Color Shader::apply(Color tint, int x, int y, float u, float v) {
 	if (active) {
 		// Pass through to the C callback function.
 		// TODO
@@ -174,7 +174,7 @@ void Buffer::draw##localName(extraArgs) {\
 	GENERIC_VALIDITY_CHECK()\
 	pax_draw_##remoteName(internal, fillColor, unpackedArgs);\
 }\
-void Buffer::draw##localName(pax_col_t color, extraArgs) {\
+void Buffer::draw##localName(Color color, extraArgs) {\
 	GENERIC_VALIDITY_CHECK()\
 	pax_draw_##remoteName(internal, color, unpackedArgs);\
 }\
@@ -182,7 +182,7 @@ void Buffer::draw##localName(Shader *shader, uvType *uvs, extraArgs) {\
 	GENERIC_VALIDITY_CHECK()\
 	pax_shade_##remoteName(internal, fillColor, GENERIC_UNWRAP_SHADER(shader), uvs, unpackedArgs);\
 }\
-void Buffer::draw##localName(pax_col_t color, Shader *shader, uvType *uvs, extraArgs) {\
+void Buffer::draw##localName(Color color, Shader *shader, uvType *uvs, extraArgs) {\
 	GENERIC_VALIDITY_CHECK()\
 	pax_shade_##remoteName(internal, color, GENERIC_UNWRAP_SHADER(shader), uvs, unpackedArgs);\
 }\
@@ -190,14 +190,14 @@ void Buffer::outline##localName(extraArgs) {\
 	GENERIC_VALIDITY_CHECK()\
 	pax_outline_##remoteName(internal, lineColor, unpackedArgs);\
 }\
-void Buffer::outline##localName(pax_col_t color, extraArgs) {\
+void Buffer::outline##localName(Color color, extraArgs) {\
 	GENERIC_VALIDITY_CHECK()\
 	pax_outline_##remoteName(internal, color, unpackedArgs);\
 }
 
 
 // Fills the entire buffer with the given color.
-void Buffer::background(pax_col_t color) {
+void Buffer::background(Color color) {
 	GENERIC_VALIDITY_CHECK()
 	pax_background(internal, color);
 }
@@ -212,13 +212,13 @@ void Buffer::outline(float x, float y, Shape &shape) { outline(lineColor, NULL, 
 // Outlines an arbitrary shape.
 void Buffer::outline(float x, float y, Shape *shape) { outline(lineColor, NULL, x, y, shape); }
 // Outlines an arbitrary shape.
-void Buffer::outline(pax_col_t color, float x, float y, Shape &shape) { outline(color, NULL, x, y, &shape); }
+void Buffer::outline(Color color, float x, float y, Shape &shape) { outline(color, NULL, x, y, &shape); }
 // Outlines an arbitrary shape.
-void Buffer::outline(pax_col_t color, float x, float y, Shape *shape) { outline(color, NULL, x, y, shape); }
+void Buffer::outline(Color color, float x, float y, Shape *shape) { outline(color, NULL, x, y, shape); }
 // Outlines an arbitrary shape.
-void Buffer::outline(pax_col_t color, Shader *shader, float x, float y, Shape &shape) { outline(color, shader, x, y, &shape); }
+void Buffer::outline(Color color, Shader *shader, float x, float y, Shape &shape) { outline(color, shader, x, y, &shape); }
 // Outlines an arbitrary shape.
-void Buffer::outline(pax_col_t color, Shader *shader, float x, float y, Shape *shape) {
+void Buffer::outline(Color color, Shader *shader, float x, float y, Shape *shape) {
 	if (shape) {
 		pax_push_2d(internal);
 		pax_apply_2d(internal, matrix_2d_translate(x, y));
@@ -232,13 +232,13 @@ void Buffer::draw(float x, float y, Shape &shape) { draw(fillColor, NULL, x, y, 
 // Draws an arbitrary shape.
 void Buffer::draw(float x, float y, Shape *shape) { draw(fillColor, NULL, x, y, shape); }
 // Draws an arbitrary shape.
-void Buffer::draw(pax_col_t color, float x, float y, Shape &shape) { draw(color, NULL, x, y, &shape); }
+void Buffer::draw(Color color, float x, float y, Shape &shape) { draw(color, NULL, x, y, &shape); }
 // Draws an arbitrary shape.
-void Buffer::draw(pax_col_t color, float x, float y, Shape *shape) { draw(color, NULL, x, y, shape); }
+void Buffer::draw(Color color, float x, float y, Shape *shape) { draw(color, NULL, x, y, shape); }
 // Draws an arbitrary shape.
-void Buffer::draw(pax_col_t color, Shader *shader, float x, float y, Shape &shape) { draw(color, shader, x, y, &shape); }
+void Buffer::draw(Color color, Shader *shader, float x, float y, Shape &shape) { draw(color, shader, x, y, &shape); }
 // Draws an arbitrary shape.
-void Buffer::draw(pax_col_t color, Shader *shader, float x, float y, Shape *shape) {
+void Buffer::draw(Color color, Shader *shader, float x, float y, Shape *shape) {
 	if (shape) {
 		pax_push_2d(internal);
 		pax_apply_2d(internal, matrix_2d_translate(x, y));
@@ -254,7 +254,7 @@ void Buffer::drawLine(float x0, float y0, float x1, float y1) {
 }
 
 // Draws a line with a custom outline color.
-void Buffer::drawLine(pax_col_t color, float x0, float y0, float x1, float y1) {
+void Buffer::drawLine(Color color, float x0, float y0, float x1, float y1) {
 	GENERIC_VALIDITY_CHECK()
 	pax_draw_line(internal, color, x0, y0, x1, y1);
 }
@@ -336,17 +336,17 @@ void Buffer::rotateAround(float x, float y, float angle) {
 
 
 // Gets color at the given point.
-pax_col_t Buffer::getPixel(int x, int y) {
+Color Buffer::getPixel(int x, int y) {
 	GENERIC_VALIDITY_CHECK(0)
 	return pax_get_pixel(internal, x, y);
 }
 // Sets color at the given point.
-void Buffer::setPixel(pax_col_t color, int x, int y) {
+void Buffer::setPixel(Color color, int x, int y) {
 	GENERIC_VALIDITY_CHECK()
 	pax_set_pixel(internal, color, x, y);
 }
 // Overlays the color at the given point (for transparent drawing).
-void Buffer::mergePixel(pax_col_t color, int x, int y) {
+void Buffer::mergePixel(Color color, int x, int y) {
 	GENERIC_VALIDITY_CHECK()
 	pax_merge_pixel(internal, color, x, y);
 }
@@ -358,13 +358,13 @@ bool Buffer::isDirty() {
 }
 
 // Gets the rectangle in which it is dirty.
-pax_rect_t Buffer::getDirtyRect() {
-	GENERIC_VALIDITY_CHECK((pax_rect_t) {0 COMMA 0 COMMA 0 COMMA 0})
-	return (pax_rect_t) {
-		.x = (float) internal->dirty_x0,
-		.y = (float) internal->dirty_y0,
-		.w = (float) internal->dirty_x1 - internal->dirty_x0,
-		.h = (float) internal->dirty_y1 - internal->dirty_y0,
+Rectf Buffer::getDirtyRect() {
+	GENERIC_VALIDITY_CHECK(Rectf())
+	return (Rectf) {
+		(float) internal->dirty_x0,
+		(float) internal->dirty_y0,
+		(float) internal->dirty_x1 - internal->dirty_x0,
+		(float) internal->dirty_y1 - internal->dirty_y0,
 	};
 }
 
@@ -418,12 +418,12 @@ static inline uint8_t pax_lerp(uint8_t part, uint8_t from, uint8_t to) {
 }
 
 // Converts HSV to ARGB.
-pax_col_t hsv(uint8_t h, uint8_t s, uint8_t v) {
+Color hsv(uint8_t h, uint8_t s, uint8_t v) {
 	return ahsv(255, h, s, v);
 }
 
 // Converts AHSV to ARGB.
-pax_col_t ahsv(uint8_t a, uint8_t c_h, uint8_t s, uint8_t v) {
+Color ahsv(uint8_t a, uint8_t c_h, uint8_t s, uint8_t v) {
 	uint16_t h     = c_h * 6;
 	uint16_t phase = h >> 8;
 	// Parts of HSV.
@@ -466,7 +466,7 @@ pax_col_t ahsv(uint8_t a, uint8_t c_h, uint8_t s, uint8_t v) {
 }
 
 // Linearly interpolates between from and to, including alpha.
-pax_col_t lerp(uint8_t part, pax_col_t from, pax_col_t to) {
+Color lerp(uint8_t part, Color from, Color to) {
 	return (pax_lerp(part, from >> 24, to >> 24) << 24)
 		 | (pax_lerp(part, from >> 16, to >> 16) << 16)
 		 | (pax_lerp(part, from >>  8, to >>  8) <<  8)
@@ -474,7 +474,7 @@ pax_col_t lerp(uint8_t part, pax_col_t from, pax_col_t to) {
 }
 
 // Merges the two colors, based on alpha.
-pax_col_t merge(pax_col_t base, pax_col_t top) {
+Color merge(Color base, Color top) {
 	// If top is transparent, return base.
 	if (!(top >> 24)) return base;
 	// If top is opaque, return top.
@@ -488,7 +488,7 @@ pax_col_t merge(pax_col_t base, pax_col_t top) {
 }
 
 // Tints the color, commonly used for textures.
-pax_col_t tint(pax_col_t col, pax_col_t tint) {
+Color tint(Color col, Color tint) {
 	// If tint is 0, return 0.
 	if (!tint) return 0;
 	// If tint is opaque white, return input.

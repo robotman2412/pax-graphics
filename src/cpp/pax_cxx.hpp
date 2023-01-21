@@ -30,7 +30,10 @@
 
 namespace pax {
 class Buffer;
+typedef pax_col_t Color;
 }
+
+#include <pax_cxx_ref.hpp>
 
 #include <functional>
 #include <pax_cxx_shape.hpp>
@@ -39,7 +42,7 @@ class Buffer;
 namespace pax {
 
 // A C++ ShaderFunc thing for use with lambdas and such.
-typedef std::function<pax_col_t(pax_col_t existing, pax_col_t tint, int x, int y, float u, float v, void *args)> ShaderFunc;
+typedef std::function<Color(Color existing, Color tint, int x, int y, float u, float v, void *args)> ShaderFunc;
 
 // A helper data structure for C++ shaders.
 typedef struct {
@@ -72,7 +75,7 @@ class Shader {
 		~Shader();
 		
 		// Apply this shader to a pixel.
-		pax_col_t apply(pax_col_t tint, int x, int y, float u, float v);
+		Color apply(Color tint, int x, int y, float u, float v);
 		// Get a shader object for using in C PAX APIs.
 		pax_shader_t *getInternal();
 };
@@ -86,9 +89,9 @@ class Buffer {
 		
 	public:
 		// Default color to use for drawing filled shapes.
-		pax_col_t fillColor;
+		Color fillColor;
 		// Default color to use for drawing outlined shapes.
-		pax_col_t lineColor;
+		Color lineColor;
 		
 		// Make an empty wrapper.
 		Buffer();
@@ -111,98 +114,100 @@ class Buffer {
 		pax_buf_type_t type();
 		
 		// Fills the entire buffer with the given color.
-		void background(pax_col_t color);
+		void background(Color color);
 		
 		// Draws a rectangle with the default color.
 		void drawRect(float x, float y, float width, float height);
 		// Draws a rectangle with a custom color.
-		void drawRect(pax_col_t color, float x, float y, float width, float height);
+		void drawRect(Color color, float x, float y, float width, float height);
 		// Draws a rectangle with a custom shader.
 		// Shader is ignored if NULL.
 		void drawRect(Shader *shader, pax_quad_t *uvs, float x, float y, float width, float height);
 		// Draws a rectangle with a custom color and shader.
 		// Shader is ignored if NULL.
-		void drawRect(pax_col_t color, Shader *shader, pax_quad_t *uvs, float x, float y, float width, float height);
+		void drawRect(Color color, Shader *shader, pax_quad_t *uvs, float x, float y, float width, float height);
 		// Outlines a rectangle with the default outline color.
 		void outlineRect(float x, float y, float width, float height);
 		// Outlines a rectangle with a custom outline color.
-		void outlineRect(pax_col_t color, float x, float y, float width, float height);
+		void outlineRect(Color color, float x, float y, float width, float height);
 		
 		// Draws a triangle with the default color.
 		void drawTri(float x0, float y0, float x1, float y1, float x2, float y2);
 		// Draws a triangle with a custom color.
-		void drawTri(pax_col_t color, float x0, float y0, float x1, float y1, float x2, float y2);
+		void drawTri(Color color, float x0, float y0, float x1, float y1, float x2, float y2);
 		// Draws a triangle with a custom shader.
 		// Shader is ignored if NULL.
 		void drawTri(Shader *shader, pax_tri_t *uvs, float x0, float y0, float x1, float y1, float x2, float y2);
 		// Draws a triangle with a custom color and shader.
 		// Shader is ignored if NULL.
-		void drawTri(pax_col_t color, Shader *shader, pax_tri_t *uvs, float x0, float y0, float x1, float y1, float x2, float y2);
+		void drawTri(Color color, Shader *shader, pax_tri_t *uvs, float x0, float y0, float x1, float y1, float x2, float y2);
 		// Outlines a triangle with the default outline color.
 		void outlineTri(float x0, float y0, float x1, float y1, float x2, float y2);
 		// Outlines a triangle with a custom outline color.
-		void outlineTri(pax_col_t color, float x0, float y0, float x1, float y1, float x2, float y2);
+		void outlineTri(Color color, float x0, float y0, float x1, float y1, float x2, float y2);
 		
 		// Draws a circle around the given point with the default color.
 		void drawCircle(float x, float y, float radius);
 		// Draws a circle around the given point with a custom color.
-		void drawCircle(pax_col_t color, float x, float y, float radius);
+		void drawCircle(Color color, float x, float y, float radius);
 		// Draws a circle around the given point with a custom shader.
 		// Shader is ignored if NULL.
 		void drawCircle(Shader *shader, pax_quad_t *uvs, float x, float y, float radius);
 		// Draws a circle around the given point with a custom color and shader.
 		// Shader is ignored if NULL.
-		void drawCircle(pax_col_t color, Shader *shader, pax_quad_t *uvs, float x, float y, float radius);
+		void drawCircle(Color color, Shader *shader, pax_quad_t *uvs, float x, float y, float radius);
 		// Outlines a circle with the default outline color.
 		void outlineCircle(float x, float y, float radius);
 		// Outlines a circle with a custom outline color.
-		void outlineCircle(pax_col_t color, float x, float y, float radius);
+		void outlineCircle(Color color, float x, float y, float radius);
 		
 		// Draws an arc around the given point with the default color.
 		void drawArc(float x, float y, float radius, float startangle, float endangle);
 		// Draws an arc around the given point with a custom color.
-		void drawArc(pax_col_t color, float x, float y, float radius, float startangle, float endangle);
+		void drawArc(Color color, float x, float y, float radius, float startangle, float endangle);
 		// Draws an arc around the given point with a custom shader.
 		// Shader is ignored if NULL.
 		void drawArc(Shader *shader, pax_quad_t *uvs, float x, float y, float radius, float startangle, float endangle);
 		// Draws an arc around the given point with a custom color and shader.
 		// Shader is ignored if NULL.
-		void drawArc(pax_col_t color, Shader *shader, pax_quad_t *uvs, float x, float y, float radius, float startangle, float endangle);
+		void drawArc(Color color, Shader *shader, pax_quad_t *uvs, float x, float y, float radius, float startangle, float endangle);
 		// Outlines an arc with the default outline color.
 		void outlineArc(float x, float y, float radius, float startangle, float endangle);
 		// Outlines an arc with a custom outline color.
-		void outlineArc(pax_col_t color, float x, float y, float radius, float startangle, float endangle);
+		void outlineArc(Color color, float x, float y, float radius, float startangle, float endangle);
 		
 		// Draws a line with the default outline color.
 		void drawLine(float x0, float y0, float x1, float y1);
 		// Draws a line with a custom outline color.
-		void drawLine(pax_col_t color, float x0, float y0, float x1, float y1);
+		void drawLine(Color color, float x0, float y0, float x1, float y1);
 		
 		// Outlines an arbitrary shape.
 		void outline(float x, float y, Shape &shape);
 		// Outlines an arbitrary shape.
 		void outline(float x, float y, Shape *shape);
 		// Outlines an arbitrary shape.
-		void outline(pax_col_t color, float x, float y, Shape &shape);
+		void outline(Color color, float x, float y, Shape &shape);
 		// Outlines an arbitrary shape.
-		void outline(pax_col_t color, float x, float y, Shape *shape);
+		void outline(Color color, float x, float y, Shape *shape);
 		// Outlines an arbitrary shape.
-		void outline(pax_col_t color, Shader *shader, float x, float y, Shape &shape);
+		void outline(Color color, Shader *shader, float x, float y, Shape &shape);
 		// Outlines an arbitrary shape.
-		void outline(pax_col_t color, Shader *shader, float x, float y, Shape *shape);
+		void outline(Color color, Shader *shader, float x, float y, Shape *shape);
 		
 		// Draws an arbitrary shape.
 		void draw(float x, float y, Shape &shape);
 		// Draws an arbitrary shape.
 		void draw(float x, float y, Shape *shape);
 		// Draws an arbitrary shape.
-		void draw(pax_col_t color, float x, float y, Shape &shape);
+		void draw(Color color, float x, float y, Shape &shape);
 		// Draws an arbitrary shape.
-		void draw(pax_col_t color, float x, float y, Shape *shape);
+		void draw(Color color, float x, float y, Shape *shape);
 		// Draws an arbitrary shape.
-		void draw(pax_col_t color, Shader *shader, float x, float y, Shape &shape);
+		void draw(Color color, Shader *shader, float x, float y, Shape &shape);
 		// Draws an arbitrary shape.
-		void draw(pax_col_t color, Shader *shader, float x, float y, Shape *shape);
+		void draw(Color color, Shader *shader, float x, float y, Shape *shape);
+		
+		Vec2f drawText(pax_buf_t *buf, Color color, const pax_font_t *font, float font_size, float x, float y, const char *text);
 		
 		// Push the matrix stack.
 		void pushMatrix();
@@ -232,16 +237,16 @@ class Buffer {
 		void rotateAround(float x, float y, float angle);
 		
 		// Gets color at the given point.
-		pax_col_t getPixel(int x, int y);
+		Color getPixel(int x, int y);
 		// Sets color at the given point.
-		void setPixel(pax_col_t color, int x, int y);
+		void setPixel(Color color, int x, int y);
 		// Overlays the color at the given point (for transparent drawing).
-		void mergePixel(pax_col_t color, int x, int y);
+		void mergePixel(Color color, int x, int y);
 		
 		// Whether or not there has been drawing since last markClean call.
 		bool isDirty();
 		// Gets the rectangle in which it is dirty.
-		pax_rect_t getDirtyRect();
+		Rectf getDirtyRect();
 		// Mark the buffer as clean.
 		void markClean();
 		// Mark the entire buffer as dirty.
@@ -261,27 +266,27 @@ class Buffer {
 };
 
 // Multiplicatively decreases alpha based on a float.
-static inline pax_col_t reduceAlpha(pax_col_t in, float coeff) {
-	return ((pax_col_t) (((in & 0xff000000) * coeff)) & 0xff000000) | (in & 0x00ffffff);
+static inline Color reduceAlpha(Color in, float coeff) {
+	return ((Color) (((in & 0xff000000) * coeff)) & 0xff000000) | (in & 0x00ffffff);
 }
 // Combines RGB.
-static inline pax_col_t rgb(uint8_t r, uint8_t g, uint8_t b) {
+static inline Color rgb(uint8_t r, uint8_t g, uint8_t b) {
 	return 0xff000000 | (r << 16) | (g << 8) | b;
 }
 // Combines ARGB.
-static inline pax_col_t argb(uint8_t a, uint8_t r, uint8_t g, uint8_t b) {
+static inline Color argb(uint8_t a, uint8_t r, uint8_t g, uint8_t b) {
 	return (a << 24) | (r << 16) | (g << 8) | b;
 }
 // Converts HSV to RGB.
-pax_col_t hsv             (uint8_t h, uint8_t s, uint8_t v);
+Color hsv             (uint8_t h, uint8_t s, uint8_t v);
 // Converts AHSV to ARGB.
-pax_col_t ahsv            (uint8_t a, uint8_t h, uint8_t s, uint8_t v);
+Color ahsv            (uint8_t a, uint8_t h, uint8_t s, uint8_t v);
 // Linearly interpolates between from and to, including alpha.
-pax_col_t lerp            (uint8_t part, pax_col_t from, pax_col_t to);
+Color lerp            (uint8_t part, Color from, Color to);
 // Merges the two colors, based on alpha.
-pax_col_t merge           (pax_col_t base, pax_col_t top);
+Color merge           (Color base, Color top);
 // Tints the color, commonly used for textures.
-pax_col_t tint            (pax_col_t col, pax_col_t tint);
+Color tint            (Color col, Color tint);
 
 }
 #endif // __cplusplus

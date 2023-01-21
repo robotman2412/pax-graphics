@@ -75,7 +75,7 @@ class Shape {
 		Outline getOutline();
 		
 		// Internal method used for drawing.
-		virtual void _int_draw(pax_buf_t *to, pax_col_t color, const pax_shader_t *shader, bool asOutline);
+		virtual void _int_draw(pax_buf_t *to, Color color, const pax_shader_t *shader, bool asOutline);
 		
 		// Equality operator.
 		virtual bool operator==(Shape const &other);
@@ -101,7 +101,7 @@ class Circle: public Shape {
 		// Get the radius of this circle.
 		float radius();
 		// Internal method used for drawing.
-		virtual void _int_draw(pax_buf_t *to, pax_col_t color, const pax_shader_t *shader, bool asOutline);
+		virtual void _int_draw(pax_buf_t *to, Color color, const pax_shader_t *shader, bool asOutline);
 };
 
 // An immutable rectangle shape.
@@ -121,7 +121,7 @@ class Rectangle: public Shape {
 		Rectangle(float width, float height);
 		
 		// Internal method used for drawing.
-		virtual void _int_draw(pax_buf_t *to, pax_col_t color, const pax_shader_t *shader, bool asOutline);
+		virtual void _int_draw(pax_buf_t *to, Color color, const pax_shader_t *shader, bool asOutline);
 };
 
 // An immutable representation of a shape being interpolated into another.

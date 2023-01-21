@@ -25,6 +25,8 @@
 #ifndef PAX_TYPES_H
 #define PAX_TYPES_H
 
+#include "pax_matrix.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif //__cplusplus
@@ -177,10 +179,6 @@ typedef enum   pax_font_type   pax_font_type_t;
 // Promises that the shader ignores the existing color.
 #define PAX_PROMISE_IGNORE_BASE	0x08
 
-struct pax_vec3;
-struct pax_vec4;
-struct pax_rect;
-union  matrix_2d;
 struct matrix_stack_2d;
 
 struct pax_buf;
@@ -196,16 +194,6 @@ struct pax_text_style;
 
 struct pax_task;
 
-typedef struct pax_vec1        pax_vec1_t;
-typedef struct pax_vec2        pax_vec2_t;
-typedef struct pax_vec3        pax_vec3_t;
-typedef struct pax_vec4        pax_vec4_t;
-typedef struct pax_vec2        pax_line_t;
-typedef struct pax_vec3        pax_tri_t;
-typedef struct pax_vec4        pax_quad_t;
-typedef struct pax_rect        pax_rect_t;
-typedef union  matrix_2d       matrix_2d_t;
-typedef struct matrix_stack_2d matrix_stack_2d_t;
 typedef struct pax_buf         pax_buf_t;
 typedef struct pax_shader      pax_shader_t;
 typedef struct pax_task        pax_task_t;
@@ -247,47 +235,6 @@ typedef pax_col_t (*pax_shader_func_v1_t)(pax_col_t tint, pax_col_t existing, in
 // Function pointer for transformer callback.
 // It's job is to optionally move the triangle vertices.
 typedef void (*pax_transf_func_t)(pax_tri_t *tri, pax_tri_t *uvs, void *args);
-
-struct pax_vec1 {
-	// Single point.
-	float x, y;
-};
-
-struct pax_vec2 {
-	// Line points.
-	float x0, y0, x1, y1;
-};
-
-struct pax_vec3 {
-	// Triangle points.
-	float x0, y0, x1, y1, x2, y2;
-};
-
-struct pax_vec4 {
-	// Quad points.
-	float x0, y0, x1, y1, x2, y2, x3, y3;
-};
-
-struct pax_rect {
-	// Rectangle points.
-	float x, y, w, h;
-};
-
-// Simplified representation of a 2D matrix.
-// Excludes the bottom row, which is implicit.
-// The matrix looks like this:
-//   a0, a1, a2,
-//   b0, b1, b2,
-//   0,  0,  1
-union matrix_2d {
-	// Named members of the matrix.
-	struct {
-		float a0, a1, a2;
-		float b0, b1, b2;
-	};
-	// Array members of the matrix.
-	float arr[6];
-};
 
 // A simple linked list data structure used to store matrices in a stack.
 struct matrix_stack_2d {

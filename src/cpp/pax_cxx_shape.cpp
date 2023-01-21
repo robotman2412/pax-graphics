@@ -36,7 +36,7 @@ void Shape::updateBounds() {
 	
 	// Iterate over outline points.
 	for (size_t i = 0; i < outline.size(); i++) {
-		pax_vec1_t p = outline[i];
+		Vec2f p = outline[i];
 		// Find minimum and maximum X.
 		if (p.x < x0) x0 = p.x;
 		if (p.x > x1) x1 = p.x;
@@ -46,7 +46,7 @@ void Shape::updateBounds() {
 	}
 	
 	// Calculate rectangle from extremes.
-	bounds = (pax_rect_t) {
+	bounds = (Rectf) {
 		x0,
 		y0,
 		x1 - x0,
@@ -74,12 +74,12 @@ void Shape::updateTriang() {
 // The default shape is a rectangle.
 Shape::Shape() {
 	// Construct a 2x2 rectangle outline centered around (0,0).
-	outline.push_back((pax_vec1_t) {-1, -1});
-	outline.push_back((pax_vec1_t) { 1, -1});
-	outline.push_back((pax_vec1_t) { 1,  1});
-	outline.push_back((pax_vec1_t) {-1,  1});
+	outline.push_back((Vec2f) {-1, -1});
+	outline.push_back((Vec2f) { 1, -1});
+	outline.push_back((Vec2f) { 1,  1});
+	outline.push_back((Vec2f) {-1,  1});
 	// With associated bounds, which are constant.
-	bounds = (pax_rect_t) { -1, -1, 2, 2 };
+	bounds = (Rectf) { -1, -1, 2, 2 };
 	// First triangle.
 	triang.push_back(0);
 	triang.push_back(1);
@@ -107,7 +107,7 @@ Shape::Shape(Outline outline) {
 Shape::~Shape() {}
 
 // Get a bounding box for this shape.
-pax_rect_t Shape::getBounds() {
+Rectf Shape::getBounds() {
 	return bounds;
 }
 
@@ -118,7 +118,7 @@ Outline Shape::getOutline() {
 
 
 // Internal method used for drawing.
-void Shape::_int_draw(pax_buf_t *to, pax_col_t color, const pax_shader_t *shader, bool asOutline) {
+void Shape::_int_draw(pax_buf_t *to, Color color, const pax_shader_t *shader, bool asOutline) {
 	// TODO: Shader support.
 	
 	// If drawing as filled, try to triangulate.
@@ -136,7 +136,7 @@ void Shape::_int_draw(pax_buf_t *to, pax_col_t color, const pax_shader_t *shader
 
 // Equality operator.
 bool Shape::operator==(Shape const &other) {
-	// Because pax_vec1_t does not have an equality operator, this must be manually implemented.
+	// Because Vec2f does not have an equality operator, this must be manually implemented.
 	
 	// Enforce outline size matches.
 	if (other.outline.size() != outline.size()) return false;
@@ -160,7 +160,7 @@ void Circle::init(float radius, size_t resolution) {
 	if (resolution < 3) resolution = 3;
 	
 	// Use internal vectoriser.
-	pax_vec1_t tmp[resolution+1];
+	Vec2f tmp[resolution+1];
 	pax_vectorise_circle(tmp, resolution+1, 0, 0, radius);
 	
 	// Determine triangle count.
@@ -175,11 +175,11 @@ void Circle::init(float radius, size_t resolution) {
 	}
 	
 	// Simple bounds computation.
-	bounds = (pax_rect_t) {
-		.x = -radius,
-		.y = -radius,
-		.w = 2 * radius,
-		.h = 2 * radius,
+	bounds = (Rectf) {
+		-radius,
+		-radius,
+		2 * radius,
+		2 * radius,
 	};
 	
 	// Update internal values.
@@ -210,7 +210,7 @@ float Circle::radius() {
 }
 
 // Internal method used for drawing.
-void Circle::_int_draw(pax_buf_t *to, pax_col_t color, const pax_shader_t *shader, bool asOutline) {
+void Circle::_int_draw(pax_buf_t *to, Color color, const pax_shader_t *shader, bool asOutline) {
 	if (asOutline) {
 		pax_outline_circle(to, color, 0, 0, currentRadius);
 	} else {
@@ -230,10 +230,10 @@ void Rectangle::init(float x, float y, float w, float h) {
 	
 	// Generate an outline.
 	outline.clear();
-	outline.push_back((pax_vec1_t) {x + w, y    });
-	outline.push_back((pax_vec1_t) {x,     y    });
-	outline.push_back((pax_vec1_t) {x,     y + h});
-	outline.push_back((pax_vec1_t) {x + w, y + h});
+	outline.push_back((Vec2f) {x + w, y    });
+	outline.push_back((Vec2f) {x,     y    });
+	outline.push_back((Vec2f) {x,     y + h});
+	outline.push_back((Vec2f) {x + w, y + h});
 	
 	// Generate a triangulation.
 	triang.clear();
@@ -266,7 +266,7 @@ Rectangle::Rectangle(float width, float height) {
 }
 
 // Internal method used for drawing.
-void Rectangle::_int_draw(pax_buf_t *to, pax_col_t color, const pax_shader_t *shader, bool asOutline) {
+void Rectangle::_int_draw(pax_buf_t *to, Color color, const pax_shader_t *shader, bool asOutline) {
 	if (asOutline) {
 		pax_outline_rect(to, color, x, y, width, height);
 	} else {
@@ -279,15 +279,15 @@ void Rectangle::_int_draw(pax_buf_t *to, pax_col_t color, const pax_shader_t *sh
 // Inserts a number of interpolated points at a given index.
 void LerpShape::insertPoints(Outline &outline, size_t index, size_t count) {
 	// Find the point after which to insert.
-	pax_vec1_t last  = outline[index];
+	Vec2f last  = outline[index];
 	// And the point before which to insert.
-	pax_vec1_t first = outline[(index + 1) % outline.size()];
+	Vec2f first = outline[(index + 1) % outline.size()];
 	
 	for (size_t i = 0; i < count; i++) {
 		// Calculate interpolation coefficient.
 		float      coeff  = (i + 1) / (float) (count + 1);
 		// Linearly interpolate between last and first.
-		pax_vec1_t center = {
+		Vec2f center = {
 			last.x + (first.x - last.x) * coeff,
 			last.y + (first.y - last.y) * coeff,
 		};
@@ -343,9 +343,9 @@ void LerpShape::interpolate(float coeff) {
 	
 	// Linearly interpolate coordinates between original and target.
 	for (size_t i = 0; i < originalOutline.size(); i++) {
-		pax_vec1_t original = originalOutline[i];
-		pax_vec1_t target   = targetOutline[i];
-		pax_vec1_t center   = {
+		Vec2f original = originalOutline[i];
+		Vec2f target   = targetOutline[i];
+		Vec2f center   = {
 			original.x + (target.x - original.x) * coeff,
 			original.y + (target.y - original.y) * coeff,
 		};
