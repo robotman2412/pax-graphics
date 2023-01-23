@@ -46,12 +46,12 @@ pax_col_t pax_index_getter_1bpp(pax_buf_t *buf, int index) {
 
 // Gets a raw value from a 2BPP buffer.
 pax_col_t pax_index_getter_2bpp(pax_buf_t *buf, int index) {
-	return (buf->buf_8bpp[index >> 2] >> (index & 3)) & 3;
+	return (buf->buf_8bpp[index >> 2] >> (index & 3) * 2) & 3;
 }
 
 // Gets a raw value from a 4BPP buffer.
 pax_col_t pax_index_getter_4bpp(pax_buf_t *buf, int index) {
-	return (buf->buf_8bpp[index >> 1] >> (index & 1)) & 15;
+	return (buf->buf_8bpp[index >> 1] >> (index & 1) * 4) & 15;
 }
 
 // Gets a raw value from a 8BPP buffer.
@@ -87,7 +87,7 @@ void pax_index_setter_1bpp(pax_buf_t *buf, pax_col_t color, int index) {
 
 // Sets a raw value from a 2BPP buffer.
 void pax_index_setter_2bpp(pax_buf_t *buf, pax_col_t color, int index) {
-	uint8_t *ptr = &buf->buf_8bpp[index >> 2];
+	uint8_t *ptr = &buf->buf_8bpp[index >> 2]; color &= 3;
 	switch (index & 3) {
 		case (0): *ptr = (*ptr & 0xfc) | (color << 0); break;
 		case (1): *ptr = (*ptr & 0xf3) | (color << 2); break;
@@ -171,6 +171,12 @@ pax_index_setter_t pax_get_setter(pax_buf_t *buf, pax_col_t *col_ptr, const pax_
 // Does no bounds checking nor color conversion.
 pax_col_t pax_get_index(pax_buf_t *buf, int index) {
 	return buf->getter(buf, index);
+}
+
+// Gets based on index instead of coordinates.
+// Does no bounds checking.
+pax_col_t pax_get_index_conv(pax_buf_t *buf, int index) {
+	return buf->buf2col(buf, buf->getter(buf, index));
 }
 
 // Sets based on index instead of coordinates.

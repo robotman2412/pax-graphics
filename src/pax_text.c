@@ -65,37 +65,6 @@ typedef struct {
 	bool              do_aa;
 } pax_text_render_t;
 
-typedef enum {
-	// A string of text.
-	PAX_TC_TEXT,
-	// A tab.
-	PAX_TC_TAB,
-	// A newline.
-	PAX_TC_NEWLINE,
-	// Word wrap goes here.
-	PAX_TC_WORDWRAP,
-} pax_tc_type_t;
-
-typedef struct pax_text_cmd pax_text_cmd_t;
-struct pax_text_cmd {
-	// Previous link.
-	pax_text_cmd_t *prev;
-	// Next link.
-	pax_text_cmd_t *next;
-	
-	// Type of command to use.
-	pax_tc_type_t type;
-	// Text part to render.
-	pax_text_part_t part;
-};
-
-typedef struct {
-	// First link.
-	pax_text_cmd_t *first;
-	// Last link.
-	pax_text_cmd_t *last;
-} pax_tc_list_t;
-
 
 
 /* ====== UTF-8 UTILITIES ====== */
@@ -168,6 +137,51 @@ uint64_t text_promise_callback(pax_buf_t *buf, pax_col_t tint, void *args0) {
 			(args->bpp == 1 && !args->do_aa) ? PAX_PROMISE_CUTOUT : 0;
 }
 
+// Pixel-aligned optimisation of pax_shade_rect, used for text.
+static void pixel_aligned_render(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
+		const pax_quad_t *uvs, float x, float y, float width, float height) {
+	// Offset and pixel-align co-ordinates.
+	x = (int) (0.5 + x + buf->stack_2d.value.a2);
+	y = (int) (0.5 + y + buf->stack_2d.value.b2);
+	pax_mark_dirty2(buf, x, y, width, height);
+	
+	// TODO: Re-work as integer UV rendererererrererer device.
+	#if PAX_COMPILE_MCR
+	if (pax_do_multicore) {
+		// Assign worker task.
+		float shape[4] = {
+			x, y, width, height
+		};
+		// Copies are made by paxmcr_add_task.
+		pax_task_t task = {
+			.buffer    = buf,
+			.type      = PAX_TASK_RECT,
+			.color     = color,
+			.shader    = (pax_shader_t *) shader,
+			.quad_uvs  = (pax_quad_t *) uvs,
+			.shape     = (float *) shape,
+			.shape_len = 4
+		};
+		paxmcr_add_task(&task);
+		// Draw our part.
+		paxmcr_rect_shaded(
+			false,
+			buf, color, shader, x, y, width, height,
+			uvs->x0, uvs->y0, uvs->x1, uvs->y1,
+			uvs->x2, uvs->y2, uvs->x3, uvs->y3
+		);
+	} else
+	#endif
+	{
+		// Single core option.
+		pax_rect_shaded(
+			buf, color, shader, x, y, width, height,
+			uvs->x0, uvs->y0, uvs->x1, uvs->y1,
+			uvs->x2, uvs->y2, uvs->x3, uvs->y3
+		);
+	}
+}
+
 // Internal method for monospace bitmapped characters.
 pax_vec1_t text_bitmap_mono(pax_text_render_t *ctx, const pax_font_range_t *range, uint32_t glyph) {
 	if (ctx->do_render) {
@@ -189,8 +203,8 @@ pax_vec1_t text_bitmap_mono(pax_text_render_t *ctx, const pax_font_range_t *rang
 		args.glyph_index = glyph_len * (glyph - range->start);
 		
 		pax_shader_t shader = {
-			.schema_version    =  0,
-			.schema_complement = ~0,
+			.schema_version    =  1,
+			.schema_complement = ~1,
 			.renderer_id       = PAX_RENDERER_ID_SWR,
 			.promise_callback  = text_promise_callback,
 			.callback_args     = &args,
@@ -214,13 +228,26 @@ pax_vec1_t text_bitmap_mono(pax_text_render_t *ctx, const pax_font_range_t *rang
 		};
 		
 		// Start drawing, boy!
-		pax_shade_rect(
-			ctx->buf, ctx->color,
-			&shader, &uvs,
-			0, 0,
-			range->bitmap_mono.width,
-			range->bitmap_mono.height
-		);
+		if (matrix_2d_is_identity1(ctx->buf->stack_2d.value)) {
+			// Pixel-aligned instead of float optimisation/fix.
+			pixel_aligned_render(
+				ctx->buf, ctx->color,
+				&shader, &uvs,
+				0,
+				0,
+				range->bitmap_mono.width,
+				range->bitmap_mono.height
+			);
+		} else {
+			pax_shade_rect(
+				ctx->buf, ctx->color,
+				&shader, &uvs,
+				0,
+				0,
+				range->bitmap_mono.width,
+				range->bitmap_mono.height
+			);
+		}
 		pax_join();
 	}
 	
@@ -252,8 +279,8 @@ pax_vec1_t text_bitmap_var(pax_text_render_t *ctx, const pax_font_range_t *range
 		args.glyph_index = dims->index;
 		
 		pax_shader_t shader = {
-			.schema_version    =  0,
-			.schema_complement = ~0,
+			.schema_version    =  1,
+			.schema_complement = ~1,
 			.renderer_id       = PAX_RENDERER_ID_SWR,
 			.promise_callback  = text_promise_callback,
 			.callback_args     = &args,
@@ -270,22 +297,34 @@ pax_vec1_t text_bitmap_var(pax_text_render_t *ctx, const pax_font_range_t *range
 		
 		// And UVs.
 		pax_quad_t uvs = {
-			.x0 = 0,                 .y0 = 0,
-			.x1 = dims->draw_w-0.00, .y1 = 0,
-			.x2 = dims->draw_w-0.00, .y2 = dims->draw_h-0.00,
-			.x3 = 0,                 .y3 = dims->draw_h-0.00,
+			.x0 = 0,            .y0 = 0,
+			.x1 = dims->draw_w, .y1 = 0,
+			.x2 = dims->draw_w, .y2 = dims->draw_h,
+			.x3 = 0,            .y3 = dims->draw_h,
 		};
 		
 		// Start drawing, boy!
 		if (dims->draw_w && dims->draw_h) {
-			pax_shade_rect(
-				ctx->buf, ctx->color,
-				&shader, &uvs,
-				dims->draw_x,
-				dims->draw_y,
-				dims->draw_w,
-				dims->draw_h
-			);
+			if (matrix_2d_is_identity1(ctx->buf->stack_2d.value)) {
+				// Pixel-aligned instead of float optimisation/fix.
+				pixel_aligned_render(
+					ctx->buf, ctx->color,
+					&shader, &uvs,
+					dims->draw_x,
+					dims->draw_y,
+					dims->draw_w,
+					dims->draw_h
+				);
+			} else {
+				pax_shade_rect(
+					ctx->buf, ctx->color,
+					&shader, &uvs,
+					dims->draw_x,
+					dims->draw_y,
+					dims->draw_w,
+					dims->draw_h
+				);
+			}
 			pax_join();
 		}
 	}
@@ -526,107 +565,6 @@ pax_vec1_t pax_text_size(const pax_font_t *font, float font_size, const char *te
 	return text_generic(&ctx, text);
 }
 
-
-
-// Append to pax_tc_list_t.
-static void pax_tcl_append(pax_tc_list_t *list, pax_text_cmd_t item) {
-	pax_text_cmd_t *ptr = malloc(sizeof(pax_text_cmd_t));
-	*ptr = item;
-	
-	if (list->first) {
-		list->last->next = ptr;
-		ptr->prev        = list->last;
-		ptr->next        = NULL;
-		list->last       = ptr;
-	} else {
-		list->first = ptr;
-		list->last  = ptr;
-		ptr->prev   = NULL;
-		ptr->next   = NULL;
-	}
-}
-
-// Delete a pax_tc_list_t.
-static void pax_tcl_delete(pax_tc_list_t *list) {
-	pax_text_cmd_t *cur = list->first;
-	while (cur) {
-		if (cur->type == PAX_TC_TEXT) {
-			free(cur->part.text);
-		}
-		void *mem = cur;
-		cur = cur->next;
-		free(mem);
-	}
-	list->first = NULL;
-	list->last  = NULL;
-}
-
-// Insert in after a link in pax_tc_list_t.
-static void pax_tcl_insert_after(pax_tc_list_t *list, pax_text_cmd_t *link, pax_text_cmd_t insert) {
-	pax_text_cmd_t *ptr = malloc(sizeof(pax_text_cmd_t));
-	*ptr = insert;
-	
-	ptr->next = link->next;
-	ptr->prev = link;
-	if (link->next) {
-		link->next->prev = ptr;
-	} else {
-		list->last = ptr;
-	}
-	link->next = ptr;
-}
-
-// Preprocessing pass for a text part.
-// Appends one or more commands to the output list.
-static void pax_text_preproc(pax_text_ctx_t *ctx, pax_tc_list_t *list, pax_text_part_t part) {
-	const char *start  = part.text;
-	const char *end    = part.text;
-	const char *search = part.text;
-	
-	while (*search) {
-		bool term = !search[1];
-		
-		if (*search == '\t') {
-			end = search;
-			term = true;
-			pax_tcl_append(list, (pax_text_cmd_t) {
-				.type = PAX_TC_TAB,
-			});
-		} else if (*search == '\r' || search == '\n') {
-			end = search;
-			if (*search == '\r' && search[1] == '\n') search ++;
-			term = true;
-			pax_tcl_append(list, (pax_text_cmd_t) {
-				.type = PAX_TC_NEWLINE,
-			});
-		}
-		
-		if (term && end > start) {
-			// Duplicate the normal text.
-			char *mem = strndup(start, end - start);
-			pax_text_cmd_t cmd = {
-				.type = PAX_TC_TEXT,
-				.part = part,
-			};
-			cmd.part.text    = mem;
-			cmd.part.ascent  = part.style.font_size;
-			cmd.part.descent = 0;
-			cmd.part.width   = pax_text_size(part.style.font, part.style.font_size, cmd.part.text).x;
-		}
-	}
-}
-
-// Draws parts using context clues, word-wrap, etc.
-void pax_text(pax_buf_t *buf, pax_text_ctx_t *ctx, size_t n_parts, const pax_text_part_t *parts) {
-	// List of text commands to run.
-	pax_tc_list_t list = {NULL, NULL};
-	
-	// Preprocess text parts.
-	for (size_t i = 0; i < n_parts; i++) {
-		pax_text_preproc(ctx, &list, parts[i]);
-	}
-	
-}
 
 
 #if 1

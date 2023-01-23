@@ -162,6 +162,10 @@ void pax_index_setter_32bpp(pax_buf_t *buf, pax_col_t color, int index);
 // Does no bounds checking nor color conversion.
 pax_col_t pax_get_index(pax_buf_t *buf, int index);
 
+// Gets based on index instead of coordinates.
+// Does no bounds checking.
+pax_col_t pax_get_index_conv(pax_buf_t *buf, int index);
+
 // Sets based on index instead of coordinates.
 // Does no bounds checking nor color conversion.
 void pax_set_index(pax_buf_t *buf, pax_col_t col, int index);
@@ -263,7 +267,10 @@ static inline float pax_flerp4(float x, float y, float e0, float e1, float e2, f
 
 
 
-/* ======= DRAWING HALPERS ======= */
+/* ======= DRAWING HELPERS ======= */
+
+// The scheduler for multicore rendering.
+void paxmcr_add_task(pax_task_t *task);
 
 // Multi-core method for shaded triangles.
 // Assumes points are sorted by Y.

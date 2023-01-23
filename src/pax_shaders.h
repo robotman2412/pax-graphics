@@ -62,16 +62,16 @@ typedef struct pax_font_bmp_args {
 } pax_font_bmp_args_t;
 
 // Texture shader for multi-bpp bitmap fonts.
-pax_col_t pax_shader_font_bmp_hi(pax_col_t tint, int x, int y, float u, float v, void *args);
+pax_col_t pax_shader_font_bmp_hi(pax_col_t tint, pax_col_t existing, int x, int y, float u, float v, void *args);
 
 // Texture shader for multi-bpp bitmap fonts with linear interpolation.
-pax_col_t pax_shader_font_bmp_hi_aa(pax_col_t tint, int x, int y, float u, float v, void *args);
+pax_col_t pax_shader_font_bmp_hi_aa(pax_col_t tint, pax_col_t existing, int x, int y, float u, float v, void *args);
 
 // Texture shader for 1bpp bitmap fonts.
-pax_col_t pax_shader_font_bmp(pax_col_t tint, int x, int y, float u, float v, void *args);
+pax_col_t pax_shader_font_bmp(pax_col_t tint, pax_col_t existing, int x, int y, float u, float v, void *args);
 
 // Texture shader for 1bpp bitmap fonts with linear interpolation.
-pax_col_t pax_shader_font_bmp_aa(pax_col_t tint, int x, int y, float u, float v, void *args);
+pax_col_t pax_shader_font_bmp_aa(pax_col_t tint, pax_col_t existing, int x, int y, float u, float v, void *args);
 
 /* ========== TEXTURES =========== */
 

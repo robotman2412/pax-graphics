@@ -60,26 +60,4 @@ pax_vec1_t  pax_draw_text_aa  (pax_buf_t *buf, pax_col_t color, const pax_font_t
 // Size is before matrix transformation.
 pax_vec1_t  pax_text_size     (const pax_font_t *font, float font_size, const char *text);
 
-static inline pax_text_style_t pax_text_style_default(const pax_font_t *font, float font_size) {
-	return (pax_text_style_t) {
-		.underline     = false,
-		.strikethrough = false,
-		.italic        = false,
-		.font          = font,
-		.font_size     = 18,
-	};
-}
-
-static inline pax_text_ctx_t pax_text_ctx_default(float x, float y) {
-	return (pax_text_ctx_t) {
-		.bounds    = { x, y, 0, 0 },
-		.cursor    = { 0, 0 },
-		.word_wrap = PAX_WW_NONE,
-		.align     = PAX_ALIGN_LEFT,
-	};
-}
-
-// Draws parts using context clues, word-wrap, etc.
-void pax_text(pax_buf_t *buf, pax_text_ctx_t *ctx, size_t n_parts, const pax_text_part_t *parts);
-
 #endif //PAX_TEXT_H

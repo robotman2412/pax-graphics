@@ -163,5 +163,6 @@ class LerpShape: public Shape {
 		float coeff();
 };
 
-}
+} // namespace pax
+
 #endif // __cplusplus

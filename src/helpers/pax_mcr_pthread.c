@@ -42,7 +42,7 @@
 
 
 // The scheduler for multicore rendering.
-static void paxmcr_add_task(pax_task_t *task) {
+void paxmcr_add_task(pax_task_t *task) {
 	// Create a copy.
 	pax_task_t copy    = *task;
 	

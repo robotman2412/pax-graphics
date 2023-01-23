@@ -310,17 +310,17 @@ void pax_buf_destroy(pax_buf_t *buf) {
 // WARNING: This is a beta feature and it does not work!
 // 
 // Convert the buffer to the given new format.
-// If dest is NULL or equal to src, src will be converted.
+// If dest is equal to src, src will be converted.
 void pax_buf_convert(pax_buf_t *dst, pax_buf_t *src, pax_buf_type_t type) {
 	if (!(src) || !(src)->buf) PAX_ERROR("pax_buf_convert (src)", PAX_ERR_NOBUF);
 	if (!(dst) || !(dst)->buf) PAX_ERROR("pax_buf_convert (dst)", PAX_ERR_NOBUF);
 	
-	// pax_buf_t dummy;
-	// bool use_dummy = !dst;
-	// if (use_dummy) {
-	// 	dummy = *src;
-	// 	dst = &dummy;
-	// }
+	pax_buf_t dummy;
+	bool use_dummy = dst == src;
+	if (use_dummy) {
+		dummy = *src;
+		dst = &dummy;
+	}
 	
 	// We can't go using realloc on an unknown buffer.
 	if (!dst->do_free) PAX_ERROR("pax_buf_convert", PAX_ERR_PARAM);
@@ -330,39 +330,57 @@ void pax_buf_convert(pax_buf_t *dst, pax_buf_t *src, pax_buf_type_t type) {
 		PAX_ERROR("pax_buf_convert", PAX_ERR_BOUNDS);
 	}
 	
+	// Update destination buffer type.
 	dst->bpp = PAX_GET_BPP(type);
 	dst->type = type;
+	// Update getters and setters.
+	pax_get_col_conv(dst, &dst->col2buf, &dst->buf2col);
+	pax_get_setters(dst, &dst->getter, &dst->setter);
+	// Compute new size requirement.
 	size_t new_pixels = dst->width * dst->height;
 	size_t new_size = (new_pixels * dst->bpp + 7) / 8;
+	
+	// Row buffer to prevent corruption in <8bpp.
+	pax_col_t *tmp = malloc(sizeof(pax_col_t) * dst->width);
+	if (!tmp) PAX_ERROR("pax_buf_convert", PAX_ERR_NOMEM);
+	
 	if (dst->bpp > src->bpp) {
 		PAX_LOGI(TAG, "Expanding buffer.");
+		
 		// Resize the memory for DST beforehand.
-		dst->buf = realloc(dst->buf, new_size);
-		if (!dst->buf) PAX_ERROR("pax_buf_convert", PAX_ERR_NOMEM);
-		// Reverse iterate if the new BPP is larger than the old BPP.
-		for (int y = dst->height - 1; y >= 0; y --) {
-			for (int x = dst->width - 1; x >= 0; x --) {
-				pax_col_t col_src = pax_get_pixel(src, x, y);
-				pax_set_pixel(dst, col_src, x, y);
-			}
-		}
-	} else {
-		PAX_LOGI(TAG, "Shrinking buffer.");
-		// Otherwise, iterate normally.
-		for (int y = 0; y < dst->height; y ++) {
-			for (int x = 0; x < dst->width; x ++) {
-				pax_col_t col_src = pax_get_pixel(src, x, y);
-				pax_set_pixel(dst, col_src, x, y);
-			}
-		}
-		// Resize the memory for DST afterwards.
-		dst->buf = realloc(dst->buf, new_size);
-		if (!dst->buf) PAX_ERROR("pax_buf_convert", PAX_ERR_NOMEM);
+		void *mem = realloc(dst->buf, new_size);
+		if (!mem) { free(tmp); PAX_ERROR("pax_buf_convert", PAX_ERR_NOMEM); }
+		dst->buf = mem;
+		if (use_dummy) src->buf = mem;
 	}
 	
-	// if (use_dummy) {
-	// 	*src = dummy;
-	// }
+	// Convert pixel data.
+	for (int y = 0; y < dst->height; y++) {
+		int offs = y*dst->width;
+		
+		// Extract from SRC.
+		for (int x = 0; x < dst->width; x++) {
+			tmp[x] = pax_get_index_conv(src, offs+x);
+		}
+		// Store into DST.
+		for (int x = 0; x < dst->width; x++) {
+			pax_set_index_conv(dst, tmp[x], offs+x);
+		}
+	}
+	free(tmp);
+	
+	if (dst->bpp < src->bpp) {
+		PAX_LOGI(TAG, "Shrinking buffer.");
+		
+		// Resize the memory for DST afterwards.
+		void *mem = realloc(dst->buf, new_size);
+		if (!dst->buf) PAX_ERROR("pax_buf_convert", PAX_ERR_NOMEM);
+		dst->buf = mem;
+	}
+	
+	if (use_dummy) {
+		*src = dummy;
+	}
 }
 
 // Clip the buffer to the desired rectangle.

@@ -258,6 +258,17 @@ void Buffer::draw(Color color, Shader *shader, float x, float y, Shape *shape) {
 	}
 }
 
+// Draws an image stored in another buffer.
+void Buffer::drawImage(pax_buf_t *image, float x, float y) {
+	GENERIC_VALIDITY_CHECK();
+	pax_draw_image(internal, image, x, y);
+}
+// Draws an image stored in another buffer.
+void Buffer::drawImage(pax_buf_t *image, float x, float y, float width, float height) {
+	GENERIC_VALIDITY_CHECK();
+	pax_draw_image_sized(internal, image, x, y, width, height);
+}
+
 // Calculate the size of the string with the given font.
 // Size is before matrix transformation.
 Vec2f Buffer::stringSize(const pax_font_t *font, float font_size, std::string text) {

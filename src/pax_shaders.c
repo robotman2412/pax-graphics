@@ -38,7 +38,7 @@ static inline float pax_interp_cubic(float a) {
 #endif
 
 // Texture shader for multi-bpp bitmap fonts.
-pax_col_t pax_shader_font_bmp_hi(pax_col_t base, int x, int y, float u, float v, void *args0) {
+pax_col_t pax_shader_font_bmp_hi(pax_col_t base, pax_col_t existing, int x, int y, float u, float v, void *args0) {
 	pax_font_bmp_args_t *args = args0;
 	
 	// Extract texture coords.
@@ -55,20 +55,29 @@ pax_col_t pax_shader_font_bmp_hi(pax_col_t base, int x, int y, float u, float v,
 	
 	// Extract pixel data.
 	uint16_t val =
+		// Get bitmap at byte index.
 		(args->range->bitmap_mono.glyphs[glyph_index]
+		// Align the bits.
 			>> args->bpp * (glyph_x & (args->mask)))
+		// Mask out the ones we want.
 		& args->mask;
 	
-	// Convert data to color.
-	uint8_t   alpha = val * 255 / (args->mask);
-	pax_col_t tint  = (alpha << 24) | 0x00ffffff;
+	// Compute alpha.
+	uint8_t alpha = val * 255 / (args->mask);
 	
-	// Tint the output color.
-	return pax_col_tint(base, tint);
+	// // Convert data to color.
+	// uint8_t   alpha = val * 255 / (args->mask);
+	// pax_col_t tint  = (alpha << 24) | 0x00ffffff;
+	
+	// // Tint the output color.
+	// return pax_col_tint(base, tint);
+	
+	// Interpolate the output color.
+	return pax_col_lerp(alpha, existing, base);
 }
 
 // Texture shader for multi-bpp bitmap fonts with linear interpolation.
-pax_col_t pax_shader_font_bmp_hi_aa(pax_col_t base, int x, int y, float u, float v, void *args0) {
+pax_col_t pax_shader_font_bmp_hi_aa(pax_col_t base, pax_col_t existing, int x, int y, float u, float v, void *args0) {
 	pax_font_bmp_args_t *args = args0;
 	
 	// Correct UVs for the offset caused by filtering.
@@ -136,13 +145,16 @@ pax_col_t pax_shader_font_bmp_hi_aa(pax_col_t base, int x, int y, float u, float
 	// Second stage interpolation.
 	float coeff = c4 + (c5 - c4) * dy;
 	
-	// Tint the output color.
-	pax_col_t tint = (pax_col_t) (0xff000000 * coeff) | 0x00ffffff;
-	return pax_col_tint(base, tint);
+	// // Tint the output color.
+	// pax_col_t tint = (pax_col_t) (0xff000000 * coeff) | 0x00ffffff;
+	// return pax_col_tint(base, tint);
+	
+	// Interpolate the output color.
+	return pax_col_lerp(coeff*255, existing, base);
 }
 
 // Texture shader for 1bpp bitmap fonts.
-pax_col_t pax_shader_font_bmp(pax_col_t tint, int x, int y, float u, float v, void *args0) {
+pax_col_t pax_shader_font_bmp(pax_col_t tint, pax_col_t existing, int x, int y, float u, float v, void *args0) {
 	pax_font_bmp_args_t *args = args0;
 	
 	// Get texture coords.
@@ -155,11 +167,12 @@ pax_col_t pax_shader_font_bmp(pax_col_t tint, int x, int y, float u, float v, vo
 	size_t glyph_index = args->glyph_index + glyph_x / 8 + args->glyph_y_mul * glyph_y;
 	
 	// Extract the pixel data.
-	return args->range->bitmap_mono.glyphs[glyph_index] & (1 << (glyph_x & 7)) ? tint : 0;
+	bool pixdat = args->range->bitmap_mono.glyphs[glyph_index] & (1 << (glyph_x & 7));
+	return pixdat ? tint : existing;
 }
 
 // Texture shader for 1bpp bitmap fonts with linear interpolation.
-pax_col_t pax_shader_font_bmp_aa(pax_col_t base, int x, int y, float u, float v, void *args0) {
+pax_col_t pax_shader_font_bmp_aa(pax_col_t base, pax_col_t existing, int x, int y, float u, float v, void *args0) {
 	pax_font_bmp_args_t *args = args0;
 	
 	// Correct UVs for the offset caused by filtering.
@@ -227,9 +240,12 @@ pax_col_t pax_shader_font_bmp_aa(pax_col_t base, int x, int y, float u, float v,
 	// Second stage interpolation.
 	float coeff = c4 + (c5 - c4) * dy;
 	
-	// Tint the output color.
-	pax_col_t tint = (pax_col_t) (0xff000000 * coeff) | 0x00ffffff;
-	return pax_col_tint(base, tint);
+	// // Tint the output color.
+	// pax_col_t tint = (pax_col_t) (0xff000000 * coeff) | 0x00ffffff;
+	// return pax_col_tint(base, tint);
+	
+	// Interpolate the output color.
+	return pax_col_lerp(coeff*255, existing, base);
 }
 
 // Texture shader. No interpolation.

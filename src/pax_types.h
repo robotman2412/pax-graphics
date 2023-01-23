@@ -143,17 +143,6 @@ enum pax_task_type {
 	PAX_TASK_STOP,
 };
 
-// Text alignment property.
-// Less obvious when justify is enabled.
-enum pax_align {
-	// Left-aligned text (Default).
-	PAX_ALIGN_LEFT,
-	// Center-aligned text.
-	PAX_ALIGN_CENTER,
-	// Right-aligned text.
-	PAX_ALIGN_RIGHT,
-};
-
 // Distinguishes between ways to draw fonts.
 enum pax_font_type {
 	// For monospace bitmapped fonts.
@@ -165,7 +154,6 @@ enum pax_font_type {
 typedef enum   pax_buf_type    pax_buf_type_t;
 typedef enum   pax_word_wrap   pax_word_wrap_t;
 typedef enum   pax_task_type   pax_task_type_t;
-typedef enum   pax_align       pax_align_t;
 typedef enum   pax_font_type   pax_font_type_t;
 
 // Promises that the shape will be fully opaque when drawn.
@@ -188,10 +176,6 @@ struct pax_bmpv;
 struct pax_font;
 struct pax_font_range;
 
-struct pax_text_ctx;
-struct pax_text_part;
-struct pax_text_style;
-
 struct pax_task;
 
 typedef struct pax_buf         pax_buf_t;
@@ -201,9 +185,6 @@ typedef struct pax_shader_ctx  pax_shader_ctx_t;
 typedef struct pax_bmpv        pax_bmpv_t;
 typedef struct pax_font        pax_font_t;
 typedef struct pax_font_range  pax_font_range_t;
-typedef struct pax_text_ctx    pax_text_ctx_t;
-typedef struct pax_text_part   pax_text_part_t;
-typedef struct pax_text_style  pax_text_style_t;
 
 typedef int32_t                pax_err_t;
 typedef uint32_t               pax_col_t;
@@ -382,55 +363,6 @@ struct pax_font_range {
 			uint8_t           bpp;
 		} bitmap_var;
 	};
-};
-
-// Style information for drawing text.
-struct pax_text_style {
-	// To draw an underline.
-	bool              underline;
-	// To draw a line through.
-	bool              strikethrough;
-	// To draw italicised.
-	bool              italic;
-	// Color to draw.
-	pax_col_t         color;
-	// Font to use.
-	const pax_font_t *font;
-	// Font size to use.
-	float             font_size;
-};
-
-// Context used for advanced text drawing.
-struct pax_text_ctx {
-	// The bounding box to draw text in.
-	// If word wrap is disabled, width and height are ignored.
-	pax_rect_t        bounds;
-	
-	// The (relative to bounds) cursor position.
-	pax_vec1_t        cursor;
-	
-	// Whether to use word-wrap, and if so, which type.
-	pax_word_wrap_t   word_wrap;
-	
-	// Text alignment options.
-	// Ignored if word wrap is disabled.
-	pax_align_t       align;
-	
-	// Size of tabs.
-	float             tab_size;
-};
-
-struct pax_text_part {
-	// Text string to draw.
-	const char *text;
-	// Appearance of the text string.
-	pax_text_style_t style;
-	// Calculated ascent.
-	float ascent;
-	// Calculated descent.
-	float descent;
-	// Calculated width.
-	float width;
 };
 
 // A task to perform, used by multicore rendering.

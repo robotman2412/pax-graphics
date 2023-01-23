@@ -279,6 +279,8 @@ PAX_CXX_Vecf_union  pax_rect {
 	pax_rect(float _x, float _y, float _w, float _h) {x=_x; y=_y; w=_w; h=_h;}
 	// Initialise from initialiser list.
 	pax_rect(std::initializer_list<float> list) { assert(list.size()==sizeof(arr)/sizeof(float)); std::copy(list.begin(), list.end(), arr); }
+	// Initialise from initialiser list.
+	pax_rect(std::initializer_list<pax::Vec2f> list) { assert(list.size()==2); position()=list.begin()[0]; size()=list.begin()[1]; }
 	// Initialise as copy.
 	pax_rect(const pax_rect &) = default;
 	
@@ -300,6 +302,13 @@ PAX_CXX_Vecf_union  pax_rect {
 	// Create an equivalent quad.
 	pax::Quadf toQuad() {
 		return pax::Quadf(x, y,  x+w, y,  x+w, y+h,  x, y+h);
+	}
+	// Get a copy which gaurantees nonnegative dimensions.
+	pax::Rectf fixSize() {
+		pax::Rectf out = *this;
+		if (out.w < 0) { out.x += out.w; out.w = -out.w; }
+		if (out.h < 0) { out.y += out.h; out.h = -out.h; }
+		return out;
 	}
 #endif //__cplusplus
 };
@@ -348,6 +357,10 @@ union matrix_2d {
 };
 
 
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 // Check whether the matrix exactly equals the identity matrix.
 static inline bool matrix_2d_is_identity(matrix_2d_t m) {
@@ -406,6 +419,11 @@ void        matrix_2d_transform   (matrix_2d_t a, float *x, float *y);
 // 2D vector: unifies a given vector (it's magnitude will be 1).
 // Does not work for vectors with all zero.
 pax_vec1_t  vec1_unify            (pax_vec1_t vec);
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
+
 
 
 #ifdef __cplusplus

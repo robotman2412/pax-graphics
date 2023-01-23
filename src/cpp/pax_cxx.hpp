@@ -37,6 +37,7 @@ typedef pax_col_t Color;
 
 #include <functional>
 #include <pax_cxx_shape.hpp>
+#include <pax_cxx_text.hpp>
 
 // This serves as a C++ wrapper which is fully compatible with the normal C version of PAX graphics.
 namespace pax {
@@ -207,6 +208,15 @@ class Buffer {
 		// Draws an arbitrary shape.
 		void draw(Color color, Shader *shader, float x, float y, Shape *shape);
 		
+		// Draws an image stored in another buffer.
+		void drawImage(pax_buf_t *image, float x, float y);
+		// Draws an image stored in another buffer.
+		void drawImage(pax_buf_t *image, float x, float y, float width, float height);
+		// Draws an image stored in another buffer.
+		void drawImage(Ref<Buffer> image, float x, float y) { drawImage(image->internal, x, y); }
+		// Draws an image stored in another buffer.
+		void drawImage(Ref<Buffer> image, float x, float y, float width, float height) { drawImage(image->internal, x, y, width, height); }
+		
 		// Calculate the size of the string with the given font.
 		// Size is before matrix transformation.
 		static Vec2f stringSize(const pax_font_t *font, float font_size, std::string text);
@@ -302,5 +312,6 @@ Color merge(Color base, Color top);
 // Tints the color, commonly used for textures.
 Color tint (Color col, Color tint);
 
-}
+} // namespace pax
+
 #endif // __cplusplus
