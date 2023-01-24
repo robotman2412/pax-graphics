@@ -25,7 +25,6 @@
 #include "pax_cxx.hpp"
 #include "pax_gfx.h"
 
-#ifdef __cplusplus
 namespace pax {
 
 
@@ -135,6 +134,25 @@ Buffer::Buffer(void *preallocated, int width, int height, pax_buf_type_t type) {
 	// Default colors.
 	fillColor      = 0xffffffff;
 	lineColor      = 0xffffffff;
+}
+
+// Enable reversed endianness mode.
+// This causes endiannes to be internally stored as reverse of native.
+// This operation does not update data stored in the buffer; it will become invalid.
+void Buffer::reverseEndianness(bool reversed) {
+	if (internal) pax_buf_reversed(internal, reversed);
+}
+
+// Get a pointer to the underlying C API pax_buf_t*.
+// Note: Doing so is less memory safe than to use the C++ API, but still compatible.
+pax_buf_t *Buffer::getInternal() {
+	return internal;
+}
+
+// Get a pointer to the memory stored in the pixel buffer.
+// The arrangement is left-to-right then top-to-bottom, packed (sub byte-aligned rows will partially share a byte with the next).
+void *Buffer::getPixelBuffer() {
+	return internal ? internal->buf : NULL;
 }
 
 // Deletion operator.
@@ -517,4 +535,3 @@ Color tint(Color col, Color tint) {
 
 
 } // namespace pax
-#endif // __cplusplus

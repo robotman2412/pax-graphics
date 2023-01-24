@@ -59,6 +59,7 @@ enum TextAlign {
 #include "pax_cxx.hpp"
 #include <string>
 #include <vector>
+#include <memory>
 
 namespace pax {
 
@@ -172,17 +173,17 @@ class TextStyle {
 			bool _underline = false, bool _overline = false
 		): font(_font), fontSize(_fontSize), color(_color), italic(_italic), strikethrough(_strikethrough), underline(_underline), overline(_overline) {}
 		
-		bool operator==(pax::Ref<TextStyle> other) {
+		bool operator==(const TextStyle &other) {
 			if (this == &other) return true;
-			return font          == other->font
-				&& fontSize      == other->fontSize
-				&& color         == other->color
-				&& italic        == other->italic
-				&& strikethrough == other->strikethrough
-				&& underline     == other->underline
-				&& overline      == other->overline;
+			return font          == other.font
+				&& fontSize      == other.fontSize
+				&& color         == other.color
+				&& italic        == other.italic
+				&& strikethrough == other.strikethrough
+				&& underline     == other.underline
+				&& overline      == other.overline;
 		}
-		bool operator!=(pax::Ref<TextStyle> other) { return !(*this == other); }
+		bool operator!=(const TextStyle &other) { return !(*this == other); }
 };
 
 // A box intended to draw text and inline elements.

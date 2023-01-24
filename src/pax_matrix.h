@@ -46,8 +46,8 @@ typedef union  matrix_2d matrix_2d_t;
 typedef struct matrix_stack_2d matrix_stack_2d_t;
 
 #ifdef __cplusplus
-#include <pax_cxx_ref.hpp>
 #include <assert.h>
+#include <memory>
 
 namespace pax {
 
@@ -83,15 +83,7 @@ typedef struct matrix_stack_2d Matrix2fStack;
 	}
 
 #define PAX_CXX_Vecf_OPERATOR(_type, _oper) \
-	_type operator _oper(pax::Ref<_type> &rhs) { \
-		_type out; \
-		const size_t _size = sizeof(arr) / 2 / sizeof(float); \
-		for (size_t i = 0; i < _size; i++) { \
-			out.arr[i] = arr[i] _oper rhs->arr[i]; \
-		} \
-		return out; \
-	} \
-	_type operator _oper(const _type &rhs) { \
+	_type operator _oper(_type rhs) { \
 		_type out; \
 		const size_t _size = sizeof(arr) / 2 / sizeof(float); \
 		for (size_t i = 0; i < _size; i++) { \
@@ -109,14 +101,7 @@ typedef struct matrix_stack_2d Matrix2fStack;
 	}
 
 #define PAX_CXX_Vecf_OPERATOR_ASSIGN(_type, _oper) \
-	_type &operator _oper(pax::Ref<_type> &rhs) { \
-		const size_t _size = sizeof(arr) / 2 / sizeof(float); \
-		for (size_t i = 0; i < _size; i++) { \
-			arr[i] _oper rhs->arr[i]; \
-		} \
-		return *this; \
-	} \
-	_type &operator _oper(const _type &rhs) { \
+	_type &operator _oper(_type rhs) { \
 		const size_t _size = sizeof(arr) / 2 / sizeof(float); \
 		for (size_t i = 0; i < _size; i++) { \
 			arr[i] _oper rhs.arr[i]; \
@@ -132,6 +117,20 @@ typedef struct matrix_stack_2d Matrix2fStack;
 	}
 
 #define PAX_CXX_Vecf_OPERATORS(_type) \
+	bool operator==(_type rhs) const { \
+		const size_t _size = sizeof(arr) / 2 / sizeof(float); \
+		for (size_t i = 0; i < _size; i++) { \
+			if (arr[i] != rhs.arr[i]) return false; \
+		} \
+		return true; \
+	} \
+	bool operator=(_type rhs) const { \
+		const size_t _size = sizeof(arr) / 2 / sizeof(float); \
+		for (size_t i = 0; i < _size; i++) { \
+			if (arr[i] != rhs.arr[i]) return false; \
+		} \
+		return true; \
+	} \
 	PAX_CXX_Vecf_OPERATOR(_type, +) \
 	PAX_CXX_Vecf_OPERATOR(_type, -) \
 	PAX_CXX_Vecf_OPERATOR(_type, *) \
@@ -139,8 +138,7 @@ typedef struct matrix_stack_2d Matrix2fStack;
 	PAX_CXX_Vecf_OPERATOR_ASSIGN(_type, +=) \
 	PAX_CXX_Vecf_OPERATOR_ASSIGN(_type, -=) \
 	PAX_CXX_Vecf_OPERATOR_ASSIGN(_type, *=) \
-	PAX_CXX_Vecf_OPERATOR_ASSIGN(_type, /=) \
-	PAX_CXX_Vecf_OPERATOR_ASSIGN(_type, =)
+	PAX_CXX_Vecf_OPERATOR_ASSIGN(_type, /=)
 
 } //namespace pax
 #endif //__cplusplus
@@ -350,9 +348,9 @@ union matrix_2d {
 	static matrix_2d rotate(float angle);
 	
 	// Matrix multiplication. Note that A*B != B*A in matrices.
-	matrix_2d operator*(const matrix_2d &rhs);
+	matrix_2d operator*(matrix_2d rhs);
 	// Matrix multiplication. Note that A*B != B*A in matrices.
-	matrix_2d operator*(pax::Ref<matrix_2d> &rhs);
+	matrix_2d operator*(const matrix_2d &rhs);
 #endif //__cplusplus
 };
 
@@ -468,12 +466,12 @@ inline pax::Matrix2f pax::Matrix2f::rotate(float angle) {
 }
 
 // Matrix multiplication. Note that A*B != B*A in matrices.
-inline pax::Matrix2f pax::Matrix2f::operator*(const pax::Matrix2f &rhs) {
+inline pax::Matrix2f pax::Matrix2f::operator*(pax::Matrix2f rhs) {
 	return matrix_2d_multiply(*this, rhs);
 }
 // Matrix multiplication. Note that A*B != B*A in matrices.
-inline pax::Matrix2f pax::Matrix2f::operator*(pax::Ref<pax::Matrix2f> &rhs) {
-	return matrix_2d_multiply(*this, *rhs);
+inline pax::Matrix2f pax::Matrix2f::operator*(const pax::Matrix2f &rhs) {
+	return matrix_2d_multiply(*this, rhs);
 }
 
 #endif //__cplusplus

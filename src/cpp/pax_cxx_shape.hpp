@@ -32,7 +32,7 @@
 
 namespace pax {
 // A list of points meant to represent a polygon's ouline.
-typedef std::vector<pax_vec1_t> Outline;
+typedef std::vector<Vec2f> Outline;
 // An immutable representation of a shape.
 class Shape;
 }

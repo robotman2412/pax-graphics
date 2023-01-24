@@ -137,8 +137,6 @@ void TextBox::draw(Buffer &to) {
 	size_t startIndex = 0;
 	// One past last index to draw the current line.
 	size_t endIndex   = 0;
-	// Whether text styling is currently being applied.
-	bool isText       = list[0].second->isText();
 	
 	// Current text style.
 	TextStyle &style    = list[0].first;
@@ -158,9 +156,16 @@ void TextBox::draw(Buffer &to) {
 		
 		// Test whether another element still fits.
 		if (endIndex < list.size()) {
+			// Grab a new element from the list.
 			InlineElement &elem = *list[endIndex].second;
 			TextStyle &style = list[endIndex].first;
-			if (elem.getWidth(*this, style) + lineWidth + theSpace <= bounds.w) {
+			
+			// Determine whether it shall fit on this line.
+			bool doesItFit = elem.getWidth(*this, style) + lineWidth + theSpace <= bounds.w;
+			// Edge case: It is too wide to fit, but the line is empty.
+			if (startIndex == endIndex) doesItFit = true;
+			
+			if (doesItFit) {
 				// If so, count it up and continue going.
 				
 				// Minimum possible width.

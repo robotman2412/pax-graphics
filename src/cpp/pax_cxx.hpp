@@ -33,8 +33,6 @@ class Buffer;
 typedef pax_col_t Color;
 }
 
-#include <pax_cxx_ref.hpp>
-
 #include <functional>
 #include <pax_cxx_shape.hpp>
 #include <pax_cxx_text.hpp>
@@ -108,6 +106,16 @@ class Buffer {
 		// Make a wrapper of a new buffer, with preallocated memory.
 		// This memory will not be free()d by default.
 		Buffer(void *preallocated, int width, int height, pax_buf_type_t type);
+		// Enable reversed endianness mode.
+		// This causes endiannes to be internally stored as reverse of native.
+		// This operation does not update data stored in the buffer; it will become invalid.
+		void reverseEndianness(bool reversed);
+		// Get a pointer to the underlying C API pax_buf_t*.
+		// Note: Doing so is less memory safe than to use the C++ API, but still compatible.
+		pax_buf_t *getInternal();
+		// Get a pointer to the memory stored in the pixel buffer.
+		// The arrangement is left-to-right then top-to-bottom, packed (sub byte-aligned rows will partially share a byte with the next).
+		void *getPixelBuffer();
 		
 		// Deletion operator.
 		~Buffer();
@@ -218,9 +226,9 @@ class Buffer {
 		// Draws an image stored in another buffer.
 		void drawImage(pax_buf_t *image, float x, float y, float width, float height);
 		// Draws an image stored in another buffer.
-		void drawImage(Ref<Buffer> image, float x, float y) { drawImage(image->internal, x, y); }
+		void drawImage(Buffer &image, float x, float y) { drawImage(image.internal, x, y); }
 		// Draws an image stored in another buffer.
-		void drawImage(Ref<Buffer> image, float x, float y, float width, float height) { drawImage(image->internal, x, y, width, height); }
+		void drawImage(Buffer &image, float x, float y, float width, float height) { drawImage(image.internal, x, y, width, height); }
 		
 		// Calculate the size of the string with the given font.
 		// Size is before matrix transformation.
@@ -293,6 +301,8 @@ class Buffer {
 		// Any effects of previous clip calls are nullified.
 		void noClip();
 };
+
+/* ============ COLORS =========== */
 
 // Multiplicatively decreases alpha based on a float.
 static inline Color reduceAlpha(Color in, float coeff) {

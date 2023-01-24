@@ -9,7 +9,7 @@ Documentation can be found [here](docs).
 
 # Target v1.1.0 TODO list
 - [ ] Fix all remaining build warnings
-- [ ] More advanced text options
+- [x] More advanced text options
 - [ ] Import more fonts
 - [ ] Comprehensive C++ wrapper
 - [ ] Triangulation that can handle any shape

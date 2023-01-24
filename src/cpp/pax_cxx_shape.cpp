@@ -136,21 +136,8 @@ void Shape::_int_draw(pax_buf_t *to, Color color, const pax_shader_t *shader, bo
 
 // Equality operator.
 bool Shape::operator==(Shape const &other) {
-	// Because Vec2f does not have an equality operator, this must be manually implemented.
-	
-	// Enforce outline size matches.
-	if (other.outline.size() != outline.size()) return false;
-	
-	// Enforce each point matches.
-	for (size_t i = 0; i < outline.size(); i++) {
-		if (outline[i].x != other.outline[i].x || outline[i].y != outline[i].y) {
-			// A point is not equal.
-			return false;
-		}
-	}
-	
-	// It is equal.
-	return true;
+	// Yes yes very complicated I know.
+	return other.outline == outline;
 }
 
 
