@@ -84,7 +84,7 @@ extern bool pax_log_use_mutex;
 #ifdef PAX_ENABLE_DEBUG_LOGS
 #define PAX_LOGD(tag, ...) PRIVATE_PAX_LOG_HELPER(stdout, "\033[94mDebug ", tag, __VA_ARGS__)
 #else
-#define PAX_LOGD(...)
+#define PAX_LOGD(...) do;while(0)
 #endif
 
 #endif
@@ -144,6 +144,10 @@ pax_col_t pax_index_getter_8bpp(pax_buf_t *buf, int index);
 pax_col_t pax_index_getter_16bpp(pax_buf_t *buf, int index);
 // Gets a raw value from a 32BPP buffer.
 pax_col_t pax_index_getter_32bpp(pax_buf_t *buf, int index);
+// Gets a raw value from a 16BPP buffer, reversed endianness.
+pax_col_t pax_index_getter_16bpp_rev(pax_buf_t *buf, int index);
+// Gets a raw value from a 32BPP buffer, reversed endianness.
+pax_col_t pax_index_getter_32bpp_rev(pax_buf_t *buf, int index);
 
 // Sets a raw value from a 1BPP buffer.
 void pax_index_setter_1bpp(pax_buf_t *buf, pax_col_t color, int index);
@@ -157,6 +161,10 @@ void pax_index_setter_8bpp(pax_buf_t *buf, pax_col_t color, int index);
 void pax_index_setter_16bpp(pax_buf_t *buf, pax_col_t color, int index);
 // Sets a raw value from a 32BPP buffer.
 void pax_index_setter_32bpp(pax_buf_t *buf, pax_col_t color, int index);
+// Sets a raw value from a 16BPP buffer, reversed endianness.
+void pax_index_setter_16bpp_rev(pax_buf_t *buf, pax_col_t color, int index);
+// Sets a raw value from a 32BPP buffer, reversed endianness.
+void pax_index_setter_32bpp_rev(pax_buf_t *buf, pax_col_t color, int index);
 
 // Gets based on index instead of coordinates.
 // Does no bounds checking nor color conversion.
@@ -265,6 +273,16 @@ static inline float pax_flerp4(float x, float y, float e0, float e1, float e2, f
 	return a + (b - a) * y;
 }
 
+// Reverse endianness for 16-bit things.
+static inline uint16_t pax_rev_endian_16(uint16_t in) {
+	return (in >> 8) | (in << 8);
+}
+
+// Reverse endianness for 32-bit things.
+static inline uint32_t pax_rev_endian_32(uint32_t in) {
+	return (in >> 24) | ((in >> 8) & 0x0000ff00) | ((in << 8) & 0x00ff0000) | (in << 24);
+}
+
 
 
 /* ======= DRAWING HELPERS ======= */
@@ -283,7 +301,7 @@ void paxmcr_tri_shaded(bool odd_scanline, pax_buf_t *buf, pax_col_t color, const
 // If odd_scanline is true, the odd (counted from 0) lines are drawn, otherwise the even lines are drawn.
 void paxmcr_overlay_buffer(bool odd_scanline, pax_buf_t *base, pax_buf_t *top, int x, int y, int width, int height, bool assume_opaque);
 
-//  Multi-core optimisation which makes more assumptions about UVs.
+// Multi-core optimisation which makes more assumptions about UVs.
 // If odd_scanline is true, the odd (counted from 0) lines are drawn, otherwise the even lines are drawn.
 void paxmcr_rect_shaded1(bool odd_scanline, pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
 		float x, float y, float width, float height, float u0, float v0, float u1, float v1);

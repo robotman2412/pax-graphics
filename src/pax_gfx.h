@@ -75,6 +75,9 @@ extern bool pax_enable_shape_aa;
 // Create a new buffer.
 // If mem is NULL, a new area is allocated.
 void      pax_buf_init            (pax_buf_t *buf, void *mem, int width, int height, pax_buf_type_t type);
+// Enable/disable the reversing of endianness for `buf`.
+// Some displays might require a feature like this one.
+void      pax_buf_reversed        (pax_buf_t *buf, bool reversed_endianness);
 // Destroy the buffer, freeing its memory.
 void      pax_buf_destroy         (pax_buf_t *buf);
 // WARNING: This is a beta feature and it does not work!

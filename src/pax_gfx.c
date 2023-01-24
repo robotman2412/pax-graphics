@@ -268,6 +268,7 @@ void pax_buf_init(pax_buf_t *buf, void *mem, int width, int height, pax_buf_type
 		// Memory management information.
 		.do_free     = use_alloc,
 		.do_free_pal = false,
+		.reverse_endianness = false,
 		.pallette    = NULL
 	};
 	// Update getters and setters.
@@ -277,6 +278,20 @@ void pax_buf_init(pax_buf_t *buf, void *mem, int width, int height, pax_buf_type
 	pax_mark_clean(buf);
 	// The clip rectangle is disabled by default.
 	pax_noclip(buf);
+	PAX_SUCCESS();
+}
+
+// Enable/disable the reversing of endianness for `buf`.
+// Some displays might require a feature like this one.
+void pax_buf_reversed(pax_buf_t *buf, bool reversed_endianness) {
+	PAX_BUF_CHECK("pax_buf_reversed");
+	
+	// Update endianness flag.
+	buf->reverse_endianness = reversed_endianness;
+	// Update getters and setters.
+	pax_get_col_conv(buf, &buf->col2buf, &buf->buf2col);
+	pax_get_setters(buf, &buf->getter, &buf->setter);
+	
 	PAX_SUCCESS();
 }
 

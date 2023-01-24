@@ -28,13 +28,23 @@ void pax_get_setters(pax_buf_t *buf, pax_index_getter_t *getter, pax_index_sette
 			break;
 			
 		case (16):
-			*getter = pax_index_getter_16bpp;
-			*setter = pax_index_setter_16bpp;
+			if (buf->reverse_endianness) {
+				*getter = pax_index_getter_16bpp_rev;
+				*setter = pax_index_setter_16bpp_rev;
+			} else {
+				*getter = pax_index_getter_16bpp;
+				*setter = pax_index_setter_16bpp;
+			}
 			break;
 			
 		case (32):
-			*getter = pax_index_getter_32bpp;
-			*setter = pax_index_setter_32bpp;
+			if (buf->reverse_endianness) {
+				*getter = pax_index_getter_32bpp_rev;
+				*setter = pax_index_setter_32bpp_rev;
+			} else {
+				*getter = pax_index_getter_32bpp;
+				*setter = pax_index_setter_32bpp;
+			}
 			break;
 	}
 }
@@ -67,6 +77,16 @@ pax_col_t pax_index_getter_16bpp(pax_buf_t *buf, int index) {
 // Gets a raw value from a 32BPP buffer.
 pax_col_t pax_index_getter_32bpp(pax_buf_t *buf, int index) {
 	return buf->buf_32bpp[index];
+}
+
+// Gets a raw value from a 16BPP buffer, reversed endianness.
+pax_col_t pax_index_getter_16bpp_rev(pax_buf_t *buf, int index) {
+	return pax_rev_endian_16(buf->buf_16bpp[index]);
+}
+
+// Gets a raw value from a 32BPP buffer, reversed endianness.
+pax_col_t pax_index_getter_32bpp_rev(pax_buf_t *buf, int index) {
+	return pax_rev_endian_32(buf->buf_32bpp[index]);
 }
 
 
@@ -119,6 +139,16 @@ void pax_index_setter_16bpp(pax_buf_t *buf, pax_col_t color, int index) {
 // Sets a raw value from a 32BPP buffer.
 void pax_index_setter_32bpp(pax_buf_t *buf, pax_col_t color, int index) {
 	buf->buf_32bpp[index] = color;
+}
+
+// Sets a raw value from a 16BPP buffer, reversed endianness.
+void pax_index_setter_16bpp_rev(pax_buf_t *buf, pax_col_t color, int index) {
+	buf->buf_16bpp[index] = pax_rev_endian_16(color);
+}
+
+// Sets a raw value from a 32BPP buffer, reversed endianness.
+void pax_index_setter_32bpp_rev(pax_buf_t *buf, pax_col_t color, int index) {
+	buf->buf_32bpp[index] = pax_rev_endian_32(color);
 }
 
 
@@ -368,8 +398,7 @@ pax_col_t pax_col_to_565_rgb(pax_buf_t *buf, pax_col_t color) {
 	// 16BPP 565-RGB
 	// From: Aaaa aaaa Rrrr rrrr Gggg gggg Bbbb bbbb
 	// To:                       Rrrr rGgg gggB bbbb
-	uint16_t value = ((color >> 8) & 0xf800) | ((color >> 5) & 0x07e0) | ((color >> 3) & 0x001f);
-	return (value >> 8) | ((value << 8) & 0xff00);
+	return ((color >> 8) & 0xf800) | ((color >> 5) & 0x07e0) | ((color >> 3) & 0x001f);
 }
 
 
@@ -397,8 +426,7 @@ pax_col_t pax_col_to_4444_argb(pax_buf_t *buf, pax_col_t color) {
 	// 16BPP 4444-ARGB
 	// From: Aaaa aaaa Rrrr rrrr Gggg gggg Bbbb bbbb
 	// To:                       Aaaa Rrrr Gggg Bbbb
-	uint16_t value = ((color >> 16) & 0xf000) | ((color >> 12) & 0x0f00) | ((color >> 8) & 0x00f0) | ((color >> 4) & 0x000f);
-	return (value >> 8) | ((value << 8) & 0xff00);
+	return ((color >> 16) & 0xf000) | ((color >> 12) & 0x0f00) | ((color >> 8) & 0x00f0) | ((color >> 4) & 0x000f);
 }
 
 
@@ -501,6 +529,7 @@ pax_col_t pax_4444_argb_to_col(pax_buf_t *buf, pax_col_t value) {
 	// To:   Aaaa .... Rrrr .... Gggg .... Bbbb ....
 	// Add:  .... Aaaa .... Rrrr .... Gggg .... Bbbb
 	pax_col_t color = ((value << 16) & 0xf0000000) | ((value << 12) & 0x00f00000) | ((value << 8) & 0x0000f000) | ((value << 4) & 0x000000f0);
+	// Now fill in some missing bits.
 	color |= color >> 4;
 	return color;
 }
@@ -538,16 +567,19 @@ uint32_t pax_col2buf(pax_buf_t *buf, pax_col_t color) {
 		// From: Aaaa aaaa Rrrr rrrr Gggg gggg Bbbb bbbb
 		// To:                       Aaaa Rrrr Gggg Bbbb
 		uint16_t value = ((color >> 16) & 0xf000) | ((color >> 12) & 0x0f00) | ((color >> 8) & 0x00f0) | ((color >> 4) & 0x000f);
-		return (value >> 8) | ((value << 8) & 0xff00);
+		if (buf->reverse_endianness) value = pax_rev_endian_16(value);
+		return value;
 	} else if (buf->type == PAX_BUF_16_565RGB) {
 		// 16BPP 565-RGB
 		// From: Aaaa aaaa Rrrr rrrr Gggg gggg Bbbb bbbb
 		// To:                       Rrrr rGgg gggB bbbb
 		uint16_t value = ((color >> 8) & 0xf800) | ((color >> 5) & 0x07e0) | ((color >> 3) & 0x001f);
-		return (value >> 8) | ((value << 8) & 0xff00);
+		if (buf->reverse_endianness) value = pax_rev_endian_16(value);
+		return value;
 	} else if (buf->type == PAX_BUF_32_8888ARGB) {
 		// Default color format, no conversion.
-		return color;
+		if (buf->reverse_endianness) return pax_rev_endian_32(color);
+		else return color;
 	}
 	pax_last_error = PAX_ERR_CORRUPT;
 	return color;
@@ -602,6 +634,7 @@ uint32_t pax_buf2col(pax_buf_t *buf, uint32_t value) {
 		// From:                     Aaaa Rrrr Gggg Bbbb
 		// To:   Aaaa .... Rrrr .... Gggg .... Bbbb ....
 		// Add:  .... Aaaa .... Rrrr .... Gggg .... Bbbb
+		if (buf->reverse_endianness) value = pax_rev_endian_16(value);
 		pax_col_t color = ((value << 16) & 0xf0000000) | ((value << 12) & 0x00f00000) | ((value << 8) & 0x0000f000) | ((value << 4) & 0x000000f0);
 		color |= color >> 4;
 		return color;
@@ -612,13 +645,15 @@ uint32_t pax_buf2col(pax_buf_t *buf, uint32_t value) {
 		// To:   .... .... Rrrr r... Gggg gg.. Bbbb b...
 		// Add:  .... .... .... .Rrr .... ..Gg .... .Bbb
 		// Take the existing information.
+		if (buf->reverse_endianness) value = pax_rev_endian_16(value);
 		pax_col_t color = ((value << 8) & 0x00f80000) | ((value << 5) & 0x0000fc00) | ((value << 3) & 0x000000f8);
 		// Now, fill in some missing bits.
 		color |= ((value << 3) & 0x00070000) | ((value >> 1) & 0x00000300) | ((value >> 2) & 0x00000007);
 		return color | 0xff000000;
 	} else if (buf->type == PAX_BUF_32_8888ARGB) {
 		// Default color format, no conversion.
-		return value;
+		if (buf->reverse_endianness) return pax_rev_endian_32(value);
+		else return value;
 	} else if (PAX_IS_PALETTE(buf->type)) {
 		// Pallette lookup.
 		if (buf->pallette) {
@@ -656,9 +691,11 @@ void pax_set_pixel_u(pax_buf_t *buf, uint32_t color, int x, int y) {
 		buf->buf_8bpp[x + y * buf->width] = color;
 	} else if (bpp == 16) {
 		// 16BPP
+		if (buf->reverse_endianness) color = pax_rev_endian_16(color);
 		buf->buf_16bpp[x + y * buf->width] = color;
 	} else if (bpp == 32) {
 		// 32BPP
+		if (buf->reverse_endianness) color = pax_rev_endian_32(color);
 		buf->buf_32bpp[x + y * buf->width] = color;
 	} else {
 		pax_last_error = PAX_ERR_CORRUPT;
@@ -688,10 +725,14 @@ uint32_t pax_get_pixel_u(pax_buf_t *buf, int x, int y) {
 		return buf->buf_8bpp[x + y * buf->width];
 	} else if (bpp == 16) {
 		// 16BPP
-		return buf->buf_16bpp[x + y * buf->width];
+		uint16_t value = buf->buf_16bpp[x + y * buf->width];
+		if (buf->reverse_endianness) value = pax_rev_endian_16(value);
+		return value;
 	} else if (bpp == 32) {
 		// 32BPP
-		return buf->buf_32bpp[x + y * buf->width];
+		uint32_t value = buf->buf_32bpp[x + y * buf->width];
+		if (buf->reverse_endianness) value = pax_rev_endian_32(value);
+		return value;
 	} else {
 		pax_last_error = PAX_ERR_CORRUPT;
 		return 0;
