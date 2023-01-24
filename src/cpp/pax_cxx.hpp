@@ -88,6 +88,11 @@ class Buffer {
 		// Whether to also delete the internal buffer.
 		bool deleteInternal;
 		
+		friend class InlineElement;
+		friend class TextElement;
+		friend class ImageElement;
+		friend class TextBox;
+		
 	public:
 		// Default color to use for drawing filled shapes.
 		Color fillColor;

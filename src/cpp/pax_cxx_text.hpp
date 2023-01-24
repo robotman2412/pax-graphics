@@ -117,15 +117,45 @@ class TextElement: public InlineElement {
 		virtual void draw(Buffer &to, TextBox &ctx, TextStyle &style) override;
 };
 
+// An inline image made of a pax::Buffer.
+class ImageElement: public InlineElement {
+	protected:
+		// What teh hel is actually drawn.
+		pax_buf_t *image = NULL;
+		
+	public:
+		// Wow very complicated.
+		ImageElement(pax_buf_t *image);
+		// Wow very complicated.
+		ImageElement(Buffer *image);
+		
+		// This class is quite virtual, and so must be the destructor.
+		virtual ~ImageElement() override = default;
+		
+		// Get ascent above baseline.
+		virtual float getAscent(TextBox &ctx, TextStyle &style) override;
+		// Get descent below baseline.
+		virtual float getDescent(TextBox &ctx, TextStyle &style) override;
+		// Compute and get dimensions.
+		// This is called once after the start of drawing or when this element's style changes.
+		virtual void calcSize(TextBox &ctx, TextStyle &style) override;
+		// Get width after computation.
+		virtual float getWidth(TextBox &ctx, TextStyle &style) override;
+		// Whether this element is to be affected by text styles like italic and underline.
+		virtual bool isText() override { return false; }
+		// Draw the element.
+		virtual void draw(Buffer &to, TextBox &ctx, TextStyle &style) override;
+};
+
 // Style to apply to text.
 class TextStyle {
 	public:
-		// Text color.
-		Color color = 0xffffffff;
 		// Font to use.
 		const pax_font_t *font = NULL;
 		// Font size.
 		float fontSize = 0;
+		// Text color.
+		Color color = 0xffffffff;
 		// Italicise text?
 		bool italic = false;
 		// Strikethrough text?
@@ -134,6 +164,25 @@ class TextStyle {
 		bool underline = false;
 		// Overline text?
 		bool overline = false;
+		
+		TextStyle() = default;
+		TextStyle(
+			const pax_font_t *_font, float _fontSize, Color _color = 0xffffffff,
+			bool _italic = false, bool _strikethrough = false,
+			bool _underline = false, bool _overline = false
+		): font(_font), fontSize(_fontSize), color(_color), italic(_italic), strikethrough(_strikethrough), underline(_underline), overline(_overline) {}
+		
+		bool operator==(pax::Ref<TextStyle> other) {
+			if (this == &other) return true;
+			return font          == other->font
+				&& fontSize      == other->fontSize
+				&& color         == other->color
+				&& italic        == other->italic
+				&& strikethrough == other->strikethrough
+				&& underline     == other->underline
+				&& overline      == other->overline;
+		}
+		bool operator!=(pax::Ref<TextStyle> other) { return !(*this == other); }
 };
 
 // A box intended to draw text and inline elements.
@@ -157,7 +206,7 @@ class TextBox {
 		// Words are broken at whitespace, to override use the non-breaking space character.
 		void appendText(std::string text);
 		// Append a text element of any type.
-		// Keep in mind that `TextElement` is treated as a single word.
+		// Keep in mind that `element` is treated as a single word.
 		template <typename Type>
 		void append(Type element) {
 			// Pack it into an entry to preserve subclasses.
@@ -173,10 +222,6 @@ class TextBox {
 		// Get a copy of the current text style.
 		const TextStyle &getStyle() { return textStyle; }
 		
-	protected:
-		// A single line's worth of `draw()`.
-		Rectf drawLine(Buffer &to, Vec2f pos, size_t startIndex, size_t endIndex);
-	public:
 		// Draw the `TextBox` and all it's contents.
 		void draw(Buffer &to);
 		

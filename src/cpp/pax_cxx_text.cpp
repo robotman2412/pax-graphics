@@ -4,6 +4,10 @@
 
 namespace pax {
 
+static const Matrix2f italicMtx = Matrix2f::shear(0, -0.2);
+
+
+
 // Wow very complicated.
 TextElement::TextElement(std::string str) {
 	updateText(str);
@@ -38,7 +42,53 @@ float TextElement::getWidth(TextBox &ctx, TextStyle &style) {
 
 // Draw the element.
 void TextElement::draw(Buffer &to, TextBox &ctx, TextStyle &style) {
-	to.drawString(style.color, style.font, style.fontSize, 0, -style.fontSize, text);
+	if (style.italic) {
+		to.pushMatrix();
+		to.applyMatrix(italicMtx);
+		to.drawString(style.color, style.font, style.fontSize, 0, -style.fontSize, text);
+		to.popMatrix();
+	} else {
+		to.drawString(style.color, style.font, style.fontSize, 0, -style.fontSize, text);
+	}
+}
+
+
+
+// Wow very complicated.
+ImageElement::ImageElement(pax_buf_t *image) {
+	this->image = image;
+}
+
+// Wow very complicated.
+ImageElement::ImageElement(Buffer *image) {
+	this->image = image->internal;
+}
+
+
+// Get ascent above baseline.
+float ImageElement::getAscent(TextBox &ctx, TextStyle &style)  {
+	return image ? image->height : 0;
+}
+
+// Get descent below baseline.
+float ImageElement::getDescent(TextBox &ctx, TextStyle &style)  {
+	return 0;
+}
+
+// Compute and get dimensions.
+// This is called once after the start of drawing or when this element's style changes.
+void ImageElement::calcSize(TextBox &ctx, TextStyle &style)  {}
+
+// Get width after computation.
+float ImageElement::getWidth(TextBox &ctx, TextStyle &style)  {
+	return image ? image->width : 0;
+}
+
+// Draw the element.
+void ImageElement::draw(Buffer &to, TextBox &ctx, TextStyle &style)  {
+	if (image) {
+		pax_draw_image(to.internal, image, 0, -image->height);
+	}
 }
 
 
@@ -74,12 +124,6 @@ void TextBox::appendStyle(TextStyle newStyle) {
 }
 
 
-// A single line's worth of `draw()`.
-Rectf TextBox::drawLine(Buffer &to, Vec2f pos, size_t startIndex, size_t endIndex) {
-	Rectf bounds{pos, {0,0}};
-	return bounds;
-}
-
 // Draw the `TextBox` and all it's contents.
 void TextBox::draw(Buffer &to) {
 	if (!list.size()) return;
@@ -92,19 +136,19 @@ void TextBox::draw(Buffer &to) {
 	// Index to start drawing the current line.
 	size_t startIndex = 0;
 	// One past last index to draw the current line.
-	size_t endIndex = 0;
+	size_t endIndex   = 0;
 	// Whether text styling is currently being applied.
-	bool isText = list[0].second->isText();
-	// Index at which text styling started.
-	size_t styleIndex = 0;
+	bool isText       = list[0].second->isText();
+	
 	// Current text style.
-	TextStyle &currentStyle = list[0].first;
+	TextStyle &style    = list[0].first;
+	
 	// Current size of space.
-	Vec2f spaceSize = pax_text_size(currentStyle.font, currentStyle.fontSize, " ");
+	Vec2f spaceSize   = pax_text_size(style.font, style.fontSize, " ");
 	// Current line's width.
-	float lineWidth = 0, elementWidth = 0;
+	float lineWidth   = 0, elementWidth = 0;
 	// Current line's height.
-	float lineAscent = 0, lineDescent = 0;
+	float lineAscent  = 0, lineDescent  = 0;
 	// Current total height.
 	float totalHeight = 0;
 	
@@ -115,19 +159,19 @@ void TextBox::draw(Buffer &to) {
 		// Test whether another element still fits.
 		if (endIndex < list.size()) {
 			InlineElement &elem = *list[endIndex].second;
-			if (elem.getWidth(*this, currentStyle) + lineWidth + theSpace <= bounds.w) {
+			if (elem.getWidth(*this, style) + lineWidth + theSpace <= bounds.w) {
 				// If so, count it up and continue going.
 				
 				// Minimum possible width.
-				lineWidth += theSpace + elem.getWidth(*this, currentStyle);
+				lineWidth += theSpace + elem.getWidth(*this, style);
 				// Element-only width (used for justification).
-				elementWidth += elem.getWidth(*this, currentStyle);
+				elementWidth += elem.getWidth(*this, style);
 				
 				// Line ascent.
-				float asc = elem.getAscent(*this, currentStyle);
+				float asc = elem.getAscent(*this, style);
 				if (asc > lineAscent) lineAscent = asc;
 				// Line descent.
-				float desc = elem.getDescent(*this, currentStyle);
+				float desc = elem.getDescent(*this, style);
 				if (desc > lineDescent) lineDescent = desc;
 				
 				// Next element please!
@@ -167,10 +211,47 @@ void TextBox::draw(Buffer &to) {
 		for (size_t i = startIndex; i < endIndex; i++) {
 			// Draw word.
 			Entry &pair = list[i];
-			pair.second->draw(to, *this, pair.first);
+			InlineElement &elem = *pair.second;
+			style = pair.first;
+			elem.draw(to, *this, style);
+			float width = elem.getWidth(*this, style);
+			
+			// Draw underline, strikethrough and overline.
+			float decorHeight = 1;
+			if (elem.isText()) {
+				if (style.underline) {
+					// Draw underline.
+					to.drawRect(style.color, 0, 0, width, decorHeight);
+				}
+				if (style.overline) {
+					// Draw overline.
+					to.drawRect(style.color, 0, -elem.getAscent(*this, style), width, decorHeight);
+				}
+				if (style.strikethrough) {
+					// Draw strikethrough.
+					to.drawRect(style.color, 0, -elem.getAscent(*this, style)/2, width, decorHeight);
+				}
+			}
+			
+			// Determine next style, if any, then draw the lines again.
+			if (elem.isText() && i < endIndex - 1) {
+				TextStyle &nextStyle = list[i+1].first;
+				if (nextStyle.underline && style.underline) {
+					// Draw underline.
+					to.drawRect(style.color, width, 0, spacing, decorHeight);
+				}
+				if (nextStyle.overline && style.overline) {
+					// Draw overline.
+					to.drawRect(style.color, width, -elem.getAscent(*this, style), spacing, decorHeight);
+				}
+				if (nextStyle.strikethrough && style.strikethrough) {
+					// Draw strikethrough.
+					to.drawRect(style.color, width, -elem.getAscent(*this, style)/2, spacing, decorHeight);
+				}
+			}
 			
 			// Move to the right a bit.
-			to.translate(pair.second->getWidth(*this, pair.first) + spacing, 0);
+			to.translate(width + spacing, 0);
 		}
 		
 		to.popMatrix();
