@@ -596,17 +596,17 @@ void pax_merge_pixel(pax_buf_t *buf, pax_col_t color, int x, int y) {
 		return;
 	}
 	PAX_SUCCESS();
+	int index = x + y * buf->width;
 	if (PAX_IS_PALETTE(buf->type)) {
 		// Palette colors don't have conversion.
-		if (color & 0xff000000)
-			pax_set_pixel_u(buf, color, x, y);
+		if (color & 0xff000000) buf->setter(buf, color, index);
 	} else if (color >= 0xff000000) {
 		// Opaque colors don't need alpha blending.
-		pax_set_pixel_u(buf, pax_col2buf(buf, color), x, y);
+		buf->setter(buf, buf->col2buf(buf, color), index);
 	} else if (color & 0xff000000) {
 		// Non-transparent colors will be blended normally.
-		pax_col_t base = pax_buf2col(buf, pax_get_pixel_u(buf, x, y));
-		pax_set_pixel_u(buf, pax_col2buf(buf, pax_col_merge(base, color)), x, y);
+		pax_col_t base = buf->buf2col(buf, buf->getter(buf, index));
+		buf->setter(buf, buf->col2buf(buf, pax_col_merge(base, color)), index);
 	}
 }
 
@@ -619,12 +619,13 @@ void pax_set_pixel(pax_buf_t *buf, pax_col_t color, int x, int y) {
 		return;
 	}
 	PAX_SUCCESS();
+	int index = x + y * buf->width;
 	if (PAX_IS_PALETTE(buf->type)) {
 		// Palette colors don't have conversion.
-		pax_set_pixel_u(buf, color, x, y);
+		buf->setter(buf, color, index);
 	} else {
 		// But all other colors do have a conversion.
-		pax_set_pixel_u(buf, pax_col2buf(buf, color), x, y);
+		buf->setter(buf, buf->col2buf(buf, color), index);
 	}
 }
 
@@ -637,7 +638,7 @@ pax_col_t pax_get_pixel(pax_buf_t *buf, int x, int y) {
 		return 0;
 	}
 	PAX_SUCCESS();
-	return pax_buf2col(buf, pax_get_pixel_u(buf, x, y));
+	return buf->buf2col(buf, buf->getter(buf, x + y * buf->width));
 }
 
 
@@ -1140,7 +1141,7 @@ PAX_PERF_CRITICAL_ATTR void pax_background(pax_buf_t *buf, pax_col_t color) {
 		if (color > buf->pallette_size) value = 0;
 		else value = color;
 	} else {
-		value = pax_col2buf(buf, color);
+		value = buf->col2buf(buf, color);
 	}
 	
 	if (value == 0) {

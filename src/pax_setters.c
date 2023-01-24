@@ -187,7 +187,7 @@ pax_index_setter_t pax_get_setter(pax_buf_t *buf, pax_col_t *col_ptr, const pax_
 		
 	} else if ((col & 0xff000000) == 0xff000000) {
 		// If no shader and 255 alpha, convert color and return raw setter.
-		*col_ptr = pax_col2buf(buf, col);
+		*col_ptr = buf->col2buf(buf, col);
 		return buf->setter;
 		
 	} else {
