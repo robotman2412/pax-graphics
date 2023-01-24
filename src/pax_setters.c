@@ -485,7 +485,6 @@ pax_col_t pax_332_rgb_to_col(pax_buf_t *buf, pax_col_t value) {
 
 // Converts 5, 6, 5 bit RGB to ARGB.
 pax_col_t pax_565_rgb_to_col(pax_buf_t *buf, pax_col_t value) {
-	value = ((value << 8) & 0xff00) | ((value >> 8) & 0x00ff);
 	// 16BPP 565-RGB
 	// From:                     Rrrr rGgg gggB bbbb
 	// To:   .... .... Rrrr r... Gggg gg.. Bbbb b...

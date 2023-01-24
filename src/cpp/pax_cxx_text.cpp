@@ -159,6 +159,7 @@ void TextBox::draw(Buffer &to) {
 		// Test whether another element still fits.
 		if (endIndex < list.size()) {
 			InlineElement &elem = *list[endIndex].second;
+			TextStyle &style = list[endIndex].first;
 			if (elem.getWidth(*this, style) + lineWidth + theSpace <= bounds.w) {
 				// If so, count it up and continue going.
 				
