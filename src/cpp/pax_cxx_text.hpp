@@ -67,6 +67,17 @@ namespace pax {
 // This serves merely as an interface for other classes to implement.
 class InlineElement {
 	public:
+		enum Type {
+			// Generic inline element.
+			GENERIC,
+			// Text element.
+			TEXT,
+			// Space character of some kind.
+			SPACE,
+			// Line break.
+			NEWLINE,
+		};
+		
 		// This class is quite virtual, and so must be the destructor.
 		virtual ~InlineElement() = default;
 		
@@ -79,8 +90,8 @@ class InlineElement {
 		virtual void calcSize(TextBox &ctx, TextStyle &style) {}
 		// Get width after computation.
 		virtual float getWidth(TextBox &ctx, TextStyle &style) { return 0; }
-		// Whether this element is to be affected by text styles like italic and underline.
-		virtual bool isText() { return false; }
+		// Get the type of element this is. Different types cause different treatment.
+		virtual Type type() { return GENERIC; }
 		// Draw the element.
 		virtual void draw(Buffer &to, TextBox &ctx, TextStyle &style) {}
 };
@@ -91,7 +102,7 @@ class TextElement: public InlineElement {
 		// Text string to draw.
 		// Everything is treated as a single word.
 		std::string text;
-		// Cached text width multiplier.
+		// Cached text width.
 		float textWidth;
 		
 	public:
@@ -112,10 +123,37 @@ class TextElement: public InlineElement {
 		virtual void calcSize(TextBox &ctx, TextStyle &style) override;
 		// Get width after computation.
 		virtual float getWidth(TextBox &ctx, TextStyle &style) override;
-		// Whether this element is to be affected by text styles like italic and underline.
-		virtual bool isText() override { return true; }
+		// Get the type of element this is. Different types cause different treatment.
+		virtual Type type() override { return TEXT; }
 		// Draw the element.
 		virtual void draw(Buffer &to, TextBox &ctx, TextStyle &style) override;
+};
+
+// A space character.
+class SpaceElement: public InlineElement {
+	protected:
+		// Cached text width.
+		float width;
+		
+	public:
+		// This class is quite virtual, and so must be the destructor.
+		virtual ~SpaceElement() override = default;
+		// Compute and get dimensions.
+		// This is called once after the start of drawing or when this element's style changes.
+		virtual void calcSize(TextBox &ctx, TextStyle &style) override;
+		// Get width after computation.
+		virtual float getWidth(TextBox &ctx, TextStyle &style) override;
+		// Get the type of element this is. Different types cause different treatment.
+		virtual Type type() override { return SPACE; }
+};
+
+// A line break.
+class NewlineElement: public InlineElement {
+	public:
+		// This class is quite virtual, and so must be the destructor.
+		virtual ~NewlineElement() override = default;
+		// Get the type of element this is. Different types cause different treatment.
+		virtual Type type() override { return NEWLINE; }
 };
 
 // An inline image made of a pax::Buffer.
@@ -142,8 +180,8 @@ class ImageElement: public InlineElement {
 		virtual void calcSize(TextBox &ctx, TextStyle &style) override;
 		// Get width after computation.
 		virtual float getWidth(TextBox &ctx, TextStyle &style) override;
-		// Whether this element is to be affected by text styles like italic and underline.
-		virtual bool isText() override { return false; }
+		// Get the type of element this is. Different types cause different treatment.
+		virtual Type type() override { return GENERIC; }
 		// Draw the element.
 		virtual void draw(Buffer &to, TextBox &ctx, TextStyle &style) override;
 };

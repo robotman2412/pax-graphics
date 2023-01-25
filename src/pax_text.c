@@ -184,7 +184,7 @@ static void pixel_aligned_render(pax_buf_t *buf, pax_col_t color, const pax_shad
 
 // Internal method for monospace bitmapped characters.
 pax_vec1_t text_bitmap_mono(pax_text_render_t *ctx, const pax_font_range_t *range, uint32_t glyph) {
-	if (ctx->do_render) {
+	if (ctx->do_render && glyph != 0x20) {
 		// Set up shader.
 		pax_font_bmp_args_t args = {
 			.font        = ctx->font,
@@ -262,7 +262,7 @@ pax_vec1_t text_bitmap_mono(pax_text_render_t *ctx, const pax_font_range_t *rang
 pax_vec1_t text_bitmap_var(pax_text_render_t *ctx, const pax_font_range_t *range, uint32_t glyph) {
 	size_t index = (glyph - range->start);
 	const pax_bmpv_t *dims = &range->bitmap_var.dims[index];
-	if (ctx->do_render) {
+	if (ctx->do_render && glyph != 0x20) {
 		// Set up shader.
 		pax_font_bmp_args_t args = {
 			.font        = ctx->font,
@@ -398,6 +398,11 @@ static pax_vec1_t text_generic(pax_text_render_t *ctx, const char *text) {
 			x  = 0;
 			y += ctx->font->default_size;
 		} else {
+			if (glyph == 0xa0) {
+				// Non-breaking space is implicitly converted to space.
+				glyph = 0x20;
+			}
+			
 			// Try to find a range the glyph is in.
 			if (!range || !text_range_includes(range, glyph)) {
 				range = text_get_range(ctx->font, glyph);
