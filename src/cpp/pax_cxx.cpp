@@ -453,13 +453,64 @@ static inline uint8_t pax_lerp(uint8_t part, uint8_t from, uint8_t to) {
 	// Then, it applies an integer multiplication and the result is shifted right by 8.
 	return from + (( (to - from) * (part + (part >> 7)) ) >> 8);
 }
-// Converts HSV to ARGB.
+// Converts HSV to ARGB, ranges are 0-255.
 Color hsv(uint8_t h, uint8_t s, uint8_t v) {
 	return ahsv(255, h, s, v);
 }
-// Converts AHSV to ARGB.
+// Converts AHSV to ARGB, ranges are 0-255.
 Color ahsv(uint8_t a, uint8_t c_h, uint8_t s, uint8_t v) {
 	uint16_t h     = c_h * 6;
+	uint16_t phase = h >> 8;
+	// Parts of HSV.
+	uint8_t up, down, other;
+	other  = ~s;
+	if (h & 0x100) {
+		// Down goes away.
+		up     = 0xff;
+		down   = pax_lerp(s, 0xff, ~h & 0xff);
+	} else {
+		// Up comes in.
+		up     = pax_lerp(s, 0xff,  h & 0xff);
+		down   = 0xff;
+	}
+	// Apply brightness.
+	up    = pax_lerp(v, 0, up);
+	down  = pax_lerp(v, 0, down);
+	other = pax_lerp(v, 0, other);
+	// Apply to RGB.
+	uint8_t r, g, b;
+	switch (phase >> 1) {
+		case 0:
+			// From R to G.
+			r = down; g = up; b = other;
+			break;
+		case 1:
+			// From G to B.
+			r = other; g = down; b = up;
+			break;
+		case 2:
+			// From B to R.
+			r = up; g = other; b = down;
+			break;
+		default:
+			// The compiler isn't aware that this case is never reached.
+			return 0;
+	}
+	// Merge.
+	return (a << 24) | (r << 16) | (g << 8) | b;
+}
+// Converts HSV to ARGB, ranges are 0-360, 0-100, 0-100.
+Color hsv_alt(uint16_t h, uint8_t s, uint8_t v) {
+	return ahsv_alt(255, h, s, v);
+}
+// Converts AHSV to ARGB, ranges are 0-255, 0-360, 0-100, 0-100.
+Color ahsv_alt(uint8_t a, uint16_t c_h, uint8_t s, uint8_t v) {
+	// Convert ranges a bit.
+	c_h %= 360;
+	s = (uint_fast16_t) s * 255 / 100;
+	v = (uint_fast16_t) v * 255 / 100;
+	
+	uint16_t h     = c_h * 6 * 255 / 360;
 	uint16_t phase = h >> 8;
 	// Parts of HSV.
 	uint8_t up, down, other;

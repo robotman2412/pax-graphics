@@ -183,7 +183,7 @@ static void pixel_aligned_render(pax_buf_t *buf, pax_col_t color, const pax_shad
 }
 
 // Internal method for monospace bitmapped characters.
-pax_vec1_t text_bitmap_mono(pax_text_render_t *ctx, const pax_font_range_t *range, uint32_t glyph) {
+pax_vec2f text_bitmap_mono(pax_text_render_t *ctx, const pax_font_range_t *range, uint32_t glyph) {
 	if (ctx->do_render && glyph != 0x20) {
 		// Set up shader.
 		pax_font_bmp_args_t args = {
@@ -252,14 +252,14 @@ pax_vec1_t text_bitmap_mono(pax_text_render_t *ctx, const pax_font_range_t *rang
 	}
 	
 	// Size calculation is very simple.
-	return (pax_vec1_t) {
+	return (pax_vec2f) {
 		.x = range->bitmap_mono.width,
 		.y = range->bitmap_mono.height
 	};
 }
 
 // Internal method for variable pitch bitmapped characters.
-pax_vec1_t text_bitmap_var(pax_text_render_t *ctx, const pax_font_range_t *range, uint32_t glyph) {
+pax_vec2f text_bitmap_var(pax_text_render_t *ctx, const pax_font_range_t *range, uint32_t glyph) {
 	size_t index = (glyph - range->start);
 	const pax_bmpv_t *dims = &range->bitmap_var.dims[index];
 	if (ctx->do_render && glyph != 0x20) {
@@ -330,7 +330,7 @@ pax_vec1_t text_bitmap_var(pax_text_render_t *ctx, const pax_font_range_t *range
 	}
 	
 	// Size calculation is very simple.
-	return (pax_vec1_t) {
+	return (pax_vec2f) {
 		.x = dims->measured_width,
 		.y = range->bitmap_var.height
 	};
@@ -355,10 +355,10 @@ static const pax_font_range_t *text_get_range(const pax_font_t *font, uint32_t c
 }
 
 // Internal method for rendering text and calculating text size.
-static pax_vec1_t text_generic(pax_text_render_t *ctx, const char *text) {
+static pax_vec2f text_generic(pax_text_render_t *ctx, const char *text) {
 	// Sanity checks.
 	if (!text || !*text) {
-		return (pax_vec1_t) { .x=0, .y=0, };
+		return (pax_vec2f) { .x=0, .y=0, };
 	}
 	// Render checks.
 	if (ctx->color < 0x01000000) {
@@ -408,7 +408,7 @@ static pax_vec1_t text_generic(pax_text_render_t *ctx, const char *text) {
 				range = text_get_range(ctx->font, glyph);
 			}
 			
-			pax_vec1_t dims = { .x=0, .y=0 };
+			pax_vec2f dims = { .x=0, .y=0 };
 			if (range) {
 				// Handle the character.
 				switch (range->type) {
@@ -432,15 +432,15 @@ static pax_vec1_t text_generic(pax_text_render_t *ctx, const char *text) {
 		pax_pop_2d(ctx->buf);
 	
 	if (x > max_x) max_x = x;
-	return (pax_vec1_t) {
+	return (pax_vec2f) {
 		.x = size_mul * max_x,
 		.y = size_mul * (y + ctx->font->default_size)
 	};
 }
 
 // A single line of `pax_center_text`.
-static pax_vec1_t pax_center_line(pax_buf_t *buf, pax_col_t color, const pax_font_t *font, float font_size, float x, float y, const char *text) {
-	pax_vec1_t dims = pax_text_size(font, font_size, text);
+static pax_vec2f pax_center_line(pax_buf_t *buf, pax_col_t color, const pax_font_t *font, float font_size, float x, float y, const char *text) {
+	pax_vec2f dims = pax_text_size(font, font_size, text);
 	pax_draw_text(buf, color, font, font_size, x-dims.x/2.0f, y, text);
 	return dims;
 }
@@ -448,7 +448,7 @@ static pax_vec1_t pax_center_line(pax_buf_t *buf, pax_col_t color, const pax_fon
 // Draw a string with the given font and return it's size.
 // Text is center-aligned on every line.
 // Size is before matrix transformation.
-pax_vec1_t pax_center_text(pax_buf_t *buf, pax_col_t color, const pax_font_t *font, float font_size, float x, float y, const char *text) {
+pax_vec2f pax_center_text(pax_buf_t *buf, pax_col_t color, const pax_font_t *font, float font_size, float x, float y, const char *text) {
 	float width = 0, height = 0;
 	
 	// Allocate a buffer since we might go splitting up lines.
@@ -475,7 +475,7 @@ pax_vec1_t pax_center_text(pax_buf_t *buf, pax_col_t color, const pax_font_t *fo
 			buffer[found-text] = 0;
 			
 			// Draw this line individually.
-			pax_vec1_t dims = pax_center_line(buf, color, font, font_size, x, y+height, buffer);
+			pax_vec2f dims = pax_center_line(buf, color, font, font_size, x, y+height, buffer);
 			if (dims.x > width) width = dims.x;
 			height += dims.y;
 			
@@ -486,13 +486,13 @@ pax_vec1_t pax_center_text(pax_buf_t *buf, pax_col_t color, const pax_font_t *fo
 	
 	// Clean up and return total size.
 	free(buffer);
-	return (pax_vec1_t) {width, height};
+	return (pax_vec2f) {width, height};
 }
 
 // Draw a string with the given font and return it's size.
 // Size is before matrix transformation.
-pax_vec1_t pax_draw_text(pax_buf_t *buf, pax_col_t color, const pax_font_t *font, float font_size, float x, float y, const char *text) {
-	if (!font) PAX_ERROR1("pax_draw_text(font: NULL)", PAX_ERR_PARAM, (pax_vec1_t){0});
+pax_vec2f pax_draw_text(pax_buf_t *buf, pax_col_t color, const pax_font_t *font, float font_size, float x, float y, const char *text) {
+	if (!font) PAX_ERROR1("pax_draw_text(font: NULL)", PAX_ERR_PARAM, (pax_vec2f){0});
 	pax_text_render_t ctx = {
 		.do_render = true,
 		.buf       = buf,
@@ -505,7 +505,7 @@ pax_vec1_t pax_draw_text(pax_buf_t *buf, pax_col_t color, const pax_font_t *font
 	};
 	pax_push_2d (buf);
 	pax_apply_2d(buf, matrix_2d_translate(x, y));
-	pax_vec1_t dims = text_generic(&ctx, text);
+	pax_vec2f dims = text_generic(&ctx, text);
 	pax_pop_2d  (buf);
 	return dims;
 }
@@ -515,8 +515,8 @@ pax_vec1_t pax_draw_text(pax_buf_t *buf, pax_col_t color, const pax_font_t *font
 // Size is before matrix transformation.
 // Font is scaled up with interpolation, overriding it's default.
 // If font is NULL, the default font (7x9) will be used.
-pax_vec1_t pax_draw_text_aa(pax_buf_t *buf, pax_col_t color, const pax_font_t *font, float font_size, float x, float y, const char *text) {
-	if (!font) PAX_ERROR1("pax_draw_text(font: NULL)", PAX_ERR_PARAM, (pax_vec1_t){0});
+pax_vec2f pax_draw_text_aa(pax_buf_t *buf, pax_col_t color, const pax_font_t *font, float font_size, float x, float y, const char *text) {
+	if (!font) PAX_ERROR1("pax_draw_text(font: NULL)", PAX_ERR_PARAM, (pax_vec2f){0});
 	pax_text_render_t ctx = {
 		.do_render = true,
 		.buf       = buf,
@@ -529,7 +529,7 @@ pax_vec1_t pax_draw_text_aa(pax_buf_t *buf, pax_col_t color, const pax_font_t *f
 	};
 	pax_push_2d (buf);
 	pax_apply_2d(buf, matrix_2d_translate(x, y));
-	pax_vec1_t dims = text_generic(&ctx, text);
+	pax_vec2f dims = text_generic(&ctx, text);
 	pax_pop_2d  (buf);
 	return dims;
 }
@@ -538,8 +538,8 @@ pax_vec1_t pax_draw_text_aa(pax_buf_t *buf, pax_col_t color, const pax_font_t *f
 // Draw a string with the given font and return it's size.
 // Size is before matrix transformation.
 // Font is scaled up without interpolation, overriding it's default.
-pax_vec1_t pax_draw_text_noaa(pax_buf_t *buf, pax_col_t color, const pax_font_t *font, float font_size, float x, float y, const char *text) {
-	if (!font) PAX_ERROR1("pax_draw_text(font: NULL)", PAX_ERR_PARAM, (pax_vec1_t){0});
+pax_vec2f pax_draw_text_noaa(pax_buf_t *buf, pax_col_t color, const pax_font_t *font, float font_size, float x, float y, const char *text) {
+	if (!font) PAX_ERROR1("pax_draw_text(font: NULL)", PAX_ERR_PARAM, (pax_vec2f){0});
 	pax_text_render_t ctx = {
 		.do_render = true,
 		.buf       = buf,
@@ -552,7 +552,7 @@ pax_vec1_t pax_draw_text_noaa(pax_buf_t *buf, pax_col_t color, const pax_font_t 
 	};
 	pax_push_2d (buf);
 	pax_apply_2d(buf, matrix_2d_translate(x, y));
-	pax_vec1_t dims = text_generic(&ctx, text);
+	pax_vec2f dims = text_generic(&ctx, text);
 	pax_pop_2d  (buf);
 	return dims;
 }
@@ -560,8 +560,8 @@ pax_vec1_t pax_draw_text_noaa(pax_buf_t *buf, pax_col_t color, const pax_font_t 
 // Calculate the size of the string with the given font.
 // Size is before matrix transformation.
 // If font is NULL, the default font (7x9) will be used.
-pax_vec1_t pax_text_size(const pax_font_t *font, float font_size, const char *text) {
-	if (!font) PAX_ERROR1("pax_draw_text(font: NULL)", PAX_ERR_PARAM, (pax_vec1_t){0});
+pax_vec2f pax_text_size(const pax_font_t *font, float font_size, const char *text) {
+	if (!font) PAX_ERROR1("pax_draw_text(font: NULL)", PAX_ERR_PARAM, (pax_vec2f){0});
 	pax_text_render_t ctx = {
 		.do_render = false,
 		.font      = font,

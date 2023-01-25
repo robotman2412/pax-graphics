@@ -26,8 +26,6 @@
 #define PAX_GFX_H
 
 #ifdef __cplusplus
-#include "cpp/pax_cxx.hpp"
-
 extern "C" {
 #endif //__cplusplus
 
@@ -208,6 +206,8 @@ void        pax_simple_circle       (pax_buf_t *buf, pax_col_t color, float x,  
 
 #ifdef __cplusplus
 }
+
+#include "cpp/pax_cxx.hpp"
 #endif //__cplusplus
 
 #endif //PAX_GFX_H

@@ -11,7 +11,7 @@
 #include "../pax_internal.h"
 
 // Circle: 4 segments
-const pax_vec1_t pax_precalc_circle_4[5] = {
+const pax_vec2f pax_precalc_circle_4[5] = {
 	{1.0, 0.0},
 	{6.123233995736766e-17, 1.0},
 	{-1.0, 1.2246467991473532e-16},
@@ -27,7 +27,7 @@ const pax_tri_t pax_precalc_uv_circle_4[3] = {
 };
 
 // Circle: 16 segments
-const pax_vec1_t pax_precalc_circle_16[17] = {
+const pax_vec2f pax_precalc_circle_16[17] = {
 	{1.0, 0.0},
 	{0.9238795325112867, 0.3826834323650898},
 	{0.7071067811865476, 0.7071067811865475},
@@ -67,7 +67,7 @@ const pax_tri_t pax_precalc_uv_circle_16[15] = {
 };
 
 // Circle: 24 segments
-const pax_vec1_t pax_precalc_circle_24[25] = {
+const pax_vec2f pax_precalc_circle_24[25] = {
 	{1.0, 0.0},
 	{0.9659258262890683, 0.25881904510252074},
 	{0.8660254037844387, 0.49999999999999994},
@@ -123,7 +123,7 @@ const pax_tri_t pax_precalc_uv_circle_24[23] = {
 };
 
 // Circle: 32 segments
-const pax_vec1_t pax_precalc_circle_32[33] = {
+const pax_vec2f pax_precalc_circle_32[33] = {
 	{1.0, 0.0},
 	{0.9807852804032304, 0.19509032201612825},
 	{0.9238795325112867, 0.3826834323650898},

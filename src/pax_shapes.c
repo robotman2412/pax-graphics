@@ -35,7 +35,7 @@ typedef struct indexed_point {
 		struct {
 			float  x, y;
 		};
-		pax_vec1_t vector;
+		pax_vec2f vector;
 	};
 	size_t         index;
 } indexed_point_t;
@@ -78,7 +78,7 @@ static inline bezier_point_t pax_calc_bezier0(float part, float x0, float y0, fl
 }
 
 // Macro for calculating a point on a given bezier curve.
-static inline bezier_point_t pax_calc_bezier(float part, pax_vec4_t ctl) {
+static inline bezier_point_t pax_calc_bezier(float part, pax_4vec2f ctl) {
 	return pax_calc_bezier0(part, ctl.x0, ctl.y0, ctl.x1, ctl.y1, ctl.x2, ctl.y2, ctl.x3, ctl.y3);
 }
 
@@ -122,7 +122,7 @@ static int bezier_point_t_comp(const void *e0, const void *e1) {
 
 // Convert a cubic bezier curve to line segments, with the given number of points.
 // From and to are from 0 to 1, but any value is accepted.
-void pax_vectorise_bezier_part(pax_vec1_t *ptr, size_t max_points, pax_vec4_t control_points, float t_from, float t_to) {
+void pax_vectorise_bezier_part(pax_vec2f *ptr, size_t max_points, pax_4vec2f control_points, float t_from, float t_to) {
 	if (max_points < 4) PAX_ERROR("pax_vectorise_bezier", PAX_ERR_PARAM);
 	if (!ptr) {
 		PAX_ERROR("pax_vectorise_bezier_part", PAX_ERR_PARAM);
@@ -172,7 +172,7 @@ void pax_vectorise_bezier_part(pax_vec1_t *ptr, size_t max_points, pax_vec4_t co
 	qsort(points, n_points, sizeof(bezier_point_t), bezier_point_t_comp);
 	// Output our GARBAGE.
 	for (size_t i = 0; i < n_points; i++) {
-		ptr[i] = (pax_vec1_t) { .x = points[i].x, .y = points[i].y };
+		ptr[i] = (pax_vec2f) { .x = points[i].x, .y = points[i].y };
 	}
 	free(points);
 	free(lines);
@@ -183,7 +183,7 @@ void pax_vectorise_bezier_part(pax_vec1_t *ptr, size_t max_points, pax_vec4_t co
 	float part  = t_from;
 	for (size_t i = 0; i < max_points; i++) {
 		bezier_point_t point = pax_calc_bezier(part, control_points);
-		ptr[i] = (pax_vec1_t) {point.x, point.y};
+		ptr[i] = (pax_vec2f) {point.x, point.y};
 		part += delta;
 	}
 	
@@ -193,19 +193,19 @@ void pax_vectorise_bezier_part(pax_vec1_t *ptr, size_t max_points, pax_vec4_t co
 }
 
 // Convert a cubic bezier curve to line segments, with the given number of points.
-void pax_vectorise_bezier(pax_vec1_t *output, size_t max_points, pax_vec4_t control_points) {
+void pax_vectorise_bezier(pax_vec2f *output, size_t max_points, pax_4vec2f control_points) {
 	pax_vectorise_bezier_part(output, max_points, control_points, 0, 1);
 }
 
 // Draw a cubic bezier curve.
-void pax_draw_bezier_part(pax_buf_t *buf, pax_col_t color, pax_vec4_t control_points, float from, float to) {
+void pax_draw_bezier_part(pax_buf_t *buf, pax_col_t color, pax_4vec2f control_points, float from, float to) {
 	size_t n_points = 64;
 	if (to < from) {
 		PAX_SWAP(float, to, from);
 	}
 #if PAX_USE_EXPENSIVE_BEZIER
 	// Vectorise the bezier curve first.
-	pax_vec1_t *points;
+	pax_vec2f *points;
 	pax_vectorise_bezier(&points, n_points, control_points);
 	if (!points) return;
 	
@@ -231,7 +231,7 @@ void pax_draw_bezier_part(pax_buf_t *buf, pax_col_t color, pax_vec4_t control_po
 }
 
 // Draw a cubic bezier curve.
-void pax_draw_bezier(pax_buf_t *buf, pax_col_t color, pax_vec4_t control_points) {
+void pax_draw_bezier(pax_buf_t *buf, pax_col_t color, pax_4vec2f control_points) {
 	pax_draw_bezier_part(buf, color, control_points, 0, 1);
 }
 
@@ -246,28 +246,28 @@ static void pax_bezier_warn() {
 
 // Convert a cubic bezier curve to line segments, with the given number of points.
 // From and to are from 0 to 1, but any value is accepted.
-void pax_vectorise_bezier_part(pax_vec1_t **output, pax_vec4_t control_points, size_t max_points, float t_from, float t_to) {
+void pax_vectorise_bezier_part(pax_vec2f **output, pax_4vec2f control_points, size_t max_points, float t_from, float t_to) {
 	// Not compiled in, but keep the method for API compatibility.
 	pax_bezier_warn();
 	PAX_ERROR("pax_vectorise_bezier_part", PAX_ERR_UNSUPPORTED);
 }
 
 // Convert a cubic bezier curve to line segments, with the given number of points.
-void pax_vectorise_bezier(pax_vec1_t **output, pax_vec4_t control_points, size_t max_points) {
+void pax_vectorise_bezier(pax_vec2f **output, pax_4vec2f control_points, size_t max_points) {
 	// Not compiled in, but keep the method for API compatibility.
 	pax_bezier_warn();
 	PAX_ERROR("pax_vectorise_bezier", PAX_ERR_UNSUPPORTED);
 }
 
 // Draw a cubic bezier curve.
-void pax_draw_bezier_part(pax_buf_t *buf, pax_col_t color, pax_vec4_t control_points, float from, float to) {
+void pax_draw_bezier_part(pax_buf_t *buf, pax_col_t color, pax_4vec2f control_points, float from, float to) {
 	// Not compiled in, but keep the method for API compatibility.
 	pax_bezier_warn();
 	PAX_ERROR("pax_draw_bezier_part", PAX_ERR_UNSUPPORTED);
 }
 
 // Draw a cubic bezier curve.
-void pax_draw_bezier(pax_buf_t *buf, pax_col_t color, pax_vec4_t control_points) {
+void pax_draw_bezier(pax_buf_t *buf, pax_col_t color, pax_4vec2f control_points) {
 	// Not compiled in, but keep the method for API compatibility.
 	pax_bezier_warn();
 	PAX_ERROR("pax_draw_bezier", PAX_ERR_UNSUPPORTED);
@@ -280,7 +280,7 @@ void pax_draw_bezier(pax_buf_t *buf, pax_col_t color, pax_vec4_t control_points)
 /* ============= ARCS ============ */
 
 // Vectorise an arc outline, angle in radians.
-void pax_vectorise_arc(pax_vec1_t *ptr, size_t n_div, float x, float y, float r, float a0, float a1) {
+void pax_vectorise_arc(pax_vec2f *ptr, size_t n_div, float x, float y, float r, float a0, float a1) {
 	// Allocate output array.
 	if (!ptr) {
 		PAX_ERROR("pax_vectorise_arc", PAX_ERR_PARAM);
@@ -312,7 +312,7 @@ void pax_vectorise_arc(pax_vec1_t *ptr, size_t n_div, float x, float y, float r,
 		float y1 = x0 * c_sin + y0 * c_cos;
 		// Store to array.
 		// We subtract y0 and y1 from y because our up is -y.
-		ptr[i] = (pax_vec1_t) { .x = x + x0 * r, .y = y - y0 * r };
+		ptr[i] = (pax_vec2f) { .x = x + x0 * r, .y = y - y0 * r };
 		// Assign them yes.
 		x0 = x1;
 		y0 = y1;
@@ -322,7 +322,7 @@ void pax_vectorise_arc(pax_vec1_t *ptr, size_t n_div, float x, float y, float r,
 }
 
 // Vectorise a circle outline.
-void pax_vectorise_circle(pax_vec1_t *output, size_t num_points, float x, float y, float r) {
+void pax_vectorise_circle(pax_vec2f *output, size_t num_points, float x, float y, float r) {
 	pax_vectorise_arc(output, num_points, x, y, r, 0, M_PI * 2);
 }
 
@@ -401,13 +401,13 @@ void pax_outline_circle(pax_buf_t *buf, pax_col_t color, float x, float y, float
 // Partially outline a shape defined by a list of points.
 // From and to range from 0 to 1, outside this range is ignored.
 // Does not close the shape: this must be done manually.
-void pax_outline_shape_part(pax_buf_t *buf, pax_col_t color, size_t num_points, const pax_vec1_t *points, float from, float to) {
+void pax_outline_shape_part(pax_buf_t *buf, pax_col_t color, size_t num_points, const pax_vec2f *points, float from, float to) {
 	pax_outline_shape_part_cl(buf, color, num_points, points, false, from, to);
 }
 
 // Outline a shape defined by a list of points.
 // Does not close the shape: this must be done manually.
-void pax_outline_shape(pax_buf_t *buf, pax_col_t color, size_t num_points, const pax_vec1_t *points) {
+void pax_outline_shape(pax_buf_t *buf, pax_col_t color, size_t num_points, const pax_vec2f *points) {
 	for (size_t i = 0; i < num_points - 1; i++) {
 		pax_draw_line(buf, color, points[i].x, points[i].y, points[i + 1].x, points[i + 1].y);
 	}
@@ -416,7 +416,7 @@ void pax_outline_shape(pax_buf_t *buf, pax_col_t color, size_t num_points, const
 // Partially outline a shape defined by a list of points.
 // From and to range from 0 to 1, outside this range is ignored.
 // Closes the shape: there is a line from the first to last point.
-void pax_outline_shape_part_cl(pax_buf_t *buf, pax_col_t color, size_t num_points, const pax_vec1_t *points, bool close, float from, float to) {
+void pax_outline_shape_part_cl(pax_buf_t *buf, pax_col_t color, size_t num_points, const pax_vec2f *points, bool close, float from, float to) {
 	// El simplify.
 	if (to < from) {
 		PAX_SWAP(float, to, from);
@@ -507,7 +507,7 @@ void pax_outline_shape_part_cl(pax_buf_t *buf, pax_col_t color, size_t num_point
 
 // Outline a shape defined by a list of points.
 // Closes the shape: there is a line from the first to last point.
-void pax_outline_shape_cl(pax_buf_t *buf, pax_col_t color, size_t num_points, const pax_vec1_t *points, bool close) {
+void pax_outline_shape_cl(pax_buf_t *buf, pax_col_t color, size_t num_points, const pax_vec2f *points, bool close) {
 	for (size_t i = 0; i < num_points - 1; i++) {
 		pax_draw_line(buf, color, points[i].x, points[i].y, points[i + 1].x, points[i + 1].y);
 	}
@@ -522,7 +522,7 @@ void pax_outline_shape_cl(pax_buf_t *buf, pax_col_t color, size_t num_points, co
 
 // Transforms a list of points using a given 2D matrix.
 // Overwrites the list's contents.
-void pax_transform_shape(size_t num_points, pax_vec1_t *points, matrix_2d_t matrix) {
+void pax_transform_shape(size_t num_points, pax_vec2f *points, matrix_2d_t matrix) {
 	for (size_t i = 0; i < num_points; i++) {
 		matrix_2d_transform(matrix, &points[i].x, &points[i].y);
 	}
@@ -532,7 +532,7 @@ void pax_transform_shape(size_t num_points, pax_vec1_t *points, matrix_2d_t matr
 // Each corner can be rounded up to 50% of the edges it is part of.
 // Capable of dealing with self-intersecting shapes.
 // Returns the amount of points created.
-size_t pax_round_shape_uniform(pax_vec1_t **output, size_t num_points, pax_vec1_t *points, float radius) {
+size_t pax_round_shape_uniform(pax_vec2f **output, size_t num_points, pax_vec2f *points, float radius) {
 	// Fill out an array with the same radius.
 	float *radii = malloc(sizeof(float) * num_points);
 	if (!radii) {
@@ -552,7 +552,7 @@ size_t pax_round_shape_uniform(pax_vec1_t **output, size_t num_points, pax_vec1_
 // Each corner can be rounded up to 50% of the edges it is part of.
 // Capable of dealing with self-intersecting shapes.
 // Returns the amount of points created.
-size_t pax_round_shape(pax_vec1_t **output, size_t num_points, pax_vec1_t *points, float *radii) {
+size_t pax_round_shape(pax_vec2f **output, size_t num_points, pax_vec2f *points, float *radii) {
 	return 0;
 }
 
@@ -581,12 +581,12 @@ static bool is_clockwise(int num_points, indexed_point_t *points, int index, int
 
 // Gets the slope of a line.
 // Returns +/- infinity for vertical lines.
-static inline float line_slope(pax_vec2_t line) {
+static inline float line_slope(pax_2vec2f line) {
 	return (line.y1 - line.y0) / (line.x1 - line.x0);
 }
 
 // Creates a bounding rectangle for a line.
-static pax_rect_t line_bounding_box(pax_vec2_t line) {
+static pax_rect_t line_bounding_box(pax_2vec2f line) {
 	// Create a simple bounding box.
 	pax_rect_t box = {
 		.x = line.x0,
@@ -609,7 +609,7 @@ static pax_rect_t line_bounding_box(pax_vec2_t line) {
 }
 
 // Determines whether a point is in the bounding box, but not on it's edge.
-static inline bool bounding_box_contains(pax_rect_t box, pax_vec1_t point) {
+static inline bool bounding_box_contains(pax_rect_t box, pax_vec2f point) {
 	if (box.w == 0 && box.h == 0) {
 		return point.x == box.x && point.x == box.y;
 	} else if (box.w == 0) {
@@ -623,7 +623,7 @@ static inline bool bounding_box_contains(pax_rect_t box, pax_vec1_t point) {
 
 // Tests whether lines A and B intersect.
 // Does not consider touching lines to intersect.
-static bool line_intersects_line(pax_vec2_t line_a, pax_vec2_t line_b, pax_vec1_t *intersection) {
+static bool line_intersects_line(pax_2vec2f line_a, pax_2vec2f line_b, pax_vec2f *intersection) {
 	// If slopes are equal, then it will never intersect.
 	float rc_a = line_slope(line_a);
 	float rc_b = line_slope(line_b);
@@ -642,7 +642,7 @@ static bool line_intersects_line(pax_vec2_t line_a, pax_vec2_t line_b, pax_vec1_
 		float y = rc_b * line_a.x0 + dy_b;
 		if (y > box_a.y && y < box_a.y + box_a.h) {
 			if (intersection) {
-				*intersection = (pax_vec1_t) {box_a.x, y};
+				*intersection = (pax_vec2f) {box_a.x, y};
 			}
 			return true;
 		}
@@ -651,7 +651,7 @@ static bool line_intersects_line(pax_vec2_t line_a, pax_vec2_t line_b, pax_vec1_
 		float y = rc_a * line_b.x0 + dy_a;
 		if (y > box_b.y && y < box_b.y + box_b.h) {
 			if (intersection) {
-				*intersection = (pax_vec1_t) {box_b.x, y};
+				*intersection = (pax_vec2f) {box_b.x, y};
 			}
 			return true;
 		}
@@ -662,21 +662,21 @@ static bool line_intersects_line(pax_vec2_t line_a, pax_vec2_t line_b, pax_vec1_
 	float y = x * rc_a + dy_a;
 	
 	// If this lies within both bounding boxes, the lines intersect.
-	bool intersects = bounding_box_contains(box_a, (pax_vec1_t) {x, y}) && bounding_box_contains(box_b, (pax_vec1_t) {x, y});
+	bool intersects = bounding_box_contains(box_a, (pax_vec2f) {x, y}) && bounding_box_contains(box_b, (pax_vec2f) {x, y});
 	if (intersects && intersection) {
-		*intersection = (pax_vec1_t) {x, y};
+		*intersection = (pax_vec2f) {x, y};
 	}
 	return intersects;
 }
 
 // Tests whether a line intersects any of the lines in the dataset.
 // Intersection is NOT counted when only the end points touch.
-static bool line_intersects_outline(size_t num_points, const pax_vec1_t *raw_points, pax_vec1_t start, pax_vec1_t end) {
+static bool line_intersects_outline(size_t num_points, const pax_vec2f *raw_points, pax_vec2f start, pax_vec2f end) {
 	for (size_t i = 0; i < num_points; i++) {
 		size_t index1 = (i + 1) % num_points;
 		if (line_intersects_line(
-			(pax_vec2_t) {start.x, start.y, end.x, end.y},
-			(pax_vec2_t) {raw_points[i].x, raw_points[i].y, raw_points[index1].x, raw_points[index1].y},
+			(pax_2vec2f) {start.x, start.y, end.x, end.y},
+			(pax_2vec2f) {raw_points[i].x, raw_points[i].y, raw_points[index1].x, raw_points[index1].y},
 			NULL
 		)) return true;
 	}
@@ -693,7 +693,7 @@ static bool line_intersects_outline(size_t num_points, const pax_vec1_t *raw_poi
 //
 // Stores triangles as triple-index pairs in output, which is a dynamically allocated size_t array.
 // The number of triangles created is num_points - 2.
-size_t pax_triang_complete(size_t **output, pax_vec1_t **additional_points, size_t num_points, pax_vec1_t *points) {
+size_t pax_triang_complete(size_t **output, pax_vec2f **additional_points, size_t num_points, pax_vec2f *points) {
 	return 0;
 }
 
@@ -704,7 +704,7 @@ size_t pax_triang_complete(size_t **output, pax_vec1_t **additional_points, size
 //
 // Stores triangles as triple-index pairs in output, which is a dynamically allocated size_t array.
 // Returns the number of triangles created.
-size_t pax_triang_concave(size_t **output, size_t raw_num_points, const pax_vec1_t *raw_points) {
+size_t pax_triang_concave(size_t **output, size_t raw_num_points, const pax_vec2f *raw_points) {
 	// Cannot triangulate with less than 3 points.
 	if (raw_num_points < 3) {
 		*output = NULL;
@@ -791,7 +791,7 @@ size_t pax_triang_concave(size_t **output, size_t raw_num_points, const pax_vec1
 
 // Draws a shape which has been previously triangulated.
 // The number of triangles is num_points - 2.
-void pax_draw_shape_triang(pax_buf_t *buf, pax_col_t color, size_t num_points, const pax_vec1_t *points, size_t n_tris, const size_t *tris) {
+void pax_draw_shape_triang(pax_buf_t *buf, pax_col_t color, size_t num_points, const pax_vec2f *points, size_t n_tris, const size_t *tris) {
 	// Then draw all triangles.
 	for (size_t i = 0, tri_index = 0; i < n_tris; i++) {
 		pax_draw_tri(
@@ -806,7 +806,7 @@ void pax_draw_shape_triang(pax_buf_t *buf, pax_col_t color, size_t num_points, c
 
 // Draw a shape based on an outline.
 // Closes the shape: no need to have the last point overlap the first.
-void pax_draw_shape(pax_buf_t *buf, pax_col_t color, size_t num_points, const pax_vec1_t *points) {
+void pax_draw_shape(pax_buf_t *buf, pax_col_t color, size_t num_points, const pax_vec2f *points) {
 	// Simply outsource the triangulation.
 	size_t *tris   = NULL;
 	size_t  n_tris = pax_triang_concave(&tris, num_points, points);
@@ -819,15 +819,15 @@ void pax_draw_shape(pax_buf_t *buf, pax_col_t color, size_t num_points, const pa
 }
 #else
 // Stub method because the real one isn't compiled in.
-size_t pax_triang_complete(size_t **output, pax_vec1_t **additional_points, size_t num_points, pax_vec1_t *points) {
+size_t pax_triang_complete(size_t **output, pax_vec2f **additional_points, size_t num_points, pax_vec2f *points) {
 	PAX_ERROR1("pax_triang_complete", PAX_ERR_UNSUPPORTED, 0);
 }
 // Stub method because the real one isn't compiled in.
-void pax_triang_concave(size_t **output, size_t num_points, pax_vec1_t *points) {
+void pax_triang_concave(size_t **output, size_t num_points, pax_vec2f *points) {
 	PAX_ERROR("pax_triang_concave", PAX_ERR_UNSUPPORTED);
 }
 // Stub method because the real one isn't compiled in.
-void pax_draw_shape(pax_buf_t *buf, pax_col_t color, size_t num_points, pax_vec1_t *points) {
+void pax_draw_shape(pax_buf_t *buf, pax_col_t color, size_t num_points, pax_vec2f *points) {
 	PAX_ERROR("pax_draw_shape", PAX_ERR_UNSUPPORTED);
 }
 #endif

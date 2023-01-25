@@ -316,16 +316,27 @@ static inline Color rgb(uint8_t r, uint8_t g, uint8_t b) {
 static inline Color argb(uint8_t a, uint8_t r, uint8_t g, uint8_t b) {
 	return (a << 24) | (r << 16) | (g << 8) | b;
 }
-// Converts HSV to RGB.
+// Converts HSV to RGB, ranges are 0-255.
 Color hsv  (uint8_t h, uint8_t s, uint8_t v);
-// Converts AHSV to ARGB.
+// Converts AHSV to ARGB, ranges are 0-255.
 Color ahsv (uint8_t a, uint8_t h, uint8_t s, uint8_t v);
+// Converts HSV to RGB, ranges are 0-360, 0-100, 0-100.
+Color hsv_alt (uint16_t h, uint8_t s, uint8_t v);
+// Converts AHSV to ARGB, ranges are 0-255, 0-360, 0-100, 0-100.
+Color ahsv_alt(uint8_t a, uint16_t h, uint8_t s, uint8_t v);
 // Linearly interpolates between from and to, including alpha.
 Color lerp (uint8_t part, Color from, Color to);
 // Merges the two colors, based on alpha.
 Color merge(Color base, Color top);
 // Tints the color, commonly used for textures.
 Color tint (Color col, Color tint);
+
+// If multi-core rendering is enabled, wait for the other core.
+static inline void join() { pax_join(); }
+// Enable multi-core rendering.
+static inline void enableMulticore(int core) { pax_enable_multicore(core); }
+// Disable multi-core rendering.
+static inline void disableMulticore() { pax_disable_multicore(); }
 
 } // namespace pax
 
