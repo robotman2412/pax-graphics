@@ -22,7 +22,8 @@
 	SOFTWARE.
 */
 
-#pragma once
+#ifndef PAX_CXX_TEXT_HPP
+#define PAX_CXX_TEXT_HPP
 
 #include <pax_types.h>
 
@@ -271,3 +272,5 @@ class TextBox {
 } // namespace pax
 
 #endif //__cplusplus
+
+#endif // PAX_CXX_TEXT_HPP

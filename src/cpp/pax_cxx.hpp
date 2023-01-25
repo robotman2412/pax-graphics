@@ -22,9 +22,10 @@
 	SOFTWARE.
 */
 
-#pragma once
+#ifndef PAX_CXX_HPP
+#define PAX_CXX_HPP
 
-#include <pax_types.h>
+#include <pax_gfx.h>
 
 #ifdef __cplusplus
 
@@ -341,3 +342,5 @@ static inline void disableMulticore() { pax_disable_multicore(); }
 } // namespace pax
 
 #endif // __cplusplus
+
+#endif // PAX_CXX_HPP

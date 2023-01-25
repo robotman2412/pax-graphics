@@ -22,7 +22,8 @@
 	SOFTWARE.
 */
 
-#pragma once
+#ifndef PAX_CXX_SHAPE_HPP
+#define PAX_CXX_SHAPE_HPP
 
 #include <pax_types.h>
 
@@ -166,3 +167,5 @@ class LerpShape: public Shape {
 } // namespace pax
 
 #endif // __cplusplus
+
+#endif // PAX_CXX_SHAPE_HPP

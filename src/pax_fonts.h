@@ -25,11 +25,11 @@
 #ifndef PAX_FONTS_H
 #define PAX_FONTS_H
 
+#include "pax_types.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif //__cplusplus
-
-#include "pax_types.h"
 
 /* ============ INDEX ============ */
 

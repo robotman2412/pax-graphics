@@ -25,6 +25,10 @@
 #ifndef PAX_TEXT_H
 #define PAX_TEXT_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "pax_gfx.h"
 #include <stdio.h>
 
@@ -60,4 +64,8 @@ pax_vec2f  pax_draw_text_aa  (pax_buf_t *buf, pax_col_t color, const pax_font_t 
 // Size is before matrix transformation.
 pax_vec2f  pax_text_size     (const pax_font_t *font, float font_size, const char *text);
 
-#endif //PAX_TEXT_H
+#ifdef __cplusplus
+} // extern "C"
+#endif
+
+#endif // PAX_TEXT_H

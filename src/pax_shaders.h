@@ -25,13 +25,13 @@
 #ifndef PAX_SHADERS_H
 #define PAX_SHADERS_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif //__cplusplus
-
 #include "pax_types.h"
 #include "pax_fonts.h"
 #include "pax_gfx.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif //__cplusplus
 
 /* ============ FONTS ============ */
 

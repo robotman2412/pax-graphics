@@ -26,14 +26,13 @@
 #define PAX_TYPES_H
 
 #include "pax_matrix.h"
+#include "pax_config.h"
+
+#include <math.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif //__cplusplus
-
-#include "pax_config.h"
-
-#include <math.h>
 
 #ifndef M_PI
 #define M_PI 3.141592653589793

@@ -950,7 +950,7 @@ void pax_shade_arc(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
 void pax_shade_circle(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
 		const pax_quad_t *uvs, float x,  float y,  float r) {
 	// Use precalcualted circles for speed because the user can't tell anyway.
-	const pax_vec1_t *preset;
+	const pax_vec2f *preset;
 	const pax_tri_t  *uv_set;
 	size_t size;
 	
@@ -1095,7 +1095,7 @@ void pax_draw_arc(pax_buf_t *buf, pax_col_t color, float x,  float y,  float r, 
 // Draw a circle.
 void pax_draw_circle(pax_buf_t *buf, pax_col_t color, float x,  float y,  float r) {
 	// Use precalcualted circles for speed because the user can't tell anyway.
-	const pax_vec1_t *preset;
+	const pax_vec2f *preset;
 	size_t size;
 	
 	// Pick a suitable number of subdivisions.

@@ -60,9 +60,9 @@ void matrix_2d_transform(matrix_2d_t a, float *x, float *y) {
 
 // 2D vector: unifies a given vector (it's magnitude will be 1).
 // Does not work for vectors with all zero.
-pax_vec1_t vec1_unify(pax_vec1_t vec) {
+pax_vec2f vec1_unify(pax_vec2f vec) {
 	float magnitude = sqrtf(vec.x*vec.x + vec.y*vec.y);
-	return (pax_vec1_t) {
+	return (pax_vec2f) {
 		.x = vec.x / magnitude,
 		.y = vec.y / magnitude
 	};

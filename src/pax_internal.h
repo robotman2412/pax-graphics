@@ -25,10 +25,6 @@
 #ifndef PAX_INTERNAL_H
 #define PAX_INTERNAL_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif //__cplusplus
-
 #include "pax_gfx.h"
 #include <stdio.h>
 #include <stdint.h>
@@ -56,7 +52,7 @@ extern "C" {
 #define PAX_LOGD(...)
 #endif
 
-#else
+#else // PAX_ESP_IDF
 
 #define PAX_PERF_CRITICAL_ATTR __attribute__((hot))
 
@@ -87,7 +83,11 @@ extern bool pax_log_use_mutex;
 #define PAX_LOGD(...) do;while(0)
 #endif
 
-#endif
+#endif // PAX_ESP_IDF
+
+#ifdef __cplusplus
+extern "C" {
+#endif //__cplusplus
 
 /* ======= GENERIC HELPERS ======= */
 

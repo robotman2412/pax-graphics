@@ -25,15 +25,15 @@
 #ifndef PAX_GFX_H
 #define PAX_GFX_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif //__cplusplus
-
 #include "pax_types.h"
 #include "pax_fonts.h"
 #include "pax_text.h"
 #include "pax_shapes.h"
 #include "pax_shaders.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif //__cplusplus
 
 /* ============ DEBUG ============ */
 
