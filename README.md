@@ -11,7 +11,7 @@ Documentation can be found [here](docs).
 - [x] Fix all remaining build warnings
 - [x] More advanced text options
 - [ ] Import more fonts
-- [ ] Comprehensive C++ wrapper
+- [x] Comprehensive C++ wrapper
 - [ ] Triangulation that can handle any shape
 - [x] Leave this box unchecked
 
