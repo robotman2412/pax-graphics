@@ -82,6 +82,7 @@ static inline bezier_point_t pax_calc_bezier(float part, pax_4vec2f ctl) {
 	return pax_calc_bezier0(part, ctl.x0, ctl.y0, ctl.x1, ctl.y1, ctl.x2, ctl.y2, ctl.x3, ctl.y3);
 }
 
+/*
 // Comparison function for two line segments.
 // Sorts by absolute line length.
 // TODO: Convert to delta over length?
@@ -113,6 +114,7 @@ static int bezier_point_t_comp(const void *e0, const void *e1) {
 	float delta = a->part - b->part;
 	return delta / fabs(delta);
 }
+*/
 
 
 

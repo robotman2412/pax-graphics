@@ -8,14 +8,12 @@ Version: v1.1.0-snapshot
 Documentation can be found [here](docs).
 
 # Target v1.1.0 TODO list
-- [ ] Fix all remaining build warnings
+- [x] Fix all remaining build warnings
 - [x] More advanced text options
 - [ ] Import more fonts
 - [ ] Comprehensive C++ wrapper
 - [ ] Triangulation that can handle any shape
 - [x] Leave this box unchecked
-
-# Target v1.2.0 TODO list
 
 # Feature wishlist
 - GPU acceleration
