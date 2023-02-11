@@ -1147,11 +1147,17 @@ PAX_PERF_CRITICAL_ATTR void pax_background(pax_buf_t *buf, pax_col_t color) {
 	if (value == 0) {
 		memset(buf->buf, 0, (PAX_GET_BPP(buf->type) * buf->width * buf->height + 7) >> 3);
 	} else if (buf->bpp == 16) {
+		if (buf->reverse_endianness) {
+			value = pax_rev_endian_16(value);
+		}
 		// Fill 16bpp parts.
 		for (size_t i = 0; i < buf->width * buf->height; i++) {
 			buf->buf_16bpp[i] = value;
 		}
 	} else if (buf->bpp == 32) {
+		if (buf->reverse_endianness) {
+			value = pax_rev_endian_32(value);
+		}
 		// Fill 32bpp parts.
 		for (size_t i = 0; i < buf->width * buf->height; i++) {
 			buf->buf_32bpp[i] = value;
