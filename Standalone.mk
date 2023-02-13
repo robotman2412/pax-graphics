@@ -7,16 +7,17 @@ PAX_LDOPTIONS ?=-shared
 PAX_LIBS      ?=-lpthread -lstdc++
 
 # Sources
-SOURCES        =src/matrix.c \
+SOURCES        =src/cpp/pax_cxx.cpp \
+				src/cpp/pax_cxx_shape.cpp \
+				src/cpp/pax_cxx_text.cpp \
+				\
+				src/pax_matrix.c \
 				src/pax_gfx.c \
 				src/pax_shaders.c \
 				src/pax_shapes.c \
 				src/pax_fonts.c \
 				src/pax_text.c \
 				src/pax_setters.c \
-				\
-				src/cpp/pax_cxx_shape.cpp \
-				src/cpp/pax_cxx.cpp \
 				\
 				src/fonts/font_bitmap_7x9.c \
 				src/fonts/font_bitmap_sky.c \
@@ -29,8 +30,8 @@ HELPERS        =$(shell find src/helpers -type f -name '*.c')
 HEADERS        =$(shell find src -type f -name '*.h' -o -name '*.hpp')
 
 # Outputs
-OBJECTS        =$(shell echo " $(SOURCES)" | sed -e 's/ src/ $(PAX_BUILD_DIR)/g;s/\.c/.c.o/g')
-OBJECTS_DEBUG  =$(shell echo " $(SOURCES)" | sed -e 's/ src/ $(PAX_BUILD_DIR)/g;s/\.c/.c.debug.o/g')
+OBJECTS        =$(shell echo " $(SOURCES) " | sed -e 's/ src/ $(PAX_BUILD_DIR)/g;s/\.c /.c.o /g;s/\.cpp /.cpp.o /g')
+OBJECTS_DEBUG  =$(shell echo " $(SOURCES) " | sed -e 's/ src/ $(PAX_BUILD_DIR)/g;s/\.c /.c.debug.o /g;s/\.cpp /.cpp.debug.o /g')
 PAX_LIB_PATH  ?=build/libpax.so
 
 # Actions
