@@ -2,7 +2,7 @@
 
 This page is about support for various hardware and software platforms.
 
-I have created a overviews of supported platforms:
+I have created some overviews of supported platforms:
  - [Quick overview of supported platforms](#a-quick-overview)
  - [List of unsupported platforms](#list-of-unsupported-platforms)
  - [More detailed information](#more-detailed-information)
