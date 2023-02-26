@@ -213,7 +213,7 @@ For other supported platforms, [see this link](supported-platforms.md).
 ## Build system: for Pi Pico
 
 Due to the more "raw CMake" nature of the Pico SDK, it's slightly more complicated.
-TL;DR: Clone it, build it with `make -f Pi_Pico.mk` and link `build/pax_graphics` in your `CMakeLists.txt`.
+TL;DR: Clone it and link it with `add_subdirectory` and `target_link_libraries`.
 
 But an actual explanation is better, so:
 
@@ -223,22 +223,17 @@ Just put in your project folder, next to your `CMakeLists.txt`.
 git clone https://github.com/robotman2412/pax-graphics
 ```
 
-### 2. Build PAX:
-This step needs to be repeated on every update, I recommend adding it to your build script somewhere.
-
-Assuming you have some sort of build script or Makefile, run:
-```sh
-make -C pax-graphics -f Pi_Pico.mk
-```
-
-### 3. Link it to your project:
+### 2. Link it to your project:
 Add to your `CMakeLists.txt`, after `target_include_directories`:
 ```cmake
-# Add any user requested libraries
+# This tells CMake to build PAX for us.
+add_subdirectory(pax-graphics)
+
+# This tells CMake we would like to use PAX as a library.
 target_link_libraries(your_project_name ${CMAKE_CURRENT_LIST_DIR}/pax-graphics/build/pax_graphics)
 ```
 
-### 4. Profit!
+### 3. Profit!
 Raspberry Pi Pico support is currently in beta.
 For supported platforms, [see this link](supported-platforms.md).
 

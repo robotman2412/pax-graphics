@@ -46,9 +46,10 @@ PAX can work as an ESP-IDF component, so simply clone it in to your `components`
 
 ## Details: Pi Pico
 Due both to request and personal projects, I am currently working on support for the Raspberry Pi Pico.
-In its current state, all this does is compile without MCR support for ARM Cortex-M0+ devices.
+In its current state, all this does is compile without MCR support.
 
-TL;DR: Clone it, build it with `make -f Pi_Pico.mk` and link `build/pax_graphics` in your `CMakeLists.txt`.
+Due to the more "raw CMake" nature of the Pico SDK, it's slightly more complicated.
+TL;DR: Clone it and link it with `add_subdirectory` and `target_link_libraries`.
 
 But an actual explanation is better, so:
 
@@ -58,20 +59,18 @@ Just put in your project folder, next to your `CMakeLists.txt`.
 git clone https://github.com/robotman2412/pax-graphics
 ```
 
-### 2. Build PAX:
-This step needs to be repeated on every update, I recommend adding it to your build script somewhere.
-
-Assuming you have some sort of build script or Makefile, run:
-```sh
-make -C pax-graphics -f Pi_Pico.mk
-```
-
-### 3. Link it to your project:
+### 2. Link it to your project:
 Add to your `CMakeLists.txt`, after `target_include_directories`:
 ```cmake
-# Add any user requested libraries
+# This tells CMake to build PAX for us.
+add_subdirectory(pax-graphics)
+
+# This tells CMake we would like to use PAX as a library.
 target_link_libraries(your_project_name ${CMAKE_CURRENT_LIST_DIR}/pax-graphics/build/pax_graphics)
 ```
+
+### 3. Profit!
+Raspberry Pi Pico support is currently in beta.
 
 
 # Why is it unsupported?
