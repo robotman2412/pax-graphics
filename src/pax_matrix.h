@@ -27,6 +27,7 @@
 #include <math.h>
 #include <stddef.h>
 #include <stdbool.h>
+#include <stdio.h>
 
 #ifdef __cplusplus
 #define PAX_CXX_Vecf_union union
@@ -67,8 +68,10 @@ typedef union  pax_rect Rectf;
 typedef union  matrix_2d Matrix2f;
 typedef struct matrix_stack_2d Matrix2fStack;
 
+} // namespace pax
+
 #define PAX_CXX_Vec2f_INDEX() \
-	pax::Vec2f &operator[](ssize_t index) { \
+	pax::Vec2f &operator[](int index) { \
 		const size_t _size = sizeof(arr) / 2 / sizeof(float); \
 		if (index < 0 || index >= _size) { \
 			fprintf(stderr, "Error: Index out of bounds: %zd (not in range 0-%zu)\n", index, _size); \
@@ -76,6 +79,7 @@ typedef struct matrix_stack_2d Matrix2fStack;
 		} \
 		return ((pax::Vec2f*) arr)[index]; \
 	}
+
 #define PAX_CXX_Vecf_AVERAGE() \
 	pax::Vec2f average() { \
 		pax::Vec2f avg(0, 0); \
@@ -144,7 +148,6 @@ typedef struct matrix_stack_2d Matrix2fStack;
 	PAX_CXX_Vecf_OPERATOR_ASSIGN(_type, *=) \
 	PAX_CXX_Vecf_OPERATOR_ASSIGN(_type, /=)
 
-} //namespace pax
 #endif //__cplusplus
 
 PAX_CXX_Vecf_union  pax_vec1 {

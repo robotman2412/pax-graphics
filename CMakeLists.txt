@@ -1,21 +1,26 @@
-idf_component_register(
-	SRCS
-	"src/cpp/pax_cxx.cpp"
-	"src/cpp/pax_cxx_shape.cpp"
-	"src/cpp/pax_cxx_text.cpp"
+# This file arbitrates between different methods of building.
+cmake_minimum_required(VERSION 3.13)
+
+if(DEFINED ENV{PAX_CMAKE_STANDALONE})
+	# Don't bother testing the compilers.
+	set(CMAKE_C_COMPILER_FORCED true)
+	set(CMAKE_CXX_COMPILER_FORCED true)
 	
-	"src/pax_matrix.c"
-	"src/pax_gfx.c"
-	"src/pax_shaders.c"
-	"src/pax_shapes.c"
-	"src/pax_fonts.c"
-	"src/pax_text.c"
-	"src/pax_setters.c"
+	project(pax_graphics C CXX)
 	
-	"src/fonts/font_bitmap_7x9.c"
-	"src/fonts/font_bitmap_sky.c"
-	"src/fonts/font_bitmap_permanentmarker.c"
-	"src/fonts/font_bitmap_sairaregular.c"
-	"src/fonts/font_bitmap_sairacondensed.c"
-	INCLUDE_DIRS src src/cpp
-)
+	message(STATUS "Building PAX Graphics for " $ENV{PAX_CMAKE_STANDALONE} ".")
+	include(Standalone.cmake)
+elseif(DEFINED PICO_SDK_PATH)
+	# Pi Pico SDK detected (by PICO_SDK_PATH being defined).
+	project(pax_graphics C CXX)
+	
+	message(STATUS "Building PAX Graphics for Pi Pico SDK.")
+	add_definitions(-DPAX_COMPILE_MCR=0)
+	add_definitions(-DPAX_PI_PICO=1)
+	include(Standalone.cmake)
+else()
+	# By default ESP-IDF
+	# TODO: Add proper detection for this.
+	message(STATUS "Building PAX Graphics as ESP-IDF module (by default).")
+	include(ESP_IDF.cmake)
+endif()
