@@ -30,7 +30,7 @@ namespace pax {
 
 
 // C wrapper function for using C++ shaders.
-extern "C" Color wrapperCallback(Color existing, Color tint, int x, int y, float u, float v, void *args) {
+static Color wrapperCallback(Color existing, Color tint, int x, int y, float u, float v, void *args) {
 	ShaderContent *ctx = (ShaderContent *) args;
 	return (*ctx->callback)(existing, tint, x, y, u, v, ctx->args);
 }

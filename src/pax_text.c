@@ -73,7 +73,7 @@ typedef struct {
 // Returns the new string pointer.
 // Sets the decoded UTF-8 using a pointer.
 // If the string terminates early or contains invalid unicode, U+FFFD is returned.
-char *utf8_getch(const char *cstr, uint32_t *out) {
+char *pax_utf8_getch(const char *cstr, uint32_t *out) {
 	char len, mask;
 	if (!*cstr) {
 		// Null pointer.
@@ -116,13 +116,13 @@ char *utf8_getch(const char *cstr, uint32_t *out) {
 }
 
 // Returns how many UTF-8 characters a given c-string contains.
-size_t utf8_strlen(const char *cstr) {
+size_t pax_utf8_strlen(const char *cstr) {
 	const char *end   = cstr + strlen(cstr);
 	uint32_t    dummy = 0;
 	size_t      len   = 0;
 	while (cstr != end) {
 		len ++;
-		cstr = utf8_getch(cstr, &dummy);
+		cstr = pax_utf8_getch(cstr, &dummy);
 	}
 	return 0;
 }
@@ -131,7 +131,7 @@ size_t utf8_strlen(const char *cstr) {
 
 /* ======= DRAWING: TEXT ======= */
 
-uint64_t text_promise_callback(pax_buf_t *buf, pax_col_t tint, void *args0) {
+static uint64_t text_promise_callback(pax_buf_t *buf, pax_col_t tint, void *args0) {
 	pax_font_bmp_args_t *args = args0;
 	return !(tint & 0xff000000) ? PAX_PROMISE_INVISIBLE :
 			(args->bpp == 1 && !args->do_aa) ? PAX_PROMISE_CUTOUT : 0;
@@ -183,7 +183,7 @@ static void pixel_aligned_render(pax_buf_t *buf, pax_col_t color, const pax_shad
 }
 
 // Internal method for monospace bitmapped characters.
-pax_vec2f text_bitmap_mono(pax_text_render_t *ctx, const pax_font_range_t *range, uint32_t glyph) {
+static pax_vec2f text_bitmap_mono(pax_text_render_t *ctx, const pax_font_range_t *range, uint32_t glyph) {
 	if (ctx->do_render && glyph != 0x20) {
 		// Set up shader.
 		pax_font_bmp_args_t args = {
@@ -259,7 +259,7 @@ pax_vec2f text_bitmap_mono(pax_text_render_t *ctx, const pax_font_range_t *range
 }
 
 // Internal method for variable pitch bitmapped characters.
-pax_vec2f text_bitmap_var(pax_text_render_t *ctx, const pax_font_range_t *range, uint32_t glyph) {
+static pax_vec2f text_bitmap_var(pax_text_render_t *ctx, const pax_font_range_t *range, uint32_t glyph) {
 	size_t index = (glyph - range->start);
 	const pax_bmpv_t *dims = &range->bitmap_var.dims[index];
 	if (ctx->do_render && glyph != 0x20) {
@@ -381,12 +381,12 @@ static pax_vec2f text_generic(pax_text_render_t *ctx, const char *text) {
 	while (text < limit) {
 		// Get a character.
 		uint32_t glyph = 0;
-		text = utf8_getch(text, &glyph);
+		text = pax_utf8_getch(text, &glyph);
 		
 		// Is it a newline?
 		if (glyph == '\r') {
 			// Consume a '\n' if the next character is one.
-			char *peek = utf8_getch(text, &glyph);
+			char *peek = pax_utf8_getch(text, &glyph);
 			if (glyph == '\n') text = peek;
 			goto newline;
 		} else if (glyph == '\n') {
