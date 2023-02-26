@@ -2,7 +2,7 @@
 # Options
 CC            ?=/usr/bin/gcc
 PAX_BUILD_DIR ?=build
-PAX_CCOPTIONS ?=-c -fPIC -DPAX_STANDALONE -Isrc -Isrc/cpp -Isrc/pthreadqueue/src
+PAX_CCOPTIONS ?=-c -fPIC -DPAX_STANDALONE -Isrc -Isrc/cpp -Isrc/gui -Isrc/pthreadqueue/src
 PAX_LDOPTIONS ?=-shared
 PAX_LIBS      ?=-lpthread -lstdc++
 
