@@ -47,7 +47,7 @@ Shape *Shape::round(float radius) {
 }
 
 // Internal method used for drawing.
-void _int_draw(pax_buf_t *to, pax_col_t *color, const pax_shader_t *shader, bool asOutline) {}
+void Shape::_int_draw(pax_buf_t *to, pax_col_t *color, const pax_shader_t *shader, bool asOutline) {}
 
 
 
