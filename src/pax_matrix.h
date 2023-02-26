@@ -78,10 +78,18 @@ typedef struct matrix_stack_2d Matrix2fStack;
 			abort(); \
 		} \
 		return ((pax::Vec2f*) arr)[index]; \
+	} \
+	const pax::Vec2f &operator[](int index) const { \
+		const size_t _size = sizeof(arr) / 2 / sizeof(float); \
+		if (index < 0 || index >= _size) { \
+			fprintf(stderr, "Error: Index out of bounds: %zd (not in range 0-%zu)\n", index, _size); \
+			abort(); \
+		} \
+		return ((const pax::Vec2f*) arr)[index]; \
 	}
 
 #define PAX_CXX_Vecf_AVERAGE() \
-	pax::Vec2f average() { \
+	pax::Vec2f average() const { \
 		pax::Vec2f avg(0, 0); \
 		const size_t _size = sizeof(arr) / 2 / sizeof(float); \
 		for (size_t i = 0; i < _size; i++) { \
@@ -91,7 +99,7 @@ typedef struct matrix_stack_2d Matrix2fStack;
 	}
 
 #define PAX_CXX_Vecf_OPERATOR(_type, _oper) \
-	_type operator _oper(_type rhs) { \
+	_type operator _oper(_type rhs) const { \
 		_type out; \
 		const size_t _size = sizeof(arr) / 2 / sizeof(float); \
 		for (size_t i = 0; i < _size; i++) { \
@@ -99,7 +107,7 @@ typedef struct matrix_stack_2d Matrix2fStack;
 		} \
 		return out; \
 	} \
-	_type operator _oper(float rhs) { \
+	_type operator _oper(float rhs) const { \
 		_type out; \
 		const size_t _size = sizeof(arr) / 2 / sizeof(float); \
 		for (size_t i = 0; i < _size; i++) { \
