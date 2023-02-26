@@ -12,7 +12,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # The output must be a relocatable file.
 add_link_options(-r)
 
-add_executable(pax_graphics
+add_library(pax_graphics
 	"src/cpp/pax_cxx.cpp"
 	"src/cpp/pax_cxx_shape.cpp"
 
@@ -31,7 +31,7 @@ add_executable(pax_graphics
 	"src/fonts/font_bitmap_sairacondensed.c"
 )
 
-target_include_directories(pax_graphics PRIVATE
+target_include_directories(pax_graphics PUBLIC
 	${CMAKE_CURRENT_LIST_DIR}/src
 	${CMAKE_CURRENT_LIST_DIR}/src/cpp
 )
