@@ -52,7 +52,7 @@
 #define PAX_LOGD(...)
 #endif
 
-#else // PAX_ESP_IDF
+#elif defined(PAX_STANDALONE)
 
 #define PAX_PERF_CRITICAL_ATTR __attribute__((hot))
 
@@ -83,7 +83,27 @@ extern bool pax_log_use_mutex;
 #define PAX_LOGD(...) do;while(0)
 #endif
 
-#endif // PAX_ESP_IDF
+#else
+
+#define PAX_PERF_CRITICAL_ATTR __attribute__((hot))
+
+#define PRIVATE_PAX_LOG_HELPER(file, prefix, tag, ...) do {\
+		fprintf(file, prefix "%s: ", (tag));\
+		fprintf(file, __VA_ARGS__);\
+		fputs("\033[0m\r\n", file);\
+	} while(0)
+
+#define PAX_LOGE(tag, ...) PRIVATE_PAX_LOG_HELPER(stderr, "\033[91mError ", tag, __VA_ARGS__)
+#define PAX_LOGI(tag, ...) PRIVATE_PAX_LOG_HELPER(stdout, "\033[32mInfo  ", tag, __VA_ARGS__)
+#define PAX_LOGW(tag, ...) PRIVATE_PAX_LOG_HELPER(stderr, "\033[33mWarn  ", tag, __VA_ARGS__)
+
+#ifdef PAX_ENABLE_DEBUG_LOGS
+#define PAX_LOGD(tag, ...) PRIVATE_PAX_LOG_HELPER(stdout, "\033[94mDebug ", tag, __VA_ARGS__)
+#else
+#define PAX_LOGD(...)
+#endif
+
+#endif
 
 #ifdef __cplusplus
 extern "C" {

@@ -5,8 +5,14 @@ It's goal is to allow anyone to, in C, use a powerful list of drawing features w
 
 This library is the successor of the revised graphics API for [the old badge.team firmware](https://github.com/badgeteam/ESP32-platform-firmware).
 
+For supported platforms, [see this link](supported-platforms.md).
+
 ## PAX Docs overview
 - [Getting started](#getting-started)
+- [Build system](#build-system)
+    - [For Arduino](#build-system-for-arduino)
+    - [For ESP32](#build-system-for-esp32)
+    - [For Pi Pico](#build-system-for-pi-pico)
 - [API overview](#api-overview)
 - [API reference](#api-reference)
     - [Setup](#api-reference-setup)
@@ -184,6 +190,57 @@ void my_graphics_function() {
     pax_buf_destroy(&buffer);
 }
 ```
+
+# Build system
+
+In order to support multiple targets and platforms, the build system for PAX has grown somewhat complex.
+
+## Build system: for Arduino
+
+PAX has been constructed such that it used directly as an Arduino library.
+Simply install via the library manager or clone directly into your libraries folder.
+
+**Warning: Platforms like the Arduino uno and Nano are not powerful enough to run PAX.**
+For supported platforms, [see this link](supported-platforms.md).
+
+## Build system: for ESP32
+
+Similarly, PAX can be used directly as an ESP-IDF component when placed in your components folder.
+
+ESP32 is an officially supported platform.
+For other supported platforms, [see this link](supported-platforms.md).
+
+## Build system: for Pi Pico
+
+Due to the more "raw CMake" nature of the Pico SDK, it's slightly more complicated.
+TL;DR: Clone it, build it with `make -f Pi_Pico.mk` and link `build/pax_graphics` in your `CMakeLists.txt`.
+
+But an actual explanation is better, so:
+
+### 1. Clone PAX:
+Just put in your project folder, next to your `CMakeLists.txt`.
+```sh
+git clone https://github.com/robotman2412/pax-graphics
+```
+
+### 2. Build PAX:
+This step needs to be repeated on every update, I recommend adding it to your build script somewhere.
+
+Assuming you have some sort of build script or Makefile, run:
+```sh
+make -C pax-graphics -f Pi_Pico.mk
+```
+
+### 3. Link it to your project:
+Add to your `CMakeLists.txt`, after `target_include_directories`:
+```cmake
+# Add any user requested libraries
+target_link_libraries(your_project_name ${CMAKE_CURRENT_LIST_DIR}/pax-graphics/build/pax_graphics)
+```
+
+### 4. Profit!
+Raspberry Pi Pico support is currently in beta.
+For supported platforms, [see this link](supported-platforms.md).
 
 # API overview
 
