@@ -4,7 +4,7 @@
 namespace pax::gui {
 
 // Make a bland new button.
-Button::Button(): Element({0, 0, 20, 20}), pressed(false) {}
+Button::Button(): Element({0, 0, 100, 20}), text("Button"), pressed(false) {}
 
 // Make a new button with some text on it.
 Button::Button(Rectf _bounds, std::string _text, Callback _onPress):
