@@ -160,7 +160,7 @@ void ColorPicker::onChangeInt() {
 		
 		briBox->top   = pax_col_hsv(hue, sat, 255);
 		briBox->vLine = briBox->bounds.h * (255-bri) / 255;
-		hueBox->color = rgb;
+		briBox->color = rgb;
 		
 	} else {
 		redBox->left    = (rgb & 0x0000ffff) | 0xff000000;
