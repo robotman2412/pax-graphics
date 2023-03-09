@@ -57,6 +57,20 @@ Theme *getTheme();
 // Update the global theme setting.
 void setTheme(Theme newTheme);
 
+// A set of focus states.
+enum FocusState {
+	// Not focussed on this element.
+	NONE,
+	// This element is highlighted.
+	HIGHLIGHTED,
+	// This element is highlighted, focussed.
+	FOCUSSED,
+	// This element is focussed, capturing navigation inputs.
+	CAPTURED,
+	// This element is delegating navigation inputs to another.
+	DELEGATED,
+};
+
 // A list of common inputs that GUI responds to.
 enum InputButton {
 	// Use when you don't know what button it is.
@@ -96,6 +110,9 @@ class Element: public InputAcceptor {
 		// Helper variable for containers and related types.
 		// Calling `draw` on an element with `visible=false` should always draw it, despite this variable.
 		bool visible = true;
+		// The type of focus this element has been given, if any.
+		// The element may change the focus state to a higher one after button press.
+		FocusState focus = FocusState::NONE;
 		
 		// Implicit default constructor.
 		Element() = default;
@@ -107,7 +124,7 @@ class Element: public InputAcceptor {
 		
 		// Draw this element to `buf`.
 		// When selected by user interaction, `selected` is true.
-		virtual void draw(Buffer &buf, bool selected=false) {}
+		virtual void draw(Buffer &buf) {}
 };
 
 } // namespace pax::gui

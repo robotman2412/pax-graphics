@@ -38,18 +38,45 @@ namespace pax::gui {
 
 // An element that contains one or more other elements.
 class Container: public Element {
+	protected:
+		// Index of selected child, if any.
+		int selectedChild;
+		
 	public:
 		// Child elements.
 		// Position of children is relative to parent.
 		std::vector<std::shared_ptr<Element>> children;
 		// Element background color, if any.
 		Color background;
-		// Index of selected child, if any.
-		int selectedChild;
+		
+		// Make an empty container.
+		Container(Rectf bounds = {0, 0, 100, 100}): Element(bounds) {}
 		
 		// This is required to allow subclasses with virtuals.
 		virtual ~Container() = default;
 		
+		// Unselect children, if any.
+		void unselect();
+		// Select a specific child by index.
+		// Returns false if the index is invalid.
+		bool selectChild(int index);
+		// Select a specific child by value.
+		// Returns false if the element is not a child.
+		bool selectChild(std::shared_ptr<Element> child);
+		// Obtain the index of a selected child, if any.
+		// Returns -1 when not selected.
+		int selectedIndex();
+		// Obtain the pointer of a selected child, if any.
+		std::shared_ptr<Element> selectedElement();
+		
+		// Add a chile (templated move edition).
+		// Returns a shared_ptr to the child.
+		template<typename T>
+		std::shared_ptr<T> appendChildT(T &&child) {
+			std::shared_ptr<T> ptr = std::make_shared<T>(std::move(child));
+			appendChild(ptr);
+			return ptr;
+		}
 		// Add a child element (move edition).
 		// Returns a shared_ptr to the child.
 		virtual std::shared_ptr<Element> appendChild(Element &&child);
@@ -66,7 +93,7 @@ class Container: public Element {
 		
 		// Draw this element to `buf`.
 		// When selected by user interaction, `selected` is true.
-		virtual void draw(Buffer &buf, bool selected=false) override;
+		virtual void draw(Buffer &buf) override;
 };
 
 } // namespace pax::gui

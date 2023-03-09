@@ -7,6 +7,7 @@ idf_component_register(
 	
 	"src/gui/pax_gui_base.cpp"
 	"src/gui/pax_gui_button.cpp"
+	"src/gui/pax_gui_colpicker.cpp"
 	"src/gui/pax_gui_container.cpp"
 	"src/gui/pax_gui_label.cpp"
 	

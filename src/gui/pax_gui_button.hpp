@@ -64,7 +64,7 @@ class Button: public Element {
 		
 		// Draw this element to `buf`.
 		// When selected by user interaction, `selected` is true.
-		virtual void draw(Buffer &buf, bool selected=false) override;
+		virtual void draw(Buffer &buf) override;
 };
 
 } // namespace pax::gui

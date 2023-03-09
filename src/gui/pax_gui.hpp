@@ -30,6 +30,7 @@
 #ifdef __cplusplus
 
 #include <pax_gui_base.hpp>
+#include <pax_gui_colpicker.hpp>
 #include <pax_gui_container.hpp>
 #include <pax_gui_button.hpp>
 #include <pax_gui_label.hpp>
