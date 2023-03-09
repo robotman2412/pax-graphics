@@ -67,6 +67,40 @@ Shader::Shader(ShaderFunc callback, void *args) {
 	active = true;
 }
 
+// Requires explicit copy constructor.
+Shader::Shader(const Shader &other) {
+	operator=(other);
+}
+
+// Requires explicit move constructor.
+Shader::Shader(const Shader &&other) {
+	operator=(other);
+}
+
+// Requires explicit copy operator.
+Shader &Shader::operator=(const Shader &other) {
+	internal = other.internal;
+	cxxShaderCtx = other.cxxShaderCtx;
+	isCxx = other.isCxx;
+	active = other.active;
+	if (isCxx && active) {
+		internal.callback_args = &cxxShaderCtx;
+	}
+	return *this;
+}
+
+// Requires explicit move operator.
+Shader &Shader::operator=(const Shader &&other) {
+	internal = other.internal;
+	cxxShaderCtx = std::move(other.cxxShaderCtx);
+	isCxx = other.isCxx;
+	active = other.active;
+	if (isCxx && active) {
+		internal.callback_args = &cxxShaderCtx;
+	}
+	return *this;
+}
+
 
 // Deletion operator.
 Shader::~Shader() {
