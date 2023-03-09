@@ -30,3 +30,4 @@ idf_component_register(
 	"src/cpp"
 	"src/gui"
 )
+set_target_properties(${COMPONENT_LIB} PROPERTIES COMPILE_FLAGS -Wno-unused-const-variable)
