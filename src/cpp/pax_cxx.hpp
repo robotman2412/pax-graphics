@@ -317,6 +317,7 @@ class Buffer {
 static inline Color reduceAlpha(Color in, float coeff) {
 	return ((Color) (((in & 0xff000000) * coeff)) & 0xff000000) | (in & 0x00ffffff);
 }
+
 // Combines RGB.
 static inline Color rgb(uint8_t r, uint8_t g, uint8_t b) {
 	return 0xff000000 | (r << 16) | (g << 8) | b;
@@ -325,14 +326,39 @@ static inline Color rgb(uint8_t r, uint8_t g, uint8_t b) {
 static inline Color argb(uint8_t a, uint8_t r, uint8_t g, uint8_t b) {
 	return (a << 24) | (r << 16) | (g << 8) | b;
 }
+
+// Splits ARGB.
+static inline void undo_argb(Color in, uint8_t &a, uint8_t &r, uint8_t &g, uint8_t &b) {
+	a = in >> 24;
+	r = in >> 16;
+	g = in >> 8;
+	b = in;
+}
+// Splits RGB.
+static inline void undo_rgb(Color in, uint8_t &r, uint8_t &g, uint8_t &b) {
+	r = in >> 16;
+	g = in >> 8;
+	b = in;
+}
+
 // Converts HSV to RGB, ranges are 0-255.
-Color hsv  (uint8_t h, uint8_t s, uint8_t v);
+Color hsv     (uint8_t h, uint8_t s, uint8_t v);
 // Converts AHSV to ARGB, ranges are 0-255.
-Color ahsv (uint8_t a, uint8_t h, uint8_t s, uint8_t v);
-// Converts HSV to RGB, ranges are 0-360, 0-100, 0-100.
+Color ahsv    (uint8_t a, uint8_t h, uint8_t s, uint8_t v);
+// Converts HSV to RGB, ranges are 0-359, 0-99, 0-99.
 Color hsv_alt (uint16_t h, uint8_t s, uint8_t v);
-// Converts AHSV to ARGB, ranges are 0-255, 0-360, 0-100, 0-100.
+// Converts AHSV to ARGB, ranges are 0-255, 0-359, 0-99, 0-99.
 Color ahsv_alt(uint8_t a, uint16_t h, uint8_t s, uint8_t v);
+
+// Converts ARGB into AHSV, ranges are 0-255.
+void undo_ahsv    (Color in, uint8_t &a, uint8_t &h, uint8_t &s, uint8_t &v);
+// Converts RGB into HSV, ranges are 0-255.
+void undo_hsv     (Color in, uint8_t &h, uint8_t &s, uint8_t &v);
+// Converts ARGB into AHSV, ranges are 0-359, 0-99, 0-99.
+void undo_ahsv_alt(Color in, uint8_t &a, uint8_t &h, uint8_t &s, uint8_t &v);
+// Converts RGB into HSV, ranges are 0-255, 0-359, 0-99, 0-99.
+void undo_hsv_alt (Color in, uint8_t &h, uint8_t &s, uint8_t &v);
+
 // Linearly interpolates between from and to, including alpha.
 Color lerp (uint8_t part, Color from, Color to);
 // Merges the two colors, based on alpha.

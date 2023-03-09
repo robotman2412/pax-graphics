@@ -504,15 +504,16 @@ static inline uint8_t pax_lerp(uint8_t part, uint8_t from, uint8_t to) {
 	return from + (( (to - from) * (part + (part >> 7)) ) >> 8);
 }
 
-// Converts HSV to ARGB.
-pax_col_t pax_col_hsv(uint8_t h, uint8_t s, uint8_t v) {
-	return pax_col_ahsv(255, h, s, v);
+// 8-bit + 8-bit fractional (0x00ff=1) division.
+static inline uint16_t pax_frac_div16(uint16_t a, uint8_t b) {
+	return (a << 8) / (b + (b >> 7));
 }
 
-// Converts AHSV to ARGB.
-pax_col_t pax_col_ahsv(uint8_t a, uint8_t c_h, uint8_t s, uint8_t v) {
-	uint16_t h     = c_h * 6;
-	uint16_t phase = h >> 8;
+
+// Internal method for AHSV to ARGB.
+// Ranges are 0xff, 0x5ff, 0xff, 0xff.
+pax_col_t PRIVATE_pax_col_hsv(uint8_t a, uint16_t h, uint8_t s, uint8_t v) {
+	uint8_t phase = h >> 8;
 	// Parts of HSV.
 	uint8_t up, down, other;
 	other  = ~s;
@@ -532,7 +533,7 @@ pax_col_t pax_col_ahsv(uint8_t a, uint8_t c_h, uint8_t s, uint8_t v) {
 	// Apply to RGB.
 	uint8_t r, g, b;
 	switch (phase >> 1) {
-		case 0:
+		default /* case 0 */:
 			// From R to G.
 			r = down; g = up; b = other;
 			break;
@@ -544,13 +545,147 @@ pax_col_t pax_col_ahsv(uint8_t a, uint8_t c_h, uint8_t s, uint8_t v) {
 			// From B to R.
 			r = up; g = other; b = down;
 			break;
-		default:
-			// The compiler isn't aware that this case is never reached.
-			return 0;
 	}
 	// Merge.
 	return (a << 24) | (r << 16) | (g << 8) | b;
 }
+
+// Internal method for RGB to HSV.
+// Ranges are 0x5ff, 0xff, 0xff.
+void PRIVATE_pax_undo_col_hsv(pax_col_t in, uint16_t *h, uint8_t *s, uint8_t *v) {
+	// Split the RGB.
+	uint8_t r = in >> 16;
+	uint8_t g = in >> 8;
+	uint8_t b = in;
+	
+	// Edge case: Equal brightness.
+	if (r == g && g == b) {
+		*h = 0; *s = 0; *v = r;
+		return;
+	}
+	
+	// Sort levels.
+	uint8_t high = r, middle = g, low = b;
+	if (high   < middle) { uint8_t tmp = high;   high   = middle; middle = tmp; }
+	if (middle < low)    { uint8_t tmp = middle; middle = low;    low    = tmp; }
+	if (high   < middle) { uint8_t tmp = high;   high   = middle; middle = tmp; }
+	
+	// Factor out brightness.
+	*v     = high;
+	middle = middle * 255 / high;
+	low    = low    * 255 / high;
+	r      = r      * 255 / high;
+	g      = g      * 255 / high;
+	b      = b      * 255 / high;
+	high   = 255;
+	
+	// Factor out saturation.
+	*s     = ~low;
+	
+	// How I inverted the function (where 1.0=0xff):
+	
+	// middle = lerp(s, 1, X)
+	// middle = 1 + s * (X - 1)
+	// middle = 1 + s * X - s * 1
+	
+	// middle - 1 + s * 1 = s * X
+	// s * X = middle - 1 + s * 1
+	
+	// X = (middle - 1 + s * 1) / s
+	// X = (middle - 1) / s + 1
+	
+	// This is it, written in code.
+	// Here, `x` is either `~h` or `h` in a 9-bit context,
+	// From the interpolation of `up` and `down` in hsv.
+	uint16_t x = pax_frac_div16(middle - 0xff + *s, *s);
+	
+	// Reason about hue.
+	uint16_t l_h;
+	if (r == high) {
+		if (g == middle) {
+			// R = down, [G = up], h < 0x100
+			l_h = 0x000 | x;
+		} else {
+			// [B = down], R = up, h > 0x100
+			l_h = 0x500 | (255-x);
+		}
+	} else if (g == high) {
+		if (b == middle) {
+			// G = down, [B = up], h < 0x100
+			l_h = 0x200 | x;
+		} else {
+			// [R = down], G = up, h > 0x100
+			l_h = 0x100 | (255-x);
+		}
+	} else /* b == high */ {
+		if (r == middle) {
+			// B = down, [R = up], h < 0x100
+			l_h = 0x400 | x;
+		} else {
+			// [G = down], B = up, h > 0x100
+			l_h = 0x300 | (255-x);
+		}
+	}
+	
+	*h = l_h;
+}
+
+
+// Converts HSV to ARGB, ranges are 0-255.
+pax_col_t pax_col_hsv(uint8_t h, uint8_t s, uint8_t v) {
+	return PRIVATE_pax_col_hsv(255, h * 6, s, v);
+}
+
+// Converts AHSV to ARGB, ranges are 0-255.
+pax_col_t pax_col_ahsv(uint8_t a, uint8_t h, uint8_t s, uint8_t v) {
+	return PRIVATE_pax_col_hsv(a, h * 6, s, v);
+}
+
+// Converts HSV to ARGB, ranges are 0-359.
+pax_col_t pax_col_hsv_alt(uint16_t h, uint8_t s, uint8_t v) {
+	return PRIVATE_pax_col_hsv(255, h%360*6*255/359, s, v);
+}
+
+// Converts AHSV to ARGB.
+pax_col_t pax_col_ahsv_alt(uint8_t a, uint16_t h, uint8_t s, uint8_t v) {
+	return PRIVATE_pax_col_hsv(a, h%360*6*255/359, s, v);
+}
+
+
+// Converts ARGB into AHSV, ranges are 0-255.
+void pax_undo_ahsv(pax_col_t in, uint8_t *a, uint8_t *h, uint8_t *s, uint8_t *v) {
+	*a = in >>24;
+	uint16_t l_h;
+	PRIVATE_pax_undo_col_hsv(in, &l_h, *s, *v);
+	*h = (l_h + 3) / 6;
+}
+
+// Converts RGB into HSV, ranges are 0-255.
+void pax_undo_hsv(pax_col_t in, uint8_t *h, uint8_t *s, uint8_t *v) {
+	uint16_t l_h;
+	PRIVATE_pax_undo_col_hsv(in, &l_h, *s, *v);
+	*h = (l_h + 3) / 6;
+}
+
+// Converts ARGB into AHSV, ranges are 0-255, 0-359, 0-99, 0-99.
+void pax_undo_ahsv_alt(pax_col_t in, uint8_t *a, uint16_t *h, uint8_t *s, uint8_t *v) {
+	*a = in >>24;
+	uint16_t l_h;
+	PRIVATE_pax_undo_col_hsv(in, &l_h, *s, *v);
+	*h = (l_h + 3) * 359 / 255 / 6;
+	*s = *s * 100 / 255;
+	*v = *v * 100 / 255;
+}
+
+// Converts RGB into HSV, ranges are 0-359, 0-99, 0-99.
+void pax_undo_hsv_alt(pax_col_t in, uint16_t *h, uint8_t *s, uint8_t *v) {
+	uint16_t l_h;
+	PRIVATE_pax_undo_col_hsv(in, &l_h, *s, *v);
+	*h = (l_h + 3) * 359 / 255 / 6;
+	*s = *s * 100 / 255;
+	*v = *v * 100 / 255;
+}
+
 
 // Linearly interpolates between from and to, including alpha.
 pax_col_t pax_col_lerp(uint8_t part, pax_col_t from, pax_col_t to) {
