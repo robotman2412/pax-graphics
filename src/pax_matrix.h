@@ -133,6 +133,14 @@ typedef struct matrix_stack_2d Matrix2fStack;
 	}
 
 #define PAX_CXX_Vecf_OPERATORS(_type) \
+	_type round() const { \
+		_type out; \
+		const size_t _size = sizeof(arr) / sizeof(float); \
+		for (size_t i = 0; i < _size; i++) { \
+			out.arr[i] = (int) (arr[i] + 0.5); \
+		} \
+		return out; \
+	} \
 	bool operator==(_type rhs) const { \
 		const size_t _size = sizeof(arr) / 2 / sizeof(float); \
 		for (size_t i = 0; i < _size; i++) { \
@@ -299,6 +307,10 @@ PAX_CXX_Vecf_union  pax_rect {
 	
 	// Operator []
 	PAX_CXX_Vec2f_INDEX()
+	
+	pax::Rectf round() const {
+		return pax::Rectf{ (int) (x+0.5), (int) (y+0.5), (int) (w+0.5), (int) (h+0.5) };
+	}
 	
 	// Get average position, i.e. center, of the rectangle.
 	pax::Vec2f average() {
