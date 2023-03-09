@@ -47,6 +47,8 @@ class Button: public Element {
 		std::string text;
 		// The function to call when this button is pressed.
 		Callback    onPress;
+		// Decorative: Whether the button is currently pressed.
+		bool        pressed;
 		
 		// Make a bland new button.
 		Button();
@@ -57,6 +59,8 @@ class Button: public Element {
 		
 		// Button pressed event.
 		virtual void buttonDown(InputButton which) override;
+		// Button released event.
+		virtual void buttonUp(InputButton which) override;
 		
 		// Draw this element to `buf`.
 		// When selected by user interaction, `selected` is true.

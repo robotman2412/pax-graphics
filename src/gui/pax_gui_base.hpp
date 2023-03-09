@@ -37,8 +37,12 @@ struct Theme {
 	Color backgroundColor;
 	// Foreground color.
 	Color foregroundColor;
+	// Foregrount color for pressed buttons.
+	Color pressedColor;
 	// Outline color, if any.
 	Color outlineColor;
+	// Outline color for highlights, if any.
+	Color highlightColor;
 	// Text color.
 	Color textColor;
 	
@@ -48,9 +52,9 @@ struct Theme {
 	float fontSize;
 };
 
-// Global theme setting.
+// Get the global theme setting.
 Theme *getTheme();
-// Global theme setting.
+// Update the global theme setting.
 void setTheme(Theme newTheme);
 
 // A list of common inputs that GUI responds to.
