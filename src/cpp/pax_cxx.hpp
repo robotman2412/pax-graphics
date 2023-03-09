@@ -82,6 +82,11 @@ class Shader {
 		// Deletion operator.
 		~Shader();
 		
+		// Update shader context.
+		void setContext(void *in);
+		// Retrieve shader context.
+		void *getContext();
+		
 		// Apply this shader to a pixel.
 		Color apply(Color tint, int x, int y, float u, float v);
 		// Get a shader object for using in C PAX APIs.

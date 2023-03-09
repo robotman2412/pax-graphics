@@ -63,7 +63,7 @@ enum FocusState {
 	NONE,
 	// This element is highlighted.
 	HIGHLIGHTED,
-	// This element is highlighted, focussed.
+	// This element is focussed (previously received button press).
 	FOCUSSED,
 	// This element is focussed, capturing navigation inputs.
 	CAPTURED,
@@ -74,7 +74,7 @@ enum FocusState {
 // A list of common inputs that GUI responds to.
 enum InputButton {
 	// Use when you don't know what button it is.
-	UNKNOWN,
+	UNKNOWN = 0,
 	// Directional inputs.
 	UP, DOWN, LEFT, RIGHT, CENTER,
 	// Navigation inputs.
@@ -83,7 +83,7 @@ enum InputButton {
 	TYPE, BACKSPACE, DELETE, SHIFT,
 };
 
-// A base class for elements that respond to inputs.
+// A base class for things that respond to inputs.
 class InputAcceptor {
 	public:
 		// This is required to allow subclasses with virtuals.
@@ -100,9 +100,20 @@ class InputAcceptor {
 		}
 };
 
+// A base class for things that update periodically.
+class Active {
+	public:
+		// This is required to allow subclasses with virtuals.
+		virtual ~Active() = default;
+		
+		// Callback to run every so often.
+		// Returns true if the object has to be redrawn.
+		virtual bool tick(uint64_t millis, uint64_t deltaMillis) { return false; }
+};
+
 // A base class for all GUI elements.
 // This base class has stubs for all virtual methods.
-class Element: public InputAcceptor {
+class Element: public InputAcceptor, public Active {
 	public:
 		// Assigned position and size.
 		Rectf bounds;

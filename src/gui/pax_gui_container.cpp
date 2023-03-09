@@ -63,11 +63,18 @@ bool Container::selectChild(std::shared_ptr<Element> child) {
 // Obtain the index of a selected child, if any.
 // Returns -1 when not selected.
 int Container::selectedIndex() {
+	if (selectedChild >= children.size()) {
+		selectedChild = -1;
+	}
 	return selectedChild;
 }
 
 // Obtain the pointer of a selected child, if any.
 std::shared_ptr<Element> Container::selectedElement() {
+	if (selectedChild >= children.size()) {
+		selectedChild = -1;
+		return nullptr;
+	}
 	if (selectedChild >= 0) return children[selectedChild];
 	else return nullptr;
 }

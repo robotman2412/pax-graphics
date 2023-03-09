@@ -29,7 +29,7 @@ namespace pax::gui {
 // Theme storage object.
 Theme theme = {
 	// Background color of the canvas, if any.
-	.backgroundColor = 0x00000000,
+	.backgroundColor = 0xffffffff,
 	// Foreground color.
 	.foregroundColor = 0xffffffff,
 	// Foregrount color for pressed buttons.

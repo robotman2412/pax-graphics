@@ -106,6 +106,22 @@ Shader &Shader::operator=(const Shader &&other) {
 Shader::~Shader() {
 	isCxx  = false;
 	active = false;
+	pax_join();
+}
+
+
+// Update shader context.
+void Shader::setContext(void *in) {
+	if (!active) return;
+	else if (isCxx) cxxShaderCtx.args = in;
+	else internal.callback_args = in;
+}
+
+// Retrieve shader context.
+void *Shader::getContext() {
+	if (!active) return nullptr;
+	else if (isCxx) return cxxShaderCtx.args;
+	else return internal.callback_args;
 }
 
 

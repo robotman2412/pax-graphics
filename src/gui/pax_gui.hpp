@@ -27,14 +27,14 @@
 
 #include <pax_gfx.h>
 
-#ifdef __cplusplus
+#ifndef __cplusplus
+#error "pax_gui is a C++ library, included from a C translation unit"
+#endif // __cplusplus
 
 #include <pax_gui_base.hpp>
 #include <pax_gui_colpicker.hpp>
 #include <pax_gui_container.hpp>
 #include <pax_gui_button.hpp>
 #include <pax_gui_label.hpp>
-
-#endif // __cplusplus
 
 #endif // PAX_GUI_HPP
