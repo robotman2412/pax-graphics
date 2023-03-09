@@ -35,18 +35,19 @@
 #define PAX_CXX_Vecf_union struct
 #endif
 
-typedef PAX_CXX_Vecf_union  pax_vec1  pax_vec1_t;
-typedef PAX_CXX_Vecf_union  pax_vec2  pax_vec2_t;
-typedef PAX_CXX_Vecf_union  pax_vec3  pax_vec3_t;
-typedef PAX_CXX_Vecf_union  pax_vec4  pax_vec4_t;
-typedef PAX_CXX_Vecf_union  pax_vec1  pax_vec2f;
-typedef PAX_CXX_Vecf_union  pax_vec2  pax_2vec2f;
-typedef PAX_CXX_Vecf_union  pax_vec3  pax_3vec2f;
-typedef PAX_CXX_Vecf_union  pax_vec4  pax_4vec2f;
-typedef PAX_CXX_Vecf_union  pax_vec2  pax_line_t;
-typedef PAX_CXX_Vecf_union  pax_vec3  pax_tri_t;
-typedef PAX_CXX_Vecf_union  pax_vec4  pax_quad_t;
-typedef PAX_CXX_Vecf_union  pax_rect  pax_rect_t;
+typedef PAX_CXX_Vecf_union struct_pax_1vec2f pax_vec1_t;
+typedef PAX_CXX_Vecf_union struct_pax_2vec2f pax_vec2_t;
+typedef PAX_CXX_Vecf_union struct_pax_3vec2f pax_vec3_t;
+typedef PAX_CXX_Vecf_union struct_pax_4vec2f pax_vec4_t;
+typedef PAX_CXX_Vecf_union struct_pax_1vec2f pax_vec2f;
+typedef PAX_CXX_Vecf_union struct_pax_1vec2f pax_1vec2f;
+typedef PAX_CXX_Vecf_union struct_pax_2vec2f pax_2vec2f;
+typedef PAX_CXX_Vecf_union struct_pax_3vec2f pax_3vec2f;
+typedef PAX_CXX_Vecf_union struct_pax_4vec2f pax_4vec2f;
+typedef PAX_CXX_Vecf_union struct_pax_2vec2f pax_line_t;
+typedef PAX_CXX_Vecf_union struct_pax_3vec2f pax_tri_t;
+typedef PAX_CXX_Vecf_union struct_pax_4vec2f pax_quad_t;
+typedef PAX_CXX_Vecf_union pax_rect pax_rect_t;
 typedef union  matrix_2d matrix_2d_t;
 typedef struct matrix_stack_2d matrix_stack_2d_t;
 
@@ -56,14 +57,14 @@ typedef struct matrix_stack_2d matrix_stack_2d_t;
 
 namespace pax {
 
-typedef union  pax_vec1 Vec2f;
-typedef union  pax_vec2 BiVec2f;
-typedef union  pax_vec3 TriVec2f;
-typedef union  pax_vec4 QuadVec2f;
-typedef union  pax_vec1 Pointf;
-typedef union  pax_vec2 Linef;
-typedef union  pax_vec3 Trif;
-typedef union  pax_vec4 Quadf;
+typedef union  struct_pax_1vec2f Vec2f;
+typedef union  struct_pax_2vec2f BiVec2f;
+typedef union  struct_pax_3vec2f TriVec2f;
+typedef union  struct_pax_4vec2f QuadVec2f;
+typedef union  struct_pax_1vec2f Pointf;
+typedef union  struct_pax_2vec2f Linef;
+typedef union  struct_pax_3vec2f Trif;
+typedef union  struct_pax_4vec2f Quadf;
 typedef union  pax_rect Rectf;
 typedef union  matrix_2d Matrix2f;
 typedef struct matrix_stack_2d Matrix2fStack;
@@ -166,7 +167,7 @@ typedef struct matrix_stack_2d Matrix2fStack;
 
 #endif //__cplusplus
 
-PAX_CXX_Vecf_union  pax_vec1 {
+PAX_CXX_Vecf_union  struct_pax_1vec2f {
 #ifdef __cplusplus
 	struct {
 #endif
@@ -199,7 +200,7 @@ PAX_CXX_Vecf_union  pax_vec1 {
 #endif //__cplusplus
 };
 
-PAX_CXX_Vecf_union  pax_vec2 {
+PAX_CXX_Vecf_union  struct_pax_2vec2f {
 #ifdef __cplusplus
 	struct {
 #endif
@@ -218,7 +219,7 @@ PAX_CXX_Vecf_union  pax_vec2 {
 	// Initialise from initialiser list.
 	pax_vec2(std::initializer_list<float> list) { assert(list.size()==sizeof(arr)/sizeof(float)); std::copy(list.begin(), list.end(), arr); }
 	// Initialise as copy.
-	pax_vec2(const pax_vec2 &) = default;
+	pax_vec2(const struct_pax_2vec2f &) = default;
 	
 	PAX_CXX_Vec2f_INDEX()
 	PAX_CXX_Vecf_AVERAGE()
@@ -226,7 +227,7 @@ PAX_CXX_Vecf_union  pax_vec2 {
 #endif //__cplusplus
 };
 
-PAX_CXX_Vecf_union  pax_vec3 {
+PAX_CXX_Vecf_union  struct_pax_3vec2f {
 #ifdef __cplusplus
 	struct {
 #endif
@@ -245,7 +246,7 @@ PAX_CXX_Vecf_union  pax_vec3 {
 	// Initialise from initialiser list.
 	pax_vec3(std::initializer_list<float> list) { assert(list.size()==sizeof(arr)/sizeof(float)); std::copy(list.begin(), list.end(), arr); }
 	// Initialise as copy.
-	pax_vec3(const pax_vec3 &) = default;
+	pax_vec3(const struct_pax_3vec2f &) = default;
 	
 	// Operator []
 	PAX_CXX_Vec2f_INDEX()
@@ -254,7 +255,7 @@ PAX_CXX_Vecf_union  pax_vec3 {
 #endif //__cplusplus
 };
 
-PAX_CXX_Vecf_union  pax_vec4 {
+PAX_CXX_Vecf_union  struct_pax_4vec2f {
 #ifdef __cplusplus
 	struct {
 #endif
@@ -273,7 +274,7 @@ PAX_CXX_Vecf_union  pax_vec4 {
 	// Initialise from initialiser list.
 	pax_vec4(std::initializer_list<float> list) { assert(list.size()==sizeof(arr)/sizeof(float)); std::copy(list.begin(), list.end(), arr); }
 	// Initialise as copy.
-	pax_vec4(const pax_vec4 &) = default;
+	pax_vec4(const struct_pax_4vec2f &) = default;
 	
 	// Operator []
 	PAX_CXX_Vec2f_INDEX()
@@ -448,7 +449,7 @@ void        matrix_2d_transform   (matrix_2d_t a, float *x, float *y);
 
 // 2D vector: unifies a given vector (it's magnitude will be 1).
 // Does not work for vectors with all zero.
-pax_vec1_t  vec1_unify            (pax_vec1_t vec);
+pax_vec2f   vec1_unify            (pax_vec2f vec);
 
 #ifdef __cplusplus
 } // extern "C"
