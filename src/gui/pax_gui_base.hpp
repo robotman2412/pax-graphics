@@ -48,6 +48,11 @@ struct Theme {
 	float fontSize;
 };
 
+// Global theme setting.
+Theme *getTheme();
+// Global theme setting.
+void setTheme(Theme newTheme);
+
 // A list of common inputs that GUI responds to.
 enum InputButton {
 	// Use when you don't know what button it is.
