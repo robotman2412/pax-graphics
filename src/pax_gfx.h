@@ -113,10 +113,25 @@ static inline pax_col_t pax_col_rgb(uint8_t r, uint8_t g, uint8_t b) {
 static inline pax_col_t pax_col_argb(uint8_t a, uint8_t r, uint8_t g, uint8_t b) {
 	return (a << 24) | (r << 16) | (g << 8) | b;
 }
-// Converts HSV to RGB.
+
+// Converts HSV to RGB, ranges are 0-255.
 pax_col_t pax_col_hsv             (uint8_t h, uint8_t s, uint8_t v);
-// Converts AHSV to ARGB.
+// Converts AHSV to ARGB, ranges are 0-255.
 pax_col_t pax_col_ahsv            (uint8_t a, uint8_t h, uint8_t s, uint8_t v);
+// Converts HSV to RGB, ranges are 0-359, 0-99, 0-99.
+pax_col_t pax_col_hsv_alt         (uint16_t h, uint8_t s, uint8_t v);
+// Converts AHSV to ARGB, ranges are 0-255, 0-359, 0-99, 0-99.
+pax_col_t pax_col_ahsv_alt        (uint8_t a, uint16_t h, uint8_t s, uint8_t v);
+
+// Converts ARGB into AHSV, ranges are 0-255.
+void pax_undo_ahsv    (pax_col_t in, uint8_t *a, uint8_t *h, uint8_t *s, uint8_t *v);
+// Converts RGB into HSV, ranges are 0-255.
+void pax_undo_hsv     (pax_col_t in, uint8_t *h, uint8_t *s, uint8_t *v);
+// Converts ARGB into AHSV, ranges are 0-255, 0-359, 0-99, 0-99.
+void pax_undo_ahsv_alt(pax_col_t in, uint8_t *a, uint16_t *h, uint8_t *s, uint8_t *v);
+// Converts RGB into HSV, ranges are 0-359, 0-99, 0-99.
+void pax_undo_hsv_alt (pax_col_t in, uint16_t *h, uint8_t *s, uint8_t *v);
+
 // Linearly interpolates between from and to, including alpha.
 pax_col_t pax_col_lerp            (uint8_t part, pax_col_t from, pax_col_t to);
 // Merges the two colors, based on alpha.
