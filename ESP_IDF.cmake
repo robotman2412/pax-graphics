@@ -20,3 +20,4 @@ idf_component_register(
 	"src/fonts/font_bitmap_sairacondensed.c"
 	INCLUDE_DIRS src src/cpp
 )
+set_target_properties(${COMPONENT_LIB} PROPERTIES COMPILE_FLAGS -Wno-unused-const-variable)
