@@ -47,7 +47,7 @@ extern const uint8_t font_bitmap_raw_7x9[];
 // 8 . . . . . . .
 
 
-const uint8_t funny_thingy[] = {
+static const uint8_t funny_thingy[] = {
 	0x00,
 	0x0a,
 	0x0a,
@@ -58,7 +58,7 @@ const uint8_t funny_thingy[] = {
 	0x0e,
 };
 
-const uint8_t unfunny_thingy[] = {
+static const uint8_t unfunny_thingy[] = {
 	0x00,
 	0x3e,
 	0x00,
@@ -70,7 +70,7 @@ const uint8_t unfunny_thingy[] = {
 	0x00,
 };
 
-const pax_font_range_t font_7x9_ranges[] = {
+static const pax_font_range_t font_7x9_ranges[] = {
 	{ // Ascii range.
 		.type  = PAX_FONT_TYPE_BITMAP_MONO,
 		.start = 0x00000,
