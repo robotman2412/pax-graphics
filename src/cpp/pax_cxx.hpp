@@ -70,6 +70,14 @@ class Shader {
 		Shader(pax_shader_t *existing);
 		// Make a shader a C++ version of shader callback.
 		Shader(ShaderFunc callback, void *context);
+		// Requires explicit copy constructor.
+		Shader(const Shader &other);
+		// Requires explicit move constructor.
+		Shader(const Shader &&other);
+		// Requires explicit copy operator.
+		Shader &operator=(const Shader &other);
+		// Requires explicit move operator.
+		Shader &operator=(const Shader &&other);
 		
 		// Deletion operator.
 		~Shader();
