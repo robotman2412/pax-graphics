@@ -198,7 +198,6 @@ ColorPicker::ColorPicker(Rectf _bounds, bool _isHSV, bool _hasAlpha, Callback _o
 	hue = 0;
 	sat = 0;
 	bri = 255;
-	hasHSV = true;
 	
 	// Create child elements.
 	if (isHSV) {
@@ -264,17 +263,12 @@ ColorPicker::ColorPicker(Rectf _bounds, bool _isHSV, bool _hasAlpha, Callback _o
 void ColorPicker::setARGB(Color _rgb) {
 	if (!hasAlpha) rgb = _rgb | 0xff000000;
 	else rgb = _rgb;
-	if (isHSV) {
-		// TODO: Do RGB to HSV.
-	} else {
-		hasHSV = false;
-	}
+	undo_hsv(rgb, hue, sat, bri);
 	onChangeInt();
 }
 
 // Set color from HSV (updates alpha).
 void ColorPicker::setAHSV(uint8_t _alpha, uint8_t _hue, uint8_t _sat, uint8_t _bri) {
-	hasHSV = true;
 	if (hasAlpha) alpha = _alpha;
 	hue = _hue;
 	sat = _sat;
@@ -286,12 +280,12 @@ void ColorPicker::setAHSV(uint8_t _alpha, uint8_t _hue, uint8_t _sat, uint8_t _b
 // Set color from RGB (preserves alpha).
 void ColorPicker::setRGB(Color _rgb) {
 	rgb = (_rgb & 0x00ffffff) | (alpha << 24);
+	undo_hsv(rgb, hue, sat, bri);
 	onChangeInt();
 }
 
 // Set color from HSV (preserves alpha).
 void ColorPicker::setHSV(uint8_t _hue, uint8_t _sat, uint8_t _bri) {
-	hasHSV = true;
 	hue = _hue;
 	sat = _sat;
 	bri = _bri;
@@ -309,9 +303,6 @@ void ColorPicker::setAlpha(uint8_t _alpha) {
 
 // Get HSV values.
 void ColorPicker::getHSV(uint8_t &hue_out, uint8_t &sat_out, uint8_t &bri_out) {
-	if (!hasHSV) {
-		// TODO: Do RGB to HSV.
-	}
 	hue_out = hue;
 	sat_out = sat;
 	bri_out = bri;

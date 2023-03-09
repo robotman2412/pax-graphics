@@ -118,16 +118,14 @@ class ColorPicker: public Container {
 				uint8_t green;
 				// Current red value.
 				uint8_t red;
-				// Current alpha value, if applicable.
+				// Current alpha value (alpha == 255 if hasAlpha == false).
 				uint8_t alpha;
 			};
 		};
-		// Current HSV, if applicable.
+		// Current HSV.
 		uint8_t hue, sat, bri;
 		// Is this an HSV-type color picker?
 		bool isHSV;
-		// Does the color currently have an HSV value?
-		bool hasHSV;
 		// Does this color picker have an alpha slider?
 		bool hasAlpha;
 		// Used to track changing of the values.
