@@ -28,7 +28,7 @@ namespace pax::gui {
 
 // Make a box with given bounds and type.
 GradientBox::GradientBox(Rectf bounds, Type type):
-	Element(bounds), dummy(0) {
+	Element(bounds.round()), dummy(0) {
 	
 	setType(type);
 	hLine = -100;
@@ -189,7 +189,7 @@ void ColorPicker::onChangeInt() {
 
 // Make a new color picker.
 ColorPicker::ColorPicker(Rectf _bounds, bool _isHSV, bool _hasAlpha, Callback _onChange):
-	Container(_bounds), isHSV(_isHSV), hasAlpha(_hasAlpha), onChange(_onChange) {
+	Container(_bounds.round()), isHSV(_isHSV), hasAlpha(_hasAlpha), onChange(_onChange) {
 	background = 0x00000000;
 	
 	// Set default color (opaque white).
