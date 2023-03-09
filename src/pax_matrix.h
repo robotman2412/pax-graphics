@@ -309,7 +309,12 @@ PAX_CXX_Vecf_union  pax_rect {
 	PAX_CXX_Vec2f_INDEX()
 	
 	pax::Rectf round() const {
-		return pax::Rectf{ (int) (x+0.5), (int) (y+0.5), (int) (w+0.5), (int) (h+0.5) };
+		return pax::Rectf{
+			(float) (int) (x+0.5),
+			(float) (int) (y+0.5),
+			(float) (int) (w+0.5),
+			(float) (int) (h+0.5)
+		};
 	}
 	
 	// Get average position, i.e. center, of the rectangle.
