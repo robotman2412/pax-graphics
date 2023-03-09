@@ -388,7 +388,7 @@ If this number is 0, the font's default size is used.
 You can also calculate the size of a given string with [`pax_text_size`](text.md#text-size):
 ```c
 // Get the size of some text.
-pax_vec1_t size = pax_text_size(font, font_size, text);
+pax_vec2f size = pax_text_size(font, font_size, text);
 float text_width  = size.x;
 float text_height = size.y;
 ```

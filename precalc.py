@@ -7,7 +7,7 @@ def precalcCircle(fd, resolution, id):
 	
 	# Precalculate points.
 	fd.write("// Circle: " + str(resolution) + " segments\n")
-	fd.write("const pax_vec1_t pax_precalc_" + id + "[" + str(resolution + 1) + "] = {\n")
+	fd.write("const pax_vec2f pax_precalc_" + id + "[" + str(resolution + 1) + "] = {\n")
 	for i in range(resolution + 1):
 		angle = i * delta
 		fd.write("\t{" + str(math.cos(angle)) + ", " + str(math.sin(angle)) + "},\n")
