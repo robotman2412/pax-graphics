@@ -46,7 +46,7 @@ typedef std::function<Color(Color existing, Color tint, int x, int y, float u, f
 
 // A helper data structure for C++ shaders.
 typedef struct {
-	ShaderFunc *callback;
+	std::shared_ptr<ShaderFunc> callback;
 	void *args;
 } ShaderContent;
 

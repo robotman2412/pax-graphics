@@ -51,7 +51,7 @@ Shader::Shader(pax_shader_t *existing) {
 
 // Make a shader a C++ version of shader callback.
 Shader::Shader(ShaderFunc callback, void *args) {
-	cxxShaderCtx.callback = new ShaderFunc(callback);
+	cxxShaderCtx.callback = std::make_shared<ShaderFunc>(std::move(callback));
 	cxxShaderCtx.args     = args;
 	internal    = (pax_shader_t) {
 		.schema_version    = (uint8_t)  1,
@@ -70,7 +70,6 @@ Shader::Shader(ShaderFunc callback, void *args) {
 
 // Deletion operator.
 Shader::~Shader() {
-	if (isCxx && cxxShaderCtx.callback) delete cxxShaderCtx.callback;
 	isCxx  = false;
 	active = false;
 }
