@@ -205,6 +205,8 @@ Buffer& Buffer::operator=(Buffer &&other) {
 	// Set other buffer to be empty.
 	other.deleteInternal = false;
 	other.internal       = NULL;
+	
+	return *this;
 }
 
 
@@ -556,7 +558,7 @@ void Buffer::noClip() {
 
 // Obtain a copy of the current clip rect.
 Rectf Buffer::getClip() {
-	GENERIC_VALIDITY_CHECK()
+	GENERIC_VALIDITY_CHECK(Rectf())
 	return internal->clip;
 }
 
