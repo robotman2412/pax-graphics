@@ -180,13 +180,13 @@ PAX_CXX_Vecf_union  struct_pax_1vec2f {
 	
 #ifdef __cplusplus
 	// Initialise to zero.
-	pax_vec1() {x=y=0;}
+	struct_pax_1vec2f() {x=y=0;}
 	// Initialise with value.
-	pax_vec1(float _x, float _y) {x=_x; y=_y;}
+	struct_pax_1vec2f(float _x, float _y) {x=_x; y=_y;}
 	// Initialise from initialiser list.
-	pax_vec1(std::initializer_list<float> list) { assert(list.size()==sizeof(arr)/sizeof(float)); std::copy(list.begin(), list.end(), arr); }
+	struct_pax_1vec2f(std::initializer_list<float> list) { assert(list.size()==sizeof(arr)/sizeof(float)); std::copy(list.begin(), list.end(), arr); }
 	// Initialise as copy.
-	pax_vec1(const pax::Vec2f &) = default;
+	struct_pax_1vec2f(const pax::Vec2f &) = default;
 	
 	PAX_CXX_Vecf_OPERATORS(pax::Vec2f)
 	
@@ -213,13 +213,13 @@ PAX_CXX_Vecf_union  struct_pax_2vec2f {
 	
 #ifdef __cplusplus
 	// Initialise to zero.
-	pax_vec2() {x0=y0=x1=y1=0;}
+	struct_pax_2vec2f() {x0=y0=x1=y1=0;}
 	// Initialise with value.
-	pax_vec2(float _x0, float _y0, float _x1, float _y1) {x0=_x0; y0=_y0; x1=_x1; y1=_y1;}
+	struct_pax_2vec2f(float _x0, float _y0, float _x1, float _y1) {x0=_x0; y0=_y0; x1=_x1; y1=_y1;}
 	// Initialise from initialiser list.
-	pax_vec2(std::initializer_list<float> list) { assert(list.size()==sizeof(arr)/sizeof(float)); std::copy(list.begin(), list.end(), arr); }
+	struct_pax_2vec2f(std::initializer_list<float> list) { assert(list.size()==sizeof(arr)/sizeof(float)); std::copy(list.begin(), list.end(), arr); }
 	// Initialise as copy.
-	pax_vec2(const struct_pax_2vec2f &) = default;
+	struct_pax_2vec2f(const struct_pax_2vec2f &) = default;
 	
 	PAX_CXX_Vec2f_INDEX()
 	PAX_CXX_Vecf_AVERAGE()
@@ -240,13 +240,13 @@ PAX_CXX_Vecf_union  struct_pax_3vec2f {
 	
 #ifdef __cplusplus
 	// Initialise to zero.
-	pax_vec3() {x0=y0=x1=y1=x2=y2=0;}
+	struct_pax_3vec2f() {x0=y0=x1=y1=x2=y2=0;}
 	// Initialise with value.
-	pax_vec3(float _x0, float _y0, float _x1, float _y1, float _x2, float _y2) {x0=_x0; y0=_y0; x1=_x1; y1=_y1; x2=_x2; y2=_y2;}
+	struct_pax_3vec2f(float _x0, float _y0, float _x1, float _y1, float _x2, float _y2) {x0=_x0; y0=_y0; x1=_x1; y1=_y1; x2=_x2; y2=_y2;}
 	// Initialise from initialiser list.
-	pax_vec3(std::initializer_list<float> list) { assert(list.size()==sizeof(arr)/sizeof(float)); std::copy(list.begin(), list.end(), arr); }
+	struct_pax_3vec2f(std::initializer_list<float> list) { assert(list.size()==sizeof(arr)/sizeof(float)); std::copy(list.begin(), list.end(), arr); }
 	// Initialise as copy.
-	pax_vec3(const struct_pax_3vec2f &) = default;
+	struct_pax_3vec2f(const struct_pax_3vec2f &) = default;
 	
 	// Operator []
 	PAX_CXX_Vec2f_INDEX()
@@ -268,13 +268,13 @@ PAX_CXX_Vecf_union  struct_pax_4vec2f {
 	
 #ifdef __cplusplus
 	// Initialise to zero.
-	pax_vec4() {x0=y0=x1=y1=x2=y2=x3=y3=0;}
+	struct_pax_4vec2f() {x0=y0=x1=y1=x2=y2=x3=y3=0;}
 	// Initialise with value.
-	pax_vec4(float _x0, float _y0, float _x1, float _y1, float _x2, float _y2, float _x3, float _y3) {x0=_x0; y0=_y0; x1=_x1; y1=_y1; x2=_x2; y2=_y2; x3=_x3; y3=_y3;}
+	struct_pax_4vec2f(float _x0, float _y0, float _x1, float _y1, float _x2, float _y2, float _x3, float _y3) {x0=_x0; y0=_y0; x1=_x1; y1=_y1; x2=_x2; y2=_y2; x3=_x3; y3=_y3;}
 	// Initialise from initialiser list.
-	pax_vec4(std::initializer_list<float> list) { assert(list.size()==sizeof(arr)/sizeof(float)); std::copy(list.begin(), list.end(), arr); }
+	struct_pax_4vec2f(std::initializer_list<float> list) { assert(list.size()==sizeof(arr)/sizeof(float)); std::copy(list.begin(), list.end(), arr); }
 	// Initialise as copy.
-	pax_vec4(const struct_pax_4vec2f &) = default;
+	struct_pax_4vec2f(const struct_pax_4vec2f &) = default;
 	
 	// Operator []
 	PAX_CXX_Vec2f_INDEX()
