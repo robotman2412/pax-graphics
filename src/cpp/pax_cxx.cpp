@@ -269,6 +269,8 @@ Buffer Buffer::clone() {
 			break;
 		}
 	}
+	
+	return out;
 }
 
 
