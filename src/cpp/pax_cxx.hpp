@@ -115,10 +115,25 @@ class Buffer {
 		// Make a wrapper of a new buffer, with preallocated memory.
 		// This memory will not be free()d by default.
 		Buffer(void *preallocated, int width, int height, pax_buf_type_t type);
+		
+		// Buffer is not implicitly copyable.
+		Buffer(Buffer &) = delete;
+		// Buffer is not trivially movable.
+		Buffer(Buffer &&);
+		// Buffer is not implicitly copyable.
+		Buffer& operator=(Buffer &) = delete;
+		// Buffer is not trivially movable.
+		Buffer& operator=(Buffer &&);
+		
+		// Get an explicit copy-by-value of this buffer.
+		Buffer clone();
+		
 		// Enable reversed endianness mode.
 		// This causes endiannes to be internally stored as reverse of native.
 		// This operation does not update data stored in the buffer; it will become invalid.
 		void reverseEndianness(bool reversed);
+		// Tells whether the endianness has been reversed.
+		bool isReverseEndianness();
 		// Get a pointer to the underlying C API pax_buf_t*.
 		// Note: Doing so is less memory safe than to use the C++ API, but still compatible.
 		pax_buf_t *getInternal();
@@ -211,28 +226,16 @@ class Buffer {
 		// Outlines an arbitrary shape.
 		void outline(float x, float y, Shape &shape);
 		// Outlines an arbitrary shape.
-		void outline(float x, float y, Shape *shape);
-		// Outlines an arbitrary shape.
 		void outline(Color color, float x, float y, Shape &shape);
 		// Outlines an arbitrary shape.
-		void outline(Color color, float x, float y, Shape *shape);
-		// Outlines an arbitrary shape.
 		void outline(Color color, Shader *shader, float x, float y, Shape &shape);
-		// Outlines an arbitrary shape.
-		void outline(Color color, Shader *shader, float x, float y, Shape *shape);
 		
 		// Draws an arbitrary shape.
 		void draw(float x, float y, Shape &shape);
 		// Draws an arbitrary shape.
-		void draw(float x, float y, Shape *shape);
-		// Draws an arbitrary shape.
 		void draw(Color color, float x, float y, Shape &shape);
 		// Draws an arbitrary shape.
-		void draw(Color color, float x, float y, Shape *shape);
-		// Draws an arbitrary shape.
 		void draw(Color color, Shader *shader, float x, float y, Shape &shape);
-		// Draws an arbitrary shape.
-		void draw(Color color, Shader *shader, float x, float y, Shape *shape);
 		
 		// Draws an image stored in another buffer.
 		void drawImage(pax_buf_t *image, float x, float y);
@@ -313,6 +316,8 @@ class Buffer {
 		// Disable clipping.
 		// Any effects of previous clip calls are nullified.
 		void noClip();
+		// Obtain a copy of the current clip rect.
+		Rectf getClip();
 };
 
 /* ============ COLORS =========== */

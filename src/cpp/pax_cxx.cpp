@@ -24,6 +24,7 @@
 
 #include "pax_cxx.hpp"
 #include "pax_gfx.h"
+#include <string.h>
 
 namespace pax {
 
@@ -169,11 +170,100 @@ Buffer::Buffer(void *preallocated, int width, int height, pax_buf_type_t type) {
 	lineColor      = 0xffffffff;
 }
 
+
+// Buffer is not trivially movable.
+Buffer::Buffer(Buffer &&other) {
+	// Take values from other buffer.
+	deleteInternal = other.deleteInternal;
+	internal       = other.internal;
+	fillColor      = other.fillColor;
+	lineColor      = other.lineColor;
+	
+	// Set other buffer to be empty.
+	other.deleteInternal = false;
+	other.internal       = NULL;
+}
+
+// Buffer is not trivially movable.
+Buffer& Buffer::operator=(Buffer &&other) {
+	// Delete internal buffer, if applicable.
+	if (deleteInternal) {
+		pax_buf_destroy(internal);
+		delete internal;
+	}
+	
+	// Set to safe default.
+	internal       = NULL;
+	deleteInternal = false;
+	
+	// Take values from other buffer.
+	deleteInternal = other.deleteInternal;
+	internal       = other.internal;
+	fillColor      = other.fillColor;
+	lineColor      = other.lineColor;
+	
+	// Set other buffer to be empty.
+	other.deleteInternal = false;
+	other.internal       = NULL;
+}
+
+
+// Get an explicit copy-by-value of this buffer.
+Buffer Buffer::clone() {
+	if (!internal) return Buffer();
+	
+	// Create a buffer large enough to house the thing.
+	Buffer out(internal->width, internal->height, internal->type);
+	out.internal->reverse_endianness = internal->reverse_endianness;
+	
+	// Copy in pixel data.
+	size_t cap = (PAX_GET_BPP(internal->type) * internal->width * internal->height + 7) >> 3;
+	memcpy(out.getPixelBuffer(), getPixelBuffer(), cap);
+	
+	// Copy palette.
+	if (internal->pallette) {
+		size_t pal_cap = sizeof(Color) * internal->pallette_size;
+		out.internal->pallette_size = internal->pallette_size;
+		out.internal->pallette = (Color *) malloc(pal_cap);
+		out.internal->do_free_pal = true;
+		memcpy(out.internal->pallette, internal->pallette, pal_cap);
+	}
+	
+	// Copy dirty rect.
+	out.internal->dirty_x0 = internal->dirty_x0;
+	out.internal->dirty_y0 = internal->dirty_y0;
+	out.internal->dirty_x1 = internal->dirty_x1;
+	out.internal->dirty_y1 = internal->dirty_y1;
+	
+	// Copy clip rect.
+	out.internal->clip = internal->clip;
+	
+	// Copy matrix stack.
+	auto cur_in  = &internal->stack_2d;
+	auto cur_out = &out.internal->stack_2d;
+	while (1) {
+		*cur_out = *cur_in;
+		if (cur_in->parent) {
+			cur_out->parent = (matrix_stack_2d_t *) malloc(sizeof(matrix_stack_2d_t));
+			cur_out = cur_out->parent;
+			cur_in  = cur_in->parent;
+		} else {
+			break;
+		}
+	}
+}
+
+
 // Enable reversed endianness mode.
 // This causes endiannes to be internally stored as reverse of native.
 // This operation does not update data stored in the buffer; it will become invalid.
 void Buffer::reverseEndianness(bool reversed) {
 	if (internal) pax_buf_reversed(internal, reversed);
+}
+
+// Tells whether the endianness has been reversed.
+bool Buffer::isReverseEndianness() {
+	return internal && internal->reverse_endianness;
 }
 
 // Get a pointer to the underlying C API pax_buf_t*.
@@ -187,6 +277,7 @@ pax_buf_t *Buffer::getInternal() {
 void *Buffer::getPixelBuffer() {
 	return internal ? internal->buf : NULL;
 }
+
 
 // Deletion operator.
 Buffer::~Buffer() {
@@ -270,43 +361,27 @@ void Buffer::drawLine(Color color, float x0, float y0, float x1, float y1) {
 }
 
 // Outlines an arbitrary shape.
-void Buffer::outline(float x, float y, Shape &shape) { outline(lineColor, NULL, x, y, &shape); }
+void Buffer::outline(float x, float y, Shape &shape) { outline(lineColor, NULL, x, y, shape); }
 // Outlines an arbitrary shape.
-void Buffer::outline(float x, float y, Shape *shape) { outline(lineColor, NULL, x, y, shape); }
+void Buffer::outline(Color color, float x, float y, Shape &shape) { outline(color, NULL, x, y, shape); }
 // Outlines an arbitrary shape.
-void Buffer::outline(Color color, float x, float y, Shape &shape) { outline(color, NULL, x, y, &shape); }
-// Outlines an arbitrary shape.
-void Buffer::outline(Color color, float x, float y, Shape *shape) { outline(color, NULL, x, y, shape); }
-// Outlines an arbitrary shape.
-void Buffer::outline(Color color, Shader *shader, float x, float y, Shape &shape) { outline(color, shader, x, y, &shape); }
-// Outlines an arbitrary shape.
-void Buffer::outline(Color color, Shader *shader, float x, float y, Shape *shape) {
-	if (shape) {
-		pax_push_2d(internal);
-		pax_apply_2d(internal, matrix_2d_translate(x, y));
-		shape->_int_draw(internal, color, shader ? shader->getInternal() : NULL, true);
-		pax_pop_2d(internal);
-	}
+void Buffer::outline(Color color, Shader *shader, float x, float y, Shape &shape) {
+	pax_push_2d(internal);
+	pax_apply_2d(internal, matrix_2d_translate(x, y));
+	shape._int_draw(internal, color, shader ? shader->getInternal() : NULL, true);
+	pax_pop_2d(internal);
 }
 
 // Draws an arbitrary shape.
-void Buffer::draw(float x, float y, Shape &shape) { draw(fillColor, NULL, x, y, &shape); }
+void Buffer::draw(float x, float y, Shape &shape) { draw(fillColor, NULL, x, y, shape); }
 // Draws an arbitrary shape.
-void Buffer::draw(float x, float y, Shape *shape) { draw(fillColor, NULL, x, y, shape); }
+void Buffer::draw(Color color, float x, float y, Shape &shape) { draw(color, NULL, x, y, shape); }
 // Draws an arbitrary shape.
-void Buffer::draw(Color color, float x, float y, Shape &shape) { draw(color, NULL, x, y, &shape); }
-// Draws an arbitrary shape.
-void Buffer::draw(Color color, float x, float y, Shape *shape) { draw(color, NULL, x, y, shape); }
-// Draws an arbitrary shape.
-void Buffer::draw(Color color, Shader *shader, float x, float y, Shape &shape) { draw(color, shader, x, y, &shape); }
-// Draws an arbitrary shape.
-void Buffer::draw(Color color, Shader *shader, float x, float y, Shape *shape) {
-	if (shape) {
-		pax_push_2d(internal);
-		pax_apply_2d(internal, matrix_2d_translate(x, y));
-		shape->_int_draw(internal, color, shader ? shader->getInternal() : NULL, false);
-		pax_pop_2d(internal);
-	}
+void Buffer::draw(Color color, Shader *shader, float x, float y, Shape &shape) {
+	pax_push_2d(internal);
+	pax_apply_2d(internal, matrix_2d_translate(x, y));
+	shape._int_draw(internal, color, shader ? shader->getInternal() : NULL, false);
+	pax_pop_2d(internal);
 }
 
 // Draws an image stored in another buffer.
@@ -471,6 +546,7 @@ void Buffer::clip(int x, int y, int width, int height) {
 	GENERIC_VALIDITY_CHECK()
 	pax_clip(internal, x, y, width, height);
 }
+
 // Disable clipping.
 // Any effects of previous clip calls are nullified.
 void Buffer::noClip() {
@@ -478,6 +554,11 @@ void Buffer::noClip() {
 	pax_noclip(internal);
 }
 
+// Obtain a copy of the current clip rect.
+Rectf Buffer::getClip() {
+	GENERIC_VALIDITY_CHECK()
+	return internal->clip;
+}
 
 
 // A linear interpolation based only on ints.
