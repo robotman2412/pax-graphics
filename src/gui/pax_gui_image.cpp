@@ -31,12 +31,12 @@ Image::Image() {}
 
 // Make an image from existing buffer data.
 Image::Image(std::shared_ptr<Buffer> _data):
-	Element({0, 0, _data->width(), _data->height()}),
+	Element({0, 0, _data->widthf(), _data->heightf()}),
 	data(std::move(_data)) {}
 
 // Make an image from existing buffer data.
 Image::Image(Vec2f pos, std::shared_ptr<Buffer> _data):
-	Element({pos.x, pos.y, _data->width(), _data->height()}),
+	Element({pos.x, pos.y, _data->widthf(), _data->heightf()}),
 	data(std::move(_data)) {}
 
 // Make an image from existing buffer data.
