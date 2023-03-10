@@ -133,6 +133,10 @@ class Buffer {
 		int width();
 		// Get the height, in pixels, of the buffer.
 		int height();
+		// Get the width, in pixels, of the buffer.
+		float widthf() { return (float) width(); }
+		// Get the height, in pixels, of the buffer.
+		float heightf() { return (float) height(); }
 		// Get the type of the buffer.
 		pax_buf_type_t type();
 		
