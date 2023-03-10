@@ -21,6 +21,7 @@ add_library(pax_graphics
 	"src/gui/pax_gui_button.cpp"
 	"src/gui/pax_gui_colpicker.cpp"
 	"src/gui/pax_gui_container.cpp"
+	"src/gui/pax_gui_image.cpp"
 	"src/gui/pax_gui_label.cpp"
 
 	"src/pax_matrix.c"
