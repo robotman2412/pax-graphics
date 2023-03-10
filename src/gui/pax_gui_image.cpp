@@ -30,17 +30,17 @@ namespace pax::gui {
 Image::Image() {}
 
 // Make an image from existing buffer data.
-Image::Image(std::shared_ptr<Buffer> data):
-	Element({0, 0, data->width(), data->height()}),
+Image::Image(std::shared_ptr<Buffer> _data):
+	Element({0, 0, _data->width(), _data->height()}),
 	data(std::move(_data)) {}
 
 // Make an image from existing buffer data.
-Image::Image(Vec2f pos, std::shared_ptr<Buffer> data):
-	Element({pos.x, pos.y, data->width(), data->height()}),
+Image::Image(Vec2f pos, std::shared_ptr<Buffer> _data):
+	Element({pos.x, pos.y, _data->width(), _data->height()}),
 	data(std::move(_data)) {}
 
 // Make an image from existing buffer data.
-Image::Image(Rectf bounds, std::shared_ptr<Buffer> data)
+Image::Image(Rectf bounds, std::shared_ptr<Buffer> _data):
 	Element(bounds),
 	data(std::move(_data)) {}
 
