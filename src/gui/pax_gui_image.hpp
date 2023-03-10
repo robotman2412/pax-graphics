@@ -51,6 +51,12 @@ class Image: public Element {
 		Image(Vec2f pos, std::shared_ptr<Buffer> data);
 		// Make an image from existing buffer data.
 		Image(Rectf bounds, std::shared_ptr<Buffer> data);
+		// Make an image from existing buffer data.
+		Image(Buffer data);
+		// Make an image from existing buffer data.
+		Image(Vec2f pos, Buffer data);
+		// Make an image from existing buffer data.
+		Image(Rectf bounds, Buffer data);
 		
 		// Draw this element to `buf`.
 		// When selected by user interaction, `selected` is true.

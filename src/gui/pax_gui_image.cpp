@@ -44,12 +44,26 @@ Image::Image(Rectf bounds, std::shared_ptr<Buffer> _data):
 	Element(bounds),
 	data(std::move(_data)) {}
 
+// Make an image from existing buffer data.
+Image::Image(Buffer _data):
+	Element({0, 0, _data.widthf(), _data.heightf()}),
+	data(std::make_shared<Buffer>(std::move(_data))) {}
+
+// Make an image from existing buffer data.
+Image::Image(Vec2f pos, Buffer _data):
+	Element({pos.x, pos.y, _data.widthf(), _data.heightf()}),
+	data(std::make_shared<Buffer>(std::move(_data))) {}
+
+// Make an image from existing buffer data.
+Image::Image(Rectf bounds, Buffer _data):
+	Element(bounds),
+	data(std::make_shared<Buffer>(std::move(_data))) {}
 
 // Draw this element to `buf`.
 // When selected by user interaction, `selected` is true.
 void Image::draw(Buffer &buf) {
 	if (data) {
-		
+		buf.drawImage(*data, bounds.x, bounds.y, bounds.w, bounds.h);
 	}
 }
 
