@@ -656,14 +656,14 @@ pax_col_t pax_col_ahsv_alt(uint8_t a, uint16_t h, uint8_t s, uint8_t v) {
 void pax_undo_ahsv(pax_col_t in, uint8_t *a, uint8_t *h, uint8_t *s, uint8_t *v) {
 	*a = in >>24;
 	uint16_t l_h;
-	PRIVATE_pax_undo_col_hsv(in, &l_h, *s, *v);
+	PRIVATE_pax_undo_col_hsv(in, &l_h, s, v);
 	*h = (l_h + 3) / 6;
 }
 
 // Converts RGB into HSV, ranges are 0-255.
 void pax_undo_hsv(pax_col_t in, uint8_t *h, uint8_t *s, uint8_t *v) {
 	uint16_t l_h;
-	PRIVATE_pax_undo_col_hsv(in, &l_h, *s, *v);
+	PRIVATE_pax_undo_col_hsv(in, &l_h, s, v);
 	*h = (l_h + 3) / 6;
 }
 
@@ -671,7 +671,7 @@ void pax_undo_hsv(pax_col_t in, uint8_t *h, uint8_t *s, uint8_t *v) {
 void pax_undo_ahsv_alt(pax_col_t in, uint8_t *a, uint16_t *h, uint8_t *s, uint8_t *v) {
 	*a = in >>24;
 	uint16_t l_h;
-	PRIVATE_pax_undo_col_hsv(in, &l_h, *s, *v);
+	PRIVATE_pax_undo_col_hsv(in, &l_h, s, v);
 	*h = (l_h + 3) * 359 / 255 / 6;
 	*s = *s * 100 / 255;
 	*v = *v * 100 / 255;
@@ -680,7 +680,7 @@ void pax_undo_ahsv_alt(pax_col_t in, uint8_t *a, uint16_t *h, uint8_t *s, uint8_
 // Converts RGB into HSV, ranges are 0-359, 0-99, 0-99.
 void pax_undo_hsv_alt(pax_col_t in, uint16_t *h, uint8_t *s, uint8_t *v) {
 	uint16_t l_h;
-	PRIVATE_pax_undo_col_hsv(in, &l_h, *s, *v);
+	PRIVATE_pax_undo_col_hsv(in, &l_h, s, v);
 	*h = (l_h + 3) * 359 / 255 / 6;
 	*s = *s * 100 / 255;
 	*v = *v * 100 / 255;
