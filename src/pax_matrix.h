@@ -40,10 +40,15 @@ typedef PAX_CXX_Vecf_union struct_pax_1vec2f pax_vec1_t;
 typedef PAX_CXX_Vecf_union struct_pax_2vec2f pax_vec2_t;
 typedef PAX_CXX_Vecf_union struct_pax_3vec2f pax_vec3_t;
 typedef PAX_CXX_Vecf_union struct_pax_4vec2f pax_vec4_t;
+typedef PAX_CXX_Vecf_union struct_pax_2vec2f pax_line_t;
+typedef PAX_CXX_Vecf_union struct_pax_3vec2f pax_tri_t;
+typedef PAX_CXX_Vecf_union struct_pax_4vec2f pax_quad_t;
+typedef PAX_CXX_Vecf_union struct_pax_rectf pax_rect_t;
 
 /* Integer vectors. */
 typedef PAX_CXX_Vecf_union struct_pax_1vec2i pax_vec2i;
 typedef PAX_CXX_Vecf_union struct_pax_1vec2i pax_1vec2i;
+typedef PAX_CXX_Vecf_union struct_pax_recti pax_recti;
 
 /* Float vectors. */
 typedef PAX_CXX_Vecf_union struct_pax_1vec2f pax_vec2f;
@@ -51,12 +56,12 @@ typedef PAX_CXX_Vecf_union struct_pax_1vec2f pax_1vec2f;
 typedef PAX_CXX_Vecf_union struct_pax_2vec2f pax_2vec2f;
 typedef PAX_CXX_Vecf_union struct_pax_3vec2f pax_3vec2f;
 typedef PAX_CXX_Vecf_union struct_pax_4vec2f pax_4vec2f;
+typedef PAX_CXX_Vecf_union struct_pax_2vec2f pax_linef;
+typedef PAX_CXX_Vecf_union struct_pax_3vec2f pax_trif;
+typedef PAX_CXX_Vecf_union struct_pax_4vec2f pax_quadf;
+typedef PAX_CXX_Vecf_union struct_pax_rectf pax_rectf;
 
 /* Shape things. */
-typedef PAX_CXX_Vecf_union struct_pax_2vec2f pax_line_t;
-typedef PAX_CXX_Vecf_union struct_pax_3vec2f pax_tri_t;
-typedef PAX_CXX_Vecf_union struct_pax_4vec2f pax_quad_t;
-typedef PAX_CXX_Vecf_union pax_rect pax_rect_t;
 
 /* Matrix stuff. */
 typedef union  matrix_2d matrix_2d_t;
@@ -68,7 +73,6 @@ typedef struct matrix_stack_2d matrix_stack_2d_t;
 
 namespace pax {
 
-typedef union  struct_pax_1vec2i Vec2i;
 typedef union  struct_pax_1vec2f Vec2f;
 typedef union  struct_pax_2vec2f BiVec2f;
 typedef union  struct_pax_3vec2f TriVec2f;
@@ -77,7 +81,11 @@ typedef union  struct_pax_1vec2f Pointf;
 typedef union  struct_pax_2vec2f Linef;
 typedef union  struct_pax_3vec2f Trif;
 typedef union  struct_pax_4vec2f Quadf;
-typedef union  pax_rect Rectf;
+typedef union  struct_pax_rectf Rectf;
+
+typedef union  struct_pax_1vec2i Vec2i;
+typedef union  struct_pax_recti Recti;
+
 typedef union  matrix_2d Matrix2f;
 typedef struct matrix_stack_2d Matrix2fStack;
 
@@ -319,7 +327,66 @@ PAX_CXX_Vecf_union  struct_pax_4vec2f {
 #endif //__cplusplus
 };
 
-PAX_CXX_Vecf_union  pax_rect {
+PAX_CXX_Vecf_union  struct_pax_recti {
+#ifdef __cplusplus
+	struct {
+#endif
+		// Rectangle points.
+		int x, y, w, h;
+#ifdef __cplusplus
+	};
+	int arr[4];
+#endif
+	
+#ifdef __cplusplus
+	// Initialise to zero.
+	struct_pax_recti() {x=y=w=h=0;}
+	// Initialise with value.
+	struct_pax_recti(int _x, int _y, int _w, int _h) {x=_x; y=_y; w=_w; h=_h;}
+	// Initialise from initialiser list.
+	struct_pax_recti(std::initializer_list<int> list) { assert(list.size()==sizeof(arr)/sizeof(int)); std::copy(list.begin(), list.end(), arr); }
+	// Initialise from initialiser list.
+	struct_pax_recti(std::initializer_list<pax::Vec2f> list) { assert(list.size()==2); position()=list.begin()[0]; size()=list.begin()[1]; }
+	
+	// Operator []
+	PAX_CXX_Vec2f_INDEX()
+	
+	// Comparator.
+	bool operator==(const pax::Recti &other) const {
+		return x == other.x && y == other.y && w == other.w && h == other.h;
+	}
+	// Comparator.
+	bool operator!=(const pax::Recti &other) const {
+		return !operator==(other);
+	}
+	
+	// Get average position, i.e. center, of the rectangle.
+	pax::Vec2i average() {
+		return pax::Vec2f(x+w/2.0f, y+h/2.0f);
+	}
+	// Get X/Y component.
+	pax::Vec2i &position() {
+		return *(pax::Vec2i*) &x;
+	}
+	// Get width/height component.
+	pax::Vec2i &size() {
+		return *(pax::Vec2i*) &w;
+	}
+	// Create an equivalent quad.
+	pax::Quadf toQuad() {
+		return pax::Quadf(x, y,  x+w, y,  x+w, y+h,  x, y+h);
+	}
+	// Get a copy which gaurantees nonnegative dimensions.
+	pax::Recti fixSize() {
+		pax::Recti out = *this;
+		if (out.w < 0) { out.x += out.w; out.w = -out.w; }
+		if (out.h < 0) { out.y += out.h; out.h = -out.h; }
+		return out;
+	}
+#endif //__cplusplus
+};
+
+PAX_CXX_Vecf_union  struct_pax_rectf {
 #ifdef __cplusplus
 	struct {
 #endif
@@ -332,13 +399,13 @@ PAX_CXX_Vecf_union  pax_rect {
 	
 #ifdef __cplusplus
 	// Initialise to zero.
-	pax_rect() {x=y=w=h=0;}
+	struct_pax_rectf() {x=y=w=h=0;}
 	// Initialise with value.
-	pax_rect(float _x, float _y, float _w, float _h) {x=_x; y=_y; w=_w; h=_h;}
+	struct_pax_rectf(float _x, float _y, float _w, float _h) {x=_x; y=_y; w=_w; h=_h;}
 	// Initialise from initialiser list.
-	pax_rect(std::initializer_list<float> list) { assert(list.size()==sizeof(arr)/sizeof(float)); std::copy(list.begin(), list.end(), arr); }
+	struct_pax_rectf(std::initializer_list<float> list) { assert(list.size()==sizeof(arr)/sizeof(float)); std::copy(list.begin(), list.end(), arr); }
 	// Initialise from initialiser list.
-	pax_rect(std::initializer_list<pax::Vec2f> list) { assert(list.size()==2); position()=list.begin()[0]; size()=list.begin()[1]; }
+	struct_pax_rectf(std::initializer_list<pax::Vec2f> list) { assert(list.size()==2); position()=list.begin()[0]; size()=list.begin()[1]; }
 	
 	// Operator []
 	PAX_CXX_Vec2f_INDEX()

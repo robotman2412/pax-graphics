@@ -588,9 +588,9 @@ static inline float line_slope(pax_2vec2f line) {
 }
 
 // Creates a bounding rectangle for a line.
-static pax_rect_t line_bounding_box(pax_2vec2f line) {
+static pax_rectf line_bounding_box(pax_2vec2f line) {
 	// Create a simple bounding box.
-	pax_rect_t box = {
+	pax_rectf box = {
 		.x = line.x0,
 		.y = line.y0,
 		.w = line.x1 - line.x0,
@@ -611,7 +611,7 @@ static pax_rect_t line_bounding_box(pax_2vec2f line) {
 }
 
 // Determines whether a point is in the bounding box, but not on it's edge.
-static inline bool bounding_box_contains(pax_rect_t box, pax_vec2f point) {
+static inline bool bounding_box_contains(pax_rectf box, pax_vec2f point) {
 	if (box.w == 0 && box.h == 0) {
 		return point.x == box.x && point.x == box.y;
 	} else if (box.w == 0) {
@@ -636,8 +636,8 @@ static bool line_intersects_line(pax_2vec2f line_a, pax_2vec2f line_b, pax_vec2f
 	float dy_b = line_b.y0 - rc_b * line_b.x0;
 	
 	// Determine bounding boxes.
-	pax_rect_t box_a = line_bounding_box(line_a);
-	pax_rect_t box_b = line_bounding_box(line_b);
+	pax_rectf box_a = line_bounding_box(line_a);
+	pax_rectf box_b = line_bounding_box(line_b);
 	
 	// Special cases for one of two lines is vertical.
 	if (isinf(rc_a)) {

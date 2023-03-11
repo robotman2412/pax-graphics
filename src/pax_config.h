@@ -64,6 +64,11 @@
 	#define PAX_COMPILE_MCR true
 #endif
 
+#ifndef PAX_COMPILE_ROTATE
+// Compile in buffer rotation.
+	#define PAX_COMPILE_ROTATE true
+#endif
+
 #ifndef PAX_QUEUE_SIZE
 // Queue size to use for multi-core rendering.
 	#define PAX_QUEUE_SIZE 128

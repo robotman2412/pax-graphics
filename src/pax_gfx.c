@@ -226,7 +226,7 @@ bool pax_enable_shape_aa = false;
 #endif //PAX_COMPILE_MCR
 
 // Dummy UVs used for quad UVs where NULL is provided.
-static const pax_quad_t dummy_quad_uvs = {
+static const pax_quadf dummy_quad_uvs = {
 	.x0 = 0, .y0 = 0,
 	.x1 = 1, .y1 = 0,
 	.x2 = 1, .y2 = 1,
@@ -234,7 +234,7 @@ static const pax_quad_t dummy_quad_uvs = {
 };
 
 // Dummy UVs used for tri UVs where NULL is provided.
-static const pax_tri_t dummy_tri_uvs = {
+static const pax_trif dummy_tri_uvs = {
 	.x0 = 0, .y0 = 0,
 	.x1 = 1, .y1 = 0,
 	.x2 = 0, .y2 = 1
@@ -405,6 +405,12 @@ void pax_buf_set_rotation(pax_buf_t *buf, int rotation) {
 	buf->rotation = rotation & 3;
 }
 
+// Get rotation of the buffer.
+// 0 is not rotated, each unit is one quarter turn counter-clockwise.
+int pax_buf_get_rotation(pax_buf_t *buf) {
+	return buf->rotation;
+}
+
 
 // Scroll the buffer, filling with a placeholder color.
 void pax_buf_scroll(pax_buf_t *buf, pax_col_t placeholder, int x, int y) {
@@ -465,7 +471,7 @@ void pax_buf_scroll(pax_buf_t *buf, pax_col_t placeholder, int x, int y) {
 
 
 // Clip the buffer to the desired rectangle.
-void pax_clip(pax_buf_t *buf, float x, float y, float width, float height) {
+void pax_clip(pax_buf_t *buf, int x, int y, int width, int height) {
 	// Make width and height positive.
 	if (width < 0) {
 		x += width;
@@ -491,7 +497,7 @@ void pax_clip(pax_buf_t *buf, float x, float y, float width, float height) {
 		height = buf->height - y;
 	}
 	// Apply the clip.
-	buf->clip = (pax_rect_t) {
+	buf->clip = (pax_recti) {
 		.x = x,
 		.y = y,
 		.w = width,
@@ -499,9 +505,14 @@ void pax_clip(pax_buf_t *buf, float x, float y, float width, float height) {
 	};
 }
 
+// Get the current clip rectangle.
+pax_recti pax_get_clip(pax_buf_t *buf) {
+	return buf->clip;
+}
+
 // Clip the buffer to it's full size.
 void pax_noclip(pax_buf_t *buf) {
-	buf->clip = (pax_rect_t) {
+	buf->clip = (pax_recti) {
 		.x = 0,
 		.y = 0,
 		.w = buf->width,
@@ -513,6 +524,16 @@ void pax_noclip(pax_buf_t *buf) {
 bool pax_is_dirty(pax_buf_t *buf) {
 	PAX_BUF_CHECK1("pax_is_dirty", 0);
 	return buf->dirty_x0 < buf->dirty_x1;
+}
+
+// Get a copy of the dirty rectangle.
+pax_recti pax_get_dirty(pax_buf_t *buf) {
+	return (pax_recti) {
+		buf->dirty_x0,
+		buf->dirty_y0,
+		buf->dirty_x1 - buf->dirty_x0 + 1,
+		buf->dirty_y1 - buf->dirty_y0 + 1,
+	};
 }
 
 // Mark the entire buffer as clean.
@@ -879,7 +900,7 @@ void pax_draw_image_sized_op(pax_buf_t *buf, pax_buf_t *image, float x, float y,
 // Draw a rectangle with a shader.
 // If uvs is NULL, a default will be used (0,0; 1,0; 1,1; 0,1).
 void pax_shade_rect(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
-		const pax_quad_t *uvs, float x, float y, float width, float height) {
+		const pax_quadf *uvs, float x, float y, float width, float height) {
 	if (!shader) {
 		// If shader is NULL, simplify this.
 		pax_draw_rect(buf, color, x, y, width, height);
@@ -892,12 +913,12 @@ void pax_shade_rect(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
 	}
 	
 	// Split UVs into two triangles.
-	pax_tri_t uv0 = {
+	pax_trif uv0 = {
 		.x0 = uvs->x0, .y0 = uvs->y0,
 		.x1 = uvs->x1, .y1 = uvs->y1,
 		.x2 = uvs->x2, .y2 = uvs->y2
 	};
-	pax_tri_t uv1 = {
+	pax_trif uv1 = {
 		.x0 = uvs->x0, .y0 = uvs->y0,
 		.x1 = uvs->x3, .y1 = uvs->y3,
 		.x2 = uvs->x2, .y2 = uvs->y2
@@ -908,6 +929,27 @@ void pax_shade_rect(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
 		matrix_2d_transform(buf->stack_2d.value, &x, &y);
 		width  *= buf->stack_2d.value.a0;
 		height *= buf->stack_2d.value.b1;
+		
+		// Perform rotation.
+		#if PAX_COMPILE_ROTATE
+		pax_rectf tmp = pax_rotate_det_rectf(buf, (pax_rectf) {x, y, width, height});
+		x=tmp.x;
+		y=tmp.y;
+		width=tmp.w;
+		height=tmp.h;
+		
+		pax_quadf uvs_rotated;
+		if (buf->rotation & 1) {
+			uvs_rotated = (pax_quadf) {
+				uvs->x0, uvs->y0,
+				uvs->x3, uvs->y3,
+				uvs->x2, uvs->y2,
+				uvs->x1, uvs->y1,
+			};
+			uvs = &uvs_rotated;
+		}
+		#endif
+		
 		pax_mark_dirty2(buf, x - 0.5, y - 0.5, width + 1, height + 1);
 		#if PAX_COMPILE_MCR
 		if (pax_do_multicore) {
@@ -921,7 +963,7 @@ void pax_shade_rect(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
 				.type      = PAX_TASK_RECT,
 				.color     = color,
 				.shader    = (pax_shader_t *) shader,
-				.quad_uvs  = (pax_quad_t *) uvs,
+				.quad_uvs  = (pax_quadf *) uvs,
 				.shape     = (float *) shape,
 				.shape_len = 4
 			};
@@ -952,7 +994,7 @@ void pax_shade_rect(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
 // Draw a line with a shader.
 // Beta feature: UVs are not currently available.
 void pax_shade_line(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
-		const pax_line_t *uvs, float x0, float y0, float x1, float y1) {
+		const pax_linef *uvs, float x0, float y0, float x1, float y1) {
 	PAX_BUF_CHECK("pax_shade_line");
 	
 	if (!shader) {
@@ -984,6 +1026,12 @@ void pax_shade_line(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
 		return;
 	}
 	
+	// Rotate points.
+	pax_vec1_t tmp = pax_rotate_det_vec2f(buf, (pax_vec2f) {x0, y0});
+	x0 = tmp.x; y0 = tmp.y;
+	tmp = pax_rotate_det_vec2f(buf, (pax_vec2f) {x1, y1});
+	x1 = tmp.x; y1 = tmp.y;
+	
 	// If any point is outside clip now, we don't draw a line.
 	if (y0 < buf->clip.y || y1 > buf->clip.y + buf->clip.h - 1) goto noneed;
 	
@@ -1003,7 +1051,7 @@ void pax_shade_line(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
 // Draw a triangle with a shader.
 // If uvs is NULL, a default will be used (0,0; 1,0; 0,1).
 void pax_shade_tri(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
-		const pax_tri_t *uvs, float x0, float y0, float x1, float y1, float x2, float y2) {
+		const pax_trif *uvs, float x0, float y0, float x1, float y1, float x2, float y2) {
 	if (!shader) {
 		// If shader is NULL, simplify this.
 		pax_draw_tri(buf, color, x0, y0, x1, y1, x2, y2);
@@ -1020,6 +1068,14 @@ void pax_shade_tri(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
 		pax_last_error = PAX_ERR_INF;
 		return;
 	}
+	
+	// Rotate points.
+	pax_vec1_t tmp = pax_rotate_det_vec2f(buf, (pax_vec2f) {x0, y0});
+	x0 = tmp.x; y0 = tmp.y;
+	tmp = pax_rotate_det_vec2f(buf, (pax_vec2f) {x1, y1});
+	x1 = tmp.x; y1 = tmp.y;
+	tmp = pax_rotate_det_vec2f(buf, (pax_vec2f) {x2, y2});
+	x2 = tmp.x; y2 = tmp.y;
 	
 	if (!uvs) {
 		// Apply default UVs.
@@ -1052,7 +1108,7 @@ void pax_shade_tri(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
 			.type      = PAX_TASK_TRI,
 			.color     = color,
 			.shader    = (pax_shader_t *) shader,
-			.tri_uvs   = (pax_tri_t *) uvs,
+			.tri_uvs   = (pax_trif *) uvs,
 			.shape     = (float *) shape,
 			.shape_len = 6
 		};
@@ -1079,7 +1135,7 @@ void pax_shade_tri(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
 // Draw an arc with a shader, angles in radians.
 // If uvs is NULL, a default will be used (0,0; 1,0; 1,1; 0,1).
 void pax_shade_arc(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
-		const pax_quad_t *uvs, float x,  float y,  float r,  float a0, float a1) {
+		const pax_quadf *uvs, float x,  float y,  float r,  float a0, float a1) {
 	if (!shader) {
 		// If shader is NULL, simplify this.
 		pax_draw_arc(buf, color, x, y, r, a0, a1);
@@ -1119,7 +1175,7 @@ void pax_shade_arc(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
 	float y0 = sinf(a0);
 	
 	// Prepare some UVs to apply to the triangle.
-	pax_tri_t tri_uvs;
+	pax_trif tri_uvs;
 	tri_uvs.x0 = (uvs->x0 + uvs->x1 + uvs->x2 + uvs->x3) * 0.25;
 	tri_uvs.y0 = (uvs->y0 + uvs->y1 + uvs->y2 + uvs->y3) * 0.25;
 	
@@ -1149,10 +1205,10 @@ void pax_shade_arc(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
 // Draw a circle with a shader.
 // If uvs is NULL, a default will be used (0,0; 1,0; 1,1; 0,1).
 void pax_shade_circle(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
-		const pax_quad_t *uvs, float x,  float y,  float r) {
+		const pax_quadf *uvs, float x,  float y,  float r) {
 	// Use precalcualted circles for speed because the user can't tell anyway.
 	const pax_vec2f *preset;
-	const pax_tri_t  *uv_set;
+	const pax_trif  *uv_set;
 	size_t size;
 	
 	// Pick a suitable number of subdivisions.
@@ -1179,7 +1235,7 @@ void pax_shade_circle(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shade
 	pax_apply_2d(buf, matrix_2d_scale(r, r));
 	if (uvs) {
 		// UV interpolation required.
-		pax_tri_t uv_res;
+		pax_trif uv_res;
 		uv_res.x0 = (uvs->x1 + uvs->x2) * 0.5;
 		uv_res.y0 = (uvs->y1 + uvs->y2) * 0.5;
 		uv_res.x1 = pax_flerp4(preset[1].x, -preset[1].y, uvs->x0, uvs->x1, uvs->x3, uvs->x2);
@@ -1385,6 +1441,13 @@ void pax_simple_rect(pax_buf_t *buf, pax_col_t color, float x, float y, float wi
 		return;
 	}
 	
+	// Do rotation.
+	pax_rectf tmp = pax_rotate_det_rectf(buf, (pax_rectf) {x,y,width,height});
+	x=tmp.x;
+	y=tmp.y;
+	width=tmp.w;
+	height=tmp.h;
+	
 	// Fix rect dimensions.
 	if (width < 0) {
 		width = -width;
@@ -1455,6 +1518,12 @@ void pax_simple_line(pax_buf_t *buf, pax_col_t color, float x0, float y0, float 
 		return;
 	}
 	
+	// Rotate points.
+	pax_vec1_t tmp = pax_rotate_det_vec2f(buf, (pax_vec2f) {x0, y0});
+	x0 = tmp.x; y0 = tmp.y;
+	tmp = pax_rotate_det_vec2f(buf, (pax_vec2f) {x1, y1});
+	x1 = tmp.x; y1 = tmp.y;
+	
 	// Sort points vertially.
 	if (y0 > y1) PAX_SWAP_POINTS(x0, y0, x1, y1);
 	
@@ -1518,16 +1587,19 @@ void pax_simple_tri(pax_buf_t *buf, pax_col_t color, float x0, float y0, float x
 		return;
 	}
 	
-	// Sort points by height.
-	// PAX_SORT_POINTS(x0, y0, x1, y1);
-	// PAX_SORT_POINTS(x0, y0, x2, y2);
-	// PAX_SORT_POINTS(x1, y1, x2, y2);
-	
 	if ((y2 == y0 && y1 == y0) || (x2 == x0 && x1 == x0)) {
 		// We can't draw a flat triangle.
 		PAX_SUCCESS();
 		return;
 	}
+	
+	// Rotate points.
+	pax_vec1_t tmp = pax_rotate_det_vec2f(buf, (pax_vec2f) {x0, y0});
+	x0 = tmp.x; y0 = tmp.y;
+	tmp = pax_rotate_det_vec2f(buf, (pax_vec2f) {x1, y1});
+	x1 = tmp.x; y1 = tmp.y;
+	tmp = pax_rotate_det_vec2f(buf, (pax_vec2f) {x2, y2});
+	x2 = tmp.x; y2 = tmp.y;
 	
 	// Mark all points as dirty
 	pax_mark_dirty1(buf, x0 - 0.5, y0 - 0.5);

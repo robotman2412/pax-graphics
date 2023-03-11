@@ -212,9 +212,6 @@ typedef pax_col_t (*pax_shader_func_v0_t)(pax_col_t tint, int x, int y, float u,
 // Tint is the color parameter to the pax_shade_xxx function.
 // It is assumed that color math is done by the shader based on the "existing" parameter.
 typedef pax_col_t (*pax_shader_func_v1_t)(pax_col_t tint, pax_col_t existing, int x, int y, float u, float v, void *args);
-// Function pointer for transformer callback.
-// It's job is to optionally move the triangle vertices.
-typedef void (*pax_transf_func_t)(pax_tri_t *tri, pax_tri_t *uvs, void *args);
 
 // A simple linked list data structure used to store matrices in a stack.
 struct matrix_stack_2d {
@@ -245,10 +242,19 @@ struct pax_buf {
 	};
 	// Bits per pixel.
 	int               bpp;
+	
+	union {
 	// Pallette for buffers with a pallette type.
 	pax_col_t        *pallette;
+	// Pallette for buffers with a pallette type.
+	pax_col_t        *palette;
+	};
+	union {
 	// The number of colors in the pallette.
 	size_t            pallette_size;
+	// The number of colors in the pallette.
+	size_t            palette_size;
+	};
 	
 	// Width in pixels.
 	int               width;
@@ -277,7 +283,7 @@ struct pax_buf {
 	// Clip rectangle.
 	// Shapes are only drawn inside the clip rectangle.
 	// This excludes PNG decoding functions.
-	pax_rect_t        clip;
+	pax_recti         clip;
 	// Matrix stack.
 	// The top most entry is used to transform shapes.
 	matrix_stack_2d_t stack_2d;
@@ -384,9 +390,9 @@ struct pax_task {
 	// UVs to use.
 	union {
 		// UVs to use for rects and arcs.
-		pax_quad_t *quad_uvs;
+		pax_quadf *quad_uvs;
 		// UVs to use for triangle.
-		pax_tri_t  *tri_uvs;
+		pax_trif  *tri_uvs;
 	};
 	// Additional parameters.
 	// This is an array of floats for X, Y, and dimensions of shapes.

@@ -90,16 +90,23 @@ void      pax_buf_convert         (pax_buf_t *dst, pax_buf_t *src, pax_buf_type_
 // Set rotation of the buffer.
 // 0 is not rotated, each unit is one quarter turn counter-clockwise.
 void      pax_buf_set_rotation    (pax_buf_t *buf, int rotation);
+// Get rotation of the buffer.
+// 0 is not rotated, each unit is one quarter turn counter-clockwise.
+int       pax_buf_get_rotation    (pax_buf_t *buf);
 // Scroll the buffer, filling with a placeholder color.
 void      pax_buf_scroll          (pax_buf_t *buf, pax_col_t placeholder, int x, int y);
 
 // Clip the buffer to the desired rectangle.
-void      pax_clip                (pax_buf_t *buf, float x, float y, float width, float height);
+void      pax_clip                (pax_buf_t *buf, int x, int y, int width, int height);
+// Get the current clip rectangle.
+pax_recti pax_get_clip            (pax_buf_t *buf);
 // Clip the buffer to it's full size.
 void      pax_noclip              (pax_buf_t *buf);
 
 // Check whether the buffer is dirty.
 bool      pax_is_dirty            (pax_buf_t *buf);
+// Get a copy of the dirty rectangle.
+pax_recti pax_get_dirty           (pax_buf_t *buf);
 // Mark the entire buffer as clean.
 void      pax_mark_clean          (pax_buf_t *buf);
 // Mark the entire buffer as dirty.
@@ -174,19 +181,19 @@ pax_col_t   pax_get_pixel           (pax_buf_t *buf, int x, int y);
 
 // Draw a rectangle with a shader.
 // If uvs is NULL, a default will be used (0,0; 1,0; 1,1; 0,1).
-void        pax_shade_rect          (pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader, const pax_quad_t *uvs, float x, float y, float width, float height);
+void        pax_shade_rect          (pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader, const pax_quadf *uvs, float x, float y, float width, float height);
 // Draw a line with a shader.
 // If uvs is NULL, a default will be used (0,0; 1,0).
-void        pax_shade_line          (pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader, const pax_line_t *uvs, float x0, float y0, float x1, float y1);
+void        pax_shade_line          (pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader, const pax_linef *uvs, float x0, float y0, float x1, float y1);
 // Draw a triangle with a shader.
 // If uvs is NULL, a default will be used (0,0; 1,0; 0,1).
-void        pax_shade_tri           (pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader, const pax_tri_t  *uvs, float x0, float y0, float x1, float y1, float x2, float y2);
+void        pax_shade_tri           (pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader, const pax_trif  *uvs, float x0, float y0, float x1, float y1, float x2, float y2);
 // Draw an arc with a shader, angles in radians.
 // If uvs is NULL, a default will be used (0,0; 1,0; 1,1; 0,1).
-void        pax_shade_arc           (pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader, const pax_quad_t *uvs, float x,  float y,  float r,  float a0, float a1);
+void        pax_shade_arc           (pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader, const pax_quadf *uvs, float x,  float y,  float r,  float a0, float a1);
 // Draw a circle with a shader.
 // If uvs is NULL, a default will be used (0,0; 1,0; 1,1; 0,1).
-void        pax_shade_circle        (pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader, const pax_quad_t *uvs, float x,  float y,  float r);
+void        pax_shade_circle        (pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader, const pax_quadf *uvs, float x,  float y,  float r);
 
 // Draws an image at the image's normal size.
 void        pax_draw_image          (pax_buf_t *buf, pax_buf_t *image, float x, float y);

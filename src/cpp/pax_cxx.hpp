@@ -164,10 +164,10 @@ class Buffer {
 		void drawRect(Color color, float x, float y, float width, float height);
 		// Draws a rectangle with a custom shader.
 		// Shader is ignored if NULL.
-		void drawRect(Shader *shader, pax_quad_t *uvs, float x, float y, float width, float height);
+		void drawRect(Shader *shader, Quadf *uvs, float x, float y, float width, float height);
 		// Draws a rectangle with a custom color and shader.
 		// Shader is ignored if NULL.
-		void drawRect(Color color, Shader *shader, pax_quad_t *uvs, float x, float y, float width, float height);
+		void drawRect(Color color, Shader *shader, Quadf *uvs, float x, float y, float width, float height);
 		// Outlines a rectangle with the default outline color.
 		void outlineRect(float x, float y, float width, float height);
 		// Outlines a rectangle with a custom outline color.
@@ -179,10 +179,10 @@ class Buffer {
 		void drawTri(Color color, float x0, float y0, float x1, float y1, float x2, float y2);
 		// Draws a triangle with a custom shader.
 		// Shader is ignored if NULL.
-		void drawTri(Shader *shader, pax_tri_t *uvs, float x0, float y0, float x1, float y1, float x2, float y2);
+		void drawTri(Shader *shader, Trif *uvs, float x0, float y0, float x1, float y1, float x2, float y2);
 		// Draws a triangle with a custom color and shader.
 		// Shader is ignored if NULL.
-		void drawTri(Color color, Shader *shader, pax_tri_t *uvs, float x0, float y0, float x1, float y1, float x2, float y2);
+		void drawTri(Color color, Shader *shader, Trif *uvs, float x0, float y0, float x1, float y1, float x2, float y2);
 		// Outlines a triangle with the default outline color.
 		void outlineTri(float x0, float y0, float x1, float y1, float x2, float y2);
 		// Outlines a triangle with a custom outline color.
@@ -194,10 +194,10 @@ class Buffer {
 		void drawCircle(Color color, float x, float y, float radius);
 		// Draws a circle around the given point with a custom shader.
 		// Shader is ignored if NULL.
-		void drawCircle(Shader *shader, pax_quad_t *uvs, float x, float y, float radius);
+		void drawCircle(Shader *shader, Quadf *uvs, float x, float y, float radius);
 		// Draws a circle around the given point with a custom color and shader.
 		// Shader is ignored if NULL.
-		void drawCircle(Color color, Shader *shader, pax_quad_t *uvs, float x, float y, float radius);
+		void drawCircle(Color color, Shader *shader, Quadf *uvs, float x, float y, float radius);
 		// Outlines a circle with the default outline color.
 		void outlineCircle(float x, float y, float radius);
 		// Outlines a circle with a custom outline color.
@@ -209,10 +209,10 @@ class Buffer {
 		void drawArc(Color color, float x, float y, float radius, float startangle, float endangle);
 		// Draws an arc around the given point with a custom shader.
 		// Shader is ignored if NULL.
-		void drawArc(Shader *shader, pax_quad_t *uvs, float x, float y, float radius, float startangle, float endangle);
+		void drawArc(Shader *shader, Quadf *uvs, float x, float y, float radius, float startangle, float endangle);
 		// Draws an arc around the given point with a custom color and shader.
 		// Shader is ignored if NULL.
-		void drawArc(Color color, Shader *shader, pax_quad_t *uvs, float x, float y, float radius, float startangle, float endangle);
+		void drawArc(Color color, Shader *shader, Quadf *uvs, float x, float y, float radius, float startangle, float endangle);
 		// Outlines an arc with the default outline color.
 		void outlineArc(float x, float y, float radius, float startangle, float endangle);
 		// Outlines an arc with a custom outline color.
@@ -299,7 +299,7 @@ class Buffer {
 		// Whether or not there has been drawing since last markClean call.
 		bool isDirty();
 		// Gets the rectangle in which it is dirty.
-		Rectf getDirtyRect();
+		Recti getDirtyRect();
 		// Mark the buffer as clean.
 		void markClean();
 		// Mark the entire buffer as dirty.
@@ -317,7 +317,7 @@ class Buffer {
 		// Any effects of previous clip calls are nullified.
 		void noClip();
 		// Obtain a copy of the current clip rect.
-		Rectf getClip();
+		Recti getClip();
 };
 
 /* ============ COLORS =========== */

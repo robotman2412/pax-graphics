@@ -49,7 +49,7 @@ class Shape {
 		// The outline that represents this shape.
 		Outline outline;
 		// The bounding box of this shape.
-		pax_rect_t bounds;
+		Rectf bounds;
 		// The optional triangulation that represents this shape.
 		std::vector<size_t> triang;
 		// Whether triangulation was successful.
@@ -71,7 +71,7 @@ class Shape {
 		virtual ~Shape();
 		
 		// Get a bounding box for this shape.
-		pax_rect_t getBounds();
+		Rectf getBounds();
 		// Get a copy of the outline that represents this shape.
 		Outline getOutline();
 		
