@@ -83,6 +83,10 @@ void      pax_buf_destroy         (pax_buf_t *buf);
 // Convert the buffer to the given new format.
 // If dest is NULL or equal to src, src will be converted.
 void      pax_buf_convert         (pax_buf_t *dst, pax_buf_t *src, pax_buf_type_t type);
+// Set rotation of the buffer.
+// 0 is not rotated, each unit is one quarter turn counter-clockwise.
+void      pax_buf_set_rotation    (pax_buf_t *buf, int rotation);
+
 // Clip the buffer to the desired rectangle.
 void      pax_clip                (pax_buf_t *buf, float x, float y, float width, float height);
 // Clip the buffer to it's full size.

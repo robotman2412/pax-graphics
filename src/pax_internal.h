@@ -304,6 +304,89 @@ static inline uint32_t pax_rev_endian_32(uint32_t in) {
 }
 
 
+/* ======= ROTATION HELPERS ====== */
+
+// Transforms the co-ordinates as 1x counter-clockwise rotation.
+static inline pax_vec2f pax_rotate_ccw1_vec2f(pax_buf_t *buf, pax_vec2f vec) {
+	return (pax_vec2f) {
+		vec.y,
+		buf->height - vec.x,
+	};
+}
+
+// Transforms the co-ordinates as 2x counter-clockwise rotation.
+static inline pax_vec2f pax_rotate_ccw2_vec2f(pax_buf_t *buf, pax_vec2f vec) {
+	return (pax_vec2f) {
+		buf->width  - vec.x,
+		buf->height - vec.y,
+	};
+}
+
+// Transforms the co-ordinates as 2x counter-clockwise rotation.
+static inline pax_vec2f pax_rotate_ccw3_vec2f(pax_buf_t *buf, pax_vec2f vec) {
+	return (pax_vec2f) {
+		buf->width - vec.y,
+		vec.x,
+	};
+}
+
+
+// Transforms the co-ordinates as 1x counter-clockwise rotation.
+static inline pax_rect_t pax_rotate_ccw1_rectf(pax_buf_t *buf, pax_rect_t vec) {
+	return (pax_rect_t) {
+		vec.y,
+		buf->height - vec.x,
+		vec.h,
+		-vec.w,
+	};
+}
+
+// Transforms the co-ordinates as 2x counter-clockwise rotation.
+static inline pax_rect_t pax_rotate_ccw2_rectf(pax_buf_t *buf, pax_rect_t vec) {
+	return (pax_rect_t) {
+		buf->width  - vec.x,
+		buf->height - vec.y,
+		-vec.w,
+		-vec.h,
+	};
+}
+
+// Transforms the co-ordinates as 2x counter-clockwise rotation.
+static inline pax_rect_t pax_rotate_ccw3_rectf(pax_buf_t *buf, pax_rect_t vec) {
+	return (pax_rect_t) {
+		buf->width - vec.y,
+		vec.x,
+		-vec.y,
+		vec.x,
+	};
+}
+
+
+// Transforms the co-ordinates as 1x counter-clockwise rotation.
+static inline pax_vec2i pax_rotate_ccw1_vec2i(pax_buf_t *buf, pax_vec2i vec) {
+	return (pax_vec2i) {
+		vec.y,
+		buf->height - 1 - vec.x,
+	};
+}
+
+// Transforms the co-ordinates as 2x counter-clockwise rotation.
+static inline pax_vec2i pax_rotate_ccw2_vec2i(pax_buf_t *buf, pax_vec2i vec) {
+	return (pax_vec2i) {
+		buf->width  - 1 - vec.x,
+		buf->height - 1 - vec.y,
+	};
+}
+
+// Transforms the co-ordinates as 2x counter-clockwise rotation.
+static inline pax_vec2i pax_rotate_ccw3_vec2i(pax_buf_t *buf, pax_vec2i vec) {
+	return (pax_vec2i) {
+		buf->width - 1 - vec.y,
+		vec.x,
+	};
+}
+
+
 
 /* ======= DRAWING HELPERS ======= */
 

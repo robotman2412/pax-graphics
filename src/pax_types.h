@@ -281,6 +281,10 @@ struct pax_buf {
 	// Matrix stack.
 	// The top most entry is used to transform shapes.
 	matrix_stack_2d_t stack_2d;
+	
+	// Rotation increment.
+	// 0 is not rotated, each unit is one quarter turn counter-clockwise.
+	int rotation;
 };
 
 // A shader definition, used by pax_shade_ methods.
