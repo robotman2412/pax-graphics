@@ -250,7 +250,7 @@ void pax_buf_init(pax_buf_t *buf, void *mem, int width, int height, pax_buf_type
 	bool use_alloc = !mem;
 	if (use_alloc) {
 		// Allocate the right amount of bytes.
-		mem = malloc((PAX_GET_BPP(type) * width * height + 7) >> 3);
+		mem = malloc(PAX_BUF_CALC_SIZE(width, height, type));
 		if (!mem) PAX_ERROR("pax_buf_init", PAX_ERR_NOMEM);
 	}
 	*buf = (pax_buf_t) {
@@ -398,11 +398,71 @@ void pax_buf_convert(pax_buf_t *dst, pax_buf_t *src, pax_buf_type_t type) {
 	}
 }
 
+
 // Set rotation of the buffer.
 // 0 is not rotated, each unit is one quarter turn counter-clockwise.
 void pax_buf_set_rotation(pax_buf_t *buf, int rotation) {
 	buf->rotation = rotation & 3;
 }
+
+
+// Scroll the buffer, filling with a placeholder color.
+void pax_buf_scroll(pax_buf_t *buf, pax_col_t placeholder, int x, int y) {
+	// Edge case: Scrolls too far.
+	if (x >= buf->width || x <= -buf->width || y >= buf->height || y <= -buf->height) {
+		pax_background(buf, placeholder);
+		return;
+	}
+	
+	// Pixel index offset for the copy.
+	ssize_t off       = x + y * buf->width;
+	// Number of pixels that must be copied.
+	size_t  count     = buf->width * buf->height - labs(off);
+	
+	// Bit index version of the offset.
+	ssize_t bit_off   = PAX_GET_BPP(buf->type) * off;
+	// Number of bits to copy.
+	size_t  bit_count = PAX_GET_BPP(buf->type) * count;
+	
+	if ((bit_off & 7) == 0) {
+		// If bit offset lines up to a byte, use memmove.
+		ssize_t byte_off   = bit_off   / 8;
+		size_t  byte_count = bit_count / 8;
+		
+		if (byte_off > 0) {
+			memmove(buf->buf_8bpp + byte_off, buf->buf_8bpp, byte_count);
+		} else {
+			memmove(buf->buf_8bpp, buf->buf_8bpp - byte_off, byte_count);
+		}
+		
+	} else {
+		// If it does not, an expensive copy must be performed.
+		if (off > 0) {
+			for (ssize_t i = count - 1; i >= 0; i--) {
+				pax_col_t value = buf->getter(buf, off + i);
+				buf->setter(buf, value, i);
+			}
+		} else {
+			for (ssize_t i = 0; i < count; i++) {
+				pax_col_t value = buf->getter(buf, i);
+				buf->setter(buf, value, off + i);
+			}
+		}
+	}
+	
+	// Fill the edges.
+	if (x > 0) {
+		pax_simple_rect(buf, placeholder, 0, y, x, buf->height - y);
+	} else if (x < 0) {
+		pax_simple_rect(buf, placeholder, buf->width, y, x, buf->height - y);
+	}
+	if (y > 0) {
+		pax_simple_rect(buf, placeholder, 0, 0, buf->width, y);
+	} else if (y < 0) {
+		pax_simple_rect(buf, placeholder, 0, buf->height, buf->width, y);
+	}
+}
+
 
 // Clip the buffer to the desired rectangle.
 void pax_clip(pax_buf_t *buf, float x, float y, float width, float height) {
@@ -1286,7 +1346,7 @@ PAX_PERF_CRITICAL_ATTR void pax_background(pax_buf_t *buf, pax_col_t color) {
 	}
 	
 	if (value == 0) {
-		memset(buf->buf, 0, (PAX_GET_BPP(buf->type) * buf->width * buf->height + 7) >> 3);
+		memset(buf->buf, 0, PAX_BUF_CALC_SIZE(buf->width, buf->height, buf->type));
 	} else if (buf->bpp == 16) {
 		if (buf->reverse_endianness) {
 			value = pax_rev_endian_16(value);

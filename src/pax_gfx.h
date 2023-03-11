@@ -70,6 +70,9 @@ extern bool pax_enable_shape_aa;
 // Whether the buffer type potentially has alpha.
 #define PAX_IS_ALPHA(type)        (((type) & 0x00f00000) || PAX_IS_PALETTE(type))
 
+// Determine how much capacity a certain buffer initialisation needs.
+#define   PAX_BUF_CALC_SIZE(width, height, type) \
+		((PAX_GET_BPP(type) * (width) * (height) + 7) >> 3)
 // Create a new buffer.
 // If mem is NULL, a new area is allocated.
 void      pax_buf_init            (pax_buf_t *buf, void *mem, int width, int height, pax_buf_type_t type);
@@ -83,9 +86,12 @@ void      pax_buf_destroy         (pax_buf_t *buf);
 // Convert the buffer to the given new format.
 // If dest is NULL or equal to src, src will be converted.
 void      pax_buf_convert         (pax_buf_t *dst, pax_buf_t *src, pax_buf_type_t type);
+
 // Set rotation of the buffer.
 // 0 is not rotated, each unit is one quarter turn counter-clockwise.
 void      pax_buf_set_rotation    (pax_buf_t *buf, int rotation);
+// Scroll the buffer, filling with a placeholder color.
+void      pax_buf_scroll          (pax_buf_t *buf, pax_col_t placeholder, int x, int y);
 
 // Clip the buffer to the desired rectangle.
 void      pax_clip                (pax_buf_t *buf, float x, float y, float width, float height);
