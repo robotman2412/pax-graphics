@@ -101,7 +101,6 @@ class GradientBox: public Element {
 		Type getType() { return type; }
 		
 		// Draw this element to `buf`.
-		// When selected by user interaction, `selected` is true.
 		void draw(Buffer &buf) final;
 };
 

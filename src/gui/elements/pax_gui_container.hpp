@@ -37,7 +37,8 @@
 namespace pax::gui {
 
 // An element that contains one or more other elements.
-class Container: public Element {
+// This class uses virtual inheritance to allow private usage of the container API.
+class Container: public virtual Element {
 	protected:
 		// Previous value of the bounds variable.
 		// Checked in draw() and tick().
@@ -56,8 +57,11 @@ class Container: public Element {
 		Color background;
 		
 		// Make an empty container.
-		Container(Rectf bounds = {0, 0, 100, 100}):
-			Element(bounds), selected(-1), background(0) {}
+		Container(Rectf _bounds = {0, 0, 100, 100}):
+			Element(_bounds), selected(-1), background(0) {
+			// Ensure bounds is always set (because of virtual inheritance).
+			bounds = _bounds;
+		}
 		
 		// This is required to allow subclasses with virtuals.
 		virtual ~Container() = default;
@@ -84,9 +88,6 @@ class Container: public Element {
 			appendChild(ptr);
 			return ptr;
 		}
-		// Add a child element (move edition).
-		// Returns a shared_ptr to the child.
-		virtual std::shared_ptr<Element> appendChild(Element &&child);
 		// Add a child element (from exiting shared_ptr edition).
 		virtual void appendChild(std::shared_ptr<Element> child);
 		// Remove a child element.
@@ -99,7 +100,6 @@ class Container: public Element {
 		virtual void buttonUp(InputButton which) override;
 		
 		// Draw this element to `buf`.
-		// When selected by user interaction, `selected` is true.
 		virtual void draw(Buffer &buf) override;
 		// Callback to run every so often.
 		// Returns true if the object has to be redrawn.
@@ -118,12 +118,8 @@ class ListContainer: public Container {
 		// Whether to wrap when the user presses down at the bottom / up at the top.
 		bool doWrap;
 		// Make an empty container.
-		ListContainer(Rectf bounds = {0, 0, 100, 100}): Container(bounds) {}
+		ListContainer(Rectf _bounds = {0, 0, 100, 100}): Container(_bounds) {}
 		
-		// Add a child element (move edition).
-		// Returns a shared_ptr to the child.
-		// Overrides the position of `child` to fit in the list.
-		virtual std::shared_ptr<Element> appendChild(Element &&child) override;
 		// Add a child element (from exiting shared_ptr edition).
 		// Overrides the position of `child` to fit in the list.
 		virtual void appendChild(std::shared_ptr<Element> child) override;
@@ -214,10 +210,6 @@ class GridContainer: public Container {
 		// Returns false if there is no child found.
 		bool selectChild(int x, int y);
 		
-		// Add a child element (move edition).
-		// Returns a shared_ptr to the child.
-		// Overrides the position of `child` to fit in the grid.
-		virtual std::shared_ptr<Element> appendChild(Element &&child) override;
 		// Add a child element (from exiting shared_ptr edition).
 		// Overrides the position of `child` to fit in the grid.
 		virtual void appendChild(std::shared_ptr<Element> child) override;
@@ -231,10 +223,6 @@ class GridContainer: public Container {
 			attach(ptr, x, y);
 			return ptr;
 		}
-		// Add a child element to a specific grid position (move edition).
-		// Returns a shared_ptr to the child.
-		// Overrides the position of `child` to fit in the grid.
-		virtual std::shared_ptr<Element> attach(Element &&child, int x, int y);
 		// Add a child element to a specific grid position.
 		// Overrides the position of `child` to fit in the grid.
 		virtual void attach(std::shared_ptr<Element> child, int x, int y);

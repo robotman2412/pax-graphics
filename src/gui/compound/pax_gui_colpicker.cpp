@@ -91,7 +91,6 @@ void GradientBox::setType(Type type) {
 
 
 // Draw this element to `buf`.
-// When selected by user interaction, `selected` is true.
 void GradientBox::draw(Buffer &buf) {
 	
 	// Delegate the rectangle to shaders.

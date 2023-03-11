@@ -85,13 +85,6 @@ std::shared_ptr<Element> Container::selectedElement() {
 }
 
 
-// Add a child element (move edition).
-std::shared_ptr<Element> Container::appendChild(Element &&child) {
-	auto ptr = std::make_shared<Element>(std::move(child));
-	children.push_back(ptr);
-	return ptr;
-}
-
 // Add a child element (from exiting shared_ptr edition).
 void Container::appendChild(std::shared_ptr<Element> child) {
 	children.push_back(child);
@@ -117,7 +110,10 @@ bool Container::removeChild(std::shared_ptr<Element> child) {
 
 // Button pressed event.
 void Container::buttonDown(InputButton which) {
-	if (selected >= 0 && selected < children.size()) {\
+	if (selected >= 0 && selected < children.size()) {
+		if (children[selected]->focus < FocusState::FOCUSSED) {
+			children[selected]->focus = FocusState::FOCUSSED;
+		}
 		children[selected]->buttonDown(which);
 	}
 }
@@ -195,16 +191,6 @@ void ListContainer::updateChildren() {
 }
 
 
-// Add a child element (move edition).
-// Returns a shared_ptr to the child.
-// Overrides the position of `child` to fit in the list.
-std::shared_ptr<Element> ListContainer::appendChild(Element &&child) {
-	auto ptr = std::make_shared<Element>(std::move(child));
-	children.push_back(ptr);
-	updateChildren();
-	return ptr;
-}
-
 // Add a child element (from exiting shared_ptr edition).
 // Overrides the position of `child` to fit in the list.
 void ListContainer::appendChild(std::shared_ptr<Element> child) {
@@ -231,9 +217,14 @@ void ListContainer::buttonDown(InputButton which) {
 		// Forward the inputs.
 		children[selected]->buttonDown(which);
 		
-	} else if (which == InputButton::CENTER || which == InputButton::ACCEPT) {
+	} else if (which == InputButton::ACCEPT) {
 		// This will potentially cause child to capture inputs.
+		if (children[selected]->focus < FocusState::FOCUSSED) {
+			children[selected]->focus = FocusState::FOCUSSED;
+		}
+		printf("%d -> ", children[selected]->focus);
 		children[selected]->buttonDown(which);
+		printf("%d\n", children[selected]->focus);
 		
 	} else if (which == InputButton::DOWN) {
 		// Scroll down.
@@ -261,7 +252,7 @@ void ListContainer::buttonUp(InputButton which) {
 		// Forward the inputs.
 		children[selected]->buttonUp(which);
 		
-	} else if (which == InputButton::CENTER || which == InputButton::ACCEPT) {
+	} else if (which == InputButton::ACCEPT) {
 		// This will potentially cause child to capture inputs.
 		children[selected]->buttonUp(which);
 	}
@@ -330,8 +321,8 @@ void GridContainer::updateChildren() {
 
 
 // Make an empty container.
-GridContainer::GridContainer(Rectf bounds, int width, int height):
-	Container(bounds), _width(width), _height(height) {}
+GridContainer::GridContainer(Rectf _bounds, int width, int height):
+	Container(_bounds), _width(width), _height(height) {}
 
 
 // Get size of grid.
@@ -358,16 +349,6 @@ bool GridContainer::selectChild(int x, int y) {
 }
 
 
-// Add a child element (move edition).
-// Returns a shared_ptr to the child.
-// Overrides the position of `child` to fit in the grid.
-std::shared_ptr<Element> GridContainer::appendChild(Element &&child) {
-	auto ptr = std::make_shared<Element>(std::move(child));
-	Pos next = findNextEmpty();
-	attach(ptr, next.x, next.y);
-	return ptr;
-}
-
 // Add a child element (from exiting shared_ptr edition).
 // Overrides the position of `child` to fit in the grid.
 void GridContainer::appendChild(std::shared_ptr<Element> child) {
@@ -375,15 +356,6 @@ void GridContainer::appendChild(std::shared_ptr<Element> child) {
 	attach(child, next.x, next.y);
 }
 
-
-// Add a child element to a specific grid position (move edition).
-// Returns a shared_ptr to the child.
-// Overrides the position of `child` to fit in the grid.
-std::shared_ptr<Element> GridContainer::attach(Element &&child, int x, int y) {
-	auto ptr = std::make_shared<Element>(std::move(child));
-	attach(ptr, x, y);
-	return ptr;
-}
 
 // Add a child element to a specific grid position.
 // Overrides the position of `child` to fit in the grid.
@@ -453,7 +425,10 @@ void GridContainer::buttonDown(InputButton which) {
 		// Forward the inputs.
 		children[selected]->buttonDown(which);
 		
-	} else if (which == InputButton::CENTER || which == InputButton::ACCEPT) {
+	} else if (which == InputButton::ACCEPT) {
+		if (children[selected]->focus < FocusState::FOCUSSED) {
+			children[selected]->focus = FocusState::FOCUSSED;
+		}
 		// This will potentially cause child to capture inputs.
 		children[selected]->buttonDown(which);
 		

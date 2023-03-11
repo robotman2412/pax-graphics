@@ -51,7 +51,6 @@ void Button::buttonUp(InputButton which) {
 
 
 // Draw this element to `buf`.
-// When selected by user interaction, `selected` is true.
 void Button::draw(Buffer &buf) {
 	const auto &theme = *getTheme();
 	

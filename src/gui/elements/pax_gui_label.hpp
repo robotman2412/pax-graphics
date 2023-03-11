@@ -53,7 +53,6 @@ class Label: public Element {
 		virtual ~Label() = default;
 		
 		// Draw this element to `buf`.
-		// When selected by user interaction, `selected` is true.
 		virtual void draw(Buffer &buf) override;
 };
 

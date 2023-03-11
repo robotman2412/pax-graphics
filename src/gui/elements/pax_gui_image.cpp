@@ -60,7 +60,6 @@ Image::Image(Rectf bounds, Buffer _data):
 	data(std::make_shared<Buffer>(std::move(_data))) {}
 
 // Draw this element to `buf`.
-// When selected by user interaction, `selected` is true.
 void Image::draw(Buffer &buf) {
 	if (data) {
 		buf.drawImage(*data, bounds.x, bounds.y, bounds.w, bounds.h);

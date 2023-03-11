@@ -59,7 +59,6 @@ class Image: public Element {
 		Image(Rectf bounds, Buffer data);
 		
 		// Draw this element to `buf`.
-		// When selected by user interaction, `selected` is true.
 		virtual void draw(Buffer &buf) override;
 };
 

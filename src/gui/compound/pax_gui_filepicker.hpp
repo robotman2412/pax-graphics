@@ -22,8 +22,8 @@
 	SOFTWARE.
 */
 
-#ifndef PAX_GUI_BUTTON_HPP
-#define PAX_GUI_BUTTON_HPP
+#ifndef PAX_GUI_FILEPICKER_HPP
+#define PAX_GUI_FILEPICKER_HPP
 
 #include <pax_gfx.h>
 
@@ -34,28 +34,25 @@
 #include <functional>
 
 #include <pax_gui_base.hpp>
+#include <pax_gui_container.hpp>
 
 namespace pax::gui {
 
-// A simple button with some centered text on it.
-class Button: public Element {
+class FileEntry: public Element {
 	public:
-		// Type used for button click callbacks.
-		using Callback = std::function<void(Button&)>;
+		// Callback type.
+		using Callback = std::function<void(FileEntry*)>;
 		
-		// The text to draw on this button.
-		std::string text;
-		// The function to call when this button is pressed.
-		Callback    onPress;
-		// Decorative: Whether the button is currently pressed.
-		bool        pressed;
+		// File icon, if any.
+		std::shared_ptr<Buffer> icon;
+		// Filename.
+		std::string name;
+		// Determined file type.
+		std::string type;
+		// Callback for when the user selects this file.
+		Callback onPress;
 		
-		// Make a bland new button.
-		Button();
-		// Make a new button with some text on it.
-		Button(Rectf _bounds, std::string _text = "", Callback _onPress = {});
-		// This is required to allow subclasses with virtuals.
-		virtual ~Button() = default;
+		FileEntry(Rectf _bounds = {0,0,100,20}): Element(_bounds) {}
 		
 		// Button pressed event.
 		virtual void buttonDown(InputButton which) override;
@@ -66,8 +63,42 @@ class Button: public Element {
 		virtual void draw(Buffer &buf) override;
 };
 
+class FilePicker: protected ListContainer, public virtual Element {
+	protected:
+		// Current directory.
+		std::string dir;
+		// Current selected filename, if any.
+		std::string filename;
+		
+	public:
+		// Make a file picker in a certain directory.
+		FilePicker(Rectf bounds={0, 0, 200, 200}, std::string dir="/", std::string filename="");
+		
+		// Change directory.
+		// Returns success status.
+		bool changeDir(std::string dir);
+		// Change the currently selected path.
+		// Returns success status.
+		bool changePath(std::string path);
+		// Change the currently selected filename.
+		// Returns success status.
+		bool changeFilename(std::string filename);
+		
+		// Get the current directory.
+		std::string getDir();
+		// Get the currently selected path.
+		std::string getPath();
+		// Get the currently selected filename.
+		std::string getFilename();
+		
+		using ListContainer::tick;
+		using ListContainer::buttonDown;
+		using ListContainer::buttonUp;
+		using ListContainer::draw;
+};
+
 } // namespace pax::gui
 
 #endif // __cplusplus
 
-#endif // PAX_GUI_BUTTON_HPP
+#endif // PAX_GUI_FILEPICKER_HPP

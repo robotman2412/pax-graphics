@@ -26,6 +26,7 @@
 #define PAX_GUI_BASE_HPP
 
 #include <pax_gfx.h>
+#include <typeinfo>
 
 #ifdef __cplusplus
 
@@ -120,21 +121,19 @@ class Element: public InputAcceptor, public Active {
 		// Whether this element is visible.
 		// Helper variable for containers and related types.
 		// Calling `draw` on an element with `visible=false` should always draw it, despite this variable.
-		bool visible = true;
+		bool visible;
 		// The type of focus this element has been given, if any.
 		// The element may change the focus state to a higher one after button press.
-		FocusState focus = FocusState::NONE;
+		FocusState focus;
 		
-		// Implicit default constructor.
-		Element() = default;
 		// Element from a bounds.
-		Element(Rectf _bounds): bounds(_bounds) {}
+		Element(Rectf _bounds = {0, 0, 0, 0}):
+			bounds(_bounds), visible(true), focus(FocusState::NONE) {}
 		
 		// This is required to allow subclasses with virtuals.
 		virtual ~Element() = default;
 		
 		// Draw this element to `buf`.
-		// When selected by user interaction, `selected` is true.
 		virtual void draw(Buffer &buf) {}
 };
 
