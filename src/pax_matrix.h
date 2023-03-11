@@ -149,10 +149,10 @@ typedef struct matrix_stack_2d Matrix2fStack;
 		} \
 		return true; \
 	} \
-	bool operator=(_type rhs) const { \
+	bool operator!=(_type rhs) const { \
 		const size_t _size = sizeof(arr) / 2 / sizeof(float); \
 		for (size_t i = 0; i < _size; i++) { \
-			if (arr[i] != rhs.arr[i]) return false; \
+			if (arr[i] == rhs.arr[i]) return false; \
 		} \
 		return true; \
 	} \
