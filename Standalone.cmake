@@ -18,11 +18,11 @@ add_library(pax_graphics
 	"src/cpp/pax_cxx_text.cpp"
 
 	"src/gui/pax_gui_base.cpp"
-	"src/gui/pax_gui_button.cpp"
-	"src/gui/pax_gui_colpicker.cpp"
-	"src/gui/pax_gui_container.cpp"
-	"src/gui/pax_gui_image.cpp"
-	"src/gui/pax_gui_label.cpp"
+	"src/gui/elements/pax_gui_button.cpp"
+	"src/gui/elements/pax_gui_container.cpp"
+	"src/gui/elements/pax_gui_image.cpp"
+	"src/gui/elements/pax_gui_label.cpp"
+	"src/gui/compound/pax_gui_colpicker.cpp"
 
 	"src/pax_matrix.c"
 	"src/pax_gfx.c"
@@ -42,4 +42,7 @@ add_library(pax_graphics
 target_include_directories(pax_graphics PUBLIC
 	${CMAKE_CURRENT_LIST_DIR}/src
 	${CMAKE_CURRENT_LIST_DIR}/src/cpp
+	${CMAKE_CURRENT_LIST_DIR}/src/gui
+	${CMAKE_CURRENT_LIST_DIR}/src/gui/elements
+	${CMAKE_CURRENT_LIST_DIR}/src/gui/compound
 )

@@ -6,11 +6,11 @@ idf_component_register(
 	"src/cpp/pax_cxx_text.cpp"
 	
 	"src/gui/pax_gui_base.cpp"
-	"src/gui/pax_gui_button.cpp"
-	"src/gui/pax_gui_colpicker.cpp"
-	"src/gui/pax_gui_container.cpp"
-	"src/gui/pax_gui_image.cpp"
-	"src/gui/pax_gui_label.cpp"
+	"src/gui/elements/pax_gui_button.cpp"
+	"src/gui/elements/pax_gui_container.cpp"
+	"src/gui/elements/pax_gui_image.cpp"
+	"src/gui/elements/pax_gui_label.cpp"
+	"src/gui/compound/pax_gui_colpicker.cpp"
 	
 	"src/pax_matrix.c"
 	"src/pax_gfx.c"
@@ -30,5 +30,7 @@ idf_component_register(
 	"src"
 	"src/cpp"
 	"src/gui"
+	"src/gui/elements"
+	"src/gui/compound"
 )
 set_target_properties(${COMPONENT_LIB} PROPERTIES COMPILE_FLAGS "-Wno-unused-const-variable")
