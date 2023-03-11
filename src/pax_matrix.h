@@ -309,6 +309,15 @@ PAX_CXX_Vecf_union  pax_rect {
 	// Operator []
 	PAX_CXX_Vec2f_INDEX()
 	
+	// Comparator.
+	bool operator==(const pax::Rectf &other) const {
+		return x == other.x && y == other.y && w == other.w && h == other.h;
+	}
+	// Comparator.
+	bool operator!=(const pax::Rectf &other) const {
+		return !operator==(other);
+	}
+	
 	pax::Rectf round() const {
 		return pax::Rectf{
 			(float) (int) (x+0.5),
@@ -368,7 +377,19 @@ union matrix_2d {
 	matrix_2d(std::initializer_list<float> list) { assert(list.size()==sizeof(arr)/sizeof(float)); std::copy(list.begin(), list.end(), arr); }
 	// Initialise as copy.
 	matrix_2d(const matrix_2d &) = default;
-
+	
+	// Comparator.
+	bool operator==(const matrix_2d &other) const {
+		for (auto i = 0; i < 6; i++) {
+			if (arr[i] != other.arr[i]) return false;
+		}
+		return true;
+	}
+	// Comparator.
+	bool operator!=(const matrix_2d &other) const {
+		return !operator==(other);
+	}
+	
 	// 2D identity matrix: represents no transformation.
 	static matrix_2d identity();
 	// 2D scale matrix: represents a 2D scaling.
