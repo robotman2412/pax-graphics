@@ -38,7 +38,7 @@ Button::Button(Rectf _bounds, std::string _text, Callback _onPress):
 void Button::buttonDown(InputButton which) {
 	if (which == ACCEPT) {
 		pressed = true;
-		onPress(*this);
+		if (onPress) onPress(*this);
 	}
 }
 
@@ -63,8 +63,8 @@ void Button::draw(Buffer &buf) {
 	// Button outline.
 	buf.outlineRect(
 		focus == FocusState::HIGHLIGHTED && !pressed
-			? theme.highlightColor : theme.backgroundColor,
-		bounds.x, bounds.y, bounds.w, bounds.h
+			? theme.highlightColor : theme.outlineColor,
+		bounds.x, bounds.y, bounds.w-1, bounds.h-1
 	);
 	
 	// Compute centered text position.
