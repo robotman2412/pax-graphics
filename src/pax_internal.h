@@ -282,6 +282,7 @@ void     pax_set_pixel_u(pax_buf_t *buf, uint32_t color, int x, int y);
 uint32_t pax_get_pixel_u(pax_buf_t *buf, int x, int y);
 
 
+
 /* ======= INLINE INTERNAL ======= */
 
 // UV interpolation helper for the circle methods.
@@ -301,134 +302,6 @@ static inline uint16_t pax_rev_endian_16(uint16_t in) {
 // Reverse endianness for 32-bit things.
 static inline uint32_t pax_rev_endian_32(uint32_t in) {
 	return (in >> 24) | ((in >> 8) & 0x0000ff00) | ((in << 8) & 0x00ff0000) | (in << 24);
-}
-
-
-/* ======= ROTATION HELPERS ====== */
-
-// Transforms the co-ordinates as 1x counter-clockwise rotation.
-static inline pax_vec2f pax_rotate_ccw1_vec2f(pax_buf_t *buf, pax_vec2f vec) {
-	return (pax_vec2f) {
-		vec.y,
-		buf->height - vec.x,
-	};
-}
-
-// Transforms the co-ordinates as 2x counter-clockwise rotation.
-static inline pax_vec2f pax_rotate_ccw2_vec2f(pax_buf_t *buf, pax_vec2f vec) {
-	return (pax_vec2f) {
-		buf->width  - vec.x,
-		buf->height - vec.y,
-	};
-}
-
-// Transforms the co-ordinates as 2x counter-clockwise rotation.
-static inline pax_vec2f pax_rotate_ccw3_vec2f(pax_buf_t *buf, pax_vec2f vec) {
-	return (pax_vec2f) {
-		buf->width - vec.y,
-		vec.x,
-	};
-}
-
-// Detects rotations and transforms co-ordinates accordingly.
-static inline pax_vec2f pax_rotate_det_vec2f(pax_buf_t *buf, pax_vec2f vec) {
-	#if PAX_COMPILE_ROTATE
-	switch (buf->rotation) {
-		default:
-		case 0: return vec;
-		case 1: return pax_rotate_ccw1_vec2f(buf, vec);
-		case 2: return pax_rotate_ccw2_vec2f(buf, vec);
-		case 3: return pax_rotate_ccw3_vec2f(buf, vec);
-	}
-	#else
-	return vec;
-	#endif
-}
-
-
-// Transforms the co-ordinates as 1x counter-clockwise rotation.
-static inline pax_rectf pax_rotate_ccw1_rectf(pax_buf_t *buf, pax_rectf vec) {
-	return (pax_rectf) {
-		vec.y,
-		buf->height - vec.x,
-		vec.h,
-		-vec.w,
-	};
-}
-
-// Transforms the co-ordinates as 2x counter-clockwise rotation.
-static inline pax_rectf pax_rotate_ccw2_rectf(pax_buf_t *buf, pax_rectf vec) {
-	return (pax_rectf) {
-		buf->width  - vec.x,
-		buf->height - vec.y,
-		-vec.w,
-		-vec.h,
-	};
-}
-
-// Transforms the co-ordinates as 2x counter-clockwise rotation.
-static inline pax_rectf pax_rotate_ccw3_rectf(pax_buf_t *buf, pax_rectf vec) {
-	return (pax_rectf) {
-		buf->width - vec.y,
-		vec.x,
-		-vec.h,
-		vec.w,
-	};
-}
-
-// Detects rotations and transforms co-ordinates accordingly.
-static inline pax_rectf pax_rotate_det_rectf(pax_buf_t *buf, pax_rectf vec) {
-	#if PAX_COMPILE_ROTATE
-	switch (buf->rotation) {
-		default:
-		case 0: return vec;
-		case 1: return pax_rotate_ccw1_rectf(buf, vec);
-		case 2: return pax_rotate_ccw2_rectf(buf, vec);
-		case 3: return pax_rotate_ccw3_rectf(buf, vec);
-	}
-	#else
-	return vec;
-	#endif
-}
-
-
-// Transforms the co-ordinates as 1x counter-clockwise rotation.
-static inline pax_vec2i pax_rotate_ccw1_vec2i(pax_buf_t *buf, pax_vec2i vec) {
-	return (pax_vec2i) {
-		vec.y,
-		buf->height - 1 - vec.x,
-	};
-}
-
-// Transforms the co-ordinates as 2x counter-clockwise rotation.
-static inline pax_vec2i pax_rotate_ccw2_vec2i(pax_buf_t *buf, pax_vec2i vec) {
-	return (pax_vec2i) {
-		buf->width  - 1 - vec.x,
-		buf->height - 1 - vec.y,
-	};
-}
-
-// Transforms the co-ordinates as 2x counter-clockwise rotation.
-static inline pax_vec2i pax_rotate_ccw3_vec2i(pax_buf_t *buf, pax_vec2i vec) {
-	return (pax_vec2i) {
-		buf->width - 1 - vec.y,
-		vec.x,
-	};
-}
-
-// Detects rotations and transforms co-ordinates accordingly.
-static inline pax_vec2i pax_rotate_det_vec2i(pax_buf_t *buf, pax_vec2i vec) {
-	#if PAX_COMPILE_ROTATE
-	switch (buf->rotation) {
-		default:
-		case 0: return vec;
-		case 1: return pax_rotate_ccw1_vec2i(buf, vec);
-		case 2: return pax_rotate_ccw2_vec2i(buf, vec);
-		case 3: return pax_rotate_ccw3_vec2i(buf, vec);
-	}
-	#else
-	return vec;
-	#endif
 }
 
 

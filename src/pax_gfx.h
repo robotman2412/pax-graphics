@@ -45,6 +45,8 @@ const char *pax_desc_err           (pax_err_t error);
 // Debug stuff.
 void        pax_debug              (pax_buf_t *buf);
 
+
+
 /* ===== MULTI-CORE RENDERING ==== */
 
 // If multi-core rendering is enabled, wait for the other core.
@@ -54,6 +56,8 @@ void       pax_join                ();
 void       pax_enable_multicore    (int core);
 // Disable multi-core rendering.
 void       pax_disable_multicore   ();
+
+
 
 /* ============ BUFFER =========== */
 
@@ -116,6 +120,137 @@ void      pax_mark_dirty1         (pax_buf_t *buf, int x, int y);
 // Mark a rectangle as dirty.
 void      pax_mark_dirty2         (pax_buf_t *buf, int x, int y, int width, int height);
 
+
+
+/* ======= ROTATION HELPERS ====== */
+
+// Transforms the co-ordinates as 1x counter-clockwise rotation.
+static inline pax_vec2f pax_rotate_ccw1_vec2f(pax_buf_t *buf, pax_vec2f vec) {
+	return (pax_vec2f) {
+		vec.y,
+		buf->height - vec.x,
+	};
+}
+
+// Transforms the co-ordinates as 2x counter-clockwise rotation.
+static inline pax_vec2f pax_rotate_ccw2_vec2f(pax_buf_t *buf, pax_vec2f vec) {
+	return (pax_vec2f) {
+		buf->width  - vec.x,
+		buf->height - vec.y,
+	};
+}
+
+// Transforms the co-ordinates as 2x counter-clockwise rotation.
+static inline pax_vec2f pax_rotate_ccw3_vec2f(pax_buf_t *buf, pax_vec2f vec) {
+	return (pax_vec2f) {
+		buf->width - vec.y,
+		vec.x,
+	};
+}
+
+// Detects rotations and transforms co-ordinates accordingly.
+static inline pax_vec2f pax_rotate_det_vec2f(pax_buf_t *buf, pax_vec2f vec) {
+	#if PAX_COMPILE_ROTATE
+	switch (buf->rotation) {
+		default:
+		case 0: return vec;
+		case 1: return pax_rotate_ccw1_vec2f(buf, vec);
+		case 2: return pax_rotate_ccw2_vec2f(buf, vec);
+		case 3: return pax_rotate_ccw3_vec2f(buf, vec);
+	}
+	#else
+	return vec;
+	#endif
+}
+
+
+// Transforms the co-ordinates as 1x counter-clockwise rotation.
+static inline pax_rectf pax_rotate_ccw1_rectf(pax_buf_t *buf, pax_rectf vec) {
+	return (pax_rectf) {
+		vec.y,
+		buf->height - vec.x,
+		vec.h,
+		-vec.w,
+	};
+}
+
+// Transforms the co-ordinates as 2x counter-clockwise rotation.
+static inline pax_rectf pax_rotate_ccw2_rectf(pax_buf_t *buf, pax_rectf vec) {
+	return (pax_rectf) {
+		buf->width  - vec.x,
+		buf->height - vec.y,
+		-vec.w,
+		-vec.h,
+	};
+}
+
+// Transforms the co-ordinates as 2x counter-clockwise rotation.
+static inline pax_rectf pax_rotate_ccw3_rectf(pax_buf_t *buf, pax_rectf vec) {
+	return (pax_rectf) {
+		buf->width - vec.y,
+		vec.x,
+		-vec.h,
+		vec.w,
+	};
+}
+
+// Detects rotations and transforms co-ordinates accordingly.
+static inline pax_rectf pax_rotate_det_rectf(pax_buf_t *buf, pax_rectf vec) {
+	#if PAX_COMPILE_ROTATE
+	switch (buf->rotation) {
+		default:
+		case 0: return vec;
+		case 1: return pax_rotate_ccw1_rectf(buf, vec);
+		case 2: return pax_rotate_ccw2_rectf(buf, vec);
+		case 3: return pax_rotate_ccw3_rectf(buf, vec);
+	}
+	#else
+	return vec;
+	#endif
+}
+
+
+// Transforms the co-ordinates as 1x counter-clockwise rotation.
+static inline pax_vec2i pax_rotate_ccw1_vec2i(pax_buf_t *buf, pax_vec2i vec) {
+	return (pax_vec2i) {
+		vec.y,
+		buf->height - 1 - vec.x,
+	};
+}
+
+// Transforms the co-ordinates as 2x counter-clockwise rotation.
+static inline pax_vec2i pax_rotate_ccw2_vec2i(pax_buf_t *buf, pax_vec2i vec) {
+	return (pax_vec2i) {
+		buf->width  - 1 - vec.x,
+		buf->height - 1 - vec.y,
+	};
+}
+
+// Transforms the co-ordinates as 2x counter-clockwise rotation.
+static inline pax_vec2i pax_rotate_ccw3_vec2i(pax_buf_t *buf, pax_vec2i vec) {
+	return (pax_vec2i) {
+		buf->width - 1 - vec.y,
+		vec.x,
+	};
+}
+
+// Detects rotations and transforms co-ordinates accordingly.
+static inline pax_vec2i pax_rotate_det_vec2i(pax_buf_t *buf, pax_vec2i vec) {
+	#if PAX_COMPILE_ROTATE
+	switch (buf->rotation) {
+		default:
+		case 0: return vec;
+		case 1: return pax_rotate_ccw1_vec2i(buf, vec);
+		case 2: return pax_rotate_ccw2_vec2i(buf, vec);
+		case 3: return pax_rotate_ccw3_vec2i(buf, vec);
+	}
+	#else
+	return vec;
+	#endif
+}
+
+
+
 /* ============ COLORS =========== */
 
 // Multiplicatively decreases alpha based on a float.
@@ -156,6 +291,8 @@ pax_col_t pax_col_merge           (pax_col_t base, pax_col_t top);
 // Tints the color, commonly used for textures.
 pax_col_t pax_col_tint            (pax_col_t col, pax_col_t tint);
 
+
+
 /* ============ MATRIX =========== */
 
 // Apply the given matrix to the stack.
@@ -168,6 +305,8 @@ void        pax_pop_2d            (pax_buf_t *buf);
 // If full is true, the entire stack gets cleared instead of just the top.
 void        pax_reset_2d          (pax_buf_t *buf, bool full);
 
+
+
 /* ======== DRAWING: PIXEL ======= */
 
 // Set a pixel, merging with alpha.
@@ -176,6 +315,8 @@ void        pax_merge_pixel         (pax_buf_t *buf, pax_col_t color, int x, int
 void        pax_set_pixel           (pax_buf_t *buf, pax_col_t color, int x, int y);
 // Get a pixel.
 pax_col_t   pax_get_pixel           (pax_buf_t *buf, int x, int y);
+
+
 
 /* ========= DRAWING: 2D ========= */
 
@@ -216,6 +357,8 @@ void        pax_draw_arc            (pax_buf_t *buf, pax_col_t color, float x,  
 // Draw a circle.
 void        pax_draw_circle         (pax_buf_t *buf, pax_col_t color, float x,  float y,  float r);
 
+
+
 /* ======= DRAWING: SIMPLE ======= */
 
 // Fill the background.
@@ -236,8 +379,10 @@ void        pax_simple_arc          (pax_buf_t *buf, pax_col_t color, float x,  
 // Draw a circle, ignoring matrix transform.
 void        pax_simple_circle       (pax_buf_t *buf, pax_col_t color, float x,  float y,  float r);
 
+
+
 #ifdef __cplusplus
-}
+} // extern "C"
 
 #include "cpp/pax_cxx.hpp"
 #endif //__cplusplus

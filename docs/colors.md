@@ -1,4 +1,4 @@
-# PAX docs: Colors
+# PAX Docs: Colors
 
 In PAX, there are a few color utilities.
 These include:

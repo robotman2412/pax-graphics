@@ -414,6 +414,22 @@ int pax_buf_get_rotation(pax_buf_t *buf) {
 
 // Scroll the buffer, filling with a placeholder color.
 void pax_buf_scroll(pax_buf_t *buf, pax_col_t placeholder, int x, int y) {
+	#if PAX_COMPILE_MCR
+	pax_join();
+	#endif
+	
+	#if PAX_COMPILE_ROTATE
+	int x0=x,y0=y;
+	// Fix direction of scrolling.
+	switch (buf->rotation) {
+		default:
+		case 0: break;
+		case 1: y = -x0; x =  y0; break;
+		case 2: x = -x0; y = -y0; break;
+		case 3: y =  x0; x = -y0; break;
+	}
+	#endif
+	
 	// Edge case: Scrolls too far.
 	if (x >= buf->width || x <= -buf->width || y >= buf->height || y <= -buf->height) {
 		pax_background(buf, placeholder);
@@ -456,6 +472,12 @@ void pax_buf_scroll(pax_buf_t *buf, pax_col_t placeholder, int x, int y) {
 		}
 	}
 	
+	#if PAX_COMPILE_ROTATE
+	// Ignore rotation for a moment.
+	int rot = buf->rotation;
+	buf->rotation = 0;
+	#endif
+	
 	// Fill the edges.
 	if (x > 0) {
 		pax_simple_rect(buf, placeholder, 0, y, x, buf->height - y);
@@ -467,6 +489,11 @@ void pax_buf_scroll(pax_buf_t *buf, pax_col_t placeholder, int x, int y) {
 	} else if (y < 0) {
 		pax_simple_rect(buf, placeholder, 0, buf->height, buf->width, y);
 	}
+	
+	#if PAX_COMPILE_ROTATE
+	// Restore previous rotation.
+	buf->rotation = rot;
+	#endif
 }
 
 
@@ -812,12 +839,20 @@ pax_col_t pax_col_tint(pax_col_t col, pax_col_t tint) {
 // Set a pixel, merging with alpha.
 void pax_merge_pixel(pax_buf_t *buf, pax_col_t color, int x, int y) {
 	PAX_BUF_CHECK("pax_merge_pixel");
+	
+	#if PAX_COMPILE_ROTATE
+	pax_vec2i tmp = pax_rotate_det_vec2i(buf, (pax_vec2i) {x, y});
+	x = tmp.x; y = tmp.y;
+	#endif
+	
 	if (x < 0 || x >= buf->width || y < 0 || y >= buf->height) {
 		// Out of bounds error.
 		pax_last_error = PAX_ERR_BOUNDS;
 		return;
 	}
+	
 	PAX_SUCCESS();
+	
 	int index = x + y * buf->width;
 	if (PAX_IS_PALETTE(buf->type)) {
 		// Palette colors don't have conversion.
@@ -835,12 +870,20 @@ void pax_merge_pixel(pax_buf_t *buf, pax_col_t color, int x, int y) {
 // Set a pixel.
 void pax_set_pixel(pax_buf_t *buf, pax_col_t color, int x, int y) {
 	PAX_BUF_CHECK("pax_set_pixel");
+	
+	#if PAX_COMPILE_ROTATE
+	pax_vec2i tmp = pax_rotate_det_vec2i(buf, (pax_vec2i) {x, y});
+	x = tmp.x; y = tmp.y;
+	#endif
+	
 	if (x < 0 || x >= buf->width || y < 0 || y >= buf->height) {
 		// Out of bounds error.
 		pax_last_error = PAX_ERR_BOUNDS;
 		return;
 	}
+	
 	PAX_SUCCESS();
+	
 	int index = x + y * buf->width;
 	if (PAX_IS_PALETTE(buf->type)) {
 		// Palette colors don't have conversion.
@@ -854,6 +897,12 @@ void pax_set_pixel(pax_buf_t *buf, pax_col_t color, int x, int y) {
 // Get a pixel.
 pax_col_t pax_get_pixel(pax_buf_t *buf, int x, int y) {
 	PAX_BUF_CHECK1("pax_get_pixel", 0);
+	
+	#if PAX_COMPILE_ROTATE
+	pax_vec2i tmp = pax_rotate_det_vec2i(buf, (pax_vec2i) {x, y});
+	x = tmp.x; y = tmp.y;
+	#endif
+	
 	if (x < 0 || x >= buf->width || y < 0 || y >= buf->height) {
 		// Out of bounds error.
 		pax_last_error = PAX_ERR_BOUNDS;

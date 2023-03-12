@@ -1,4 +1,4 @@
-# PAX docs: Shaders
+# PAX Docs: Shaders
 
 Shading is PAX' flagship feature.
 It allows you to quickly and easily make colorful shapes or to add images to them.

@@ -361,10 +361,10 @@ You can also draw images:
 ### In case you do use shaders
 
 If the method is one of the `pax_shade_` methods, two additional arguments are added after `color`:
-- `pax_shader_t *shader, pax_quad_t *uvs` (Except triangle)
+- `pax_shader_t *shader, pax_quadf *uvs` (Except triangle)
     - Circles and arcs behave as though they are a cutout of a rectangle (in terms of UVs).
     - Rectangle UVs 0 -> 3 are the corners: top left, top right, bottom right, bottom left.
-- `pax_shader_t *shader, pax_tri_t  *uvs` (Triangle only)
+- `pax_shader_t *shader, pax_trif  *uvs` (Triangle only)
     - Triangles define their UVs per point.
 
 UVs are "texture co-ordinates" in the computer graphics world.
