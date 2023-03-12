@@ -163,6 +163,21 @@ static inline pax_vec2f pax_rotate_det_vec2f(pax_buf_t *buf, pax_vec2f vec) {
 	#endif
 }
 
+// Detects rotations and transforms co-ordinates accordingly.
+static inline pax_vec2f pax_rotate_det_vec2f(pax_buf_t *buf, pax_vec2f vec) {
+	#if PAX_COMPILE_ROTATE
+	switch (buf->rotation) {
+		default:
+		case 0: return vec;
+		case 3: return pax_rotate_ccw1_vec2f(buf, vec);
+		case 2: return pax_rotate_ccw2_vec2f(buf, vec);
+		case 1: return pax_rotate_ccw3_vec2f(buf, vec);
+	}
+	#else
+	return vec;
+	#endif
+}
+
 
 // Transforms the co-ordinates as 1x counter-clockwise rotation.
 static inline pax_rectf pax_rotate_ccw1_rectf(pax_buf_t *buf, pax_rectf vec) {
@@ -209,6 +224,21 @@ static inline pax_rectf pax_rotate_det_rectf(pax_buf_t *buf, pax_rectf vec) {
 	#endif
 }
 
+// Detects rotations and transforms co-ordinates accordingly.
+static inline pax_rectf pax_unrotate_det_rectf(pax_buf_t *buf, pax_rectf vec) {
+	#if PAX_COMPILE_ROTATE
+	switch (buf->rotation) {
+		default:
+		case 0: return vec;
+		case 3: return pax_rotate_ccw1_rectf(buf, vec);
+		case 2: return pax_rotate_ccw2_rectf(buf, vec);
+		case 1: return pax_rotate_ccw3_rectf(buf, vec);
+	}
+	#else
+	return vec;
+	#endif
+}
+
 
 // Transforms the co-ordinates as 1x counter-clockwise rotation.
 static inline pax_vec2i pax_rotate_ccw1_vec2i(pax_buf_t *buf, pax_vec2i vec) {
@@ -243,6 +273,21 @@ static inline pax_vec2i pax_rotate_det_vec2i(pax_buf_t *buf, pax_vec2i vec) {
 		case 1: return pax_rotate_ccw1_vec2i(buf, vec);
 		case 2: return pax_rotate_ccw2_vec2i(buf, vec);
 		case 3: return pax_rotate_ccw3_vec2i(buf, vec);
+	}
+	#else
+	return vec;
+	#endif
+}
+
+// Detects rotations and transforms co-ordinates accordingly.
+static inline pax_vec2i pax_unrotate_det_vec2i(pax_buf_t *buf, pax_vec2i vec) {
+	#if PAX_COMPILE_ROTATE
+	switch (buf->rotation) {
+		default:
+		case 0: return vec;
+		case 3: return pax_rotate_ccw1_vec2i(buf, vec);
+		case 2: return pax_rotate_ccw2_vec2i(buf, vec);
+		case 1: return pax_rotate_ccw3_vec2i(buf, vec);
 	}
 	#else
 	return vec;

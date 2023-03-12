@@ -168,18 +168,22 @@ In quarter-turn counter-clockwise increments, PAX can be told to rotate everythi
 Calls to almost all functions will act as if the buffer has been rotated accordingly.
 It is up to the user to know the new width and height after rotation. However, these are simply swapped each quarter-turn.
 
-| returns   | name                 | arguments
-| :-------- | :------------------- | :--------
-| void      | pax_buf_set_rotation | pax_buf_t \*buf, int rotation
-| int       | pax_buf_get_rotation | pax_buf_t \*buf
-| pax_vec2f | pax_rotate_det_vec2f | pax_buf_t \*buf, pax_vec2f raw
-| pax_rectf | pax_rotate_det_rectf | pax_buf_t \*buf, pax_rectf raw
-| pax_vec2i | pax_rotate_det_vec2i | pax_buf_t \*buf, pax_vec2i raw
+| returns   | name                   | arguments
+| :-------- | :--------------------- | :--------
+| void      | pax_buf_set_rotation   | pax_buf_t \*buf, int rotation
+| int       | pax_buf_get_rotation   | pax_buf_t \*buf
+| pax_vec2f | pax_rotate_det_vec2f   | pax_buf_t \*buf, pax_vec2f raw
+| pax_rectf | pax_rotate_det_rectf   | pax_buf_t \*buf, pax_rectf raw
+| pax_vec2i | pax_rotate_det_vec2i   | pax_buf_t \*buf, pax_vec2i raw
+| pax_vec2f | pax_unrotate_det_vec2f | pax_buf_t \*buf, pax_vec2f raw
+| pax_rectf | pax_unrotate_det_rectf | pax_buf_t \*buf, pax_rectf raw
+| pax_vec2i | pax_unrotate_det_vec2i | pax_buf_t \*buf, pax_vec2i raw
 
 The first function, `pax_buf_set_rotation` applies this behaviour.
 Similarly, `pax_buf_get_rotation` returns the current rotation increment.
 
-The `pax_rotate_det_` functions are used to convert co-ordinates from real pixels into rotated ("pretended") pixels.
+The `pax_rotate_det_` functions are used to convert co-ordinates from input ("pretended") pixels into real ("rotated") pixels.
+The `pax_unrotate_det_` functions convert in the opposite direction, and are made for shaders to use.
 This is used internally, and can come in handy if you have a shader that needs rotated co-ordinates:
 
 ## Exceptions
@@ -188,7 +192,7 @@ Because the screen doesn't know about the rotation,
 all [the dirty area functions](#dirty-area) will not be affected by rotation settings.
 
 Similarly, the pixel co-ordinates passed to [shader](#shaders.md) are not affected, this time because it would have a performance impact.
-Shaders can call `pax_rotate_det_vec2i` to correct for this and get the pretended co-ordinates.
+<!-- Shaders can call `pax_unrotate_det_vec2i` to correct for this and get the pretended co-ordinates. -->
 
 **Note: The UV co-ordinates passed to shaders are still affected by rotation.**
 
@@ -217,8 +221,12 @@ void set_up_my_buf() {
 ```c
 /* Example code by Julian Scheffers: Public domain */
 
-// TODO: Need better normal shader examples first.
-``` !-->
+// This shader function needs rotated co-ordinates.
+pax_col_t my_shader_callback(pax_col_t tint, pax_col_t existing, int x, int y, float u, float v, void *args) {
+    // Convert pretended co-ordinates.
+	pax_veci unrot = pax_unrotate_det_vec2i()
+}
+``` -->
 
 
 

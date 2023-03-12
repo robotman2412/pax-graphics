@@ -263,6 +263,14 @@ The API is split into a few groups:
 - [Image codecs](codecs.md)
     - Decoding PNG images
     - Requires a [seperate component](https://github.com/robotman2412/pax-codecs)
+- [Misc. features](misc.md)
+    - [Endianness](misc.md#endianness)
+    - [Clipping](misc.md#clipping)
+    - [Dirty area](misc.md#dirty-area)
+    - [Rotation](misc.md#screen-rotation)
+    - [Scrolling](misc.md#scrolling)
+    - [Pixel setting](misc.md#pixel-setting)
+    - [Multi-core rendering](misc.md#multi-core-rendering)
 
 # API reference
 
