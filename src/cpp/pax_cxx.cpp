@@ -272,7 +272,7 @@ void Buffer::setRotation(int rotation) {
 // Get rotation of the buffer.
 // 0 is not rotated, each unit is one quarter turn counter-clockwise.
 int Buffer::getRotation() {
-	GENERIC_VALIDITY_CHECK();
+	GENERIC_VALIDITY_CHECK(0);
 	return internal->rotation;
 }
 
