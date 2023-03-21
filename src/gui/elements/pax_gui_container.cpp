@@ -56,9 +56,15 @@ bool Container::selectChild(int index) {
 bool Container::selectChild(std::shared_ptr<Element> child) {
 	for (std::size_t i = 0; i < children.size(); i++) {
 		if (children[i] == child) {
-			unselect();
+			// Unselect any other children.
+			if (selected != i) {
+				unselect();
+			}
+			// Select new child.
 			selected = i;
-			children[selected]->focus = FocusState::HIGHLIGHTED;
+			if (children[selected]->focus < FocusState::HIGHLIGHTED) {
+				children[selected]->focus = FocusState::HIGHLIGHTED;
+			}
 			return true;
 		}
 	}
@@ -222,9 +228,7 @@ void ListContainer::buttonDown(InputButton which) {
 		if (children[selected]->focus < FocusState::FOCUSSED) {
 			children[selected]->focus = FocusState::FOCUSSED;
 		}
-		printf("%d -> ", children[selected]->focus);
 		children[selected]->buttonDown(which);
-		printf("%d\n", children[selected]->focus);
 		
 	} else if (which == InputButton::DOWN) {
 		// Scroll down.
