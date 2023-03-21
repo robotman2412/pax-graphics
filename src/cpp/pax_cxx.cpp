@@ -145,6 +145,10 @@ pax_shader_t *Shader::getInternal() {
 
 
 
+#define COMMA ,
+
+#define GENERIC_VALIDITY_CHECK(retval) if (!internal) return retval;
+
 // Make an empty wrapper.
 Buffer::Buffer() {
 	// Set to safe default.
@@ -274,6 +278,25 @@ Buffer Buffer::clone() {
 }
 
 
+// Set rotation of the buffer.
+// 0 is not rotated, each unit is one quarter turn counter-clockwise.
+void Buffer::setRotation(int rotation) {
+	GENERIC_VALIDITY_CHECK();
+	internal->rotation = rotation & 3;
+}
+
+// Get rotation of the buffer.
+// 0 is not rotated, each unit is one quarter turn counter-clockwise.
+int Buffer::getRotation() {
+	GENERIC_VALIDITY_CHECK();
+	return internal->rotation;
+}
+
+// Scroll the buffer, filling with a placeholder color.
+void Buffer::scroll(Color placeholder, int x, int y) {
+	pax_buf_scroll(internal, placeholder, x, y);
+}
+
 // Enable reversed endianness mode.
 // This causes endiannes to be internally stored as reverse of native.
 // This operation does not update data stored in the buffer; it will become invalid.
@@ -323,10 +346,6 @@ pax_buf_type_t Buffer::type() { return internal ? internal->type : (pax_buf_type
 
 
 
-#define COMMA ,
-
-#define GENERIC_VALIDITY_CHECK(retval) if (!internal) return retval;
-
 static inline pax_shader_t *GENERIC_UNWRAP_SHADER(Shader *wrapped) {
 	return wrapped ? wrapped->getInternal() : NULL;
 }
@@ -364,10 +383,10 @@ void Buffer::background(Color color) {
 	pax_background(internal, color);
 }
 
-GENERIC_WRAPPER_IMPL(Rect,   rect,   pax_quad_t, float x COMMA float y COMMA float width COMMA float height, x COMMA y COMMA width COMMA height)
-GENERIC_WRAPPER_IMPL(Tri,    tri,    pax_tri_t,  float x0 COMMA float y0 COMMA float x1 COMMA float y1 COMMA float x2 COMMA float y2, x0 COMMA y0 COMMA x1 COMMA y1 COMMA x2 COMMA y2)
-GENERIC_WRAPPER_IMPL(Circle, circle, pax_quad_t, float x COMMA float y COMMA float radius, x COMMA y COMMA radius)
-GENERIC_WRAPPER_IMPL(Arc,    arc,    pax_quad_t, float x COMMA float y COMMA float radius COMMA float startAngle COMMA float endAngle, x COMMA y COMMA radius COMMA startAngle COMMA endAngle)
+GENERIC_WRAPPER_IMPL(Rect,   rect,   Quadf, float x COMMA float y COMMA float width COMMA float height, x COMMA y COMMA width COMMA height)
+GENERIC_WRAPPER_IMPL(Tri,    tri,    Trif,  float x0 COMMA float y0 COMMA float x1 COMMA float y1 COMMA float x2 COMMA float y2, x0 COMMA y0 COMMA x1 COMMA y1 COMMA x2 COMMA y2)
+GENERIC_WRAPPER_IMPL(Circle, circle, Quadf, float x COMMA float y COMMA float radius, x COMMA y COMMA radius)
+GENERIC_WRAPPER_IMPL(Arc,    arc,    Quadf, float x COMMA float y COMMA float radius COMMA float startAngle COMMA float endAngle, x COMMA y COMMA radius COMMA startAngle COMMA endAngle)
 
 // Draws a line with the default outline color.
 void Buffer::drawLine(float x0, float y0, float x1, float y1) {
@@ -529,13 +548,13 @@ bool Buffer::isDirty() {
 	return pax_is_dirty(internal);
 }
 // Gets the rectangle in which it is dirty.
-Rectf Buffer::getDirtyRect() {
-	GENERIC_VALIDITY_CHECK(Rectf())
-	return (Rectf) {
-		(float) internal->dirty_x0,
-		(float) internal->dirty_y0,
-		(float) internal->dirty_x1 - internal->dirty_x0,
-		(float) internal->dirty_y1 - internal->dirty_y0,
+Recti Buffer::getDirtyRect() {
+	GENERIC_VALIDITY_CHECK(Recti())
+	return (Recti) {
+		internal->dirty_x0,
+		internal->dirty_y0,
+		internal->dirty_x1 - internal->dirty_x0 + 1,
+		internal->dirty_y1 - internal->dirty_y0 + 1,
 	};
 }
 // Mark the buffer as clean.
@@ -575,8 +594,8 @@ void Buffer::noClip() {
 }
 
 // Obtain a copy of the current clip rect.
-Rectf Buffer::getClip() {
-	GENERIC_VALIDITY_CHECK(Rectf())
+Recti Buffer::getClip() {
+	GENERIC_VALIDITY_CHECK(Recti())
 	return internal->clip;
 }
 

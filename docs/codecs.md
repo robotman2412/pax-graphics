@@ -1,4 +1,4 @@
-# PAX docs: Image codecs
+# PAX Docs: Image codecs
 The image codecs are currently work-in-development, but PNG decode has been released as test.
 
 ## Where to get it

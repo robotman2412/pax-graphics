@@ -81,11 +81,15 @@ void pax_outline_shape_cl     (pax_buf_t *buf, pax_col_t color, size_t num_point
 // Transforms a list of points using a given 2D matrix.
 // Overwrites the list's contents.
 void pax_transform_shape(size_t num_points, pax_vec2f *points, matrix_2d_t matrix);
+// WARNING: This is a beta feature and it does not work!
+// 
 // Rounds a polygon with a uniform radius applied to all corners.
 // Each corner can be rounded up to 50% of the edges it is part of.
 // Capable of dealing with self-intersecting shapes.
 // Returns the amount of points created.
 size_t pax_round_shape_uniform(pax_vec2f **output, size_t num_points, pax_vec2f *points, float radius);
+// WARNING: This is a beta feature and it does not work!
+// 
 // Rounds a polygon with a specific radius per corner.
 // Each corner can be rounded up to 50% of the edges it is part of.
 // Capable of dealing with self-intersecting shapes.

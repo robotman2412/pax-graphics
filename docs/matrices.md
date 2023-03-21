@@ -1,4 +1,4 @@
-# PAX docs: Matrices
+# PAX Docs: Matrices
 
 PAX uses matrices to apply transformations.
 Common examples of this are rotating images and scaling vector graphics.
@@ -42,7 +42,7 @@ The matrices are internally treated like a 3x3 matrix:
 matrix_2d_t my_matrix = (matrix_2d_t) { .arr = {
     1, 0, 0,
     0, 1, 0,
-//  0, 0, 1
+//  0, 0, 1  (implicit)
 }};
 ```
 The last (commented out) row is implicit and cannot be changed.

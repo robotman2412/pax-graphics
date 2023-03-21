@@ -282,6 +282,7 @@ void     pax_set_pixel_u(pax_buf_t *buf, uint32_t color, int x, int y);
 uint32_t pax_get_pixel_u(pax_buf_t *buf, int x, int y);
 
 
+
 /* ======= INLINE INTERNAL ======= */
 
 // UV interpolation helper for the circle methods.

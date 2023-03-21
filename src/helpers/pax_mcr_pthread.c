@@ -65,7 +65,7 @@ void paxmcr_add_task(pax_task_t *task) {
 	
 	// And the UVs.
 	if (copy.type == PAX_TASK_TRI && copy.tri_uvs) {
-		copy.tri_uvs   = malloc(sizeof(pax_tri_t));
+		copy.tri_uvs   = malloc(sizeof(pax_trif));
 		if (!copy.tri_uvs) {
 			if (copy.shape) free(copy.shape);
 			if (copy.shader) free(copy.shape);
@@ -73,7 +73,7 @@ void paxmcr_add_task(pax_task_t *task) {
 		}
 		*copy.tri_uvs  = *task->tri_uvs;
 	} else if (copy.type == PAX_TASK_RECT && copy.quad_uvs) {
-		copy.quad_uvs  = malloc(sizeof(pax_quad_t));
+		copy.quad_uvs  = malloc(sizeof(pax_quadf));
 		if (!copy.quad_uvs) {
 			if (copy.shape) free(copy.shape);
 			if (copy.shader) free(copy.shape);

@@ -139,11 +139,30 @@ static uint64_t text_promise_callback(pax_buf_t *buf, pax_col_t tint, void *args
 
 // Pixel-aligned optimisation of pax_shade_rect, used for text.
 static void pixel_aligned_render(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
-		const pax_quad_t *uvs, float x, float y, float width, float height) {
+		const pax_quadf *uvs, float x, float y, float width, float height) {
 	// Offset and pixel-align co-ordinates.
 	x = (int) (0.5 + x + buf->stack_2d.value.a2);
 	y = (int) (0.5 + y + buf->stack_2d.value.b2);
 	pax_mark_dirty2(buf, x, y, width, height);
+	
+	#if PAX_COMPILE_ROTATE
+	pax_rectf tmp = pax_rotate_det_rectf(buf, (pax_rectf) {x, y, width, height});
+	x=tmp.x;
+	y=tmp.y;
+	width=tmp.w;
+	height=tmp.h;
+	
+	pax_quadf uvs_rotated;
+	if (buf->rotation & 1) {
+		uvs_rotated = (pax_quadf) {
+			uvs->x0, uvs->y0,
+			uvs->x3, uvs->y3,
+			uvs->x2, uvs->y2,
+			uvs->x1, uvs->y1,
+		};
+		uvs = &uvs_rotated;
+	}
+	#endif
 	
 	// TODO: Re-work as integer UV rendererererrererer device.
 	#if PAX_COMPILE_MCR
@@ -158,7 +177,7 @@ static void pixel_aligned_render(pax_buf_t *buf, pax_col_t color, const pax_shad
 			.type      = PAX_TASK_RECT,
 			.color     = color,
 			.shader    = (pax_shader_t *) shader,
-			.quad_uvs  = (pax_quad_t *) uvs,
+			.quad_uvs  = (pax_quadf *) uvs,
 			.shape     = (float *) shape,
 			.shape_len = 4
 		};
@@ -220,7 +239,7 @@ static pax_vec2f text_bitmap_mono(pax_text_render_t *ctx, const pax_font_range_t
 		}
 		
 		// And UVs.
-		pax_quad_t uvs = {
+		pax_quadf uvs = {
 			.x0 = 0,                        .y0 = 0,
 			.x1 = range->bitmap_mono.width, .y1 = 0,
 			.x2 = range->bitmap_mono.width, .y2 = range->bitmap_mono.height,
@@ -296,7 +315,7 @@ static pax_vec2f text_bitmap_var(pax_text_render_t *ctx, const pax_font_range_t 
 		}
 		
 		// And UVs.
-		pax_quad_t uvs = {
+		pax_quadf uvs = {
 			.x0 = 0,            .y0 = 0,
 			.x1 = dims->draw_w, .y1 = 0,
 			.x2 = dims->draw_w, .y2 = dims->draw_h,

@@ -45,6 +45,8 @@ const char *pax_desc_err           (pax_err_t error);
 // Debug stuff.
 void        pax_debug              (pax_buf_t *buf);
 
+
+
 /* ===== MULTI-CORE RENDERING ==== */
 
 // If multi-core rendering is enabled, wait for the other core.
@@ -54,6 +56,8 @@ void       pax_join                ();
 void       pax_enable_multicore    (int core);
 // Disable multi-core rendering.
 void       pax_disable_multicore   ();
+
+
 
 /* ============ BUFFER =========== */
 
@@ -70,6 +74,9 @@ extern bool pax_enable_shape_aa;
 // Whether the buffer type potentially has alpha.
 #define PAX_IS_ALPHA(type)        (((type) & 0x00f00000) || PAX_IS_PALETTE(type))
 
+// Determine how much capacity a certain buffer initialisation needs.
+#define   PAX_BUF_CALC_SIZE(width, height, type) \
+		((PAX_GET_BPP(type) * (width) * (height) + 7) >> 3)
 // Create a new buffer.
 // If mem is NULL, a new area is allocated.
 void      pax_buf_init            (pax_buf_t *buf, void *mem, int width, int height, pax_buf_type_t type);
@@ -83,13 +90,27 @@ void      pax_buf_destroy         (pax_buf_t *buf);
 // Convert the buffer to the given new format.
 // If dest is NULL or equal to src, src will be converted.
 void      pax_buf_convert         (pax_buf_t *dst, pax_buf_t *src, pax_buf_type_t type);
+
+// Set rotation of the buffer.
+// 0 is not rotated, each unit is one quarter turn counter-clockwise.
+void      pax_buf_set_rotation    (pax_buf_t *buf, int rotation);
+// Get rotation of the buffer.
+// 0 is not rotated, each unit is one quarter turn counter-clockwise.
+int       pax_buf_get_rotation    (pax_buf_t *buf);
+// Scroll the buffer, filling with a placeholder color.
+void      pax_buf_scroll          (pax_buf_t *buf, pax_col_t placeholder, int x, int y);
+
 // Clip the buffer to the desired rectangle.
-void      pax_clip                (pax_buf_t *buf, float x, float y, float width, float height);
+void      pax_clip                (pax_buf_t *buf, int x, int y, int width, int height);
+// Get the current clip rectangle.
+pax_recti pax_get_clip            (pax_buf_t *buf);
 // Clip the buffer to it's full size.
 void      pax_noclip              (pax_buf_t *buf);
 
 // Check whether the buffer is dirty.
 bool      pax_is_dirty            (pax_buf_t *buf);
+// Get a copy of the dirty rectangle.
+pax_recti pax_get_dirty           (pax_buf_t *buf);
 // Mark the entire buffer as clean.
 void      pax_mark_clean          (pax_buf_t *buf);
 // Mark the entire buffer as dirty.
@@ -98,6 +119,182 @@ void      pax_mark_dirty0         (pax_buf_t *buf);
 void      pax_mark_dirty1         (pax_buf_t *buf, int x, int y);
 // Mark a rectangle as dirty.
 void      pax_mark_dirty2         (pax_buf_t *buf, int x, int y, int width, int height);
+
+
+
+/* ======= ROTATION HELPERS ====== */
+
+// Transforms the co-ordinates as 1x counter-clockwise rotation.
+static inline pax_vec2f pax_rotate_ccw1_vec2f(pax_buf_t *buf, pax_vec2f vec) {
+	return (pax_vec2f) {
+		vec.y,
+		buf->height - vec.x,
+	};
+}
+
+// Transforms the co-ordinates as 2x counter-clockwise rotation.
+static inline pax_vec2f pax_rotate_ccw2_vec2f(pax_buf_t *buf, pax_vec2f vec) {
+	return (pax_vec2f) {
+		buf->width  - vec.x,
+		buf->height - vec.y,
+	};
+}
+
+// Transforms the co-ordinates as 2x counter-clockwise rotation.
+static inline pax_vec2f pax_rotate_ccw3_vec2f(pax_buf_t *buf, pax_vec2f vec) {
+	return (pax_vec2f) {
+		buf->width - vec.y,
+		vec.x,
+	};
+}
+
+// Detects rotations and transforms co-ordinates accordingly.
+static inline pax_vec2f pax_rotate_det_vec2f(pax_buf_t *buf, pax_vec2f vec) {
+	#if PAX_COMPILE_ROTATE
+	switch (buf->rotation) {
+		default:
+		case 0: return vec;
+		case 1: return pax_rotate_ccw1_vec2f(buf, vec);
+		case 2: return pax_rotate_ccw2_vec2f(buf, vec);
+		case 3: return pax_rotate_ccw3_vec2f(buf, vec);
+	}
+	#else
+	return vec;
+	#endif
+}
+
+// Detects rotations and transforms co-ordinates accordingly.
+static inline pax_vec2f pax_rotate_det_vec2f(pax_buf_t *buf, pax_vec2f vec) {
+	#if PAX_COMPILE_ROTATE
+	switch (buf->rotation) {
+		default:
+		case 0: return vec;
+		case 3: return pax_rotate_ccw1_vec2f(buf, vec);
+		case 2: return pax_rotate_ccw2_vec2f(buf, vec);
+		case 1: return pax_rotate_ccw3_vec2f(buf, vec);
+	}
+	#else
+	return vec;
+	#endif
+}
+
+
+// Transforms the co-ordinates as 1x counter-clockwise rotation.
+static inline pax_rectf pax_rotate_ccw1_rectf(pax_buf_t *buf, pax_rectf vec) {
+	return (pax_rectf) {
+		vec.y,
+		buf->height - vec.x,
+		vec.h,
+		-vec.w,
+	};
+}
+
+// Transforms the co-ordinates as 2x counter-clockwise rotation.
+static inline pax_rectf pax_rotate_ccw2_rectf(pax_buf_t *buf, pax_rectf vec) {
+	return (pax_rectf) {
+		buf->width  - vec.x,
+		buf->height - vec.y,
+		-vec.w,
+		-vec.h,
+	};
+}
+
+// Transforms the co-ordinates as 2x counter-clockwise rotation.
+static inline pax_rectf pax_rotate_ccw3_rectf(pax_buf_t *buf, pax_rectf vec) {
+	return (pax_rectf) {
+		buf->width - vec.y,
+		vec.x,
+		-vec.h,
+		vec.w,
+	};
+}
+
+// Detects rotations and transforms co-ordinates accordingly.
+static inline pax_rectf pax_rotate_det_rectf(pax_buf_t *buf, pax_rectf vec) {
+	#if PAX_COMPILE_ROTATE
+	switch (buf->rotation) {
+		default:
+		case 0: return vec;
+		case 1: return pax_rotate_ccw1_rectf(buf, vec);
+		case 2: return pax_rotate_ccw2_rectf(buf, vec);
+		case 3: return pax_rotate_ccw3_rectf(buf, vec);
+	}
+	#else
+	return vec;
+	#endif
+}
+
+// Detects rotations and transforms co-ordinates accordingly.
+static inline pax_rectf pax_unrotate_det_rectf(pax_buf_t *buf, pax_rectf vec) {
+	#if PAX_COMPILE_ROTATE
+	switch (buf->rotation) {
+		default:
+		case 0: return vec;
+		case 3: return pax_rotate_ccw1_rectf(buf, vec);
+		case 2: return pax_rotate_ccw2_rectf(buf, vec);
+		case 1: return pax_rotate_ccw3_rectf(buf, vec);
+	}
+	#else
+	return vec;
+	#endif
+}
+
+
+// Transforms the co-ordinates as 1x counter-clockwise rotation.
+static inline pax_vec2i pax_rotate_ccw1_vec2i(pax_buf_t *buf, pax_vec2i vec) {
+	return (pax_vec2i) {
+		vec.y,
+		buf->height - 1 - vec.x,
+	};
+}
+
+// Transforms the co-ordinates as 2x counter-clockwise rotation.
+static inline pax_vec2i pax_rotate_ccw2_vec2i(pax_buf_t *buf, pax_vec2i vec) {
+	return (pax_vec2i) {
+		buf->width  - 1 - vec.x,
+		buf->height - 1 - vec.y,
+	};
+}
+
+// Transforms the co-ordinates as 2x counter-clockwise rotation.
+static inline pax_vec2i pax_rotate_ccw3_vec2i(pax_buf_t *buf, pax_vec2i vec) {
+	return (pax_vec2i) {
+		buf->width - 1 - vec.y,
+		vec.x,
+	};
+}
+
+// Detects rotations and transforms co-ordinates accordingly.
+static inline pax_vec2i pax_rotate_det_vec2i(pax_buf_t *buf, pax_vec2i vec) {
+	#if PAX_COMPILE_ROTATE
+	switch (buf->rotation) {
+		default:
+		case 0: return vec;
+		case 1: return pax_rotate_ccw1_vec2i(buf, vec);
+		case 2: return pax_rotate_ccw2_vec2i(buf, vec);
+		case 3: return pax_rotate_ccw3_vec2i(buf, vec);
+	}
+	#else
+	return vec;
+	#endif
+}
+
+// Detects rotations and transforms co-ordinates accordingly.
+static inline pax_vec2i pax_unrotate_det_vec2i(pax_buf_t *buf, pax_vec2i vec) {
+	#if PAX_COMPILE_ROTATE
+	switch (buf->rotation) {
+		default:
+		case 0: return vec;
+		case 3: return pax_rotate_ccw1_vec2i(buf, vec);
+		case 2: return pax_rotate_ccw2_vec2i(buf, vec);
+		case 1: return pax_rotate_ccw3_vec2i(buf, vec);
+	}
+	#else
+	return vec;
+	#endif
+}
+
+
 
 /* ============ COLORS =========== */
 
@@ -139,6 +336,8 @@ pax_col_t pax_col_merge           (pax_col_t base, pax_col_t top);
 // Tints the color, commonly used for textures.
 pax_col_t pax_col_tint            (pax_col_t col, pax_col_t tint);
 
+
+
 /* ============ MATRIX =========== */
 
 // Apply the given matrix to the stack.
@@ -151,6 +350,8 @@ void        pax_pop_2d            (pax_buf_t *buf);
 // If full is true, the entire stack gets cleared instead of just the top.
 void        pax_reset_2d          (pax_buf_t *buf, bool full);
 
+
+
 /* ======== DRAWING: PIXEL ======= */
 
 // Set a pixel, merging with alpha.
@@ -160,23 +361,25 @@ void        pax_set_pixel           (pax_buf_t *buf, pax_col_t color, int x, int
 // Get a pixel.
 pax_col_t   pax_get_pixel           (pax_buf_t *buf, int x, int y);
 
+
+
 /* ========= DRAWING: 2D ========= */
 
 // Draw a rectangle with a shader.
 // If uvs is NULL, a default will be used (0,0; 1,0; 1,1; 0,1).
-void        pax_shade_rect          (pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader, const pax_quad_t *uvs, float x, float y, float width, float height);
+void        pax_shade_rect          (pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader, const pax_quadf *uvs, float x, float y, float width, float height);
 // Draw a line with a shader.
 // If uvs is NULL, a default will be used (0,0; 1,0).
-void        pax_shade_line          (pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader, const pax_line_t *uvs, float x0, float y0, float x1, float y1);
+void        pax_shade_line          (pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader, const pax_linef *uvs, float x0, float y0, float x1, float y1);
 // Draw a triangle with a shader.
 // If uvs is NULL, a default will be used (0,0; 1,0; 0,1).
-void        pax_shade_tri           (pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader, const pax_tri_t  *uvs, float x0, float y0, float x1, float y1, float x2, float y2);
+void        pax_shade_tri           (pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader, const pax_trif  *uvs, float x0, float y0, float x1, float y1, float x2, float y2);
 // Draw an arc with a shader, angles in radians.
 // If uvs is NULL, a default will be used (0,0; 1,0; 1,1; 0,1).
-void        pax_shade_arc           (pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader, const pax_quad_t *uvs, float x,  float y,  float r,  float a0, float a1);
+void        pax_shade_arc           (pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader, const pax_quadf *uvs, float x,  float y,  float r,  float a0, float a1);
 // Draw a circle with a shader.
 // If uvs is NULL, a default will be used (0,0; 1,0; 1,1; 0,1).
-void        pax_shade_circle        (pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader, const pax_quad_t *uvs, float x,  float y,  float r);
+void        pax_shade_circle        (pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader, const pax_quadf *uvs, float x,  float y,  float r);
 
 // Draws an image at the image's normal size.
 void        pax_draw_image          (pax_buf_t *buf, pax_buf_t *image, float x, float y);
@@ -199,6 +402,8 @@ void        pax_draw_arc            (pax_buf_t *buf, pax_col_t color, float x,  
 // Draw a circle.
 void        pax_draw_circle         (pax_buf_t *buf, pax_col_t color, float x,  float y,  float r);
 
+
+
 /* ======= DRAWING: SIMPLE ======= */
 
 // Fill the background.
@@ -219,8 +424,10 @@ void        pax_simple_arc          (pax_buf_t *buf, pax_col_t color, float x,  
 // Draw a circle, ignoring matrix transform.
 void        pax_simple_circle       (pax_buf_t *buf, pax_col_t color, float x,  float y,  float r);
 
+
+
 #ifdef __cplusplus
-}
+} // extern "C"
 
 #include "cpp/pax_cxx.hpp"
 #endif //__cplusplus

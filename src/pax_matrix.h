@@ -35,19 +35,35 @@
 #define PAX_CXX_Vecf_union struct
 #endif
 
+/* Backwards compat typedefs. */
 typedef PAX_CXX_Vecf_union struct_pax_1vec2f pax_vec1_t;
 typedef PAX_CXX_Vecf_union struct_pax_2vec2f pax_vec2_t;
 typedef PAX_CXX_Vecf_union struct_pax_3vec2f pax_vec3_t;
 typedef PAX_CXX_Vecf_union struct_pax_4vec2f pax_vec4_t;
+typedef PAX_CXX_Vecf_union struct_pax_2vec2f pax_line_t;
+typedef PAX_CXX_Vecf_union struct_pax_3vec2f pax_tri_t;
+typedef PAX_CXX_Vecf_union struct_pax_4vec2f pax_quad_t;
+typedef PAX_CXX_Vecf_union struct_pax_rectf pax_rect_t;
+
+/* Integer vectors. */
+typedef PAX_CXX_Vecf_union struct_pax_1vec2i pax_vec2i;
+typedef PAX_CXX_Vecf_union struct_pax_1vec2i pax_1vec2i;
+typedef PAX_CXX_Vecf_union struct_pax_recti pax_recti;
+
+/* Float vectors. */
 typedef PAX_CXX_Vecf_union struct_pax_1vec2f pax_vec2f;
 typedef PAX_CXX_Vecf_union struct_pax_1vec2f pax_1vec2f;
 typedef PAX_CXX_Vecf_union struct_pax_2vec2f pax_2vec2f;
 typedef PAX_CXX_Vecf_union struct_pax_3vec2f pax_3vec2f;
 typedef PAX_CXX_Vecf_union struct_pax_4vec2f pax_4vec2f;
-typedef PAX_CXX_Vecf_union struct_pax_2vec2f pax_line_t;
-typedef PAX_CXX_Vecf_union struct_pax_3vec2f pax_tri_t;
-typedef PAX_CXX_Vecf_union struct_pax_4vec2f pax_quad_t;
-typedef PAX_CXX_Vecf_union pax_rect pax_rect_t;
+typedef PAX_CXX_Vecf_union struct_pax_2vec2f pax_linef;
+typedef PAX_CXX_Vecf_union struct_pax_3vec2f pax_trif;
+typedef PAX_CXX_Vecf_union struct_pax_4vec2f pax_quadf;
+typedef PAX_CXX_Vecf_union struct_pax_rectf pax_rectf;
+
+/* Shape things. */
+
+/* Matrix stuff. */
 typedef union  matrix_2d matrix_2d_t;
 typedef struct matrix_stack_2d matrix_stack_2d_t;
 
@@ -65,7 +81,11 @@ typedef union  struct_pax_1vec2f Pointf;
 typedef union  struct_pax_2vec2f Linef;
 typedef union  struct_pax_3vec2f Trif;
 typedef union  struct_pax_4vec2f Quadf;
-typedef union  pax_rect Rectf;
+typedef union  struct_pax_rectf Rectf;
+
+typedef union  struct_pax_1vec2i Vec2i;
+typedef union  struct_pax_recti Recti;
+
 typedef union  matrix_2d Matrix2f;
 typedef struct matrix_stack_2d Matrix2fStack;
 
@@ -167,6 +187,31 @@ typedef struct matrix_stack_2d Matrix2fStack;
 
 #endif //__cplusplus
 
+PAX_CXX_Vecf_union  struct_pax_1vec2i {
+#ifdef __cplusplus
+	struct {
+#endif
+		// Single point.
+		int x, y;
+#ifdef __cplusplus
+	};
+	int arr[2];
+#endif
+	
+#ifdef __cplusplus
+	// Initialise to zero.
+	struct_pax_1vec2i() {x=y=0;}
+	// Initialise with value.
+	struct_pax_1vec2i(int _x, int _y) {x=_x; y=_y;}
+	// Initialise from initialiser list.
+	struct_pax_1vec2i(std::initializer_list<int> list) { assert(list.size()==sizeof(arr)/sizeof(float)); std::copy(list.begin(), list.end(), arr); }
+	// Initialise as copy.
+	inline struct_pax_1vec2i(const pax::Vec2f &other);
+	
+	PAX_CXX_Vecf_OPERATORS(pax::Vec2i)
+#endif //__cplusplus
+};
+
 PAX_CXX_Vecf_union  struct_pax_1vec2f {
 #ifdef __cplusplus
 	struct {
@@ -185,8 +230,6 @@ PAX_CXX_Vecf_union  struct_pax_1vec2f {
 	struct_pax_1vec2f(float _x, float _y) {x=_x; y=_y;}
 	// Initialise from initialiser list.
 	struct_pax_1vec2f(std::initializer_list<float> list) { assert(list.size()==sizeof(arr)/sizeof(float)); std::copy(list.begin(), list.end(), arr); }
-	// Initialise as copy.
-	struct_pax_1vec2f(const pax::Vec2f &) = default;
 	
 	PAX_CXX_Vecf_OPERATORS(pax::Vec2f)
 	
@@ -199,6 +242,13 @@ PAX_CXX_Vecf_union  struct_pax_1vec2f {
 	float squareMagnitude();
 #endif //__cplusplus
 };
+
+#ifdef __cplusplus
+pax::Vec2i::struct_pax_1vec2i(const pax::Vec2f &other) {
+	x = (int) other.x;
+	y = (int) other.y;
+}
+#endif
 
 PAX_CXX_Vecf_union  struct_pax_2vec2f {
 #ifdef __cplusplus
@@ -218,8 +268,6 @@ PAX_CXX_Vecf_union  struct_pax_2vec2f {
 	struct_pax_2vec2f(float _x0, float _y0, float _x1, float _y1) {x0=_x0; y0=_y0; x1=_x1; y1=_y1;}
 	// Initialise from initialiser list.
 	struct_pax_2vec2f(std::initializer_list<float> list) { assert(list.size()==sizeof(arr)/sizeof(float)); std::copy(list.begin(), list.end(), arr); }
-	// Initialise as copy.
-	struct_pax_2vec2f(const struct_pax_2vec2f &) = default;
 	
 	PAX_CXX_Vec2f_INDEX()
 	PAX_CXX_Vecf_AVERAGE()
@@ -245,8 +293,6 @@ PAX_CXX_Vecf_union  struct_pax_3vec2f {
 	struct_pax_3vec2f(float _x0, float _y0, float _x1, float _y1, float _x2, float _y2) {x0=_x0; y0=_y0; x1=_x1; y1=_y1; x2=_x2; y2=_y2;}
 	// Initialise from initialiser list.
 	struct_pax_3vec2f(std::initializer_list<float> list) { assert(list.size()==sizeof(arr)/sizeof(float)); std::copy(list.begin(), list.end(), arr); }
-	// Initialise as copy.
-	struct_pax_3vec2f(const struct_pax_3vec2f &) = default;
 	
 	// Operator []
 	PAX_CXX_Vec2f_INDEX()
@@ -273,8 +319,6 @@ PAX_CXX_Vecf_union  struct_pax_4vec2f {
 	struct_pax_4vec2f(float _x0, float _y0, float _x1, float _y1, float _x2, float _y2, float _x3, float _y3) {x0=_x0; y0=_y0; x1=_x1; y1=_y1; x2=_x2; y2=_y2; x3=_x3; y3=_y3;}
 	// Initialise from initialiser list.
 	struct_pax_4vec2f(std::initializer_list<float> list) { assert(list.size()==sizeof(arr)/sizeof(float)); std::copy(list.begin(), list.end(), arr); }
-	// Initialise as copy.
-	struct_pax_4vec2f(const struct_pax_4vec2f &) = default;
 	
 	// Operator []
 	PAX_CXX_Vec2f_INDEX()
@@ -283,7 +327,66 @@ PAX_CXX_Vecf_union  struct_pax_4vec2f {
 #endif //__cplusplus
 };
 
-PAX_CXX_Vecf_union  pax_rect {
+PAX_CXX_Vecf_union  struct_pax_recti {
+#ifdef __cplusplus
+	struct {
+#endif
+		// Rectangle points.
+		int x, y, w, h;
+#ifdef __cplusplus
+	};
+	int arr[4];
+#endif
+	
+#ifdef __cplusplus
+	// Initialise to zero.
+	struct_pax_recti() {x=y=w=h=0;}
+	// Initialise with value.
+	struct_pax_recti(int _x, int _y, int _w, int _h) {x=_x; y=_y; w=_w; h=_h;}
+	// Initialise from initialiser list.
+	struct_pax_recti(std::initializer_list<int> list) { assert(list.size()==sizeof(arr)/sizeof(int)); std::copy(list.begin(), list.end(), arr); }
+	// Initialise from initialiser list.
+	struct_pax_recti(std::initializer_list<pax::Vec2f> list) { assert(list.size()==2); position()=list.begin()[0]; size()=list.begin()[1]; }
+	
+	// Operator []
+	PAX_CXX_Vec2f_INDEX()
+	
+	// Comparator.
+	bool operator==(const pax::Recti &other) const {
+		return x == other.x && y == other.y && w == other.w && h == other.h;
+	}
+	// Comparator.
+	bool operator!=(const pax::Recti &other) const {
+		return !operator==(other);
+	}
+	
+	// Get average position, i.e. center, of the rectangle.
+	pax::Vec2i average() {
+		return pax::Vec2f(x+w/2.0f, y+h/2.0f);
+	}
+	// Get X/Y component.
+	pax::Vec2i &position() {
+		return *(pax::Vec2i*) &x;
+	}
+	// Get width/height component.
+	pax::Vec2i &size() {
+		return *(pax::Vec2i*) &w;
+	}
+	// Create an equivalent quad.
+	pax::Quadf toQuad() {
+		return pax::Quadf(x, y,  x+w, y,  x+w, y+h,  x, y+h);
+	}
+	// Get a copy which gaurantees nonnegative dimensions.
+	pax::Recti fixSize() {
+		pax::Recti out = *this;
+		if (out.w < 0) { out.x += out.w; out.w = -out.w; }
+		if (out.h < 0) { out.y += out.h; out.h = -out.h; }
+		return out;
+	}
+#endif //__cplusplus
+};
+
+PAX_CXX_Vecf_union  struct_pax_rectf {
 #ifdef __cplusplus
 	struct {
 #endif
@@ -296,15 +399,13 @@ PAX_CXX_Vecf_union  pax_rect {
 	
 #ifdef __cplusplus
 	// Initialise to zero.
-	pax_rect() {x=y=w=h=0;}
+	struct_pax_rectf() {x=y=w=h=0;}
 	// Initialise with value.
-	pax_rect(float _x, float _y, float _w, float _h) {x=_x; y=_y; w=_w; h=_h;}
+	struct_pax_rectf(float _x, float _y, float _w, float _h) {x=_x; y=_y; w=_w; h=_h;}
 	// Initialise from initialiser list.
-	pax_rect(std::initializer_list<float> list) { assert(list.size()==sizeof(arr)/sizeof(float)); std::copy(list.begin(), list.end(), arr); }
+	struct_pax_rectf(std::initializer_list<float> list) { assert(list.size()==sizeof(arr)/sizeof(float)); std::copy(list.begin(), list.end(), arr); }
 	// Initialise from initialiser list.
-	pax_rect(std::initializer_list<pax::Vec2f> list) { assert(list.size()==2); position()=list.begin()[0]; size()=list.begin()[1]; }
-	// Initialise as copy.
-	pax_rect(const pax_rect &) = default;
+	struct_pax_rectf(std::initializer_list<pax::Vec2f> list) { assert(list.size()==2); position()=list.begin()[0]; size()=list.begin()[1]; }
 	
 	// Operator []
 	PAX_CXX_Vec2f_INDEX()
@@ -375,8 +476,6 @@ union matrix_2d {
 	matrix_2d(float _a0, float _a1, float _a2, float _b0, float _b1, float _b2) {a0=_a0; a1=_a1; a2=_a2; b0=_b0; b1=_b1; b2=_b2;}
 	// Initialise from initialiser list.
 	matrix_2d(std::initializer_list<float> list) { assert(list.size()==sizeof(arr)/sizeof(float)); std::copy(list.begin(), list.end(), arr); }
-	// Initialise as copy.
-	matrix_2d(const matrix_2d &) = default;
 	
 	// Comparator.
 	bool operator==(const matrix_2d &other) const {
