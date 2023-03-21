@@ -164,7 +164,7 @@ static inline pax_vec2f pax_rotate_det_vec2f(pax_buf_t *buf, pax_vec2f vec) {
 }
 
 // Detects rotations and transforms co-ordinates accordingly.
-static inline pax_vec2f pax_rotate_det_vec2f(pax_buf_t *buf, pax_vec2f vec) {
+static inline pax_vec2f pax_unrotate_det_vec2f(pax_buf_t *buf, pax_vec2f vec) {
 	#if PAX_COMPILE_ROTATE
 	switch (buf->rotation) {
 		default:
