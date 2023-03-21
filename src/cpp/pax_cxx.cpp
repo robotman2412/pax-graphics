@@ -129,6 +129,10 @@ pax_shader_t *Shader::getInternal() {
 
 
 
+#define COMMA ,
+
+#define GENERIC_VALIDITY_CHECK(retval) if (!internal) return retval;
+
 // Make an empty wrapper.
 Buffer::Buffer() {
 	// Set to safe default.
@@ -258,6 +262,25 @@ Buffer Buffer::clone() {
 }
 
 
+// Set rotation of the buffer.
+// 0 is not rotated, each unit is one quarter turn counter-clockwise.
+void Buffer::setRotation(int rotation) {
+	GENERIC_VALIDITY_CHECK();
+	internal->rotation = rotation & 3;
+}
+
+// Get rotation of the buffer.
+// 0 is not rotated, each unit is one quarter turn counter-clockwise.
+int Buffer::getRotation() {
+	GENERIC_VALIDITY_CHECK();
+	return internal->rotation;
+}
+
+// Scroll the buffer, filling with a placeholder color.
+void Buffer::scroll(Color placeholder, int x, int y) {
+	pax_buf_scroll(internal, placeholder, x, y);
+}
+
 // Enable reversed endianness mode.
 // This causes endiannes to be internally stored as reverse of native.
 // This operation does not update data stored in the buffer; it will become invalid.
@@ -306,10 +329,6 @@ int Buffer::height() { return internal ? internal->height : -1; }
 pax_buf_type_t Buffer::type() { return internal ? internal->type : (pax_buf_type_t) -1; }
 
 
-
-#define COMMA ,
-
-#define GENERIC_VALIDITY_CHECK(retval) if (!internal) return retval;
 
 static inline pax_shader_t *GENERIC_UNWRAP_SHADER(Shader *wrapped) {
 	return wrapped ? wrapped->getInternal() : NULL;

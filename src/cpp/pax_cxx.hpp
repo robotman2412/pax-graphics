@@ -128,6 +128,16 @@ class Buffer {
 		// Get an explicit copy-by-value of this buffer.
 		Buffer clone();
 		
+		// Set rotation of the buffer.
+		// 0 is not rotated, each unit is one quarter turn counter-clockwise.
+		void setRotation(int rotation);
+		// Get rotation of the buffer.
+		// 0 is not rotated, each unit is one quarter turn counter-clockwise.
+		int getRotation();
+		// Scroll the buffer, filling with a placeholder color.
+		void scroll(Color placeholder, int x, int y);
+		// Scroll the buffer using fill color as placeholder.
+		void scroll(int x, int y) { scroll(fillColor, x, y); }
 		// Enable reversed endianness mode.
 		// This causes endiannes to be internally stored as reverse of native.
 		// This operation does not update data stored in the buffer; it will become invalid.
