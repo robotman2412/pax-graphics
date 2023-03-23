@@ -6,6 +6,8 @@ idf_component_register(
 	"src/cpp/pax_cxx_text.cpp"
 	
 	"src/gui/pax_gui_base.cpp"
+	"src/gui/icons.cpp"
+	"src/gui/icons/icons.c"
 	"src/gui/elements/pax_gui_button.cpp"
 	"src/gui/elements/pax_gui_container.cpp"
 	"src/gui/elements/pax_gui_image.cpp"

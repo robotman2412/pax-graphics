@@ -45,9 +45,15 @@ void Container::unselect() {
 // Returns false if the index is invalid.
 bool Container::selectChild(int index) {
 	if (index < 0 || index >= children.size()) return false;
-	unselect();
+	// Unselect any other children.
+	if (selected != index) {
+		unselect();
+	}
+	// Select new child.
 	selected = index;
-	children[selected]->focus = FocusState::HIGHLIGHTED;
+	if (children[selected]->focus < FocusState::HIGHLIGHTED) {
+		children[selected]->focus = FocusState::HIGHLIGHTED;
+	}
 	return true;
 }
 

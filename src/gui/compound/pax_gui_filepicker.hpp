@@ -38,10 +38,21 @@
 
 namespace pax::gui {
 
+// A callback that takes a path and tries to return an icon for it.
+using IconGetter = std::function<std::shared_ptr<Buffer>(const std::string &dir, const std::string &name)>;
+
+// A list of getters called when a FileEntry is created.
+extern std::vector<IconGetter> iconGetters;
+
+// Registers a standard set of icon getters to the list.
+void addDefaultIconGetters();
+
+
+
 class FileEntry: public Element {
 	public:
-		// Callback type.
-		using Callback = std::function<void(FileEntry*)>;
+		// Callback for pressed/selected type.
+		using Callback = std::function<void(FileEntry&)>;
 		
 		// File icon, if any.
 		std::shared_ptr<Buffer> icon;
@@ -49,10 +60,13 @@ class FileEntry: public Element {
 		std::string name;
 		// Determined file type.
 		std::string type;
-		// Callback for when the user selects this file.
+		// Callback for when the user highlights this file.
 		Callback onPress;
 		
+		// Create an empty entry.
 		FileEntry(Rectf _bounds = {0,0,100,20}): Element(_bounds) {}
+		// Create an entry and look up an icon.
+		FileEntry(Rectf _bounds, const std::string &dir, const std::string &file);
 		
 		// Button pressed event.
 		virtual void buttonDown(InputButton which) override;
@@ -63,20 +77,37 @@ class FileEntry: public Element {
 		virtual void draw(Buffer &buf) override;
 };
 
+
+
 class FilePicker: protected ListContainer, public virtual Element {
+	public:
+		// Callback for file/directory selected type.
+		using Callback = std::function<void(FilePicker&)>;
+		
 	protected:
 		// Current directory.
 		std::string dir;
 		// Current selected filename, if any.
 		std::string filename;
 		
+		// Next path to select, used in `buttonDown` events.
+		std::string nextPath;
+		
 	public:
+		// Callback to run when a file/directory is selected.
+		Callback onSelect;
+		// Whether a directory can be selected.
+		bool dirSelectable;
+		// Whether a file can be selected.
+		// Files are hidden on the next `changeDir` if false.
+		bool fileSelectable;
+		
 		// Make a file picker in a certain directory.
 		FilePicker(Rectf bounds={0, 0, 200, 200}, std::string dir="/", std::string filename="");
 		
 		// Change directory.
 		// Returns success status.
-		bool changeDir(std::string dir);
+		bool changeDir(std::string dir, bool force=false);
 		// Change the currently selected path.
 		// Returns success status.
 		bool changePath(std::string path);
@@ -91,9 +122,12 @@ class FilePicker: protected ListContainer, public virtual Element {
 		// Get the currently selected filename.
 		std::string getFilename();
 		
+		// Button pressed event.
+		virtual void buttonDown(InputButton which) override;
+		// Button released event.
+		virtual void buttonUp(InputButton which) override;
+		
 		using ListContainer::tick;
-		using ListContainer::buttonDown;
-		using ListContainer::buttonUp;
 		using ListContainer::draw;
 };
 
