@@ -14,6 +14,7 @@ idf_component_register(
 	"src/gui/elements/pax_gui_label.cpp"
 	"src/gui/compound/pax_gui_colpicker.cpp"
 	"src/gui/compound/pax_gui_filepicker.cpp"
+	"src/gui/compound/pax_gui_keyboard.cpp"
 	
 	"src/pax_matrix.c"
 	"src/pax_gfx.c"
