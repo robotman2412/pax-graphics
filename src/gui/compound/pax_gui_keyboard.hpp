@@ -38,7 +38,7 @@
 
 namespace pax::gui {
 
-class Keyboard: protected Container, public virtual Element {
+class Keyboard: public Element {
 	public:
 		// Board selection.
 		enum class Type {
@@ -48,8 +48,10 @@ class Keyboard: protected Container, public virtual Element {
 			UPPERCASE,
 			// Numbers and common symbols.
 			NUMBERS,
-			// Less common symbols.
+			// Less common symbols: non-unicode edition.
 			SYMBOLS,
+			// Less common symbols: unicode edition.
+			UNICODE,
 			// Numbers only.
 			NUMPAD,
 		};
@@ -61,6 +63,9 @@ class Keyboard: protected Container, public virtual Element {
 		Type type;
 		// Current position.
 		int x, y;
+		
+		// Set the type of keyboard being shown.
+		void setType(Type next);
 		
 	public:
 		// Callback to run when an input is accepted.

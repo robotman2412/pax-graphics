@@ -26,4 +26,92 @@
 
 namespace pax::gui {
 
+using KmType = const std::string[4][10];
+
+// Lowercase keymap.
+static const std::string km_lowercase[4][10] = {
+	{"q", "w", "e", "r", "t", "y", "u", "i", "o", "p"},
+	{"a", "s", "d", "f", "g", "h", "j", "k", "l", ""},
+	{"z", "x", "c", "v", "b", "n", "m", ""},
+	{",", "."},
+};
+
+// Uppercase keymap.
+static const std::string km_uppercase[4][10] = {
+	{"Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P"},
+	{"A", "S", "D", "F", "G", "H", "J", "K", "L", ""},
+	{"Z", "X", "C", "V", "B", "N", "M", ""},
+	{"<", ">"},
+};
+
+// Numbers keymap.
+static const std::string km_numbers[4][10] = {
+	{"1", "2", "3", "4", "5", "6", "7", "8", "9", "0"},
+	{"@", "#", "$", "_", "&", "-", "+", "(", ")", "/"},
+	{"*", "\"", "'", ":", ";", "!", "?", ""},
+	{",", "."},
+};
+
+// Symbols keymap: non-unicode edition.
+static const std::string km_symbols[4][10] = {
+	{"(", ")", "[", "]", "{", "}", "`", "~", ""},
+	{"/", "|", "\\", "+", "-", "_", "=", ""},
+	{"^", "%", "<", ">", "'", "\"", ""},
+	{",", "."},
+};
+
+// Symbols keymap: unicode edition.
+static const std::string km_unicode[4][10] = {
+	{"~", "`", "|", "•", "√", "π", "÷", "×", "¶", "∆"},
+	{"£", "¢", "€", "¥", "^", "°", "=", "{", "}", "\\"},
+	{"%", "©", "®", "™", "✓", "[", "]", ""},
+	{",", "."},
+};
+
+// Type to keymap list.
+static const std::string (*keymaps[5])[10] = {
+	km_lowercase,
+	km_uppercase,
+	km_numbers,
+	km_symbols,
+	km_unicode,
+};
+
+
+
+// Set the type of keyboard being shown.
+void Keyboard::setType(Type next) {
+	type = next;
+}
+
+
+// Make a basic keyboard.
+Keyboard::Keyboard(Rectf bounds):
+	Element(bounds) {
+	setType(Type::LOWERCASE);
+}
+
+
+// Button pressed event.
+void Keyboard::buttonDown(InputButton which) {
+	
+}
+
+// Button released event.
+void Keyboard::buttonUp(InputButton which) {
+	
+}
+
+
+// Callback to run every so often.
+// Returns true if the object has to be redrawn.
+bool Keyboard::tick(uint64_t millis, uint64_t deltaMillis) {
+	return false;
+}
+
+// Draw this element to `buf`.
+void Keyboard::draw(Buffer &buf) {
+	
+}
+
 } // namespace pax::gui
