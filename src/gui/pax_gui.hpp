@@ -39,5 +39,6 @@
 
 #include <pax_gui_colpicker.hpp>
 #include <pax_gui_filepicker.hpp>
+#include <pax_gui_keyboard.hpp>
 
 #endif // PAX_GUI_HPP
