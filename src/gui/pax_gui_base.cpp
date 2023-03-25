@@ -44,7 +44,7 @@ Theme theme = {
 	// Text font.
 	.font = pax_font_sky,
 	// Text size.
-	.fontSize = (float) pax_font_sky->default_size,
+	.fontSize = 18,
 };
 
 // Global theme setting.

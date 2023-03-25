@@ -48,10 +48,8 @@ class Keyboard: public Element {
 			UPPERCASE,
 			// Numbers and common symbols.
 			NUMBERS,
-			// Less common symbols: non-unicode edition.
+			// Less common symbols.
 			SYMBOLS,
-			// Less common symbols: unicode edition.
-			UNICODE,
 			// Numbers only.
 			NUMPAD,
 		};
@@ -62,12 +60,22 @@ class Keyboard: public Element {
 		// Current keyboard type.
 		Type type;
 		// Shift key status: 0 is off, 1 is on, 2 is caps lock.
-		int shift;
+		bool shift;
 		// Current position.
 		int x, y;
+		// Current value.
+		std::string value;
+		// Some being-held-down button.
+		InputButton held;
+		// Cursor index.
+		int cursor;
+		// Last time of button press.
+		uint64_t buttonTime;
 		
 		// Set the type of keyboard being shown.
 		void setType(Type next);
+		// Set value of shift key.
+		void setShift(bool newShift);
 		// Draws a row of the keyboard.
 		void drawRow(Buffer &buf, const std::string *chars, int selected, int row, int charW, int charH);
 		
@@ -84,6 +92,16 @@ class Keyboard: public Element {
 		
 		// Make a basic keyboard.
 		Keyboard(Rectf bounds={0, 0, 200, 200});
+		
+		// Get the current string value.
+		std::string getValue();
+		// set the current string value.
+		void setValue(std::string newValue);
+		
+		// Type some text into the box.
+		void input(std::string value);
+		// Delete character to the left.
+		void backspace();
 		
 		// Button pressed event.
 		virtual void buttonDown(InputButton which) override;
