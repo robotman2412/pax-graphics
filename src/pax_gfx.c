@@ -144,15 +144,6 @@ const char *pax_desc_err(pax_err_t error) {
 	else return desc[-error];
 }
 
-// Debug stuff.
-void pax_debug(pax_buf_t *buf) {
-	// Try to cause the error flood.
-	pax_buf_t garbage;
-	garbage.buf = NULL;
-	
-	pax_draw_image(buf, &garbage, 2, 2);
-}
-
 
 
 /* ======= DRAWING HELPERS ======= */

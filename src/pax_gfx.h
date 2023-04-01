@@ -42,8 +42,6 @@ extern pax_err_t pax_last_error;
 
 // Describe error.
 const char *pax_desc_err           (pax_err_t error);
-// Debug stuff.
-void        pax_debug              (pax_buf_t *buf);
 
 
 
