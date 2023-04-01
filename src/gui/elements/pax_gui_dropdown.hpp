@@ -22,24 +22,51 @@
 	SOFTWARE.
 */
 
-#ifndef PAX_GUI_HPP
-#define PAX_GUI_HPP
+#ifndef PAX_GUI_DROPDOWN_HPP
+#define PAX_GUI_DROPDOWN_HPP
 
 #include <pax_gfx.h>
 
-#ifndef __cplusplus
-#error "pax_gui is a C++ library, included from a C translation unit"
-#endif // __cplusplus
+#ifdef __cplusplus
+
+#include <memory>
+#include <vector>
+#include <functional>
 
 #include <pax_gui_base.hpp>
-#include <pax_gui_button.hpp>
-#include <pax_gui_container.hpp>
-#include <pax_gui_dropdown.hpp>
-#include <pax_gui_image.hpp>
-#include <pax_gui_label.hpp>
 
-#include <pax_gui_colpicker.hpp>
-#include <pax_gui_filepicker.hpp>
-#include <pax_gui_keyboard.hpp>
+namespace pax::gui {
 
-#endif // PAX_GUI_HPP
+// A simple dropdown with some centered text on it.
+class Dropdown: public Element {
+	public:
+		// Type used for change events.
+		using Callback = std::function<void(Dropdown&)>;
+		
+		// Index of the selected option.
+		int selected;
+		// Valid options for the dropdown.
+		std::vector<std::string> options;
+		
+		// The function to call when this dropdown is changed.
+		Callback    onChange;
+		
+		// Make a new dropdown with no options.
+		Dropdown(Rectf _bounds = {0, 0, 100, 20}, Callback _onChange = {});
+		// This is required to allow subclasses with virtuals.
+		virtual ~Dropdown() = default;
+		
+		// Dropdown pressed event.
+		virtual void buttonDown(InputButton which) override;
+		// Dropdown released event.
+		virtual void buttonUp(InputButton which) override;
+		
+		// Draw this element to `buf`.
+		virtual void draw(Buffer &buf) override;
+};
+
+} // namespace pax::gui
+
+#endif // __cplusplus
+
+#endif // PAX_GUI_DROPDOWN_HPP

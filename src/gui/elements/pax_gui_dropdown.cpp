@@ -22,24 +22,30 @@
 	SOFTWARE.
 */
 
-#ifndef PAX_GUI_HPP
-#define PAX_GUI_HPP
+#include "pax_gui_dropdown.hpp"
 
-#include <pax_gfx.h>
+namespace pax::gui {
 
-#ifndef __cplusplus
-#error "pax_gui is a C++ library, included from a C translation unit"
-#endif // __cplusplus
+// Make a new dropdown with no options.
+Dropdown::Dropdown(Rectf _bounds, Callback _onChange):
+	Element(_bounds), selected(-1), onChange(_onChange) {}
 
-#include <pax_gui_base.hpp>
-#include <pax_gui_button.hpp>
-#include <pax_gui_container.hpp>
-#include <pax_gui_dropdown.hpp>
-#include <pax_gui_image.hpp>
-#include <pax_gui_label.hpp>
 
-#include <pax_gui_colpicker.hpp>
-#include <pax_gui_filepicker.hpp>
-#include <pax_gui_keyboard.hpp>
+// Dropdown pressed event.
+void Dropdown::buttonDown(InputButton which) {
+	
+}
 
-#endif // PAX_GUI_HPP
+// Dropdown released event.
+void Dropdown::buttonUp(InputButton which) {
+	
+}
+
+
+// Draw this element to `buf`.
+void Dropdown::draw(Buffer &buf) {
+	
+}
+
+
+} // namespace pax::gui

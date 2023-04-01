@@ -157,9 +157,13 @@ void Container::draw(Buffer &buf) {
 	// Draw all children.
 	for (int i = 0; i < children.size(); i++) {
 		auto &iter = children[i];
-		if (iter->visible) {
+		if (iter->visible && i != selected) {
 			iter->draw(buf);
 		}
+	}
+	// Draw selected child on top.
+	if ((unsigned) selected < children.size() && children[selected]->visible) {
+		children[selected]->draw(buf);
 	}
 	
 	// Restore transformation.
