@@ -185,6 +185,96 @@ typedef struct matrix_stack_2d Matrix2fStack;
 	PAX_CXX_Vecf_OPERATOR_ASSIGN(_type, *=) \
 	PAX_CXX_Vecf_OPERATOR_ASSIGN(_type, /=)
 
+#define PAX_CXX_Vec2i_INDEX() \
+	pax::Vec2i &operator[](int index) { \
+		const size_t _size = sizeof(arr) / 2 / sizeof(float); \
+		if (index < 0 || index >= _size) { \
+			fprintf(stderr, "Error: Index out of bounds: %zd (not in range 0-%zu)\n", index, _size); \
+			abort(); \
+		} \
+		return ((pax::Vec2i*) arr)[index]; \
+	} \
+	const pax::Vec2i &operator[](int index) const { \
+		const size_t _size = sizeof(arr) / 2 / sizeof(float); \
+		if (index < 0 || index >= _size) { \
+			fprintf(stderr, "Error: Index out of bounds: %zd (not in range 0-%zu)\n", index, _size); \
+			abort(); \
+		} \
+		return ((const pax::Vec2i*) arr)[index]; \
+	}
+
+#define PAX_CXX_Veci_AVERAGE() \
+	pax::Vec2i average() const { \
+		int64_t avgX, avgY; \
+		const size_t _size = sizeof(arr) / 2 / sizeof(int); \
+		for (size_t i = 0; i < _size; i++) { \
+			avgX += arr[i].x; \
+			avgY += arr[i].y; \
+		} \
+		return {(avgX + _size/2) / _size, (avgY + _size/2) / _size}; \
+	}
+
+#define PAX_CXX_Veci_OPERATOR(_type, _oper) \
+	_type operator _oper(_type rhs) const { \
+		_type out; \
+		const size_t _size = sizeof(arr) / 2 / sizeof(int); \
+		for (size_t i = 0; i < _size; i++) { \
+			out.arr[i] = arr[i] _oper rhs.arr[i]; \
+		} \
+		return out; \
+	} \
+	_type operator _oper(int rhs) const { \
+		_type out; \
+		const size_t _size = sizeof(arr) / 2 / sizeof(int); \
+		for (size_t i = 0; i < _size; i++) { \
+			out.arr[i] = arr[i] _oper rhs; \
+		} \
+		return out; \
+	}
+
+#define PAX_CXX_Veci_OPERATOR_ASSIGN(_type, _oper) \
+	_type &operator _oper(_type rhs) { \
+		const size_t _size = sizeof(arr) / 2 / sizeof(int); \
+		for (size_t i = 0; i < _size; i++) { \
+			arr[i] _oper rhs.arr[i]; \
+		} \
+		return *this; \
+	} \
+	_type &operator _oper(int rhs) { \
+		const size_t _size = sizeof(arr) / 2 / sizeof(int); \
+		for (size_t i = 0; i < _size; i++) { \
+			arr[i] _oper rhs; \
+		} \
+		return *this; \
+	}
+
+#define PAX_CXX_Veci_OPERATORS(_type) \
+	_type round() const { \
+		return *this; \
+	} \
+	bool operator==(_type rhs) const { \
+		const size_t _size = sizeof(arr) / 2 / sizeof(int); \
+		for (size_t i = 0; i < _size; i++) { \
+			if (arr[i] != rhs.arr[i]) return false; \
+		} \
+		return true; \
+	} \
+	bool operator!=(_type rhs) const { \
+		const size_t _size = sizeof(arr) / 2 / sizeof(int); \
+		for (size_t i = 0; i < _size; i++) { \
+			if (arr[i] == rhs.arr[i]) return false; \
+		} \
+		return true; \
+	} \
+	PAX_CXX_Veci_OPERATOR(_type, +) \
+	PAX_CXX_Veci_OPERATOR(_type, -) \
+	PAX_CXX_Veci_OPERATOR(_type, *) \
+	PAX_CXX_Veci_OPERATOR(_type, /) \
+	PAX_CXX_Veci_OPERATOR_ASSIGN(_type, +=) \
+	PAX_CXX_Veci_OPERATOR_ASSIGN(_type, -=) \
+	PAX_CXX_Veci_OPERATOR_ASSIGN(_type, *=) \
+	PAX_CXX_Veci_OPERATOR_ASSIGN(_type, /=)
+
 #endif //__cplusplus
 
 PAX_CXX_Vecf_union  struct_pax_1vec2i {
@@ -208,7 +298,7 @@ PAX_CXX_Vecf_union  struct_pax_1vec2i {
 	// Initialise as copy.
 	inline struct_pax_1vec2i(const pax::Vec2f &other);
 	
-	PAX_CXX_Vecf_OPERATORS(pax::Vec2i)
+	PAX_CXX_Veci_OPERATORS(pax::Vec2i)
 #endif //__cplusplus
 };
 
@@ -269,8 +359,11 @@ PAX_CXX_Vecf_union  struct_pax_2vec2f {
 	// Initialise from initialiser list.
 	struct_pax_2vec2f(std::initializer_list<float> list) { assert(list.size()==sizeof(arr)/sizeof(float)); std::copy(list.begin(), list.end(), arr); }
 	
+	// Operator []
 	PAX_CXX_Vec2f_INDEX()
+	// Function average()
 	PAX_CXX_Vecf_AVERAGE()
+	// Operators + - * / += -= *= /= =
 	PAX_CXX_Vecf_OPERATORS(pax::BiVec2f)
 #endif //__cplusplus
 };
@@ -346,10 +439,10 @@ PAX_CXX_Vecf_union  struct_pax_recti {
 	// Initialise from initialiser list.
 	struct_pax_recti(std::initializer_list<int> list) { assert(list.size()==sizeof(arr)/sizeof(int)); std::copy(list.begin(), list.end(), arr); }
 	// Initialise from initialiser list.
-	struct_pax_recti(std::initializer_list<pax::Vec2f> list) { assert(list.size()==2); position()=list.begin()[0]; size()=list.begin()[1]; }
+	struct_pax_recti(std::initializer_list<pax::Vec2i> list) { assert(list.size()==2); position()=list.begin()[0]; size()=list.begin()[1]; }
 	
 	// Operator []
-	PAX_CXX_Vec2f_INDEX()
+	PAX_CXX_Vec2i_INDEX()
 	
 	// Comparator.
 	bool operator==(const pax::Recti &other) const {
@@ -361,23 +454,31 @@ PAX_CXX_Vecf_union  struct_pax_recti {
 	}
 	
 	// Get average position, i.e. center, of the rectangle.
-	pax::Vec2i average() {
+	pax::Vec2i average() const {
 		return pax::Vec2f(x+w/2.0f, y+h/2.0f);
 	}
 	// Get X/Y component.
 	pax::Vec2i &position() {
 		return *(pax::Vec2i*) &x;
 	}
+	// Get X/Y component.
+	const pax::Vec2i &position() const {
+		return *(pax::Vec2i*) &x;
+	}
 	// Get width/height component.
 	pax::Vec2i &size() {
 		return *(pax::Vec2i*) &w;
 	}
+	// Get width/height component.
+	const pax::Vec2i &size() const {
+		return *(pax::Vec2i*) &w;
+	}
 	// Create an equivalent quad.
-	pax::Quadf toQuad() {
+	pax::Quadf toQuad() const {
 		return pax::Quadf(x, y,  x+w, y,  x+w, y+h,  x, y+h);
 	}
 	// Get a copy which gaurantees nonnegative dimensions.
-	pax::Recti fixSize() {
+	pax::Recti fixSize() const {
 		pax::Recti out = *this;
 		if (out.w < 0) { out.x += out.w; out.w = -out.w; }
 		if (out.h < 0) { out.y += out.h; out.h = -out.h; }
