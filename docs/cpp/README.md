@@ -13,15 +13,6 @@ For supported platforms, [see this link](../supported-platforms.md).
 - [Getting started](#getting-started)
 - [API overview](#api-overview)
 - [Example code](#example-code)
-  - [`pax::Buffer`](#example-paxbuffer)
-    - [`Setup functions`](#example-setup)
-    - [`Basic drawing functions`](#example-basic-drawing)
-    - And more
-  - [`pax::Shader`](#example-paxshader)
-  - [Vector types](#example-paxvectors)
-    - [`pax::Vec2f`](#example-paxvec2f)
-    - [`pax::Rectf`](#example-paxrectf)
-    - And more
 
 
 
@@ -36,9 +27,10 @@ This chapter contains links to complete specifications of every type and every f
   - [Basic drawing functions](drawing.md#basic-drawing-functions)
     - [Circles](drawing.md#circles)
     - [Arcs](drawing.md#arcs)
+    - [Triangles](drawing.md#triangles)
     - [Rectangles](drawing.md#rectangles)
     - [Lines](drawing.md#rectangles)
-  - [Outlines](drawing.md#outlines)
+    - [Arbitrary shapes](drawing.md#arbitrary-shapes)
   - [Text](drawing.md#text)
   - [Images](drawing.md#images)
   - [Shader drawing functions](drawing.md#shaded-drawing)
