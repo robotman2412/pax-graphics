@@ -51,7 +51,7 @@ void pax_vectorise_arc        (pax_vec2f *output, size_t num_points, float x, fl
 // Vectorise a circle outline.
 void pax_vectorise_circle     (pax_vec2f *output, size_t num_points, float x, float y, float r);
 
-/* =========== OUTLINES ========== */
+/* ======= OUTLINE EDITIONS ====== */
 
 // Draw a rectangle outline.
 void pax_outline_rect         (pax_buf_t *buf, pax_col_t color, float x, float y, float width, float height);
@@ -61,6 +61,22 @@ void pax_outline_tri          (pax_buf_t *buf, pax_col_t color, float x0, float 
 void pax_outline_arc          (pax_buf_t *buf, pax_col_t color, float x, float y, float r, float a0, float a1);
 // Draw a circle outline.
 void pax_outline_circle       (pax_buf_t *buf, pax_col_t color, float x, float y, float r);
+
+// Draw a rectangle outline with a shader.
+// If uvs is NULL, a default will be used (0,0; 1,0; 1,1; 0,1).
+void pax_shade_outline_rect   (pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader, const pax_quadf *uvs, float x, float y, float width, float height);
+// Draw a triangle with a shader.
+// If uvs is NULL, a default will be used (0,0; 1,0; 1,1; 0,1).
+void pax_shade_outline_tri    (pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader, const pax_trif *uvs, float x0, float y0, float x1, float y1, float x2, float y2);
+// Draw an arc outline with a shader, angle in radians.
+// If uvs is NULL, a default will be used (0,0; 1,0; 1,1; 0,1).
+void pax_shade_outline_arc    (pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader, const pax_quadf *uvs, float x, float y, float r, float a0, float a1);
+// Draw a circle outline with a shader.
+// If uvs is NULL, a default will be used (0,0; 1,0; 1,1; 0,1).
+void pax_shade_outline_circle (pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader, const pax_quadf *uvs, float x, float y, float r);
+
+/* =========== OUTLINES ========== */
+
 // Partially outline a shape defined by a list of points.
 // From and to range from 0 to 1, outside this range is ignored.
 // Does not close the shape: this must be done manually.

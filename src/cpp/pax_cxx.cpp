@@ -330,8 +330,8 @@ pax_buf_type_t Buffer::type() { return internal ? internal->type : (pax_buf_type
 
 
 
-static inline pax_shader_t *GENERIC_UNWRAP_SHADER(Shader *wrapped) {
-	return wrapped ? wrapped->getInternal() : NULL;
+static inline pax_shader_t *GENERIC_UNWRAP_SHADER(Shader &wrapped) {
+	return wrapped.getInternal();
 }
 
 #define GENERIC_WRAPPER_IMPL(localName, remoteName, uvType, extraArgs, unpackedArgs) \
@@ -343,11 +343,11 @@ void Buffer::draw##localName(Color color, extraArgs) {\
 	GENERIC_VALIDITY_CHECK()\
 	pax_draw_##remoteName(internal, color, unpackedArgs);\
 }\
-void Buffer::draw##localName(Shader *shader, uvType *uvs, extraArgs) {\
+void Buffer::draw##localName(Shader &shader, uvType *uvs, extraArgs) {\
 	GENERIC_VALIDITY_CHECK()\
 	pax_shade_##remoteName(internal, fillColor, GENERIC_UNWRAP_SHADER(shader), uvs, unpackedArgs);\
 }\
-void Buffer::draw##localName(Color color, Shader *shader, uvType *uvs, extraArgs) {\
+void Buffer::draw##localName(Color color, Shader &shader, uvType *uvs, extraArgs) {\
 	GENERIC_VALIDITY_CHECK()\
 	pax_shade_##remoteName(internal, color, GENERIC_UNWRAP_SHADER(shader), uvs, unpackedArgs);\
 }\
@@ -358,6 +358,14 @@ void Buffer::outline##localName(extraArgs) {\
 void Buffer::outline##localName(Color color, extraArgs) {\
 	GENERIC_VALIDITY_CHECK()\
 	pax_outline_##remoteName(internal, color, unpackedArgs);\
+}\
+void Buffer::outline##localName(Shader &shader, uvType *uvs, extraArgs) {\
+	GENERIC_VALIDITY_CHECK()\
+	pax_shade_outline_##remoteName(internal, lineColor, GENERIC_UNWRAP_SHADER(shader), uvs, unpackedArgs);\
+}\
+void Buffer::outline##localName(Color color, Shader &shader, uvType *uvs, extraArgs) {\
+	GENERIC_VALIDITY_CHECK()\
+	pax_shade_outline_##remoteName(internal, color, GENERIC_UNWRAP_SHADER(shader), uvs, unpackedArgs);\
 }
 
 
@@ -382,28 +390,52 @@ void Buffer::drawLine(Color color, float x0, float y0, float x1, float y1) {
 	GENERIC_VALIDITY_CHECK()
 	pax_draw_line(internal, color, x0, y0, x1, y1);
 }
+// Draws a line with the default outline color.
+void Buffer::drawLine(Shader &shader, Linef* uvs, float x0, float y0, float x1, float y1) {
+	GENERIC_VALIDITY_CHECK()
+	pax_shade_line(internal, lineColor, shader.getInternal(), uvs, x0, y0, x1, y1);
+}
+// Draws a line with a custom outline color.
+void Buffer::drawLine(Color color, Shader &shader, Linef* uvs, float x0, float y0, float x1, float y1) {
+	GENERIC_VALIDITY_CHECK()
+	pax_shade_line(internal, color, shader.getInternal(), uvs, x0, y0, x1, y1);
+}
 
 // Outlines an arbitrary shape.
-void Buffer::outline(float x, float y, Shape &shape) { outline(lineColor, NULL, x, y, shape); }
+void Buffer::outline(float x, float y, Shape &shape) { outline(lineColor, x, y, shape); }
 // Outlines an arbitrary shape.
-void Buffer::outline(Color color, float x, float y, Shape &shape) { outline(color, NULL, x, y, shape); }
-// Outlines an arbitrary shape.
-void Buffer::outline(Color color, Shader *shader, float x, float y, Shape &shape) {
+void Buffer::outline(Color color, float x, float y, Shape &shape) {
 	pax_push_2d(internal);
 	pax_apply_2d(internal, matrix_2d_translate(x, y));
-	shape._int_draw(internal, color, shader ? shader->getInternal() : NULL, true);
+	shape._int_draw(internal, color, NULL, true);
+	pax_pop_2d(internal);
+}
+// Outlines an arbitrary shape.
+void Buffer::outline(Shader &shader, float x, float y, Shape &shape) { outline(lineColor, shader, x, y, shape); }
+// Outlines an arbitrary shape.
+void Buffer::outline(Color color, Shader &shader, float x, float y, Shape &shape) {
+	pax_push_2d(internal);
+	pax_apply_2d(internal, matrix_2d_translate(x, y));
+	shape._int_draw(internal, color, shader.getInternal(), true);
 	pax_pop_2d(internal);
 }
 
 // Draws an arbitrary shape.
-void Buffer::draw(float x, float y, Shape &shape) { draw(fillColor, NULL, x, y, shape); }
+void Buffer::draw(float x, float y, Shape &shape) { draw(fillColor, x, y, shape); }
 // Draws an arbitrary shape.
-void Buffer::draw(Color color, float x, float y, Shape &shape) { draw(color, NULL, x, y, shape); }
-// Draws an arbitrary shape.
-void Buffer::draw(Color color, Shader *shader, float x, float y, Shape &shape) {
+void Buffer::draw(Color color, float x, float y, Shape &shape) {
 	pax_push_2d(internal);
 	pax_apply_2d(internal, matrix_2d_translate(x, y));
-	shape._int_draw(internal, color, shader ? shader->getInternal() : NULL, false);
+	shape._int_draw(internal, color, NULL, false);
+	pax_pop_2d(internal);
+}
+// Draws an arbitrary shape.
+void Buffer::draw(Shader &shader, float x, float y, Shape &shape) { draw(fillColor, shader, x, y, shape); }
+// Draws an arbitrary shape.
+void Buffer::draw(Color color, Shader &shader, float x, float y, Shape &shape) {
+	pax_push_2d(internal);
+	pax_apply_2d(internal, matrix_2d_translate(x, y));
+	shape._int_draw(internal, color, shader.getInternal(), false);
 	pax_pop_2d(internal);
 }
 

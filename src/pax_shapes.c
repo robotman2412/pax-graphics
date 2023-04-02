@@ -330,7 +330,7 @@ void pax_vectorise_circle(pax_vec2f *output, size_t num_points, float x, float y
 
 
 
-/* =========== OUTLINES ========== */
+/* ======= OUTLINE EDITIONS ====== */
 
 // Draw a rectangle outline.
 void pax_outline_rect(pax_buf_t *buf, pax_col_t color, float x, float y, float width, float height) {
@@ -399,6 +399,136 @@ void pax_outline_arc(pax_buf_t *buf, pax_col_t color, float x, float y, float r,
 void pax_outline_circle(pax_buf_t *buf, pax_col_t color, float x, float y, float r) {
 	pax_outline_arc(buf, color, x, y, r, 0, M_PI * 2);
 }
+
+
+// Dummy UVs used for quad UVs where NULL is provided.
+static const pax_quadf dummy_quad_uvs = {
+	.x0 = 0, .y0 = 0,
+	.x1 = 1, .y1 = 0,
+	.x2 = 1, .y2 = 1,
+	.x3 = 0, .y3 = 1
+};
+
+// Dummy UVs used for tri UVs where NULL is provided.
+static const pax_trif dummy_tri_uvs = {
+	.x0 = 0, .y0 = 0,
+	.x1 = 1, .y1 = 0,
+	.x2 = 0, .y2 = 1
+};
+
+// Draw a rectangle outline with a shader.
+// If uvs is NULL, a default will be used (0,0; 1,0; 1,1; 0,1).
+void pax_shade_outline_rect(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader, const pax_quadf *uvs, float x, float y, float width, float height) {
+	pax_linef tmp;
+	if (uvs == NULL) {
+		uvs = &dummy_quad_uvs;
+	}
+	
+	pax_push_2d(buf);
+	pax_apply_2d(buf, matrix_2d_translate(x, y));
+	
+	tmp = (pax_linef) { uvs->x0, uvs->y0, uvs->x1, uvs->y1};
+	pax_shade_line(buf, color, shader, &tmp, 0,     0,      width, 0);
+	
+	tmp = (pax_linef) { uvs->x1, uvs->y1, uvs->x2, uvs->y2};
+	pax_shade_line(buf, color, shader, &tmp, width, 0,      width, height);
+	
+	tmp = (pax_linef) { uvs->x2, uvs->y2, uvs->x3, uvs->y3};
+	pax_shade_line(buf, color, shader, &tmp, width, height, 0,     height);
+	
+	tmp = (pax_linef) { uvs->x3, uvs->y3, uvs->x0, uvs->y0};
+	pax_shade_line(buf, color, shader, &tmp, 0,     height, 0,     0);
+	
+	pax_pop_2d(buf);
+}
+
+// Draw a triangle with a shader.
+// If uvs is NULL, a default will be used (0,0; 1,0; 1,1; 0,1).
+void pax_shade_outline_tri(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
+		const pax_trif *uvs, float x0, float y0, float x1, float y1, float x2, float y2) {
+	pax_linef tmp;
+	if (uvs == NULL) {
+		uvs = &dummy_tri_uvs;
+	}
+	
+	tmp = (pax_linef) { uvs->x0, uvs->y0, uvs->x1, uvs->y1};
+	pax_shade_line(buf, color, shader, &tmp, x0, y0, x1, y1);
+	
+	tmp = (pax_linef) { uvs->x1, uvs->y1, uvs->x2, uvs->y2};
+	pax_shade_line(buf, color, shader, &tmp, x1, y1, x2, y2);
+	
+	tmp = (pax_linef) { uvs->x2, uvs->y2, uvs->x0, uvs->y0};
+	pax_shade_line(buf, color, shader, &tmp, x2, y2, x0, y0);
+}
+
+// Draw an arc outline with a shader, angle in radians.
+// If uvs is NULL, a default will be used (0,0; 1,0; 1,1; 0,1).
+void pax_shade_outline_arc(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
+		const pax_quadf *uvs, float x, float y, float r, float a0, float a1) {
+	PAX_BUF_CHECK("pax_shade_outline_arc");
+	pax_linef tmp;
+	if (uvs == NULL) {
+		uvs = &dummy_quad_uvs;
+	}
+	
+	// Simplify the angles slightly.
+	float a2 = fmodf(a0, M_PI * 2);
+	a1 += a2 - a0;
+	a0 = a2;
+	if (a1 < a0) PAX_SWAP(float, a0, a1);
+	if (a1 - a0 > M_PI * 2) {
+		a1 = M_PI * 2;
+		a0 = 0;
+	}
+	
+	// Pick an appropriate number of divisions.
+	int n_div;
+	matrix_2d_t matrix = buf->stack_2d.value;
+	float c_r = r * sqrtf(matrix.a0*matrix.a0 + matrix.b0*matrix.b0) * sqrtf(matrix.a1*matrix.a1 + matrix.b1*matrix.b1);
+	if (c_r > 30) n_div = (a1 - a0) / M_PI * 32 + 1;
+	else n_div = (a1 - a0) / M_PI * 16 + 1;
+	
+	// Get the sine and cosine of one division, used for rotation in the loop.
+	float div_angle = (a1 - a0) / n_div;
+	float c_sin = sinf(div_angle);
+	float c_cos = cosf(div_angle);
+	
+	// Start with a unit vector according to a0.
+	float x0 = cosf(a0);
+	float y0 = sinf(a0);
+	// Transform UV coords.
+	tmp.x0 = pax_flerp4(x0, y0, uvs->x0, uvs->x1, uvs->x3, uvs->x2);
+	tmp.y0 = pax_flerp4(x0, y0, uvs->y0, uvs->y1, uvs->y3, uvs->y2);
+	
+	// Draw it as a series of triangles, rotating with what is essentially matrix multiplication.
+	for (int i = 0; i < n_div; i++) {
+		// Perform the rotation.
+		float x1 = x0 * c_cos - y0 * c_sin;
+		float y1 = x0 * c_sin + y0 * c_cos;
+		// Transform UV coords.
+		tmp.x1 = pax_flerp4(x1, y1, uvs->x0, uvs->x1, uvs->x3, uvs->x2);
+		tmp.y1 = pax_flerp4(x1, y1, uvs->y0, uvs->y1, uvs->y3, uvs->y2);
+		// We subtract y0 and y1 from y because our up is -y.
+		pax_shade_line(buf, color, shader, &tmp, x + x0 * r, y - y0 * r, x + x1 * r, y - y1 * r);
+		// Assign them yes.
+		x0 = x1;
+		y0 = y1;
+		tmp.x0 = tmp.x1;
+		tmp.y0 = tmp.y1;
+	}
+	
+	PAX_SUCCESS();
+}
+
+// Draw a circle outline with a shader.
+// If uvs is NULL, a default will be used (0,0; 1,0; 1,1; 0,1).
+void pax_shade_outline_circle(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader, const pax_quadf *uvs, float x, float y, float r) {
+	pax_shade_outline_arc(buf, color, shader, uvs, x, y, r, 0, M_PI * 2);
+}
+
+
+
+/* =========== OUTLINES ========== */
 
 // Partially outline a shape defined by a list of points.
 // From and to range from 0 to 1, outside this range is ignored.
