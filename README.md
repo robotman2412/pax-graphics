@@ -10,13 +10,17 @@ Documentation can be found [here](docs).
 # Target v1.1.0 TODO list
 - [x] Fix all remaining build warnings
 - [x] More advanced text options
-- [ ] Import more fonts
 - [x] Comprehensive C++ wrapper
-- [ ] Triangulation that can handle any shape
+- [x] Triangulation that can handle simple inputs
+- [ ] Add `const` to all read-only accesses
+- [ ] Add special case to text functions for buffers with palette types
+- [ ] Check for other buffer type inconsistencies
 - [x] Leave this box unchecked
 
 # Feature wishlist
 - GPU acceleration
+- Antialiasing
+- Import more fonts
 - Support for holes in triangulated shapes
 - Support for outline-based (.ttf or similar) fonts
 - Built-in simple GUI library
