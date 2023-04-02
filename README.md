@@ -25,7 +25,7 @@ Documentation can be found [here](docs).
 - Support for outline-based (.ttf or similar) fonts
 - Built-in simple GUI library
 
-## MCH2022?
+# MCH2022?
 [MCH2022](https://mch2022.org/) was a hackercamp in the summer of 2022.
 MCH is the successor of SHA2017, where [Badge.Team](https://badge.team/) made their first badge.
 
