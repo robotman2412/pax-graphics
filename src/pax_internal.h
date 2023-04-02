@@ -308,6 +308,9 @@ static inline uint32_t pax_rev_endian_32(uint32_t in) {
 
 /* ======= DRAWING HELPERS ======= */
 
+// Gets the correct callback function for the shader.
+pax_shader_ctx_t pax_get_shader_ctx(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader);
+
 // The scheduler for multicore rendering.
 void paxmcr_add_task(pax_task_t *task);
 

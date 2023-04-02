@@ -24,6 +24,7 @@
 
 #include "pax_cxx.hpp"
 #include "pax_gfx.h"
+#include "pax_internal.h"
 #include <string.h>
 
 namespace pax {
@@ -31,9 +32,9 @@ namespace pax {
 
 
 // C wrapper function for using C++ shaders.
-static Color wrapperCallback(Color existing, Color tint, int x, int y, float u, float v, void *args) {
+static Color wrapperCallback(Color tint, Color existing, int x, int y, float u, float v, void *args) {
 	ShaderContent *ctx = (ShaderContent *) args;
-	return (*ctx->callback)(existing, tint, x, y, u, v, ctx->args);
+	return (*ctx->callback)(tint, existing, x, y, u, v, ctx->args);
 }
 
 // Make an empty shader.
@@ -111,12 +112,11 @@ Shader::~Shader() {
 
 
 // Apply this shader to a pixel.
-Color Shader::apply(Color tint, int x, int y, float u, float v) {
+Color Shader::apply(Buffer &buffer, Color tint, Color existing, int x, int y, float u, float v) const {
 	if (active) {
 		// Pass through to the C callback function.
-		// TODO
-		// return internal.callback(tint, x, y, u, v, internal.callback_args);
-		return 0;
+		pax_shader_ctx_t ctx = pax_get_shader_ctx(buffer.getInternal(), tint, &internal);
+		return ctx.callback(tint, existing, x, y, u, v, ctx.callback_args);
 	} else {
 		return tint;
 	}
@@ -124,6 +124,11 @@ Color Shader::apply(Color tint, int x, int y, float u, float v) {
 
 // Get a shader object for using in C PAX APIs.
 pax_shader_t *Shader::getInternal() {
+	return active ? &internal : NULL;
+}
+
+// Get a shader object for using in C PAX APIs.
+const pax_shader_t *Shader::getInternal() const {
 	return active ? &internal : NULL;
 }
 
@@ -330,7 +335,7 @@ pax_buf_type_t Buffer::type() { return internal ? internal->type : (pax_buf_type
 
 
 
-static inline pax_shader_t *GENERIC_UNWRAP_SHADER(Shader &wrapped) {
+static inline const pax_shader_t *GENERIC_UNWRAP_SHADER(const Shader &wrapped) {
 	return wrapped.getInternal();
 }
 
@@ -343,11 +348,11 @@ void Buffer::draw##localName(Color color, extraArgs) {\
 	GENERIC_VALIDITY_CHECK()\
 	pax_draw_##remoteName(internal, color, unpackedArgs);\
 }\
-void Buffer::draw##localName(Shader &shader, uvType *uvs, extraArgs) {\
+void Buffer::draw##localName(const Shader &shader, const uvType *uvs, extraArgs) {\
 	GENERIC_VALIDITY_CHECK()\
 	pax_shade_##remoteName(internal, fillColor, GENERIC_UNWRAP_SHADER(shader), uvs, unpackedArgs);\
 }\
-void Buffer::draw##localName(Color color, Shader &shader, uvType *uvs, extraArgs) {\
+void Buffer::draw##localName(Color color, const Shader &shader, const uvType *uvs, extraArgs) {\
 	GENERIC_VALIDITY_CHECK()\
 	pax_shade_##remoteName(internal, color, GENERIC_UNWRAP_SHADER(shader), uvs, unpackedArgs);\
 }\
@@ -359,11 +364,11 @@ void Buffer::outline##localName(Color color, extraArgs) {\
 	GENERIC_VALIDITY_CHECK()\
 	pax_outline_##remoteName(internal, color, unpackedArgs);\
 }\
-void Buffer::outline##localName(Shader &shader, uvType *uvs, extraArgs) {\
+void Buffer::outline##localName(const Shader &shader, const uvType *uvs, extraArgs) {\
 	GENERIC_VALIDITY_CHECK()\
 	pax_shade_outline_##remoteName(internal, lineColor, GENERIC_UNWRAP_SHADER(shader), uvs, unpackedArgs);\
 }\
-void Buffer::outline##localName(Color color, Shader &shader, uvType *uvs, extraArgs) {\
+void Buffer::outline##localName(Color color, const Shader &shader, const uvType *uvs, extraArgs) {\
 	GENERIC_VALIDITY_CHECK()\
 	pax_shade_outline_##remoteName(internal, color, GENERIC_UNWRAP_SHADER(shader), uvs, unpackedArgs);\
 }
@@ -391,12 +396,12 @@ void Buffer::drawLine(Color color, float x0, float y0, float x1, float y1) {
 	pax_draw_line(internal, color, x0, y0, x1, y1);
 }
 // Draws a line with the default outline color.
-void Buffer::drawLine(Shader &shader, Linef* uvs, float x0, float y0, float x1, float y1) {
+void Buffer::drawLine(const Shader &shader, Linef* uvs, float x0, float y0, float x1, float y1) {
 	GENERIC_VALIDITY_CHECK()
 	pax_shade_line(internal, lineColor, shader.getInternal(), uvs, x0, y0, x1, y1);
 }
 // Draws a line with a custom outline color.
-void Buffer::drawLine(Color color, Shader &shader, Linef* uvs, float x0, float y0, float x1, float y1) {
+void Buffer::drawLine(Color color, const Shader &shader, Linef* uvs, float x0, float y0, float x1, float y1) {
 	GENERIC_VALIDITY_CHECK()
 	pax_shade_line(internal, color, shader.getInternal(), uvs, x0, y0, x1, y1);
 }
@@ -411,9 +416,9 @@ void Buffer::outline(Color color, float x, float y, Shape &shape) {
 	pax_pop_2d(internal);
 }
 // Outlines an arbitrary shape.
-void Buffer::outline(Shader &shader, float x, float y, Shape &shape) { outline(lineColor, shader, x, y, shape); }
+void Buffer::outline(const Shader &shader, float x, float y, Shape &shape) { outline(lineColor, shader, x, y, shape); }
 // Outlines an arbitrary shape.
-void Buffer::outline(Color color, Shader &shader, float x, float y, Shape &shape) {
+void Buffer::outline(Color color, const Shader &shader, float x, float y, Shape &shape) {
 	pax_push_2d(internal);
 	pax_apply_2d(internal, matrix_2d_translate(x, y));
 	shape._int_draw(internal, color, shader.getInternal(), true);
@@ -430,9 +435,9 @@ void Buffer::draw(Color color, float x, float y, Shape &shape) {
 	pax_pop_2d(internal);
 }
 // Draws an arbitrary shape.
-void Buffer::draw(Shader &shader, float x, float y, Shape &shape) { draw(fillColor, shader, x, y, shape); }
+void Buffer::draw(const Shader &shader, float x, float y, Shape &shape) { draw(fillColor, shader, x, y, shape); }
 // Draws an arbitrary shape.
-void Buffer::draw(Color color, Shader &shader, float x, float y, Shape &shape) {
+void Buffer::draw(Color color, const Shader &shader, float x, float y, Shape &shape) {
 	pax_push_2d(internal);
 	pax_apply_2d(internal, matrix_2d_translate(x, y));
 	shape._int_draw(internal, color, shader.getInternal(), false);

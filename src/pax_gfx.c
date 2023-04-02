@@ -156,7 +156,7 @@ static pax_col_t pax_shader_wrapper_for_v0(pax_col_t tint, pax_col_t existing, i
 }
 
 // Gets the correct callback function for the shader.
-static pax_shader_ctx_t pax_get_shader_ctx(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader) {
+pax_shader_ctx_t pax_get_shader_ctx(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader) {
 	if (shader->schema_version != ~shader->schema_complement) {
 		// TODO: Bad.
 	}
