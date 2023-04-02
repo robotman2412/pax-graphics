@@ -63,7 +63,7 @@ The following table species the full names, type of UVs and last arguments (the 
 The `drawCircle` and `outlineCircle` functions draw and outline respectively a circle of unspecified resolution.
 Like most `draw` functions, there are optional colors, shaders and an `outline` variant.
 
-All drawing functions (including `drawCircle` and `outlineCircle`) are member functions of `pax::Buffer`.
+Most drawing functions (including `drawCircle` and `outlineCircle`) are member functions of `pax::Buffer`.
 
 ---
 ### `void drawCircle(float x, float y, float radius)`
@@ -119,7 +119,7 @@ TODO.
 The `drawArc` and `outlineArc` functions draw and outline respectively an arc of unspecified resolution.
 Like most `draw` functions, there are optional colors, shaders and an `outline` variant.
 
-All drawing functions (including `drawArc` and `outlineArc`) are member functions of `pax::Buffer`.
+Most drawing functions (including `drawArc` and `outlineArc`) are member functions of `pax::Buffer`.
 
 Angle units are in radians: Starting relatively +X, rotating one turn counter-clockwise every `M_PI*2` radians.
 
@@ -182,9 +182,77 @@ TODO.
 
 
 ## Triangles
+
+The `drawCircle` and `outlineCircle` functions draw and outline respectively a triangle defined by its three corners.
+Like most `draw` functions, there are optional colors, shaders and an `outline` variant.
+
+Most drawing functions (including `drawTri` and `outlineTri`) are member functions of `pax::Buffer`.
+
+---
+### `void drawTri(float x0, float y0, float x1, float y1, float x2, float y2);`
+Fills in a triangle defined by the points (x0, y0), (x1, y1) and (x2, y2) with the color as `fillColor` setting.
+
+---
+### `void drawTri(Color color, float x0, float y0, float x1, float y1, float x2, float y2);`
+Fills in a triangle defined by the points (x0, y0), (x1, y1) and (x2, y2) with color `color`.
+
+---
+### `void drawTri(const Shader &shader, const Trif *uvs, float x0, float y0, float x1, float y1, float x2, float y2);`
+Fills in a triangle defined by the points (x0, y0), (x1, y1) and (x2, y2) with the color as `fillColor` setting.
+
+Applies shader `shader` to the shape with UV co-ordinates optionally provided in `uvs`.
+If `uvs` is `nullptr`, a default (0,0; 1,0; 0,1) will be used.
+
+---
+### `void drawTri(Color color, const Shader &shader, const Trif *uvs, float x0, float y0, float x1, float y1, float x2, float y2);`
+Fills in a triangle defined by the points (x0, y0), (x1, y1) and (x2, y2) with color `color`.
+
+Applies shader `shader` to the shape with UV co-ordinates optionally provided in `uvs`.
+If `uvs` is `nullptr`, a default (0,0; 1,0; 0,1) will be used.
+
+
+---
+### `void outlineTri(float x0, float y0, float x1, float y1, float x2, float y2);`
+Outlines a triangle defined by the points (x0, y0), (x1, y1) and (x2, y2) with the color as `lineColor` setting.
+
+---
+### `void outlineTri(Color color, float x0, float y0, float x1, float y1, float x2, float y2);`
+Outlines a triangle defined by the points (x0, y0), (x1, y1) and (x2, y2) with color `color`.
+
+---
+### `void outlineTri(const Shader &shader, const Trif *uvs, float x0, float y0, float x1, float y1, float x2, float y2);`
+Outlines a triangle defined by the points (x0, y0), (x1, y1) and (x2, y2) with the color as `lineColor` setting.
+
+Applies shader `shader` to the shape with UV co-ordinates optionally provided in `uvs`.
+If `uvs` is `nullptr`, a default (0,0; 1,0; 0,1) will be used.
+
+---
+### `void outlineTri(Color color, const Shader &shader, const Trif *uvs, float x0, float y0, float x1, float y1, float x2, float y2);`
+Outlines a triangle defined by the points (x0, y0), (x1, y1) and (x2, y2) with color `color`.
+
+Applies shader `shader` to the shape with UV co-ordinates optionally provided in `uvs`.
+If `uvs` is `nullptr`, a default (0,0; 1,0; 0,1) will be used.
+
+
+## Example: Triangles
+TODO.
+
+
 ## Rectangles
+## Example: Rectangles
+TODO.
+
+
 ## Lines
+## Example: Lines
+TODO.
+
+
 ## Arbitrary shapes
+## Example: Arbitrary shapes
+TODO.
+
+
 
 
 
