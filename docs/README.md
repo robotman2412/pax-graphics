@@ -14,6 +14,7 @@ For supported platforms, [see this link](supported-platforms.md).
     - [For Arduino](#build-system-for-arduino)
     - [For ESP32](#build-system-for-esp32)
     - [For Pi Pico](#build-system-for-pi-pico)
+- [Image data format](pixelformat.md)
 
 
 
@@ -25,7 +26,7 @@ It has better memory and is easier to use than the C API.
 **Note: Because the C++ API is quite new, the documentation might not be complete.**
 
 
-# Overview
+## Overview
 
 From the [C++ API overview](cpp/README.md):
 
@@ -154,3 +155,5 @@ target_link_libraries(your_project_name ${CMAKE_CURRENT_LIST_DIR}/pax-graphics/b
 ### 3. Profit!
 Raspberry Pi Pico support is currently in beta.
 For supported platforms, [see this link](supported-platforms.md).
+
+
