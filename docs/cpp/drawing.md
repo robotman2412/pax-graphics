@@ -183,28 +183,28 @@ TODO.
 
 ## Triangles
 
-The `drawCircle` and `outlineCircle` functions draw and outline respectively a triangle defined by its three corners.
+The `drawTri` and `outlineTri` functions draw and outline respectively a triangle defined by its three corners.
 Like most `draw` functions, there are optional colors, shaders and an `outline` variant.
 
 Most drawing functions (including `drawTri` and `outlineTri`) are member functions of `pax::Buffer`.
 
 ---
-### `void drawTri(float x0, float y0, float x1, float y1, float x2, float y2);`
+### `void drawTri(float x0, float y0, float x1, float y1, float x2, float y2)`
 Fills in a triangle defined by the points (x0, y0), (x1, y1) and (x2, y2) with the color as `fillColor` setting.
 
 ---
-### `void drawTri(Color color, float x0, float y0, float x1, float y1, float x2, float y2);`
+### `void drawTri(Color color, float x0, float y0, float x1, float y1, float x2, float y2)`
 Fills in a triangle defined by the points (x0, y0), (x1, y1) and (x2, y2) with color `color`.
 
 ---
-### `void drawTri(const Shader &shader, const Trif *uvs, float x0, float y0, float x1, float y1, float x2, float y2);`
+### `void drawTri(const Shader &shader, const Trif *uvs, float x0, float y0, float x1, float y1, float x2, float y2)`
 Fills in a triangle defined by the points (x0, y0), (x1, y1) and (x2, y2) with the color as `fillColor` setting.
 
 Applies shader `shader` to the shape with UV co-ordinates optionally provided in `uvs`.
 If `uvs` is `nullptr`, a default (0,0; 1,0; 0,1) will be used.
 
 ---
-### `void drawTri(Color color, const Shader &shader, const Trif *uvs, float x0, float y0, float x1, float y1, float x2, float y2);`
+### `void drawTri(Color color, const Shader &shader, const Trif *uvs, float x0, float y0, float x1, float y1, float x2, float y2)`
 Fills in a triangle defined by the points (x0, y0), (x1, y1) and (x2, y2) with color `color`.
 
 Applies shader `shader` to the shape with UV co-ordinates optionally provided in `uvs`.
@@ -212,22 +212,22 @@ If `uvs` is `nullptr`, a default (0,0; 1,0; 0,1) will be used.
 
 
 ---
-### `void outlineTri(float x0, float y0, float x1, float y1, float x2, float y2);`
+### `void outlineTri(float x0, float y0, float x1, float y1, float x2, float y2)`
 Outlines a triangle defined by the points (x0, y0), (x1, y1) and (x2, y2) with the color as `lineColor` setting.
 
 ---
-### `void outlineTri(Color color, float x0, float y0, float x1, float y1, float x2, float y2);`
+### `void outlineTri(Color color, float x0, float y0, float x1, float y1, float x2, float y2)`
 Outlines a triangle defined by the points (x0, y0), (x1, y1) and (x2, y2) with color `color`.
 
 ---
-### `void outlineTri(const Shader &shader, const Trif *uvs, float x0, float y0, float x1, float y1, float x2, float y2);`
+### `void outlineTri(const Shader &shader, const Trif *uvs, float x0, float y0, float x1, float y1, float x2, float y2)`
 Outlines a triangle defined by the points (x0, y0), (x1, y1) and (x2, y2) with the color as `lineColor` setting.
 
 Applies shader `shader` to the shape with UV co-ordinates optionally provided in `uvs`.
 If `uvs` is `nullptr`, a default (0,0; 1,0; 0,1) will be used.
 
 ---
-### `void outlineTri(Color color, const Shader &shader, const Trif *uvs, float x0, float y0, float x1, float y1, float x2, float y2);`
+### `void outlineTri(Color color, const Shader &shader, const Trif *uvs, float x0, float y0, float x1, float y1, float x2, float y2)`
 Outlines a triangle defined by the points (x0, y0), (x1, y1) and (x2, y2) with color `color`.
 
 Applies shader `shader` to the shape with UV co-ordinates optionally provided in `uvs`.
@@ -239,20 +239,111 @@ TODO.
 
 
 ## Rectangles
+
+The `drawRect` and `outlineRect` functions draw and outline respectively a rectangle defined by its position and size.
+Like most `draw` functions, there are optional colors, shaders and an `outline` variant.
+
+Most drawing functions (including `drawRect` and `outlineRect`) are member functions of `pax::Buffer`.
+
+---
+### `void drawRect(float x, float y, float width, float height)`
+Fills in a rectangle with position (`x`, `y`) and size `width` by `height` with color as `fillColor` setting.
+`width` and/or `height` may be negative numbers.
+
+---
+### `void drawRect(Color color, float x, float y, float width, float height)`
+Fills in a rectangle with position (`x`, `y`) and size `width` by `height` with color `color`.
+`width` and/or `height` may be negative numbers.
+
+---
+### `void drawRect(const Shader &shader, const Quadf *uvs, float x, float y, float width, float height)`
+Fills in a rectangle with position (`x`, `y`) and size `width` by `height` with color as `fillColor` setting.
+`width` and/or `height` may be negative numbers.
+
+Applies shader `shader` to the shape with UV co-ordinates optionally provided in `uvs`.
+If `uvs` is `nullptr`, a default (0,0; 1,0; 1,1; 0,1) will be used.
+
+---
+### `void drawRect(Color color, const Shader &shader, const Quadf *uvs, float x, float y, float width, float height)`
+Fills in a rectangle with position (`x`, `y`) and size `width` by `height` with color `color`.
+`width` and/or `height` may be negative numbers.
+
+Applies shader `shader` to the shape with UV co-ordinates optionally provided in `uvs`.
+If `uvs` is `nullptr`, a default (0,0; 1,0; 1,1; 0,1) will be used.
+
+
+
+---
+### `void outlineRect(float x, float y, float width, float height)`
+Outlines a rectangle with position (`x`, `y`) and size `width` by `height` with color as `lineColor` setting.
+`width` and/or `height` may be negative numbers.
+
+---
+### `void outlineRect(Color color, float x, float y, float width, float height)`
+Outlines a rectangle with position (`x`, `y`) and size `width` by `height` with color `color`.
+`width` and/or `height` may be negative numbers.
+
+---
+### `void outlineRect(const Shader &shader, const Quadf *uvs, float x, float y, float width, float height)`
+Outlines a rectangle with position (`x`, `y`) and size `width` by `height` with color as `lineColor` setting.
+`width` and/or `height` may be negative numbers.
+
+Applies shader `shader` to the shape with UV co-ordinates optionally provided in `uvs`.
+If `uvs` is `nullptr`, a default (0,0; 1,0; 1,1; 0,1) will be used.
+
+---
+### `void outlineRect(Color color, const Shader &shader, const Quadf *uvs, float x, float y, float width, float height)`
+Outlines a rectangle with position (`x`, `y`) and size `width` by `height` with color `color`.
+`width` and/or `height` may be negative numbers.
+
+Applies shader `shader` to the shape with UV co-ordinates optionally provided in `uvs`.
+If `uvs` is `nullptr`, a default (0,0; 1,0; 1,1; 0,1) will be used.
+
+
 ## Example: Rectangles
 TODO.
 
 
 ## Lines
+
+The `drawLine` function draws straight lines between two end points.
+Because the shape is already an outline, there is no `outline` variant.
+For the same reason, the default color value is the `lineColor` setting instead of the `fillColor` setting.
+
+The `outline` functions are all based on the `drawLine` functions.
+
+Most drawing functions (including `drawLine`) are member functions of `pax::Buffer`.
+
+---
+### `void drawLine(float x0, float y0, float x1, float y1)`
+Draws a straight line between the points (x0, y0) and (x1, y1) with color as `lineColor` setting.
+
+---
+### `void drawLine(Color color, float x0, float y0, float x1, float y1)`
+Draws a straight line between the points (x0, y0) and (x1, y1) with color `color`.
+
+---
+### `void drawLine(const Shader &shader, Linef* uvs, float x0, float y0, float x1, float y1)`
+Draws a straight line between the points (x0, y0) and (x1, y1) with color as `lineColor` setting.
+
+Applies shader `shader` to the shape with UV co-ordinates optionally provided in `uvs`.
+If `uvs` is `nullptr`, a default (0,0; 1,0) will be used.
+
+---
+### `void drawLine(Color color, const Shader &shader, Linef* uvs, float x0, float y0, float x1, float y1)`
+Draws a straight line between the points (x0, y0) and (x1, y1) with color `color`.
+
+Applies shader `shader` to the shape with UV co-ordinates optionally provided in `uvs`.
+If `uvs` is `nullptr`, a default (0,0; 1,0) will be used.
+
 ## Example: Lines
 TODO.
 
 
 ## Arbitrary shapes
+TODO.
 ## Example: Arbitrary shapes
 TODO.
-
-
 
 
 
