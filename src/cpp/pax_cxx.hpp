@@ -128,14 +128,14 @@ class Buffer {
 		Buffer& operator=(Buffer &&);
 		
 		// Get an explicit copy-by-value of this buffer.
-		Buffer clone();
+		Buffer clone() const;
 		
 		// Set rotation of the buffer.
 		// 0 is not rotated, each unit is one quarter turn counter-clockwise.
 		void setRotation(int rotation);
 		// Get rotation of the buffer.
 		// 0 is not rotated, each unit is one quarter turn counter-clockwise.
-		int getRotation();
+		int getRotation() const;
 		// Scroll the buffer, filling with a placeholder color.
 		void scroll(Color placeholder, int x, int y);
 		// Scroll the buffer using fill color as placeholder.
@@ -149,23 +149,31 @@ class Buffer {
 		// Get a pointer to the underlying C API pax_buf_t*.
 		// Note: Doing so is less memory safe than to use the C++ API, but still compatible.
 		pax_buf_t *getInternal();
-		// Get a pointer to the memory stored in the pixel buffer.
-		// The arrangement is left-to-right then top-to-bottom, packed (sub byte-aligned rows will partially share a byte with the next).
+		// Get a pointer to the underlying C API pax_buf_t*.
+		// Note: Doing so is less memory safe than to use the C++ API, but still compatible.
+		const pax_buf_t *getInternal() const;
+		// Get a pointer to the image data.
+		// See <../docs/pixelformat.md> for the format.
 		void *getPixelBuffer();
+		// Get a pointer to the image data.
+		// See <../docs/pixelformat.md> for the format.
+		const void *getPixelBuffer() const;
+		// Get the byte size of the image data.
+		size_t getPixelBufferSize() const;
 		
 		// Deletion operator.
 		~Buffer();
 		
 		// Get the width, in pixels, of the buffer.
-		int width();
+		int width() const;
 		// Get the height, in pixels, of the buffer.
-		int height();
+		int height() const;
 		// Get the width, in pixels, of the buffer.
-		float widthf() { return (float) width(); }
+		float widthf() const { return (float) width(); }
 		// Get the height, in pixels, of the buffer.
-		float heightf() { return (float) height(); }
+		float heightf() const { return (float) height(); }
 		// Get the type of the buffer.
-		pax_buf_type_t type();
+		pax_buf_type_t type() const;
 		
 		// Fills the entire buffer with the given color.
 		void background(Color color);
@@ -336,16 +344,16 @@ class Buffer {
 		void rotateAround(float x, float y, float angle);
 		
 		// Gets color at the given point.
-		Color getPixel(int x, int y);
+		Color getPixel(int x, int y) const;
 		// Sets color at the given point.
 		void setPixel(Color color, int x, int y);
 		// Overlays the color at the given point (for transparent drawing).
 		void mergePixel(Color color, int x, int y);
 		
 		// Whether or not there has been drawing since last markClean call.
-		bool isDirty();
+		bool isDirty() const;
 		// Gets the rectangle in which it is dirty.
-		Recti getDirtyRect();
+		Recti getDirtyRect() const;
 		// Mark the buffer as clean.
 		void markClean();
 		// Mark the entire buffer as dirty.
@@ -363,7 +371,7 @@ class Buffer {
 		// Any effects of previous clip calls are nullified.
 		void noClip();
 		// Obtain a copy of the current clip rect.
-		Recti getClip();
+		Recti getClip() const;
 };
 
 /* ============ COLORS =========== */

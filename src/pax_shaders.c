@@ -256,7 +256,7 @@ pax_col_t pax_shader_texture(pax_col_t tint, int x, int y, float u, float v, voi
 	}
 	
 	// Pointer cast to texture thingy.
-	pax_buf_t *image = (pax_buf_t *) args;
+	const pax_buf_t *image = (const pax_buf_t *) args;
 	// Simply get a pixel.
 	pax_col_t  color = pax_get_pixel(image, u*image->width, v*image->height);
 	// And return it.
@@ -271,7 +271,7 @@ pax_col_t pax_shader_texture_aa(pax_col_t tint, int x, int y, float u, float v, 
 	}
 	
 	// Pointer cast to texture thingy.
-	pax_buf_t *image = (pax_buf_t *) args;
+	const pax_buf_t *image = (const pax_buf_t *) args;
 	
 	// Remap UVs.
 	u *= image->width;

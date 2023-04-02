@@ -220,7 +220,7 @@ Buffer& Buffer::operator=(Buffer &&other) {
 
 
 // Get an explicit copy-by-value of this buffer.
-Buffer Buffer::clone() {
+Buffer Buffer::clone() const {
 	if (!internal) return Buffer();
 	
 	// Create a buffer large enough to house the thing.
@@ -276,7 +276,7 @@ void Buffer::setRotation(int rotation) {
 
 // Get rotation of the buffer.
 // 0 is not rotated, each unit is one quarter turn counter-clockwise.
-int Buffer::getRotation() {
+int Buffer::getRotation() const {
 	GENERIC_VALIDITY_CHECK(0);
 	return internal->rotation;
 }
@@ -304,12 +304,28 @@ pax_buf_t *Buffer::getInternal() {
 	return internal;
 }
 
-// Get a pointer to the memory stored in the pixel buffer.
-// The arrangement is left-to-right then top-to-bottom, packed (sub byte-aligned rows will partially share a byte with the next).
+// Get a pointer to the underlying C API pax_buf_t*.
+// Note: Doing so is less memory safe than to use the C++ API, but still compatible.
+const pax_buf_t *Buffer::getInternal() const {
+	return internal;
+}
+
+// Get a pointer to the memory stored in the image data.
+// See <../docs/pixelformat.md> for the format.
 void *Buffer::getPixelBuffer() {
 	return internal ? internal->buf : NULL;
 }
 
+// Get a pointer to the memory stored in the image data.
+// See <../docs/pixelformat.md> for the format.
+const void *Buffer::getPixelBuffer() const {
+	return internal ? internal->buf : NULL;
+}
+
+// Get the byte size of the image data.
+size_t Buffer::getPixelBufferSize() const {
+	return PAX_BUF_CALC_SIZE(internal->width, internal->height, internal->type);
+}
 
 // Deletion operator.
 Buffer::~Buffer() {
@@ -327,11 +343,11 @@ Buffer::~Buffer() {
 
 
 // Get the width, in pixels, of the buffer.
-int Buffer::width() { return internal ? internal->width : -1; }
+int Buffer::width() const { return internal ? internal->width : -1; }
 // Get the height, in pixels, of the buffer.
-int Buffer::height() { return internal ? internal->height : -1; }
+int Buffer::height() const { return internal ? internal->height : -1; }
 // Get the type of the buffer.
-pax_buf_type_t Buffer::type() { return internal ? internal->type : (pax_buf_type_t) -1; }
+pax_buf_type_t Buffer::type() const { return internal ? internal->type : (pax_buf_type_t) -1; }
 
 
 
@@ -548,7 +564,7 @@ void Buffer::rotateAround(float x, float y, float angle) {
 }
 
 // Gets color at the given point.
-Color Buffer::getPixel(int x, int y) {
+Color Buffer::getPixel(int x, int y) const {
 	GENERIC_VALIDITY_CHECK(0)
 	return pax_get_pixel(internal, x, y);
 }
@@ -564,12 +580,12 @@ void Buffer::mergePixel(Color color, int x, int y) {
 }
 
 // Whether or not there has been drawing since last markClean call.
-bool Buffer::isDirty() {
+bool Buffer::isDirty() const {
 	GENERIC_VALIDITY_CHECK(false)
 	return pax_is_dirty(internal);
 }
 // Gets the rectangle in which it is dirty.
-Recti Buffer::getDirtyRect() {
+Recti Buffer::getDirtyRect() const {
 	GENERIC_VALIDITY_CHECK(Recti())
 	return (Recti) {
 		internal->dirty_x0,
@@ -615,7 +631,7 @@ void Buffer::noClip() {
 }
 
 // Obtain a copy of the current clip rect.
-Recti Buffer::getClip() {
+Recti Buffer::getClip() const {
 	GENERIC_VALIDITY_CHECK(Recti())
 	return internal->clip;
 }

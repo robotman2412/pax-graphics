@@ -390,6 +390,24 @@ void pax_buf_convert(pax_buf_t *dst, pax_buf_t *src, pax_buf_type_t type) {
 }
 
 
+// Retrieve the width of the buffer.
+int pax_buf_get_width(const pax_buf_t *buf) { return buf->width; }
+// Retrieve the height of the buffer.
+int pax_buf_get_height(const pax_buf_t *buf) { return buf->height; }
+// Retrieve the width of the buffer.
+float pax_buf_get_widthf(const pax_buf_t *buf) { return (float) buf->width;}
+// Retrieve the height of the buffer.
+float pax_buf_get_heightf(const pax_buf_t *buf) { return (float) buf->height; }
+// Retrieve the type of the buffer.
+float pax_buf_get_type(const pax_buf_t *buf) { return buf->type; }
+
+// Get a const pointer to the image data.
+const void *pax_buf_get_pixels(const pax_buf_t *buf) { return buf->buf; }
+// Get a non-const pointer to the image data.
+void *pax_buf_get_pixels_rw(pax_buf_t *buf) { return buf->buf; }
+// Get the byte size of the image data.
+size_t pax_buf_get_size(const pax_buf_t *buf) { return PAX_BUF_CALC_SIZE(buf->width, buf->height, buf->type); }
+
 // Set rotation of the buffer.
 // 0 is not rotated, each unit is one quarter turn counter-clockwise.
 void pax_buf_set_rotation(pax_buf_t *buf, int rotation) {
@@ -398,7 +416,7 @@ void pax_buf_set_rotation(pax_buf_t *buf, int rotation) {
 
 // Get rotation of the buffer.
 // 0 is not rotated, each unit is one quarter turn counter-clockwise.
-int pax_buf_get_rotation(pax_buf_t *buf) {
+int pax_buf_get_rotation(const pax_buf_t *buf) {
 	return buf->rotation;
 }
 
@@ -524,7 +542,7 @@ void pax_clip(pax_buf_t *buf, int x, int y, int width, int height) {
 }
 
 // Get the current clip rectangle.
-pax_recti pax_get_clip(pax_buf_t *buf) {
+pax_recti pax_get_clip(const pax_buf_t *buf) {
 	return buf->clip;
 }
 
@@ -539,13 +557,13 @@ void pax_noclip(pax_buf_t *buf) {
 }
 
 // Check whether the buffer is dirty.
-bool pax_is_dirty(pax_buf_t *buf) {
+bool pax_is_dirty(const pax_buf_t *buf) {
 	PAX_BUF_CHECK1("pax_is_dirty", 0);
 	return buf->dirty_x0 < buf->dirty_x1;
 }
 
 // Get a copy of the dirty rectangle.
-pax_recti pax_get_dirty(pax_buf_t *buf) {
+pax_recti pax_get_dirty(const pax_buf_t *buf) {
 	return (pax_recti) {
 		buf->dirty_x0,
 		buf->dirty_y0,
@@ -886,7 +904,7 @@ void pax_set_pixel(pax_buf_t *buf, pax_col_t color, int x, int y) {
 }
 
 // Get a pixel.
-pax_col_t pax_get_pixel(pax_buf_t *buf, int x, int y) {
+pax_col_t pax_get_pixel(const pax_buf_t *buf, int x, int y) {
 	PAX_BUF_CHECK1("pax_get_pixel", 0);
 	
 	#if PAX_COMPILE_ROTATE
@@ -908,13 +926,13 @@ pax_col_t pax_get_pixel(pax_buf_t *buf, int x, int y) {
 /* ========= DRAWING: 2D ========= */
 
 // Draws an image at the image's normal size.
-void pax_draw_image(pax_buf_t *buf, pax_buf_t *image, float x, float y) {
+void pax_draw_image(pax_buf_t *buf, const pax_buf_t *image, float x, float y) {
 	if (!image || !image->buf) PAX_ERROR("pax_draw_image", PAX_ERR_CORRUPT);
 	pax_draw_image_sized(buf, image, x, y, image->width, image->height);
 }
 
 // Draw an image with a prespecified size.
-void pax_draw_image_sized(pax_buf_t *buf, pax_buf_t *image, float x, float y, float width, float height) {
+void pax_draw_image_sized(pax_buf_t *buf, const pax_buf_t *image, float x, float y, float width, float height) {
 	if (!image || !image->buf) PAX_ERROR("pax_draw_image", PAX_ERR_CORRUPT);
 	if (PAX_IS_ALPHA(image->type)) {
 		pax_shade_rect(buf, -1, &PAX_SHADER_TEXTURE(image), NULL, x, y, width, height);
@@ -925,14 +943,14 @@ void pax_draw_image_sized(pax_buf_t *buf, pax_buf_t *image, float x, float y, fl
 
 // Draws an image at the image's normal size.
 // Assumes the image is completely opaque, any transparent parts are drawn opaque.
-void pax_draw_image_op(pax_buf_t *buf, pax_buf_t *image, float x, float y) {
+void pax_draw_image_op(pax_buf_t *buf, const pax_buf_t *image, float x, float y) {
 	if (!image || !image->buf) PAX_ERROR("pax_draw_image_op", PAX_ERR_CORRUPT);
 	pax_draw_image_sized_op(buf, image, x, y, image->width, image->height);
 }
 
 // Draw an image with a prespecified size.
 // Assumes the image is completely opaque, any transparent parts are drawn opaque.
-void pax_draw_image_sized_op(pax_buf_t *buf, pax_buf_t *image, float x, float y, float width, float height) {
+void pax_draw_image_sized_op(pax_buf_t *buf, const pax_buf_t *image, float x, float y, float width, float height) {
 	if (!image || !image->buf) PAX_ERROR("pax_draw_image", PAX_ERR_CORRUPT);
 	pax_shade_rect(buf, -1, &PAX_SHADER_TEXTURE_OP(image), NULL, x, y, width, height);
 }

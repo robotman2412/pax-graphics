@@ -145,29 +145,29 @@ void pax_report_error(const char *where, pax_err_t errno);
 /* ===== GETTERS AND SETTERS ===== */
 
 // Gets the index getters and setters for the given buffer.
-void pax_get_setters(pax_buf_t *buf, pax_index_getter_t *getter, pax_index_setter_t *setter);
+void pax_get_setters(const pax_buf_t *buf, pax_index_getter_t *getter, pax_index_setter_t *setter);
 
 // Gets the most efficient index setter for the occasion.
 // Also converts the color, if applicable.
 // Returns NULL when setting is not required.
-pax_index_setter_t pax_get_setter(pax_buf_t *buf, pax_col_t *col, const pax_shader_t *shader);
+pax_index_setter_t pax_get_setter(const pax_buf_t *buf, pax_col_t *col, const pax_shader_t *shader);
 
 // Gets a raw value from a 1BPP buffer.
-pax_col_t pax_index_getter_1bpp(pax_buf_t *buf, int index);
+pax_col_t pax_index_getter_1bpp(const pax_buf_t *buf, int index);
 // Gets a raw value from a 2BPP buffer.
-pax_col_t pax_index_getter_2bpp(pax_buf_t *buf, int index);
+pax_col_t pax_index_getter_2bpp(const pax_buf_t *buf, int index);
 // Gets a raw value from a 4BPP buffer.
-pax_col_t pax_index_getter_4bpp(pax_buf_t *buf, int index);
+pax_col_t pax_index_getter_4bpp(const pax_buf_t *buf, int index);
 // Gets a raw value from a 8BPP buffer.
-pax_col_t pax_index_getter_8bpp(pax_buf_t *buf, int index);
+pax_col_t pax_index_getter_8bpp(const pax_buf_t *buf, int index);
 // Gets a raw value from a 16BPP buffer.
-pax_col_t pax_index_getter_16bpp(pax_buf_t *buf, int index);
+pax_col_t pax_index_getter_16bpp(const pax_buf_t *buf, int index);
 // Gets a raw value from a 32BPP buffer.
-pax_col_t pax_index_getter_32bpp(pax_buf_t *buf, int index);
+pax_col_t pax_index_getter_32bpp(const pax_buf_t *buf, int index);
 // Gets a raw value from a 16BPP buffer, reversed endianness.
-pax_col_t pax_index_getter_16bpp_rev(pax_buf_t *buf, int index);
+pax_col_t pax_index_getter_16bpp_rev(const pax_buf_t *buf, int index);
 // Gets a raw value from a 32BPP buffer, reversed endianness.
-pax_col_t pax_index_getter_32bpp_rev(pax_buf_t *buf, int index);
+pax_col_t pax_index_getter_32bpp_rev(const pax_buf_t *buf, int index);
 
 // Sets a raw value from a 1BPP buffer.
 void pax_index_setter_1bpp(pax_buf_t *buf, pax_col_t color, int index);
@@ -188,11 +188,11 @@ void pax_index_setter_32bpp_rev(pax_buf_t *buf, pax_col_t color, int index);
 
 // Gets based on index instead of coordinates.
 // Does no bounds checking nor color conversion.
-pax_col_t pax_get_index(pax_buf_t *buf, int index);
+pax_col_t pax_get_index(const pax_buf_t *buf, int index);
 
 // Gets based on index instead of coordinates.
 // Does no bounds checking.
-pax_col_t pax_get_index_conv(pax_buf_t *buf, int index);
+pax_col_t pax_get_index_conv(const pax_buf_t *buf, int index);
 
 // Sets based on index instead of coordinates.
 // Does no bounds checking nor color conversion.
@@ -211,75 +211,66 @@ void pax_merge_index(pax_buf_t *buf, pax_col_t col, int index);
 /* ======= COLOR CONVERSION ====== */
 
 // Get the correct color conversion methods for the buffer type.
-void pax_get_col_conv(pax_buf_t *buf, pax_col_conv_t *col2buf, pax_col_conv_t *buf2col);
+void pax_get_col_conv(const pax_buf_t *buf, pax_col_conv_t *col2buf, pax_col_conv_t *buf2col);
 
 // Dummy color converter, returns color input directly.
-pax_col_t pax_col_conv_dummy(pax_buf_t *buf, pax_col_t color);
+pax_col_t pax_col_conv_dummy(const pax_buf_t *buf, pax_col_t color);
 
 // Truncates input to 1 bit.
-pax_col_t pax_trunc_to_1(pax_buf_t *buf, pax_col_t color);
+pax_col_t pax_trunc_to_1(const pax_buf_t *buf, pax_col_t color);
 // Truncates input to 2 bit.
-pax_col_t pax_trunc_to_2(pax_buf_t *buf, pax_col_t color);
+pax_col_t pax_trunc_to_2(const pax_buf_t *buf, pax_col_t color);
 // Truncates input to 4 bit.
-pax_col_t pax_trunc_to_4(pax_buf_t *buf, pax_col_t color);
+pax_col_t pax_trunc_to_4(const pax_buf_t *buf, pax_col_t color);
 // Truncates input to 8 bit.
-pax_col_t pax_trunc_to_8(pax_buf_t *buf, pax_col_t color);
+pax_col_t pax_trunc_to_8(const pax_buf_t *buf, pax_col_t color);
 // Truncates input to 16 bit.
-pax_col_t pax_trunc_to_16(pax_buf_t *buf, pax_col_t color);
+pax_col_t pax_trunc_to_16(const pax_buf_t *buf, pax_col_t color);
 
 // Converts ARGB to 1-bit greyscale (AKA black/white).
-pax_col_t pax_col_to_1_grey(pax_buf_t *buf, pax_col_t color);
+pax_col_t pax_col_to_1_grey(const pax_buf_t *buf, pax_col_t color);
 // Converts ARGB to 2-bit greyscale.
-pax_col_t pax_col_to_2_grey(pax_buf_t *buf, pax_col_t color);
+pax_col_t pax_col_to_2_grey(const pax_buf_t *buf, pax_col_t color);
 // Converts ARGB to 4-bit greyscale.
-pax_col_t pax_col_to_4_grey(pax_buf_t *buf, pax_col_t color);
+pax_col_t pax_col_to_4_grey(const pax_buf_t *buf, pax_col_t color);
 // Converts ARGB to 8-bit greyscale.
-pax_col_t pax_col_to_8_grey(pax_buf_t *buf, pax_col_t color);
+pax_col_t pax_col_to_8_grey(const pax_buf_t *buf, pax_col_t color);
 
 // Converts ARGB to 3, 3, 2 bit RGB.
-pax_col_t pax_col_to_332_rgb(pax_buf_t *buf, pax_col_t color);
+pax_col_t pax_col_to_332_rgb(const pax_buf_t *buf, pax_col_t color);
 // Converts ARGB to 5, 6, 5 bit RGB.
-pax_col_t pax_col_to_565_rgb(pax_buf_t *buf, pax_col_t color);
+pax_col_t pax_col_to_565_rgb(const pax_buf_t *buf, pax_col_t color);
 
 // Converts ARGB to 1 bit per channel ARGB.
-pax_col_t pax_col_to_1111_argb(pax_buf_t *buf, pax_col_t color);
+pax_col_t pax_col_to_1111_argb(const pax_buf_t *buf, pax_col_t color);
 // Converts ARGB to 2 bit per channel ARGB.
-pax_col_t pax_col_to_2222_argb(pax_buf_t *buf, pax_col_t color);
+pax_col_t pax_col_to_2222_argb(const pax_buf_t *buf, pax_col_t color);
 // Converts ARGB to 4 bit per channel ARGB.
-pax_col_t pax_col_to_4444_argb(pax_buf_t *buf, pax_col_t color);
+pax_col_t pax_col_to_4444_argb(const pax_buf_t *buf, pax_col_t color);
 
 // Performs a palette lookup based on the input.
-pax_col_t pax_pal_lookup(pax_buf_t *buf, pax_col_t color);
+pax_col_t pax_pal_lookup(const pax_buf_t *buf, pax_col_t color);
 
 // Converts 1-bit greyscale (AKA black/white) to ARGB.
-pax_col_t pax_1_grey_to_col(pax_buf_t *buf, pax_col_t color);
+pax_col_t pax_1_grey_to_col(const pax_buf_t *buf, pax_col_t color);
 // Converts 2-bit greyscale to ARGB.
-pax_col_t pax_2_grey_to_col(pax_buf_t *buf, pax_col_t color);
+pax_col_t pax_2_grey_to_col(const pax_buf_t *buf, pax_col_t color);
 // Converts 4-bit greyscale to ARGB.
-pax_col_t pax_4_grey_to_col(pax_buf_t *buf, pax_col_t color);
+pax_col_t pax_4_grey_to_col(const pax_buf_t *buf, pax_col_t color);
 // Converts 8-bit greyscale to ARGB.
-pax_col_t pax_8_grey_to_col(pax_buf_t *buf, pax_col_t color);
+pax_col_t pax_8_grey_to_col(const pax_buf_t *buf, pax_col_t color);
 
 // Converts 3, 3, 2 bit RGB to ARGB.
-pax_col_t pax_332_rgb_to_col(pax_buf_t *buf, pax_col_t color);
+pax_col_t pax_332_rgb_to_col(const pax_buf_t *buf, pax_col_t color);
 // Converts 5, 6, 5 bit RGB to ARGB.
-pax_col_t pax_565_rgb_to_col(pax_buf_t *buf, pax_col_t color);
+pax_col_t pax_565_rgb_to_col(const pax_buf_t *buf, pax_col_t color);
 
 // Converts 1 bit per channel ARGB to ARGB.
-pax_col_t pax_1111_argb_to_col(pax_buf_t *buf, pax_col_t color);
+pax_col_t pax_1111_argb_to_col(const pax_buf_t *buf, pax_col_t color);
 // Converts 2 bit per channel ARGB to ARGB.
-pax_col_t pax_2222_argb_to_col(pax_buf_t *buf, pax_col_t color);
+pax_col_t pax_2222_argb_to_col(const pax_buf_t *buf, pax_col_t color);
 // Converts 4 bit per channel ARGB to ARGB.
-pax_col_t pax_4444_argb_to_col(pax_buf_t *buf, pax_col_t color);
-
-// Convert a color from ARGB to the buffer's native format.
-uint32_t pax_col2buf(pax_buf_t *buf, pax_col_t color);
-// Convert a color from the buffer's native format to ARGB.
-uint32_t pax_buf2col(pax_buf_t *buf, uint32_t value);
-// Set a pixel, unsafe (don't check bounds or buffer, no color conversion).
-void     pax_set_pixel_u(pax_buf_t *buf, uint32_t color, int x, int y);
-// Get a pixel, unsafe (don't check bounds or buffer, no color conversion).
-uint32_t pax_get_pixel_u(pax_buf_t *buf, int x, int y);
+pax_col_t pax_4444_argb_to_col(const pax_buf_t *buf, pax_col_t color);
 
 
 
