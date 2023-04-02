@@ -175,10 +175,8 @@ class Buffer {
 		// Draws a rectangle with a custom color.
 		void drawRect(Color color, float x, float y, float width, float height);
 		// Draws a rectangle with a custom shader.
-		// Shader is ignored if NULL.
 		void drawRect(const Shader &shader, const Quadf *uvs, float x, float y, float width, float height);
 		// Draws a rectangle with a custom color and shader.
-		// Shader is ignored if NULL.
 		void drawRect(Color color, const Shader &shader, const Quadf *uvs, float x, float y, float width, float height);
 		// Outlines a rectangle with the default outline color.
 		void outlineRect(float x, float y, float width, float height);
@@ -194,10 +192,8 @@ class Buffer {
 		// Draws a triangle with a custom color.
 		void drawTri(Color color, float x0, float y0, float x1, float y1, float x2, float y2);
 		// Draws a triangle with a custom shader.
-		// Shader is ignored if NULL.
 		void drawTri(const Shader &shader, const Trif *uvs, float x0, float y0, float x1, float y1, float x2, float y2);
 		// Draws a triangle with a custom color and shader.
-		// Shader is ignored if NULL.
 		void drawTri(Color color, const Shader &shader, const Trif *uvs, float x0, float y0, float x1, float y1, float x2, float y2);
 		// Outlines a triangle with the default outline color.
 		void outlineTri(float x0, float y0, float x1, float y1, float x2, float y2);
@@ -213,10 +209,8 @@ class Buffer {
 		// Draws a circle around the given point with a custom color.
 		void drawCircle(Color color, float x, float y, float radius);
 		// Draws a circle around the given point with a custom shader.
-		// Shader is ignored if NULL.
 		void drawCircle(const Shader &shader, const Quadf *uvs, float x, float y, float radius);
 		// Draws a circle around the given point with a custom color and shader.
-		// Shader is ignored if NULL.
 		void drawCircle(Color color, const Shader &shader, const Quadf *uvs, float x, float y, float radius);
 		// Outlines a circle with the default outline color.
 		void outlineCircle(float x, float y, float radius);
@@ -232,10 +226,8 @@ class Buffer {
 		// Draws an arc around the given point with a custom color.
 		void drawArc(Color color, float x, float y, float radius, float startangle, float endangle);
 		// Draws an arc around the given point with a custom shader.
-		// Shader is ignored if NULL.
 		void drawArc(const Shader &shader, const Quadf *uvs, float x, float y, float radius, float startangle, float endangle);
 		// Draws an arc around the given point with a custom color and shader.
-		// Shader is ignored if NULL.
 		void drawArc(Color color, const Shader &shader, const Quadf *uvs, float x, float y, float radius, float startangle, float endangle);
 		// Outlines an arc with the default outline color.
 		void outlineArc(float x, float y, float radius, float startangle, float endangle);
