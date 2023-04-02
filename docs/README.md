@@ -29,7 +29,17 @@ It has better memory and is easier to use than the C API.
 ## Overview
 
 From the [C++ API overview](cpp/README.md):
-
+- [Getting started](#getting-started) (TODO)
+- [API overview](#api-overview)
+  - [Drawing functions](drawing.md)
+  - [`pax::Buffer`](buffer.md)
+  - [`pax::TextBox`](textbox.md)
+  - [Shaders](shaders.md)
+  - [Vector types](matrix.md)
+- [Example code](#example-code)
+  - [`pax::Buffer`](#example-paxbuffer)
+  - [`pax::Shader`](#example-paxshader)
+  - [`pax::Vec2f` and other vector types](#example-pax-vectors)
 
 
 # For C developers
