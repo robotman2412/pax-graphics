@@ -175,16 +175,20 @@ class Buffer {
 		// Draws a rectangle with a custom color.
 		void drawRect(Color color, float x, float y, float width, float height);
 		// Draws a rectangle with a custom shader.
+		// If uvs is NULL, a default will be used (0,0; 1,0; 1,1; 0,1).
 		void drawRect(const Shader &shader, const Quadf *uvs, float x, float y, float width, float height);
 		// Draws a rectangle with a custom color and shader.
+		// If uvs is NULL, a default will be used (0,0; 1,0; 1,1; 0,1).
 		void drawRect(Color color, const Shader &shader, const Quadf *uvs, float x, float y, float width, float height);
 		// Outlines a rectangle with the default outline color.
 		void outlineRect(float x, float y, float width, float height);
 		// Outlines a rectangle with a custom outline color.
 		void outlineRect(Color color, float x, float y, float width, float height);
 		// Outlines a rectangle with the default outline color.
+		// If uvs is NULL, a default will be used (0,0; 1,0; 1,1; 0,1).
 		void outlineRect(const Shader &shader, const Quadf *uvs, float x, float y, float width, float height);
 		// Outlines a rectangle with a custom outline color.
+		// If uvs is NULL, a default will be used (0,0; 1,0; 1,1; 0,1).
 		void outlineRect(Color color, const Shader &shader, const Quadf *uvs, float x, float y, float width, float height);
 		
 		// Draws a triangle with the default color.
@@ -192,16 +196,20 @@ class Buffer {
 		// Draws a triangle with a custom color.
 		void drawTri(Color color, float x0, float y0, float x1, float y1, float x2, float y2);
 		// Draws a triangle with a custom shader.
+		// If uvs is NULL, a default will be used (0,0; 1,0; 0,1).
 		void drawTri(const Shader &shader, const Trif *uvs, float x0, float y0, float x1, float y1, float x2, float y2);
 		// Draws a triangle with a custom color and shader.
+		// If uvs is NULL, a default will be used (0,0; 1,0; 0,1).
 		void drawTri(Color color, const Shader &shader, const Trif *uvs, float x0, float y0, float x1, float y1, float x2, float y2);
 		// Outlines a triangle with the default outline color.
 		void outlineTri(float x0, float y0, float x1, float y1, float x2, float y2);
 		// Outlines a triangle with a custom outline color.
 		void outlineTri(Color color, float x0, float y0, float x1, float y1, float x2, float y2);
 		// Outlines a triangle with the default outline color.
+		// If uvs is NULL, a default will be used (0,0; 1,0; 0,1).
 		void outlineTri(const Shader &shader, const Trif *uvs, float x0, float y0, float x1, float y1, float x2, float y2);
 		// Outlines a triangle with a custom outline color.
+		// If uvs is NULL, a default will be used (0,0; 1,0; 0,1).
 		void outlineTri(Color color, const Shader &shader, const Trif *uvs, float x0, float y0, float x1, float y1, float x2, float y2);
 		
 		// Draws a circle around the given point with the default color.
@@ -209,16 +217,20 @@ class Buffer {
 		// Draws a circle around the given point with a custom color.
 		void drawCircle(Color color, float x, float y, float radius);
 		// Draws a circle around the given point with a custom shader.
+		// If uvs is NULL, a default will be used (0,0; 1,0; 1,1; 0,1).
 		void drawCircle(const Shader &shader, const Quadf *uvs, float x, float y, float radius);
 		// Draws a circle around the given point with a custom color and shader.
+		// If uvs is NULL, a default will be used (0,0; 1,0; 1,1; 0,1).
 		void drawCircle(Color color, const Shader &shader, const Quadf *uvs, float x, float y, float radius);
 		// Outlines a circle with the default outline color.
 		void outlineCircle(float x, float y, float radius);
 		// Outlines a circle with a custom outline color.
 		void outlineCircle(Color color, float x, float y, float radius);
 		// Outlines a circle with the default outline color.
+		// If uvs is NULL, a default will be used (0,0; 1,0; 1,1; 0,1).
 		void outlineCircle(const Shader &shader, const Quadf *uvs, float x, float y, float radius);
 		// Outlines a circle with a custom outline color.
+		// If uvs is NULL, a default will be used (0,0; 1,0; 1,1; 0,1).
 		void outlineCircle(Color color, const Shader &shader, const Quadf *uvs, float x, float y, float radius);
 		
 		// Draws an arc around the given point with the default color.
@@ -226,16 +238,20 @@ class Buffer {
 		// Draws an arc around the given point with a custom color.
 		void drawArc(Color color, float x, float y, float radius, float startangle, float endangle);
 		// Draws an arc around the given point with a custom shader.
+		// If uvs is NULL, a default will be used (0,0; 1,0; 1,1; 0,1).
 		void drawArc(const Shader &shader, const Quadf *uvs, float x, float y, float radius, float startangle, float endangle);
 		// Draws an arc around the given point with a custom color and shader.
+		// If uvs is NULL, a default will be used (0,0; 1,0; 1,1; 0,1).
 		void drawArc(Color color, const Shader &shader, const Quadf *uvs, float x, float y, float radius, float startangle, float endangle);
 		// Outlines an arc with the default outline color.
 		void outlineArc(float x, float y, float radius, float startangle, float endangle);
 		// Outlines an arc with a custom outline color.
 		void outlineArc(Color color, float x, float y, float radius, float startangle, float endangle);
 		// Outlines an arc with the default outline color.
+		// If uvs is NULL, a default will be used (0,0; 1,0; 1,1; 0,1).
 		void outlineArc(const Shader &shader, const Quadf *uvs, float x, float y, float radius, float startangle, float endangle);
 		// Outlines an arc with a custom outline color.
+		// If uvs is NULL, a default will be used (0,0; 1,0; 1,1; 0,1).
 		void outlineArc(Color color, const Shader &shader, const Quadf *uvs, float x, float y, float radius, float startangle, float endangle);
 		
 		// Draws a line with the default outline color.
@@ -243,8 +259,10 @@ class Buffer {
 		// Draws a line with a custom outline color.
 		void drawLine(Color color, float x0, float y0, float x1, float y1);
 		// Draws a line with the default outline color.
+		// If uvs is NULL, a default will be used (0,0; 1,0).
 		void drawLine(const Shader &shader, Linef* uvs, float x0, float y0, float x1, float y1);
 		// Draws a line with a custom outline color.
+		// If uvs is NULL, a default will be used (0,0; 1,0).
 		void drawLine(Color color, const Shader &shader, Linef* uvs, float x0, float y0, float x1, float y1);
 		
 		// Outlines an arbitrary shape.
