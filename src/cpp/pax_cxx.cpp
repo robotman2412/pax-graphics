@@ -461,14 +461,25 @@ void Buffer::draw(Color color, const Shader &shader, float x, float y, Shape &sh
 }
 
 // Draws an image stored in another buffer.
-void Buffer::drawImage(pax_buf_t *image, float x, float y) {
+void Buffer::drawImage(const pax_buf_t *image, float x, float y) {
 	GENERIC_VALIDITY_CHECK();
 	pax_draw_image(internal, image, x, y);
 }
 // Draws an image stored in another buffer.
-void Buffer::drawImage(pax_buf_t *image, float x, float y, float width, float height) {
+void Buffer::drawImage(const pax_buf_t *image, float x, float y, float width, float height) {
 	GENERIC_VALIDITY_CHECK();
 	pax_draw_image_sized(internal, image, x, y, width, height);
+}
+
+// Draws an image stored in another buffer.
+void Buffer::drawImageOpaque(const pax_buf_t *image, float x, float y) {
+	GENERIC_VALIDITY_CHECK();
+	pax_draw_image_op(internal, image, x, y);
+}
+// Draws an image stored in another buffer.
+void Buffer::drawImageOpaque(const pax_buf_t *image, float x, float y, float width, float height) {
+	GENERIC_VALIDITY_CHECK();
+	pax_draw_image_sized_op(internal, image, x, y, width, height);
 }
 
 // Calculate the size of the string with the given font.

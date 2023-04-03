@@ -292,13 +292,26 @@ class Buffer {
 		void draw(Color color, const Shader &shader, float x, float y, Shape &shape);
 		
 		// Draws an image stored in another buffer.
-		void drawImage(pax_buf_t *image, float x, float y);
+		void drawImage(const pax_buf_t *image, float x, float y);
 		// Draws an image stored in another buffer.
-		void drawImage(pax_buf_t *image, float x, float y, float width, float height);
+		void drawImage(const pax_buf_t *image, float x, float y, float width, float height);
 		// Draws an image stored in another buffer.
-		void drawImage(Buffer &image, float x, float y) { drawImage(image.internal, x, y); }
+		void drawImage(const Buffer &image, float x, float y) { drawImage(image.internal, x, y); }
 		// Draws an image stored in another buffer.
-		void drawImage(Buffer &image, float x, float y, float width, float height) { drawImage(image.internal, x, y, width, height); }
+		void drawImage(const Buffer &image, float x, float y, float width, float height) { drawImage(image.internal, x, y, width, height); }
+		
+		// Draws an image stored in another buffer.
+		// Assumes the image is opaque and ignores and transparency.
+		void drawImageOpaque(const pax_buf_t *image, float x, float y);
+		// Draws an image stored in another buffer.
+		// Assumes the image is opaque and ignores and transparency.
+		void drawImageOpaque(const pax_buf_t *image, float x, float y, float width, float height);
+		// Draws an image stored in another buffer.
+		// Assumes the image is opaque and ignores and transparency.
+		void drawImageOpaque(const Buffer &image, float x, float y) { drawImageOpaque(image.internal, x, y); }
+		// Draws an image stored in another buffer.
+		// Assumes the image is opaque and ignores and transparency.
+		void drawImageOpaque(const Buffer &image, float x, float y, float width, float height) { drawImageOpaque(image.internal, x, y, width, height); }
 		
 		// Calculate the size of the string with the given font.
 		// Size is before matrix transformation.
