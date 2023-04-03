@@ -276,15 +276,19 @@ void my_simple_terminal(pax_buf_t *buf, const char *text) {
 
 PAX features a very simple API to get and set pixels directly.
 
-| returns   | name            | arguments
-| :-------- | :-------------- | :--------
-| void      | pax_merge_pixel | pax_buf_t \*buf, pax_col_t color, int x, int y
-| void      | pax_set_pixel   | pax_buf_t \*buf, pax_col_t color, int x, int y
-| pax_col_t | pax_get_pixel   | pax_buf_t \*buf, int x, int y
+| returns   | name              | arguments
+| :-------- | :---------------- | :--------
+| void      | pax_merge_pixel   | pax_buf_t \*buf, pax_col_t color, int x, int y
+| void      | pax_set_pixel     | pax_buf_t \*buf, pax_col_t color, int x, int y
+| pax_col_t | pax_get_pixel     | const pax_buf_t \*buf, int x, int y
+| void      | pax_set_pixel_raw | pax_buf_t \*buf, pax_col_t color, int x, int y
+| pax_col_t | pax_get_pixel_raw | const pax_buf_t \*buf, int x, int y
 
 These allow you to directly access the pixels in a buffer.
 
 Like the name, `pax_get_pixel` and `pax_set_pixel` get and set pixel data respectively.
+The `pax_get_pixel_raw` and `pax_set_pixel_raw` functions do the same, but no color conversion; you will get the raw data stored in the buffer.
+
 The move advanced `pax_merge_pixel` is for when you want to "draw a pixel" with semi-transparent colors.
 
 ## Example code

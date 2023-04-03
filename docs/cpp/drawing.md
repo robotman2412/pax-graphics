@@ -1,6 +1,9 @@
 # PAX Docs: Drawing
 
-This document covers:
+This document covers the drawing functions of `pax::Buffer`.
+For setup and other functions, see [`pax::Buffer`](buffer.md).
+
+- [Background filling](#background-filling)
 - [Basic drawing functions](#basic-drawing-functions)
   - [Circles](#circles)
   - [Arcs](#arcs)
@@ -12,6 +15,25 @@ This document covers:
 - [Images](#images)
 - [Shader drawing functions](#shaded-drawing)
 - [Pixel manipulation](#pixel-manipulation)
+
+
+
+# Background filling
+
+The simple `background` function is so important that is deserves a section of its own.
+
+This function is commonly used as the very first when starting to render a new frame, and it can be beneficial to optimise your software around this feature.
+
+### `void background(Color color)`
+
+Fills the entirety of the image data with a single specified color, overriding alpha channel (if the [pixel type](../pixelformat.md) has one).
+
+## Relation to double buffering
+
+*Double buffering* is to have two distinct framebuffers such that one is used for rendering while the other is used to update the display.
+
+The `background` function would then obscure that fact that there are two buffers by replacing the switched-in buffer with a solid color.
+If you didn't clean the slate before drawing, a copy would be required, which is slightly slower than filling with a solid color.
 
 
 
@@ -109,10 +131,6 @@ Outlines a circle with color `color`, midpoint (`x`, `y`) and radius `radius`.
 Applies shader `shader` to the shape with UV co-ordinates optionally provided in `uvs`.
 If `uvs` is `nullptr`, a default (0,0; 1,0; 1,1; 0,1) will be used.
 
----
-## Example: Circles
-TODO.
-
 
 ## Arcs
 
@@ -176,11 +194,6 @@ Applies shader `shader` to the shape with UV co-ordinates optionally provided in
 If `uvs` is `nullptr`, a default (0,0; 1,0; 1,1; 0,1) will be used.
 
 
----
-## Example: Arcs
-TODO.
-
-
 ## Triangles
 
 The `drawTri` and `outlineTri` functions draw and outline respectively a triangle defined by its three corners.
@@ -232,10 +245,6 @@ Outlines a triangle defined by the points (x0, y0), (x1, y1) and (x2, y2) with c
 
 Applies shader `shader` to the shape with UV co-ordinates optionally provided in `uvs`.
 If `uvs` is `nullptr`, a default (0,0; 1,0; 0,1) will be used.
-
-
-## Example: Triangles
-TODO.
 
 
 ## Rectangles
@@ -300,10 +309,6 @@ Applies shader `shader` to the shape with UV co-ordinates optionally provided in
 If `uvs` is `nullptr`, a default (0,0; 1,0; 1,1; 0,1) will be used.
 
 
-## Example: Rectangles
-TODO.
-
-
 ## Lines
 
 The `drawLine` function draws straight lines between two end points.
@@ -336,18 +341,148 @@ Draws a straight line between the points (x0, y0) and (x1, y1) with color `color
 Applies shader `shader` to the shape with UV co-ordinates optionally provided in `uvs`.
 If `uvs` is `nullptr`, a default (0,0; 1,0) will be used.
 
-## Example: Lines
-TODO.
-
 
 ## Arbitrary shapes
 TODO.
-## Example: Arbitrary shapes
-TODO.
-
 
 
 # Text
+
+Text is an ubuquitous part of UI (User Interface) design.
+This chapter focusses on the simple `drawString` API.
+
+Like the simple drawing functions, the `color` parameter is optional and the default color is `fillColor`.
+There is also a center-aligned version of `drawString` (`drawStringCentered`; useful for things like buttons).
+
+For more advanced text options, see [`pax::TextBox`](textbox.md).
+
+---
+### `static Vec2f stringSize(const pax_font_t *font, float font_size, std::string text)`
+Determines the dimentions of string `text` when rendered with font `font` and font size `font_size`.
+
+Because the results aren't affected by the buffer's settings, it is a *static member function*; Call it as `pax::Buffer::stringSize(...)`.
+
+---
+### `Vec2f drawString(const pax_font_t *font, float font_size, float x, float y, std::string text)`
+Draws the string `text` with font `font` size `font_size` with color as current `fillColor` setting.
+Text is left-aligned.
+
+---
+### `Vec2f drawString(Color color, const pax_font_t *font, float font_size, float x, float y, std::string text)`
+Draws the string `text` with font `font` size `font_size` with color `color`.
+Text is left-aligned.
+
+---
+### `Vec2f drawStringCentered(const pax_font_t *font, float font_size, float x, float y, std::string text)`
+Draws the string `text` with font `font` size `font_size` with color as current `fillColor` setting.
+Text is center-aligned on each line individually.
+
+---
+### `Vec2f drawStringCentered(Color color, const pax_font_t *font, float font_size, float x, float y, std::string text)`
+Draws the string `text` with font `font` size `font_size` with color `color`.
+Text is center-aligned on each line individually.
+
+
 # Images
+
+Images are useful for many things, most commonly used for icons, logos and pre-rendered graphics.
+
+There is a is a small list of image drawing options including:
+- Unspecified dimensions (uses image's dimensions)
+- Specified dimensions
+- Opaque images (ignores opacity data)
+
+**Note: The behaviour of drawing a buffer to itself is *unspecified*.**
+
+---
+### `void drawImage(const pax_buf_t *image, float x, float y);`
+Draws an image stored in a `const pax_buf_t *` (from the C-style API).
+Uses the image's width and height.
+
+---
+### `void drawImage(const pax_buf_t *image, float x, float y, float width, float height);`
+Draws an image stored in a `const pax_buf_t *` (from the C-style API).
+Uses user-specified width (`width` parameter) and height (`height` parameter).
+
+---
+### `void drawImage(const Buffer &image, float x, float y) { drawImage(image.internal, x, y); }`
+Draws an image stored in another `pax::Buffer`.
+Uses the image's width and height.
+
+---
+### `void drawImage(const Buffer &image, float x, float y, float width, float height) { drawImage(image.internal, x, y, width, height); }`
+Draws an image stored in another `pax::Buffer`.
+Uses user-specified width (`width` parameter) and height (`height` parameter).
+
+---
+### `void drawImageOpaque(const pax_buf_t *image, float x, float y);`
+Draws an image stored in a `const pax_buf_t *` (from the C-style API).
+Uses the image's width and height.
+
+Assumes the image is opaque and ignores and transparency if present.
+
+---
+### `void drawImageOpaque(const pax_buf_t *image, float x, float y, float width, float height);`
+Draws an image stored in a `const pax_buf_t *` (from the C-style API).
+Uses user-specified width (`width` parameter) and height (`height` parameter).
+
+Assumes the image is opaque and ignores and transparency if present.
+
+---
+### `void drawImageOpaque(const Buffer &image, float x, float y) { drawImage(image.internal, x, y); }`
+Draws an image stored in another `pax::Buffer`.
+Uses the image's width and height.
+
+Assumes the image is opaque and ignores and transparency if present.
+
+---
+### `void drawImageOpaque(const Buffer &image, float x, float y, float width, float height) { drawImage(image.internal, x, y, width, height); }`
+Draws an image stored in another `pax::Buffer`.
+Uses user-specified width (`width` parameter) and height (`height` parameter).
+
+Assumes the image is opaque and ignores and transparency if present.
+
+
 # Shaded drawing
+TODO: Put shader code examples here.
+
+For more information, see [`pax::Shader`](shaders.md).
+
 # Pixel manipulation
+For certain effects (like particles in games or applying dithering), direct plotting of single pixels may be required.
+
+PAX has a simple, three-part API for directly manipulating pixel data:
+- [Getting/Setting](#color-getpixelint-x-int-y-const)
+- [Raw pixel data access]()
+- [Setting with alpha](#void-mergepixelcolor-color-int-x-int-y)
+
+*Note: Make sure to call `pax::join()` before using these functions to avoid graphical artefacts.*
+
+---
+### `Color getPixel(int x, int y) const`
+Gets the ARGB representation of the pixel data at (`x`, `y`).
+Applies palette lookup for palette pixel types.
+
+---
+### `void setPixel(Color color, int x, int y)`
+Sets the color at (`x`, `y`) to `color`.
+Overrides current opacity value, if applicable.
+Does no color conversion for palette pixel types.
+
+---
+### `Color getPixelRaw(int x, int y) const`
+Gets the raw pixel data at (`x`, `y`).
+Does no color conversion.
+
+---
+### `void setPixelRaw(Color color, int x, int y)`
+Sets the raw pixel data at (`x`, `y`) to `color`.
+Overrides current opacity value, if applicable.
+Does no color conversion.
+
+---
+### `void mergePixel(Color color, int x, int y)`
+Performs an alpha overlay to pixel at (`x`, `y`).
+
+Behaves differently for palette pixel types; set pixel if `color & 0xff000000 > 0`, does nothing if `color & 0xff000000 == 0`.
+

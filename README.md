@@ -15,6 +15,16 @@ Documentation can be found [here](docs).
 - [ ] Add `const` to all read-only accesses
 - [ ] Add special case to text functions for buffers with palette types
 - [ ] Check for other buffer type inconsistencies
+- [ ] Complete C++ docs
+  - [ ] Images
+  - [ ] Examples
+  - [ ] `buffer.md`
+  - [x] `drawing.md`
+  - [ ] `matrix.md`
+  - [ ] `README.md`
+  - [ ] `shaders.md`
+  - [ ] `shapes.md`
+  - [ ] `textbox.md`
 - [x] Leave this box unchecked
 
 # Feature wishlist
