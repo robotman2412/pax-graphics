@@ -108,6 +108,12 @@ class Buffer {
 		// Default color to use for drawing outlined shapes.
 		Color lineColor;
 		
+		// Compute required size of a certain buffer type.
+		// Returns byte capacity requirement for preallocated buffers.
+		static constexpr size_t computeSize(int width, int height, pax_buf_type_t type) {
+			return PAX_BUF_CALC_SIZE(width, height, type);
+		}
+		
 		// Make an empty wrapper.
 		Buffer();
 		// Make a wrapper using an existing PAX buffer.
