@@ -921,6 +921,46 @@ pax_col_t pax_get_pixel(const pax_buf_t *buf, int x, int y) {
 	return buf->buf2col(buf, buf->getter(buf, x + y * buf->width));
 }
 
+// Set a pixel without color conversion.
+void pax_set_pixel_raw(pax_buf_t *buf, pax_col_t color, int x, int y) {
+	PAX_BUF_CHECK("pax_set_pixel");
+	
+	#if PAX_COMPILE_ROTATE
+	pax_vec2i tmp = pax_rotate_det_vec2i(buf, (pax_vec2i) {x, y});
+	x = tmp.x; y = tmp.y;
+	#endif
+	
+	if (x < 0 || x >= buf->width || y < 0 || y >= buf->height) {
+		// Out of bounds error.
+		pax_last_error = PAX_ERR_BOUNDS;
+		return;
+	}
+	
+	PAX_SUCCESS();
+	
+	int index = x + y * buf->width;
+	// Don't do any color conversion.
+	buf->setter(buf, color, index);
+}
+
+// Get a pixel without color conversion.
+pax_col_t pax_get_pixel_raw(const pax_buf_t *buf, int x, int y) {
+	PAX_BUF_CHECK1("pax_get_pixel", 0);
+	
+	#if PAX_COMPILE_ROTATE
+	pax_vec2i tmp = pax_rotate_det_vec2i(buf, (pax_vec2i) {x, y});
+	x = tmp.x; y = tmp.y;
+	#endif
+	
+	if (x < 0 || x >= buf->width || y < 0 || y >= buf->height) {
+		// Out of bounds error.
+		pax_last_error = PAX_ERR_BOUNDS;
+		return 0;
+	}
+	PAX_SUCCESS();
+	return buf->getter(buf, x + y * buf->width);
+}
+
 
 
 /* ========= DRAWING: 2D ========= */

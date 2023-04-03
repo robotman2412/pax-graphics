@@ -576,13 +576,19 @@ void Buffer::rotateAround(float x, float y, float angle) {
 
 // Gets color at the given point.
 Color Buffer::getPixel(int x, int y) const {
-	GENERIC_VALIDITY_CHECK(0)
 	return pax_get_pixel(internal, x, y);
 }
 // Sets color at the given point.
 void Buffer::setPixel(Color color, int x, int y) {
-	GENERIC_VALIDITY_CHECK()
 	pax_set_pixel(internal, color, x, y);
+}
+// Gets the raw pixel data (before color converion) at the given point.
+Color Buffer::getPixelRaw(int x, int y) const {
+	return pax_get_pixel_raw(internal, x, y);
+}
+// Sets raw pixel data (before color converion) at the given point.
+void Buffer::setPixelRaw(Color color, int x, int y) {
+	pax_set_pixel_raw(internal, color, x, y);
 }
 // Overlays the color at the given point (for transparent drawing).
 void Buffer::mergePixel(Color color, int x, int y) {

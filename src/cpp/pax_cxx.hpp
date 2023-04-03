@@ -360,6 +360,10 @@ class Buffer {
 		Color getPixel(int x, int y) const;
 		// Sets color at the given point.
 		void setPixel(Color color, int x, int y);
+		// Gets the raw pixel data (before color converion) at the given point.
+		Color getPixelRaw(int x, int y) const;
+		// Sets raw pixel data (before color converion) at the given point.
+		void setPixelRaw(Color color, int x, int y);
 		// Overlays the color at the given point (for transparent drawing).
 		void mergePixel(Color color, int x, int y);
 		

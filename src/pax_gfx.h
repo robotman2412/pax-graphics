@@ -376,8 +376,12 @@ void        pax_reset_2d          (pax_buf_t *buf, bool full);
 void        pax_merge_pixel         (pax_buf_t *buf, pax_col_t color, int x, int y);
 // Set a pixel.
 void        pax_set_pixel           (pax_buf_t *buf, pax_col_t color, int x, int y);
-// Get a pixel.
+// Get a pixel (does palette lookup if applicable).
 pax_col_t   pax_get_pixel           (const pax_buf_t *buf, int x, int y);
+// Set a pixel without color conversion.
+void        pax_set_pixel_raw       (pax_buf_t *buf, pax_col_t color, int x, int y);
+// Get a pixel without color conversion.
+pax_col_t   pax_get_pixel_raw       (const pax_buf_t *buf, int x, int y);
 
 
 
