@@ -377,12 +377,12 @@ LerpShape LerpShape::withCoeff(float coeff) {
 
 
 // Get the original that helped create this shape.
-const Shape &LerpShape::original() const {
+Shape LerpShape::original() const {
 	return Shape(originalOutline);
 }
 
 // Get the target that helped create this shape.
-const Shape &LerpShape::target() const {
+Shape LerpShape::target() const {
 	return Shape(targetOutline);
 }
 

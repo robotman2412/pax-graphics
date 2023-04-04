@@ -157,9 +157,9 @@ class LerpShape: public Shape {
 		LerpShape withCoeff(float coeff);
 		
 		// Get the original that helped create this shape.
-		const Shape &original() const;
+		Shape original() const;
 		// Get the target that helped create this shape.
-		const Shape &target() const;
+		Shape target() const;
 		// Get the interpolation coefficient that helped create this shape.
 		float coeff() const;
 };

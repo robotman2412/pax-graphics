@@ -12,7 +12,7 @@ Documentation can be found [here](docs).
 - [x] More advanced text options
 - [x] Comprehensive C++ wrapper
 - [x] Triangulation that can handle simple inputs
-- [ ] Add `const` to all read-only accesses
+- [x] Add `const` to all read-only accesses
 - [ ] Add special case to text functions for buffers with palette types
 - [ ] Check for other buffer type inconsistencies
 - [ ] Complete C++ docs
@@ -20,7 +20,7 @@ Documentation can be found [here](docs).
   - [ ] Examples
   - [x] `buffer.md`
   - [x] `drawing.md`
-  - [ ] `matrix.md`
+  - [x] `matrix.md`
   - [ ] `README.md`
   - [ ] `shaders.md`
   - [ ] `shapes.md`
