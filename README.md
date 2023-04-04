@@ -34,6 +34,7 @@ Documentation can be found [here](docs).
 - Support for holes in triangulated shapes
 - Support for outline-based (.ttf or similar) fonts
 - Built-in simple GUI library
+- 3D rendering
 
 # MCH2022?
 [MCH2022](https://mch2022.org/) was a hackercamp in the summer of 2022.
