@@ -346,7 +346,7 @@ class Buffer {
 		void clearMatrix(bool full);
 		
 		// Applies a given 2D matrix to the current by matrix multiplication.
-		void applyMatrix(matrix_2d_t matrix);
+		void applyMatrix(Matrix2f matrix);
 		// Scales the current view.
 		void scale(float x, float y);
 		// Scales the current view.
@@ -387,7 +387,7 @@ class Buffer {
 		void markDirty(int x, int y, int width, int height);
 		
 		// Apply a clip rectangle to the buffer.
-		// Anothing outside of the clip will not be drawn.
+		// Anything outside of the clip will not be drawn.
 		// This is an operation that ignores matrix transforms (translate, rotate, etc.).
 		void clip(int x, int y, int width, int height);
 		// Disable clipping.

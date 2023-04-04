@@ -18,7 +18,7 @@ Documentation can be found [here](docs).
 - [ ] Complete C++ docs
   - [ ] Images
   - [ ] Examples
-  - [ ] `buffer.md`
+  - [x] `buffer.md`
   - [x] `drawing.md`
   - [ ] `matrix.md`
   - [ ] `README.md`
