@@ -158,6 +158,10 @@ void pax_index_setter_32bpp_rev(pax_buf_t *buf, pax_col_t color, int index) {
 pax_index_setter_t pax_get_setter(const pax_buf_t *buf, pax_col_t *col_ptr, const pax_shader_t *shader) {
 	pax_col_t col = *col_ptr;
 	
+	if (PAX_IS_PALETTE(buf->type)) {
+		return pax_do_draw_col(buf, col) ? pax_set_index : NULL;
+	}
+	
 	if (shader && (shader->callback == pax_shader_texture || shader->callback == pax_shader_texture_aa)) {
 		// We can determine whether to factor in alpha based on buffer type.
 		if (PAX_IS_ALPHA(((pax_buf_t *)shader->callback_args)->type)) {
@@ -431,9 +435,8 @@ pax_col_t pax_col_to_4444_argb(const pax_buf_t *buf, pax_col_t color) {
 
 
 // Performs a palette lookup based on the input.
-pax_col_t pax_pal_lookup(const pax_buf_t *buf, pax_col_t color) {
-	uint_fast16_t index = color & 0xffff;
-	return (index >= buf->pallette_size)
+pax_col_t pax_pal_lookup(const pax_buf_t *buf, pax_col_t index) {
+	return (index >= buf->palette_size)
 		   ? *buf->pallette
 		   :  buf->pallette[index];
 }

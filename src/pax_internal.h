@@ -276,6 +276,24 @@ pax_col_t pax_4444_argb_to_col(const pax_buf_t *buf, pax_col_t color);
 
 /* ======= INLINE INTERNAL ======= */
 
+// Determine whether or not to draw given a color.
+// Non-palette buffers: Draw if alpha > 0.
+// Palette buffers: Draw if color in bounds.
+static inline bool pax_do_draw_col(const pax_buf_t *buf, pax_col_t col) {
+	if (PAX_IS_PALETTE(buf->type)) {
+		return col < buf->palette_size;
+	} else {
+		return col & 0xff000000;
+	}
+}
+
+// A linear interpolation based only on ints.
+static inline uint8_t pax_lerp(uint8_t part, uint8_t from, uint8_t to) {
+	// This funny line converts part from 0-255 to 0-256.
+	// Then, it applies an integer multiplication and the result is shifted right by 8.
+	return from + (( (to - from) * (part + (part >> 7)) ) >> 8);
+}
+
 // UV interpolation helper for the circle methods.
 static inline float pax_flerp4(float x, float y, float e0, float e1, float e2, float e3) {
 	x = x *  0.5 + 0.5;

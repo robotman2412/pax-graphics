@@ -620,13 +620,6 @@ void pax_mark_dirty2(pax_buf_t *buf, int x, int y, int width, int height) {
 
 /* ============ COLORS =========== */
 
-// A linear interpolation based only on ints.
-static inline uint8_t pax_lerp(uint8_t part, uint8_t from, uint8_t to) {
-	// This funny line converts part from 0-255 to 0-256.
-	// Then, it applies an integer multiplication and the result is shifted right by 8.
-	return from + (( (to - from) * (part + (part >> 7)) ) >> 8);
-}
-
 // 8-bit + 8-bit fractional (0x00ff=1) division.
 static inline uint16_t pax_frac_div16(uint16_t a, uint8_t b) {
 	return (a << 8) / (b + (b >> 7));
@@ -1358,6 +1351,7 @@ void pax_shade_circle(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shade
 // Draw a rectangle.
 void pax_draw_rect(pax_buf_t *buf, pax_col_t color, float x, float y, float width, float height) {
 	PAX_BUF_CHECK("pax_draw_rect");
+	if (!pax_do_draw_col(buf, color)) return;
 	if (matrix_2d_is_identity2(buf->stack_2d.value)) {
 		// This can be simplified significantly.
 		matrix_2d_transform(buf->stack_2d.value, &x, &y);
@@ -1384,6 +1378,7 @@ void pax_draw_rect(pax_buf_t *buf, pax_col_t color, float x, float y, float widt
 // Draw a line.
 void pax_draw_line(pax_buf_t *buf, pax_col_t color, float x0, float y0, float x1, float y1) {
 	PAX_BUF_CHECK("pax_draw_line");
+	if (!pax_do_draw_col(buf, color)) return;
 	// Apply transforms.
 	matrix_2d_transform(buf->stack_2d.value, &x0, &y0);
 	matrix_2d_transform(buf->stack_2d.value, &x1, &y1);
@@ -1394,6 +1389,7 @@ void pax_draw_line(pax_buf_t *buf, pax_col_t color, float x0, float y0, float x1
 // Draw a triangle.
 void pax_draw_tri(pax_buf_t *buf, pax_col_t color, float x0, float y0, float x1, float y1, float x2, float y2) {
 	PAX_BUF_CHECK("pax_draw_tri");
+	if (!pax_do_draw_col(buf, color)) return;
 	// Apply the transforms.
 	matrix_2d_transform(buf->stack_2d.value, &x0, &y0);
 	matrix_2d_transform(buf->stack_2d.value, &x1, &y1);
@@ -1405,6 +1401,7 @@ void pax_draw_tri(pax_buf_t *buf, pax_col_t color, float x0, float y0, float x1,
 // Draw na arc, angles in radians.
 void pax_draw_arc(pax_buf_t *buf, pax_col_t color, float x,  float y,  float r,  float a0, float a1) {
 	PAX_BUF_CHECK("pax_draw_arc");
+	if (!pax_do_draw_col(buf, color)) return;
 	
 	// Simplify the angles slightly.
 	float a2 = fmodf(a0, M_PI * 2);
@@ -1449,6 +1446,9 @@ void pax_draw_arc(pax_buf_t *buf, pax_col_t color, float x,  float y,  float r, 
 
 // Draw a circle.
 void pax_draw_circle(pax_buf_t *buf, pax_col_t color, float x,  float y,  float r) {
+	PAX_BUF_CHECK("pax_draw_circle");
+	if (!pax_do_draw_col(buf, color)) return;
+	
 	// Use precalcualted circles for speed because the user can't tell anyway.
 	const pax_vec2f *preset;
 	size_t size;
@@ -1534,10 +1534,7 @@ PAX_PERF_CRITICAL_ATTR void pax_background(pax_buf_t *buf, pax_col_t color) {
 // Draw a rectangle, ignoring matrix transform.
 void pax_simple_rect(pax_buf_t *buf, pax_col_t color, float x, float y, float width, float height) {
 	PAX_BUF_CHECK("pax_simple_rect");
-	if (color < 0x01000000) {
-		PAX_SUCCESS();
-		return;
-	}
+	if (!pax_do_draw_col(buf, color)) return;
 	
 	// Do rotation.
 	pax_rectf tmp = pax_rotate_det_rectf(buf, (pax_rectf) {x,y,width,height});
@@ -1609,6 +1606,7 @@ void pax_simple_rect(pax_buf_t *buf, pax_col_t color, float x, float y, float wi
 // Draw a line, ignoring matrix transform.
 void pax_simple_line(pax_buf_t *buf, pax_col_t color, float x0, float y0, float x1, float y1) {
 	PAX_BUF_CHECK("pax_simple_line");
+	if (!pax_do_draw_col(buf, color)) return;
 	
 	if (!isfinite(x0) || !isfinite(y0) || !isfinite(x1) || !isfinite(y1)) {
 		// We can't draw to infinity.
@@ -1678,6 +1676,7 @@ void pax_simple_line(pax_buf_t *buf, pax_col_t color, float x0, float y0, float 
 // Draw a triangle, ignoring matrix transform.
 void pax_simple_tri(pax_buf_t *buf, pax_col_t color, float x0, float y0, float x1, float y1, float x2, float y2) {
 	PAX_BUF_CHECK("pax_simple_tri");
+	if (!pax_do_draw_col(buf, color)) return;
 	
 	if (!isfinite(x0) || !isfinite(y0) || !isfinite(x1) || !isfinite(y1) || !isfinite(x2) || !isfinite(y2)) {
 		// We can't draw to infinity.
@@ -1737,6 +1736,7 @@ void pax_simple_tri(pax_buf_t *buf, pax_col_t color, float x0, float y0, float x
 // Angles in radians.
 void pax_simple_arc(pax_buf_t *buf, pax_col_t color, float x, float y, float r, float a0, float a1) {
 	PAX_BUF_CHECK("pax_simple_arc");
+	if (!pax_do_draw_col(buf, color)) return;
 	
 	// Simplify the angles slightly.
 	float a2 = fmodf(a0, M_PI * 2);
