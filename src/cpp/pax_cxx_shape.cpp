@@ -107,12 +107,12 @@ Shape::Shape(Outline outline) {
 Shape::~Shape() {}
 
 // Get a bounding box for this shape.
-Rectf Shape::getBounds() {
+Rectf Shape::getBounds() const {
 	return bounds;
 }
 
 // Get a copy of the outline that represents this shape.
-Outline Shape::getOutline() {
+const Outline &Shape::getOutline() const {
 	return outline;
 }
 
@@ -135,7 +135,7 @@ void Shape::_int_draw(pax_buf_t *to, Color color, const pax_shader_t *shader, bo
 
 
 // Equality operator.
-bool Shape::operator==(Shape const &other) {
+bool Shape::operator==(Shape const &other) const {
 	// Yes yes very complicated I know.
 	return other.outline == outline;
 }
@@ -192,7 +192,7 @@ Circle::Circle(float radius, size_t resolution) {
 }
 
 // Get the radius of this circle.
-float Circle::radius() {
+float Circle::radius() const {
 	return currentRadius;
 }
 
@@ -377,17 +377,17 @@ LerpShape LerpShape::withCoeff(float coeff) {
 
 
 // Get the original that helped create this shape.
-Shape LerpShape::original() {
+const Shape &LerpShape::original() const {
 	return Shape(originalOutline);
 }
 
 // Get the target that helped create this shape.
-Shape LerpShape::target() {
+const Shape &LerpShape::target() const {
 	return Shape(targetOutline);
 }
 
 // Get the interpolation coefficient that helped create this shape.
-float LerpShape::coeff() {
+float LerpShape::coeff() const {
 	return currentCoeff;
 }
 

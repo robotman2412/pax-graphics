@@ -38,7 +38,7 @@ extern "C" {
 // Returns the new string pointer.
 // Sets the decoded UTF-8 using a pointer.
 // If the string terminates early or contains invalid unicode, U+FFFD is returned.
-char *pax_utf8_getch(const char *cstr, uint32_t *out) ;
+char *pax_utf8_getch(const char *cstr, uint32_t *out);
 // Returns how many UTF-8 characters a given c-string contains.
 size_t pax_utf8_strlen(const char *cstr);
 

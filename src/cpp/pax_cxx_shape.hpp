@@ -71,15 +71,15 @@ class Shape {
 		virtual ~Shape();
 		
 		// Get a bounding box for this shape.
-		Rectf getBounds();
+		Rectf getBounds() const;
 		// Get a copy of the outline that represents this shape.
-		Outline getOutline();
+		const Outline &getOutline() const;
 		
 		// Internal method used for drawing.
 		virtual void _int_draw(pax_buf_t *to, Color color, const pax_shader_t *shader, bool asOutline);
 		
 		// Equality operator.
-		virtual bool operator==(Shape const &other);
+		virtual bool operator==(Shape const &other) const;
 };
 
 // An immutable circle shape.
@@ -100,9 +100,9 @@ class Circle: public Shape {
 		Circle(float radius, size_t resolution);
 		
 		// Get the radius of this circle.
-		float radius();
+		float radius() const;
 		// Internal method used for drawing.
-		virtual void _int_draw(pax_buf_t *to, Color color, const pax_shader_t *shader, bool asOutline);
+		void _int_draw(pax_buf_t *to, Color color, const pax_shader_t *shader, bool asOutline) override;
 };
 
 // An immutable rectangle shape.
@@ -122,7 +122,7 @@ class Rectangle: public Shape {
 		Rectangle(float width, float height);
 		
 		// Internal method used for drawing.
-		virtual void _int_draw(pax_buf_t *to, Color color, const pax_shader_t *shader, bool asOutline);
+		void _int_draw(pax_buf_t *to, Color color, const pax_shader_t *shader, bool asOutline) override;
 };
 
 // An immutable representation of a shape being interpolated into another.
@@ -157,11 +157,11 @@ class LerpShape: public Shape {
 		LerpShape withCoeff(float coeff);
 		
 		// Get the original that helped create this shape.
-		Shape original();
+		const Shape &original() const;
 		// Get the target that helped create this shape.
-		Shape target();
+		const Shape &target() const;
 		// Get the interpolation coefficient that helped create this shape.
-		float coeff();
+		float coeff() const;
 };
 
 } // namespace pax

@@ -20,12 +20,12 @@ void TextElement::updateText(std::string str) {
 
 
 // Get ascent above baseline.
-float TextElement::getAscent(TextBox &ctx, TextStyle &style) {
+float TextElement::getAscent(TextBox &ctx, TextStyle &style) const {
 	return style.fontSize;
 }
 
 // Get descent below baseline.
-float TextElement::getDescent(TextBox &ctx, TextStyle &style) {
+float TextElement::getDescent(TextBox &ctx, TextStyle &style) const {
 	return 0;
 }
 
@@ -36,7 +36,7 @@ void TextElement::calcSize(TextBox &ctx, TextStyle &style) {
 }
 
 // Get width after computation.
-float TextElement::getWidth(TextBox &ctx, TextStyle &style) {
+float TextElement::getWidth(TextBox &ctx, TextStyle &style) const {
 	return textWidth;
 }
 
@@ -61,7 +61,7 @@ void SpaceElement::calcSize(TextBox &ctx, TextStyle &style) {
 }
 
 // Get width after computation.
-float SpaceElement::getWidth(TextBox &ctx, TextStyle &style) {
+float SpaceElement::getWidth(TextBox &ctx, TextStyle &style) const {
 	return width;
 }
 
@@ -79,21 +79,21 @@ ImageElement::ImageElement(Buffer *image) {
 
 
 // Get ascent above baseline.
-float ImageElement::getAscent(TextBox &ctx, TextStyle &style)  {
+float ImageElement::getAscent(TextBox &ctx, TextStyle &style) const {
 	return image ? image->height : 0;
 }
 
 // Get descent below baseline.
-float ImageElement::getDescent(TextBox &ctx, TextStyle &style)  {
+float ImageElement::getDescent(TextBox &ctx, TextStyle &style) const {
 	return 0;
 }
 
 // Compute and get dimensions.
 // This is called once after the start of drawing or when this element's style changes.
-void ImageElement::calcSize(TextBox &ctx, TextStyle &style)  {}
+void ImageElement::calcSize(TextBox &ctx, TextStyle &style) {}
 
 // Get width after computation.
-float ImageElement::getWidth(TextBox &ctx, TextStyle &style)  {
+float ImageElement::getWidth(TextBox &ctx, TextStyle &style) const {
 	return image ? image->width : 0;
 }
 
