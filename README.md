@@ -13,7 +13,7 @@ Documentation can be found [here](docs).
 - [x] Comprehensive C++ wrapper
 - [x] Triangulation that can handle simple inputs
 - [x] Add `const` to all read-only accesses
-- [ ] Add special case to text functions for buffers with palette types
+- [x] Add special case to text functions for buffers with palette types
 - [ ] Check for other buffer type inconsistencies
 - [ ] Complete C++ docs
   - [ ] Images
