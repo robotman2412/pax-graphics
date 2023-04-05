@@ -3,6 +3,7 @@
 This document covers the drawing functions of `pax::Buffer`.
 For setup and other functions, see [`pax::Buffer`](buffer.md).
 
+In this document:
 - [Background filling](#background-filling)
 - [Basic drawing functions](#basic-drawing-functions)
   - [Circles](#circles)

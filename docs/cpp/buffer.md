@@ -3,6 +3,7 @@
 This document covers the setup and related functions of `pax::Buffer`.
 For drawing functions, see [drawing functions](drawing.md).
 
+In this document:
 - [Construction](#construction)
   - [From existing](#from-existing)
   - [Preallocated](#preallocated)
