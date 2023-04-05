@@ -158,19 +158,19 @@ class NewlineElement: public InlineElement {
 };
 
 // An inline image made of a pax::Buffer.
-class ImageElement: public InlineElement {
+class InlineImage: public InlineElement {
 	protected:
 		// What teh hel is actually drawn.
 		pax_buf_t *image = NULL;
 		
 	public:
 		// Wow very complicated.
-		ImageElement(pax_buf_t *image);
+		InlineImage(pax_buf_t *image);
 		// Wow very complicated.
-		ImageElement(Buffer *image);
+		InlineImage(Buffer *image);
 		
 		// This class is quite virtual, and so must be the destructor.
-		virtual ~ImageElement() override = default;
+		virtual ~InlineImage() override = default;
 		
 		// Get ascent above baseline.
 		float getAscent(TextBox &ctx, TextStyle &style) const override;

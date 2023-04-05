@@ -99,7 +99,7 @@ class Buffer {
 		
 		friend class InlineElement;
 		friend class TextElement;
-		friend class ImageElement;
+		friend class InlineImage;
 		friend class TextBox;
 		
 	public:

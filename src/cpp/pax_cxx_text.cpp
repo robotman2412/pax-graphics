@@ -68,37 +68,37 @@ float SpaceElement::getWidth(TextBox &ctx, TextStyle &style) const {
 
 
 // Wow very complicated.
-ImageElement::ImageElement(pax_buf_t *image) {
+InlineImage::InlineImage(pax_buf_t *image) {
 	this->image = image;
 }
 
 // Wow very complicated.
-ImageElement::ImageElement(Buffer *image) {
+InlineImage::InlineImage(Buffer *image) {
 	this->image = image->internal;
 }
 
 
 // Get ascent above baseline.
-float ImageElement::getAscent(TextBox &ctx, TextStyle &style) const {
+float InlineImage::getAscent(TextBox &ctx, TextStyle &style) const {
 	return image ? image->height : 0;
 }
 
 // Get descent below baseline.
-float ImageElement::getDescent(TextBox &ctx, TextStyle &style) const {
+float InlineImage::getDescent(TextBox &ctx, TextStyle &style) const {
 	return 0;
 }
 
 // Compute and get dimensions.
 // This is called once after the start of drawing or when this element's style changes.
-void ImageElement::calcSize(TextBox &ctx, TextStyle &style) {}
+void InlineImage::calcSize(TextBox &ctx, TextStyle &style) {}
 
 // Get width after computation.
-float ImageElement::getWidth(TextBox &ctx, TextStyle &style) const {
+float InlineImage::getWidth(TextBox &ctx, TextStyle &style) const {
 	return image ? image->width : 0;
 }
 
 // Draw the element.
-void ImageElement::draw(Buffer &to, TextBox &ctx, TextStyle &style)  {
+void InlineImage::draw(Buffer &to, TextBox &ctx, TextStyle &style)  {
 	if (image) {
 		pax_draw_image(to.internal, image, 0, -image->height);
 	}
