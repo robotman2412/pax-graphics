@@ -198,6 +198,8 @@ void TextBox::draw(Buffer &to) {
 	size_t lastSpace   = 0;
 	// Whether the current line ends with space characters.
 	bool endsWithSpace = false;
+	// Whether the line was broken by a newline.
+	bool explicitBreak = true;
 	// Count of non-whitespace characters in current line.
 	size_t elemCount   = 0;
 	
@@ -223,9 +225,14 @@ void TextBox::draw(Buffer &to) {
 			// Determine whether it shall fit on this line.
 			bool doesItFit = elem.getWidth(*this, style) + lineWidth <= bounds.w;
 			// Edge case: Newlines "never fit" to force line break.
-			if (elem.type() == InlineElement::NEWLINE) doesItFit = false;
+			if (elem.type() == InlineElement::NEWLINE) {
+				doesItFit     = false;
+				explicitBreak = true;
+			}
 			// Edge case: It is too wide to fit, but the line is empty.
-			if (startIndex == endIndex) doesItFit = true;
+			if (startIndex == endIndex) {
+				doesItFit     = true;
+			}
 			
 			if (doesItFit) {
 				// If so, count it up and continue going.
@@ -306,8 +313,12 @@ void TextBox::draw(Buffer &to) {
 			// Draw underline, strikethrough and overline.
 			float decorHeight = 1;
 			if (elem.type() == InlineElement::TEXT || elem.type() == InlineElement::SPACE) {
-				// Edge case: Space characters on justify.
-				if (alignment == JUSTIFY && elem.type() == InlineElement::SPACE) {
+				if (!explicitBreak && i == startIndex && elem.type() == InlineElement::SPACE) {
+					// Edge case: Space after word-wrap.
+					width = 0;
+					
+				} else if (alignment == JUSTIFY && elem.type() == InlineElement::SPACE) {
+					// Edge case: Space characters on justify.
 					if (wasSpace) {
 						// Corner case: Repeated space on justified lines.
 						width = 0;
@@ -352,6 +363,7 @@ void TextBox::draw(Buffer &to) {
 		totalHeight += lineAscent + lineDescent;
 		lineAscent=lineDescent=lineWidth=elementWidth=elemCount=0;
 		startIndex = endIndex;
+		explicitBreak = false;
 	}
 	
 	to.popMatrix();

@@ -242,6 +242,13 @@ class TextBox {
 		// Method by which to align text.
 		TextAlign alignment;
 		
+		// Make a BOX and set its bounds.
+		TextBox(Rectf _bounds = {0, 0, 100, 100}, TextAlign _alignment = TextAlign::LEFT):
+			bounds(_bounds), alignment(_alignment) {}
+		// Make a BOX and set its bounds.
+		TextBox(Rectf _bounds, const pax_font_t *font, float font_size, TextAlign _alignment = TextAlign::LEFT):
+			textStyle(font, font_size), bounds(_bounds), alignment(_alignment) {}
+		
 		// Append a string of text to the grand list.
 		// Words are broken at whitespace, to override use the non-breaking space character.
 		void appendText(std::string text);
@@ -250,7 +257,7 @@ class TextBox {
 		template <typename Type>
 		void append(Type element) {
 			// Pack it into an entry to preserve subclasses.
-			std::shared_ptr<InlineElement> ptr = std::make_shared<Type>(element);
+			std::shared_ptr<InlineElement> ptr = std::make_shared<Type>(std::move(element));
 			Entry entry(textStyle, ptr);
 			// Have dimensions computed on newly generated copy.
 			entry.second->calcSize(*this, textStyle);
