@@ -56,7 +56,7 @@ extern const size_t      pax_n_fonts;
 /* ========== FUNCTIONS ========== */
 
 // Finds the built-in font with the given name.
-const pax_font_t *pax_get_font(char *name);
+const pax_font_t *pax_get_font(const char *name);
 
 #ifdef __cplusplus
 }

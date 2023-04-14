@@ -113,7 +113,7 @@ const pax_font_t *pax_fonts_index[] = {
 	&PRIVATE_pax_font_saira_regular,
 #endif
 };
-const size_t pax_n_fonts = sizeof(pax_fonts_index) / sizeof(pax_font_t);
+const size_t pax_n_fonts = sizeof(pax_fonts_index) / sizeof(const pax_font_t *);
 
 const pax_font_t PRIVATE_pax_font_sky = { // Sky
 	.name         = "Sky",
@@ -153,7 +153,7 @@ const pax_font_t PRIVATE_pax_font_saira_regular = { // Saira regular
 
 #if PAX_COMPILE_FONT_INDEX
 // Finds the built-in font with the given name.
-const pax_font_t *pax_get_font(char *name) {
+const pax_font_t *pax_get_font(const char *name) {
 	for (size_t i = 0; i < PAX_N_FONTS; i++) {
 		if (!strcasecmp(pax_fonts_index[i]->name, name)) {
 			return pax_fonts_index[i];
@@ -162,7 +162,7 @@ const pax_font_t *pax_get_font(char *name) {
 	return NULL;
 }
 #else
-const pax_font_t *pax_get_font(char *name) {
+const pax_font_t *pax_get_font(const char *name) {
 	// Not compiled in, so ignore this.
 	PAX_ERROR1("pax_get_font", PAX_ERR_UNSUPPORTED, NULL);
 }
