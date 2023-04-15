@@ -116,7 +116,7 @@ const pax_font_t *pax_fonts_index[] = {
 const size_t pax_n_fonts = sizeof(pax_fonts_index) / sizeof(const pax_font_t *);
 
 const pax_font_t PRIVATE_pax_font_sky = { // Sky
-	.name         = "Sky",
+	.name         = "sky",
 	.n_ranges     = 6,
 	.ranges       = pax_font_sky_ranges,
 	.default_size = 9,
@@ -130,15 +130,15 @@ const pax_font_t PRIVATE_pax_font_sky_mono = { // Sky mono
 	.recommend_aa = false,
 };
 const pax_font_t PRIVATE_pax_font_marker = { // PermanentMarker
-	.name         = "permanentmarker",
-	.n_ranges     = 23,
+	.name         = "Permanent Marker",
+	.n_ranges     = 3,
 	.ranges       = permanentmarker_ranges,
-	.default_size = 45,
+	.default_size = 22,
 	.recommend_aa = true,
 };
 const pax_font_t PRIVATE_pax_font_saira_condensed = { // Saira condensed
-	.name         = "saira condensed",
-	.n_ranges     = 80,
+	.name         = "saira Condensed",
+	.n_ranges     = 3,
 	.ranges       = sairacondensed_ranges,
 	.default_size = 45,
 	.recommend_aa = true,

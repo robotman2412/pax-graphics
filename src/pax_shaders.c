@@ -57,7 +57,7 @@ pax_col_t pax_shader_font_bmp_hi_pal(pax_col_t base, pax_col_t existing, int x, 
 		// Get bitmap at byte index.
 		(args->bitmap[glyph_index]
 		// Align the bits.
-			>> args->bpp * (glyph_x & (args->mask)))
+			>> args->bpp * (glyph_x & (args->index_mask)))
 		// Mask out the ones we want.
 		& args->mask;
 	
@@ -88,7 +88,7 @@ pax_col_t pax_shader_font_bmp_hi(pax_col_t base, pax_col_t existing, int x, int 
 		// Get bitmap at byte index.
 		(args->bitmap[glyph_index]
 		// Align the bits.
-			>> args->bpp * (glyph_x & (args->mask)))
+			>> args->bpp * (glyph_x & (args->index_mask)))
 		// Mask out the ones we want.
 		& args->mask;
 	
@@ -138,22 +138,22 @@ pax_col_t pax_shader_font_bmp_hi_aa(pax_col_t base, pax_col_t existing, int x, i
 	
 	// Top left bit.
 	if (glyph_x >= 0 && glyph_y >= 0) {
-		glyph_bit_0 = (arr[glyph_index_0] >> args->bpp * (glyph_x & (args->mask))) & args->mask;
+		glyph_bit_0 = (arr[glyph_index_0] >> args->bpp * (glyph_x & (args->index_mask))) & args->mask;
 	}
 	
 	// Top right bit.
 	if (glyph_x < args->glyph_w - 1 && glyph_y >= 0) {
-		glyph_bit_1 = (arr[glyph_index_1] >> args->bpp * ((glyph_x + 1) & (args->mask))) & args->mask;
+		glyph_bit_1 = (arr[glyph_index_1] >> args->bpp * ((glyph_x + 1) & (args->index_mask))) & args->mask;
 	}
 	
 	// Bottom left bit.
 	if (glyph_x >= 0 && glyph_y < args->glyph_h - 1) {
-		glyph_bit_2 = (arr[glyph_index_2] >> args->bpp * (glyph_x & (args->mask))) & args->mask;
+		glyph_bit_2 = (arr[glyph_index_2] >> args->bpp * (glyph_x & (args->index_mask))) & args->mask;
 	}
 	
 	// Bottom right bit.
 	if (glyph_x < args->glyph_w - 1 && glyph_y < args->glyph_h - 1) {
-		glyph_bit_3 = (arr[glyph_index_3] >> args->bpp * ((glyph_x + 1) & (args->mask))) & args->mask;
+		glyph_bit_3 = (arr[glyph_index_3] >> args->bpp * ((glyph_x + 1) & (args->index_mask))) & args->mask;
 	}
 	
 	// Turn them into floats.

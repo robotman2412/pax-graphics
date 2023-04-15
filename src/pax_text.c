@@ -217,6 +217,7 @@ static pax_vec2f text_bitmap_mono(pax_text_render_t *ctx, const pax_font_range_t
 			.do_aa       = ctx->do_aa,
 		};
 		args.mask        = (1 << args.bpp) - 1;
+		args.index_mask  = (1 << args.ppb) - 1;
 		
 		size_t glyph_len  = args.glyph_y_mul * range->bitmap_mono.height;
 		size_t byte_index = glyph_len * (glyph - range->start);
@@ -296,6 +297,7 @@ static pax_vec2f text_bitmap_var(pax_text_render_t *ctx, const pax_font_range_t 
 			.do_aa       = ctx->do_aa,
 		};
 		args.mask         = (1 << args.bpp) - 1;
+		args.index_mask   = args.ppb - 1;
 		size_t byte_index = dims->index;
 		args.bitmap = range->bitmap_mono.glyphs + byte_index;
 		
