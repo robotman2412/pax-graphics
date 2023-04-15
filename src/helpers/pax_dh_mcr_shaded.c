@@ -308,6 +308,11 @@ void paxmcr_overlay_buffer(bool odd_scanline, pax_buf_t *base, pax_buf_t *top, i
 		tex_y ++;
 	}
 	
+	// Check alpha channel presence.
+	if (!PAX_IS_ALPHA(top->type)) {
+		assume_opaque = true;
+	}
+	
 	// Now, let us MAP.
 	int top_delta  = tex_y * top->width;
 	int base_delta = y     * base->width;
