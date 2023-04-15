@@ -487,7 +487,9 @@ pax_vec2f pax_center_text(pax_buf_t *buf, pax_col_t color, const pax_font_t *fon
 		
 		if (!cr && !lf) {
 			// Nothing special left to do.
-			pax_center_line(buf, color, font, font_size, x, y+height, text);
+			pax_vec2f dims = pax_center_line(buf, color, font, font_size, x, y+height, text);
+			if (dims.x > width) width = dims.x;
+			height += dims.y;
 			break;
 			
 		} else {
