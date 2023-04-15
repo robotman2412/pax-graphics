@@ -272,7 +272,7 @@ void pax_overlay_buffer(pax_buf_t *base, pax_buf_t *top, int x, int y, int width
 	
 	bool equal = top->type == base->type;
 	
-	if (equal && x == 0 && y == 0 && width == base->width && height == base->height) {
+	if (equal && x == 0 && y == 0 && width == base->width && height == base->height && base->reverse_endianness == top->reverse_endianness) {
 		// When copying one buffer onto another as a background,
 		// and the types are the same, perform a memcpy() instead.
 		memcpy(base->buf, top->buf, (PAX_GET_BPP(base->type) * width * height + 7) >> 3);
