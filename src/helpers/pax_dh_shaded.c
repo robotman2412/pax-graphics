@@ -254,20 +254,20 @@ void pax_overlay_buffer(pax_buf_t *base, pax_buf_t *top, int x, int y, int width
 	
 	// Perform clipping.
 	if (x < base->clip.x) {
-		tex_x = base->clip.x + 0.5 - x;
+		tex_x = base->clip.x - x;
 		width -= tex_x;
-		x  = base->clip.x + 0.5;
+		x  = base->clip.x;
 	}
 	if (x + width > base->clip.x + base->clip.w) {
-		width = base->clip.x + base->clip.w - 0.5 - x;
+		width = base->clip.x + base->clip.w - x;
 	}
 	if (y < base->clip.y) {
-		tex_y = base->clip.y + 0.5 - y;
+		tex_y = base->clip.y - y;
 		height -= tex_y;
-		y  = base->clip.y + 0.5;
+		y  = base->clip.y;
 	}
 	if (y + height > base->clip.y + base->clip.h) {
-		height = base->clip.y + base->clip.h - 0.5 - y;
+		height = base->clip.y + base->clip.h - y;
 	}
 	
 	bool equal = top->type == base->type;
