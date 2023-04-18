@@ -7,6 +7,8 @@ if(DEFINED ENV{PAX_CMAKE_STANDALONE})
 	set(CMAKE_CXX_COMPILER_FORCED true)
 	
 	project(pax_graphics C CXX)
+	add_definitions(-DPAX_STANDALONE=1)
+	add_definitions(-DPAX_COMPILE_MCR=0)
 	
 	message(STATUS "Building PAX Graphics for " $ENV{PAX_CMAKE_STANDALONE} ".")
 	include(${CMAKE_CURRENT_LIST_DIR}/Standalone.cmake)

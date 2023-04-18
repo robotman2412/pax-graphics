@@ -67,9 +67,6 @@ static QueueHandle_t   queue_handle      = NULL;
 #include <unistd.h>
 #include <ptq.h>
 
-pthread_mutex_t        pax_log_mutex     = PTHREAD_MUTEX_INITIALIZER;
-bool                   pax_log_use_mutex = false;
-
 // The thread for multicore helper stuff.
 static pthread_t       multicore_handle;
 // The mutex used to determine IDLE.
@@ -78,6 +75,11 @@ static pthread_mutex_t multicore_mutex   = PTHREAD_MUTEX_INITIALIZER;
 static ptq_queue_t     queue_handle      = NULL;
 
 #endif
+#endif
+
+#ifdef PAX_STANDALONE
+pthread_mutex_t        pax_log_mutex     = PTHREAD_MUTEX_INITIALIZER;
+bool                   pax_log_use_mutex = false;
 #endif
 
 

@@ -30,15 +30,26 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #if (defined(ESP32) || defined(ESP8266) || defined(ESP_PLATFORM)) && !defined(PAX_ESP_IDF)
 #define PAX_ESP_IDF
 #endif
 
 #ifdef PAX_ESP_IDF
+
+#ifdef __cplusplus
+}
+#endif
 #include <esp_system.h>
 #include <sdkconfig.h>
 #include <esp_err.h>
 #include <esp_log.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define PAX_PERF_CRITICAL_ATTR IRAM_ATTR
 
@@ -56,7 +67,13 @@
 
 #define PAX_PERF_CRITICAL_ATTR __attribute__((hot))
 
+#ifdef __cplusplus
+}
+#endif
 #include <pthread.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 extern pthread_mutex_t pax_log_mutex;
 extern bool pax_log_use_mutex;
@@ -104,10 +121,6 @@ extern bool pax_log_use_mutex;
 #endif
 
 #endif
-
-#ifdef __cplusplus
-extern "C" {
-#endif //__cplusplus
 
 /* ======= GENERIC HELPERS ======= */
 
