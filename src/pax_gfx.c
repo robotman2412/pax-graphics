@@ -264,6 +264,8 @@ void pax_buf_init(pax_buf_t *buf, void *mem, int width, int height, pax_buf_type
 		.reverse_endianness = false,
 		.pallette    = NULL
 	};
+	// Bit of workaround because 16BPP screens almost always require this option.
+	if (PAX_GET_BPP(type) == 16) buf->reverse_endianness = true;
 	// Update getters and setters.
 	pax_get_col_conv(buf, &buf->col2buf, &buf->buf2col);
 	pax_get_setters(buf, &buf->getter, &buf->setter);
