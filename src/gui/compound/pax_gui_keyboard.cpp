@@ -444,14 +444,21 @@ void Keyboard::buttonDown(InputButton which) {
 		
 	} else if (which == InputButton::LEFT) {
 		// The navigation.
-		x --;
-		if (x < 0) x = board.lengths[y] - 1;
+		if (y == 3 && x >= 2 && x <= 6) {
+			x = 1;
+		} else {
+			x --;
+			if (x < 0) x = board.lengths[y] - 1;
+		}
 		
 	} else if (which == InputButton::RIGHT) {
 		// The navigation.
-		x ++;
-		if (x >= board.lengths[y]) x = 0;
-		
+		if (y == 3 && x >= 2 && x <= 6) {
+			x =7;
+		} else {
+			x ++;
+			if (x >= board.lengths[y]) x = 0;
+		}
 	}
 }
 
@@ -496,8 +503,15 @@ void Keyboard::draw(Buffer &buf) {
 		case Type::SYMBOLS:   keymap = km_symbols;   break;
 	}
 	
-	// TODO: Draw text box.
-	buf.drawString(theme.textColor, theme.font, theme.fontSize, bounds.x, bounds.y, value);
+	// Draw text box.
+	TextBox text{{bounds.x, bounds.y, bounds.w, (float) textBoxHeight}};
+	auto style     = text.getStyle();
+	style.font     = theme.font;
+	style.fontSize = theme.fontSize;
+	style.color    = theme.textColor;
+	text.appendStyle(style);
+	text.appendText(value);
+	text.draw(buf);
 	
 	// Draw the base keyboard.
 	buf.pushMatrix();

@@ -95,7 +95,7 @@ void GradientBox::draw(Buffer &buf) {
 	
 	// Delegate the rectangle to shaders.
 	shader.setContext((void *) this);
-	buf.drawRect(&shader, nullptr, bounds.x, bounds.y, bounds.w, bounds.h);
+	buf.drawRect(shader, nullptr, bounds.x, bounds.y, bounds.w, bounds.h);
 	
 	// Draw outline.
 	Color col;

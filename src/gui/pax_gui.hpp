@@ -37,6 +37,7 @@
 #include <pax_gui_dropdown.hpp>
 #include <pax_gui_image.hpp>
 #include <pax_gui_label.hpp>
+#include <pax_gui_progress.hpp>
 
 #include <pax_gui_colpicker.hpp>
 #include <pax_gui_filepicker.hpp>

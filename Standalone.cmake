@@ -22,10 +22,11 @@ add_library(pax_graphics
 	"src/gui/icons/icons.c"
 	"src/gui/elements/pax_gui_button.cpp"
 	"src/gui/elements/pax_gui_container.cpp"
+	"src/gui/elements/pax_gui_dropdown.cpp"
 	"src/gui/elements/pax_gui_image.cpp"
 	"src/gui/elements/pax_gui_label.cpp"
+	"src/gui/elements/pax_gui_progress.cpp"
 	"src/gui/compound/pax_gui_colpicker.cpp"
-	"src/gui/elements/pax_gui_dropdown.cpp"
 	"src/gui/compound/pax_gui_filepicker.cpp"
 	"src/gui/compound/pax_gui_keyboard.cpp"
 
