@@ -58,6 +58,8 @@ class ProgressBar: public Element {
 		Style style;
 		// Color of this progress bar.
 		Color color;
+		// Radius of rounding or thickness of ring.
+		float radius;
 		// Display as "unknown progress" type.
 		// Uses `progress` to animate the shape.
 		bool unknownProgress;

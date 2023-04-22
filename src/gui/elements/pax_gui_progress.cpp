@@ -29,11 +29,11 @@ namespace pax::gui {
 
 // Make a new progress bar with unknown progress.
 ProgressBar::ProgressBar(Rectf _bounds, Style _style):
-	Element(_bounds), style(_style), color(0xff007fff), unknownProgress(1), progress(0) {}
+	Element(_bounds), style(_style), color(0xff007fff), radius(10), unknownProgress(1), progress(0) {}
 
 // Make a new progress bar with known progress.
 ProgressBar::ProgressBar(Rectf _bounds, float _progress, Style _style):
-	Element(_bounds), style(_style), color(0xff007fff), unknownProgress(0), progress(_progress) {}
+	Element(_bounds), style(_style), color(0xff007fff), radius(10), unknownProgress(0), progress(_progress) {}
 
 
 // Draw this element to `buf`.
@@ -58,7 +58,29 @@ void ProgressBar::draw(Buffer &buf) {
 	
 	switch (style) {
 		default:
-		case Style::ROUNDED_RECT:
+		case Style::ROUNDED_RECT: {
+			if (angle+width > 1) {
+				buf.drawRoundRect(
+					color,
+					bounds.x+bounds.w*angle, bounds.y,
+					bounds.w*(1-angle), bounds.h,
+					radius
+				);
+				buf.drawRoundRect(
+					color,
+					bounds.x, bounds.y,
+					bounds.w*(width-1+angle), bounds.h,
+					radius
+				);
+			} else {
+				buf.drawRoundRect(
+					color,
+					bounds.x+bounds.w*angle, bounds.y,
+					bounds.w*width, bounds.h,
+					radius
+				);
+			}
+		} break;
 		case Style::RECT: {
 			if (angle+width > 1) {
 				buf.drawRect(
@@ -80,8 +102,24 @@ void ProgressBar::draw(Buffer &buf) {
 			}
 		} break;
 		
-		case Style::ROUNDED_RING:
-		case Style::RING:
+		case Style::ROUNDED_RING: {
+			float arcRadius = fminf(bounds.w, bounds.h)/2;
+			buf.drawRoundHollowArc(
+				color,
+				bounds.x+bounds.w/2, bounds.y+bounds.h/2,
+				arcRadius, arcRadius - radius,
+				M_PI/2-angle*2*M_PI, M_PI/2-(angle+width)*2*M_PI
+			);
+		} break;
+		case Style::RING: {
+			float arcRadius = fminf(bounds.w, bounds.h)/2;
+			buf.drawHollowArc(
+				color,
+				bounds.x+bounds.w/2, bounds.y+bounds.h/2,
+				arcRadius, arcRadius - radius,
+				M_PI/2-angle*2*M_PI, M_PI/2-(angle+width)*2*M_PI
+			);
+		} break;
 		case Style::PIE_CHART: {
 			buf.drawArc(
 				color,
