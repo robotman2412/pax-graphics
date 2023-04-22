@@ -218,8 +218,9 @@ static pax_vec2f text_bitmap_mono(pax_text_render_t *ctx, const pax_font_range_t
 		};
 		args.mask        = (1 << args.bpp) - 1;
 		
-		size_t glyph_len = args.glyph_y_mul * range->bitmap_mono.height;
-		args.glyph_index = glyph_len * (glyph - range->start);
+		size_t glyph_len  = args.glyph_y_mul * range->bitmap_mono.height;
+		size_t byte_index = glyph_len * (glyph - range->start);
+		args.bitmap = range->bitmap_mono.glyphs + byte_index;
 		
 		pax_shader_t shader = {
 			.schema_version    =  1,
@@ -230,12 +231,12 @@ static pax_vec2f text_bitmap_mono(pax_text_render_t *ctx, const pax_font_range_t
 			.alpha_promise_0   = true,
 			.alpha_promise_255 = false,
 		};
-		if (range->bitmap_mono.bpp > 1) {
-			// Multi-bit per pixel impl.
-			shader.callback = pax_shader_font_bmp_hi;
-		} else {
+		if (range->bitmap_mono.bpp == 1) {
 			// Single bit per pixel impl.
-			shader.callback = ctx->do_aa ? pax_shader_font_bmp_aa : pax_shader_font_bmp;
+			shader.callback = PAX_IS_PALETTE(ctx->buf->type) ? pax_shader_font_bmp_pal : pax_shader_font_bmp;
+		} else {
+			// Multi-bit per pixel impl.
+			shader.callback = PAX_IS_PALETTE(ctx->buf->type) ? pax_shader_font_bmp_hi_pal : (ctx->do_aa ? pax_shader_font_bmp_hi_aa : pax_shader_font_bmp_hi);
 		}
 		
 		// And UVs.
@@ -294,8 +295,9 @@ static pax_vec2f text_bitmap_var(pax_text_render_t *ctx, const pax_font_range_t 
 			.ppb         = 8 / range->bitmap_var.bpp,
 			.do_aa       = ctx->do_aa,
 		};
-		args.mask        = (1 << args.bpp) - 1;
-		args.glyph_index = dims->index;
+		args.mask         = (1 << args.bpp) - 1;
+		size_t byte_index = dims->index;
+		args.bitmap = range->bitmap_mono.glyphs + byte_index;
 		
 		pax_shader_t shader = {
 			.schema_version    =  1,
@@ -306,12 +308,12 @@ static pax_vec2f text_bitmap_var(pax_text_render_t *ctx, const pax_font_range_t 
 			.alpha_promise_0   = true,
 			.alpha_promise_255 = false,
 		};
-		if (range->bitmap_var.bpp > 1) {
-			// Multi-bit per pixel impl.
-			shader.callback = ctx->do_aa ? pax_shader_font_bmp_hi_aa : pax_shader_font_bmp_hi;
-		} else {
+		if (range->bitmap_var.bpp == 1) {
 			// Single bit per pixel impl.
-			shader.callback = ctx->do_aa ? pax_shader_font_bmp_aa : pax_shader_font_bmp;
+			shader.callback = PAX_IS_PALETTE(ctx->buf->type) ? pax_shader_font_bmp_pal : pax_shader_font_bmp;
+		} else {
+			// Multi-bit per pixel impl.
+			shader.callback = PAX_IS_PALETTE(ctx->buf->type) ? pax_shader_font_bmp_hi_pal : (ctx->do_aa ? pax_shader_font_bmp_hi_aa : pax_shader_font_bmp_hi);
 		}
 		
 		// And UVs.
@@ -380,7 +382,7 @@ static pax_vec2f text_generic(pax_text_render_t *ctx, const char *text) {
 		return (pax_vec2f) { .x=0, .y=0, };
 	}
 	// Render checks.
-	if (ctx->color < 0x01000000) {
+	if (ctx->buf && !pax_do_draw_col(ctx->buf, ctx->color)) {
 		ctx->do_render = false;
 	}
 	

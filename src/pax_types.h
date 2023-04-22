@@ -191,13 +191,13 @@ typedef uint32_t               pax_col_t;
 // Helper for color conversion.
 // Used for both buffer type to ARGB and vice versa.
 // Buffer argument is mostly used for images with palette.
-typedef pax_col_t (*pax_col_conv_t)(pax_buf_t *buf, pax_col_t color);
+typedef pax_col_t (*pax_col_conv_t)(const pax_buf_t *buf, pax_col_t color);
 // Helper for setting pixels in drawing routines.
 // Used to allow optimising away alpha in colors.
 typedef void (*pax_setter_t)(pax_buf_t *buf, pax_col_t color, int x, int y);
 // Helper for getting pixels in drawing routines.
 // Used to allow optimising away inline branching.
-typedef pax_col_t (*pax_index_getter_t)(pax_buf_t *buf, int index);
+typedef pax_col_t (*pax_index_getter_t)(const pax_buf_t *buf, int index);
 // Helper for setting pixels in drawing routines.
 // Used to allow optimising away color conversion.
 typedef void (*pax_index_setter_t)(pax_buf_t *buf, pax_col_t color, int index);

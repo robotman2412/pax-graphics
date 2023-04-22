@@ -71,7 +71,7 @@
 
 #ifndef PAX_QUEUE_SIZE
 // Queue size to use for multi-core rendering.
-	#define PAX_QUEUE_SIZE 128
+	#define PAX_QUEUE_SIZE 32
 #endif
 
 #endif //PAX_CONFIG_H

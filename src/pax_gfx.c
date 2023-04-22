@@ -144,15 +144,6 @@ const char *pax_desc_err(pax_err_t error) {
 	else return desc[-error];
 }
 
-// Debug stuff.
-void pax_debug(pax_buf_t *buf) {
-	// Try to cause the error flood.
-	pax_buf_t garbage;
-	garbage.buf = NULL;
-	
-	pax_draw_image(buf, &garbage, 2, 2);
-}
-
 
 
 /* ======= DRAWING HELPERS ======= */
@@ -165,7 +156,7 @@ static pax_col_t pax_shader_wrapper_for_v0(pax_col_t tint, pax_col_t existing, i
 }
 
 // Gets the correct callback function for the shader.
-static pax_shader_ctx_t pax_get_shader_ctx(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader) {
+pax_shader_ctx_t pax_get_shader_ctx(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader) {
 	if (shader->schema_version != ~shader->schema_complement) {
 		// TODO: Bad.
 	}
@@ -399,6 +390,24 @@ void pax_buf_convert(pax_buf_t *dst, pax_buf_t *src, pax_buf_type_t type) {
 }
 
 
+// Retrieve the width of the buffer.
+int pax_buf_get_width(const pax_buf_t *buf) { return buf->width; }
+// Retrieve the height of the buffer.
+int pax_buf_get_height(const pax_buf_t *buf) { return buf->height; }
+// Retrieve the width of the buffer.
+float pax_buf_get_widthf(const pax_buf_t *buf) { return (float) buf->width;}
+// Retrieve the height of the buffer.
+float pax_buf_get_heightf(const pax_buf_t *buf) { return (float) buf->height; }
+// Retrieve the type of the buffer.
+float pax_buf_get_type(const pax_buf_t *buf) { return buf->type; }
+
+// Get a const pointer to the image data.
+const void *pax_buf_get_pixels(const pax_buf_t *buf) { return buf->buf; }
+// Get a non-const pointer to the image data.
+void *pax_buf_get_pixels_rw(pax_buf_t *buf) { return buf->buf; }
+// Get the byte size of the image data.
+size_t pax_buf_get_size(const pax_buf_t *buf) { return PAX_BUF_CALC_SIZE(buf->width, buf->height, buf->type); }
+
 // Set rotation of the buffer.
 // 0 is not rotated, each unit is one quarter turn counter-clockwise.
 void pax_buf_set_rotation(pax_buf_t *buf, int rotation) {
@@ -407,7 +416,7 @@ void pax_buf_set_rotation(pax_buf_t *buf, int rotation) {
 
 // Get rotation of the buffer.
 // 0 is not rotated, each unit is one quarter turn counter-clockwise.
-int pax_buf_get_rotation(pax_buf_t *buf) {
+int pax_buf_get_rotation(const pax_buf_t *buf) {
 	return buf->rotation;
 }
 
@@ -533,7 +542,7 @@ void pax_clip(pax_buf_t *buf, int x, int y, int width, int height) {
 }
 
 // Get the current clip rectangle.
-pax_recti pax_get_clip(pax_buf_t *buf) {
+pax_recti pax_get_clip(const pax_buf_t *buf) {
 	return buf->clip;
 }
 
@@ -548,13 +557,13 @@ void pax_noclip(pax_buf_t *buf) {
 }
 
 // Check whether the buffer is dirty.
-bool pax_is_dirty(pax_buf_t *buf) {
+bool pax_is_dirty(const pax_buf_t *buf) {
 	PAX_BUF_CHECK1("pax_is_dirty", 0);
 	return buf->dirty_x0 < buf->dirty_x1;
 }
 
 // Get a copy of the dirty rectangle.
-pax_recti pax_get_dirty(pax_buf_t *buf) {
+pax_recti pax_get_dirty(const pax_buf_t *buf) {
 	return (pax_recti) {
 		buf->dirty_x0,
 		buf->dirty_y0,
@@ -610,13 +619,6 @@ void pax_mark_dirty2(pax_buf_t *buf, int x, int y, int width, int height) {
 
 
 /* ============ COLORS =========== */
-
-// A linear interpolation based only on ints.
-static inline uint8_t pax_lerp(uint8_t part, uint8_t from, uint8_t to) {
-	// This funny line converts part from 0-255 to 0-256.
-	// Then, it applies an integer multiplication and the result is shifted right by 8.
-	return from + (( (to - from) * (part + (part >> 7)) ) >> 8);
-}
 
 // 8-bit + 8-bit fractional (0x00ff=1) division.
 static inline uint16_t pax_frac_div16(uint16_t a, uint8_t b) {
@@ -895,7 +897,7 @@ void pax_set_pixel(pax_buf_t *buf, pax_col_t color, int x, int y) {
 }
 
 // Get a pixel.
-pax_col_t pax_get_pixel(pax_buf_t *buf, int x, int y) {
+pax_col_t pax_get_pixel(const pax_buf_t *buf, int x, int y) {
 	PAX_BUF_CHECK1("pax_get_pixel", 0);
 	
 	#if PAX_COMPILE_ROTATE
@@ -912,18 +914,58 @@ pax_col_t pax_get_pixel(pax_buf_t *buf, int x, int y) {
 	return buf->buf2col(buf, buf->getter(buf, x + y * buf->width));
 }
 
+// Set a pixel without color conversion.
+void pax_set_pixel_raw(pax_buf_t *buf, pax_col_t color, int x, int y) {
+	PAX_BUF_CHECK("pax_set_pixel");
+	
+	#if PAX_COMPILE_ROTATE
+	pax_vec2i tmp = pax_rotate_det_vec2i(buf, (pax_vec2i) {x, y});
+	x = tmp.x; y = tmp.y;
+	#endif
+	
+	if (x < 0 || x >= buf->width || y < 0 || y >= buf->height) {
+		// Out of bounds error.
+		pax_last_error = PAX_ERR_BOUNDS;
+		return;
+	}
+	
+	PAX_SUCCESS();
+	
+	int index = x + y * buf->width;
+	// Don't do any color conversion.
+	buf->setter(buf, color, index);
+}
+
+// Get a pixel without color conversion.
+pax_col_t pax_get_pixel_raw(const pax_buf_t *buf, int x, int y) {
+	PAX_BUF_CHECK1("pax_get_pixel", 0);
+	
+	#if PAX_COMPILE_ROTATE
+	pax_vec2i tmp = pax_rotate_det_vec2i(buf, (pax_vec2i) {x, y});
+	x = tmp.x; y = tmp.y;
+	#endif
+	
+	if (x < 0 || x >= buf->width || y < 0 || y >= buf->height) {
+		// Out of bounds error.
+		pax_last_error = PAX_ERR_BOUNDS;
+		return 0;
+	}
+	PAX_SUCCESS();
+	return buf->getter(buf, x + y * buf->width);
+}
+
 
 
 /* ========= DRAWING: 2D ========= */
 
 // Draws an image at the image's normal size.
-void pax_draw_image(pax_buf_t *buf, pax_buf_t *image, float x, float y) {
+void pax_draw_image(pax_buf_t *buf, const pax_buf_t *image, float x, float y) {
 	if (!image || !image->buf) PAX_ERROR("pax_draw_image", PAX_ERR_CORRUPT);
 	pax_draw_image_sized(buf, image, x, y, image->width, image->height);
 }
 
 // Draw an image with a prespecified size.
-void pax_draw_image_sized(pax_buf_t *buf, pax_buf_t *image, float x, float y, float width, float height) {
+void pax_draw_image_sized(pax_buf_t *buf, const pax_buf_t *image, float x, float y, float width, float height) {
 	if (!image || !image->buf) PAX_ERROR("pax_draw_image", PAX_ERR_CORRUPT);
 	if (PAX_IS_ALPHA(image->type)) {
 		pax_shade_rect(buf, -1, &PAX_SHADER_TEXTURE(image), NULL, x, y, width, height);
@@ -934,14 +976,14 @@ void pax_draw_image_sized(pax_buf_t *buf, pax_buf_t *image, float x, float y, fl
 
 // Draws an image at the image's normal size.
 // Assumes the image is completely opaque, any transparent parts are drawn opaque.
-void pax_draw_image_op(pax_buf_t *buf, pax_buf_t *image, float x, float y) {
+void pax_draw_image_op(pax_buf_t *buf, const pax_buf_t *image, float x, float y) {
 	if (!image || !image->buf) PAX_ERROR("pax_draw_image_op", PAX_ERR_CORRUPT);
 	pax_draw_image_sized_op(buf, image, x, y, image->width, image->height);
 }
 
 // Draw an image with a prespecified size.
 // Assumes the image is completely opaque, any transparent parts are drawn opaque.
-void pax_draw_image_sized_op(pax_buf_t *buf, pax_buf_t *image, float x, float y, float width, float height) {
+void pax_draw_image_sized_op(pax_buf_t *buf, const pax_buf_t *image, float x, float y, float width, float height) {
 	if (!image || !image->buf) PAX_ERROR("pax_draw_image", PAX_ERR_CORRUPT);
 	pax_shade_rect(buf, -1, &PAX_SHADER_TEXTURE_OP(image), NULL, x, y, width, height);
 }
@@ -1309,6 +1351,7 @@ void pax_shade_circle(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shade
 // Draw a rectangle.
 void pax_draw_rect(pax_buf_t *buf, pax_col_t color, float x, float y, float width, float height) {
 	PAX_BUF_CHECK("pax_draw_rect");
+	if (!pax_do_draw_col(buf, color)) return;
 	if (matrix_2d_is_identity2(buf->stack_2d.value)) {
 		// This can be simplified significantly.
 		matrix_2d_transform(buf->stack_2d.value, &x, &y);
@@ -1335,6 +1378,7 @@ void pax_draw_rect(pax_buf_t *buf, pax_col_t color, float x, float y, float widt
 // Draw a line.
 void pax_draw_line(pax_buf_t *buf, pax_col_t color, float x0, float y0, float x1, float y1) {
 	PAX_BUF_CHECK("pax_draw_line");
+	if (!pax_do_draw_col(buf, color)) return;
 	// Apply transforms.
 	matrix_2d_transform(buf->stack_2d.value, &x0, &y0);
 	matrix_2d_transform(buf->stack_2d.value, &x1, &y1);
@@ -1345,6 +1389,7 @@ void pax_draw_line(pax_buf_t *buf, pax_col_t color, float x0, float y0, float x1
 // Draw a triangle.
 void pax_draw_tri(pax_buf_t *buf, pax_col_t color, float x0, float y0, float x1, float y1, float x2, float y2) {
 	PAX_BUF_CHECK("pax_draw_tri");
+	if (!pax_do_draw_col(buf, color)) return;
 	// Apply the transforms.
 	matrix_2d_transform(buf->stack_2d.value, &x0, &y0);
 	matrix_2d_transform(buf->stack_2d.value, &x1, &y1);
@@ -1356,6 +1401,7 @@ void pax_draw_tri(pax_buf_t *buf, pax_col_t color, float x0, float y0, float x1,
 // Draw na arc, angles in radians.
 void pax_draw_arc(pax_buf_t *buf, pax_col_t color, float x,  float y,  float r,  float a0, float a1) {
 	PAX_BUF_CHECK("pax_draw_arc");
+	if (!pax_do_draw_col(buf, color)) return;
 	
 	// Simplify the angles slightly.
 	float a2 = fmodf(a0, M_PI * 2);
@@ -1400,6 +1446,9 @@ void pax_draw_arc(pax_buf_t *buf, pax_col_t color, float x,  float y,  float r, 
 
 // Draw a circle.
 void pax_draw_circle(pax_buf_t *buf, pax_col_t color, float x,  float y,  float r) {
+	PAX_BUF_CHECK("pax_draw_circle");
+	if (!pax_do_draw_col(buf, color)) return;
+	
 	// Use precalcualted circles for speed because the user can't tell anyway.
 	const pax_vec2f *preset;
 	size_t size;
@@ -1485,10 +1534,7 @@ PAX_PERF_CRITICAL_ATTR void pax_background(pax_buf_t *buf, pax_col_t color) {
 // Draw a rectangle, ignoring matrix transform.
 void pax_simple_rect(pax_buf_t *buf, pax_col_t color, float x, float y, float width, float height) {
 	PAX_BUF_CHECK("pax_simple_rect");
-	if (color < 0x01000000) {
-		PAX_SUCCESS();
-		return;
-	}
+	if (!pax_do_draw_col(buf, color)) return;
 	
 	// Do rotation.
 	pax_rectf tmp = pax_rotate_det_rectf(buf, (pax_rectf) {x,y,width,height});
@@ -1560,6 +1606,7 @@ void pax_simple_rect(pax_buf_t *buf, pax_col_t color, float x, float y, float wi
 // Draw a line, ignoring matrix transform.
 void pax_simple_line(pax_buf_t *buf, pax_col_t color, float x0, float y0, float x1, float y1) {
 	PAX_BUF_CHECK("pax_simple_line");
+	if (!pax_do_draw_col(buf, color)) return;
 	
 	if (!isfinite(x0) || !isfinite(y0) || !isfinite(x1) || !isfinite(y1)) {
 		// We can't draw to infinity.
@@ -1629,6 +1676,7 @@ void pax_simple_line(pax_buf_t *buf, pax_col_t color, float x0, float y0, float 
 // Draw a triangle, ignoring matrix transform.
 void pax_simple_tri(pax_buf_t *buf, pax_col_t color, float x0, float y0, float x1, float y1, float x2, float y2) {
 	PAX_BUF_CHECK("pax_simple_tri");
+	if (!pax_do_draw_col(buf, color)) return;
 	
 	if (!isfinite(x0) || !isfinite(y0) || !isfinite(x1) || !isfinite(y1) || !isfinite(x2) || !isfinite(y2)) {
 		// We can't draw to infinity.
@@ -1688,6 +1736,7 @@ void pax_simple_tri(pax_buf_t *buf, pax_col_t color, float x0, float y0, float x
 // Angles in radians.
 void pax_simple_arc(pax_buf_t *buf, pax_col_t color, float x, float y, float r, float a0, float a1) {
 	PAX_BUF_CHECK("pax_simple_arc");
+	if (!pax_do_draw_col(buf, color)) return;
 	
 	// Simplify the angles slightly.
 	float a2 = fmodf(a0, M_PI * 2);

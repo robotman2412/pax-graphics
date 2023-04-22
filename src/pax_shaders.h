@@ -45,8 +45,8 @@ typedef struct pax_font_bmp_args {
 	bool                    do_aa;
 	// The glyph to be drawn.
 	uint32_t                glyph;
-	// The first byte index of the glyph to be drawn.
-	size_t                  glyph_index;
+	// The glyph data pointer.
+	const uint8_t          *bitmap;
 	// The bytes per line of the glyph.
 	size_t                  glyph_y_mul;
 	// The width of the glyph's drawn region.
@@ -61,11 +61,17 @@ typedef struct pax_font_bmp_args {
 	uint8_t                 mask;
 } pax_font_bmp_args_t;
 
+// Texture shader for multi-bpp bitmap fonts on palette buffers.
+pax_col_t pax_shader_font_bmp_hi_pal(pax_col_t tint, pax_col_t existing, int x, int y, float u, float v, void *args);
+
 // Texture shader for multi-bpp bitmap fonts.
 pax_col_t pax_shader_font_bmp_hi(pax_col_t tint, pax_col_t existing, int x, int y, float u, float v, void *args);
 
 // Texture shader for multi-bpp bitmap fonts with linear interpolation.
 pax_col_t pax_shader_font_bmp_hi_aa(pax_col_t tint, pax_col_t existing, int x, int y, float u, float v, void *args);
+
+// Texture shader for 1bpp bitmap fonts on palette buffers.
+pax_col_t pax_shader_font_bmp_pal(pax_col_t tint, pax_col_t existing, int x, int y, float u, float v, void *args);
 
 // Texture shader for 1bpp bitmap fonts.
 pax_col_t pax_shader_font_bmp(pax_col_t tint, pax_col_t existing, int x, int y, float u, float v, void *args);
@@ -77,10 +83,10 @@ pax_col_t pax_shader_font_bmp_aa(pax_col_t tint, pax_col_t existing, int x, int 
 
 // Create a shader_t of the given texture.
 // Texture format is pax_but_t*.
-#define PAX_SHADER_TEXTURE(texture) (pax_shader_t) { .schema_version = 0, .schema_complement = (uint8_t) ~0, .renderer_id = PAX_RENDERER_ID_SWR, .promise_callback = NULL, .callback = (void *) pax_shader_texture_aa, .callback_args = texture, .alpha_promise_0=true, .alpha_promise_255=false }
+#define PAX_SHADER_TEXTURE(texture) (pax_shader_t) { .schema_version = 0, .schema_complement = (uint8_t) ~0, .renderer_id = PAX_RENDERER_ID_SWR, .promise_callback = NULL, .callback = (void *) pax_shader_texture_aa, .callback_args = (void *) (texture), .alpha_promise_0=true, .alpha_promise_255=false }
 // Create a shader_t of the given texture, assumes the texture is opaque.
 // Texture format is pax_but_t*.
-#define PAX_SHADER_TEXTURE_OP(texture) (pax_shader_t) { .schema_version = 0, .schema_complement = (uint8_t) ~0, .renderer_id = PAX_RENDERER_ID_SWR, .promise_callback = NULL, .callback = (void *) pax_shader_texture_aa, .callback_args = texture, .alpha_promise_0=true, .alpha_promise_255=true }
+#define PAX_SHADER_TEXTURE_OP(texture) (pax_shader_t) { .schema_version = 0, .schema_complement = (uint8_t) ~0, .renderer_id = PAX_RENDERER_ID_SWR, .promise_callback = NULL, .callback = (void *) pax_shader_texture_aa, .callback_args = (void *) (texture), .alpha_promise_0=true, .alpha_promise_255=true }
 // Texture shader. No interpolation.
 pax_col_t pax_shader_texture(pax_col_t tint, int x, int y, float u, float v, void *args);
 // Texture shader with interpolation.

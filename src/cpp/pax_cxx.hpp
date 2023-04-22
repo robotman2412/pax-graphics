@@ -42,7 +42,7 @@ typedef pax_col_t Color;
 namespace pax {
 
 // A C++ ShaderFunc thing for use with lambdas and such.
-typedef std::function<Color(Color existing, Color tint, int x, int y, float u, float v, void *args)> ShaderFunc;
+typedef std::function<Color(Color tint, Color existing, int x, int y, float u, float v, void *args)> ShaderFunc;
 
 // A helper data structure for C++ shaders.
 typedef struct {
@@ -88,9 +88,11 @@ class Shader {
 		void *getContext();
 		
 		// Apply this shader to a pixel.
-		Color apply(Color tint, int x, int y, float u, float v);
+		Color apply(Buffer &buffer, Color tint, Color existing, int x, int y, float u, float v) const;
 		// Get a shader object for using in C PAX APIs.
 		pax_shader_t *getInternal();
+		// Get a shader object for using in C PAX APIs.
+		const pax_shader_t *getInternal() const;
 };
 
 class Buffer {
@@ -102,7 +104,7 @@ class Buffer {
 		
 		friend class InlineElement;
 		friend class TextElement;
-		friend class ImageElement;
+		friend class InlineImage;
 		friend class TextBox;
 		
 	public:
@@ -110,6 +112,12 @@ class Buffer {
 		Color fillColor;
 		// Default color to use for drawing outlined shapes.
 		Color lineColor;
+		
+		// Compute required size of a certain buffer type.
+		// Returns byte capacity requirement for preallocated buffers.
+		static constexpr size_t computeSize(int width, int height, pax_buf_type_t type) {
+			return PAX_BUF_CALC_SIZE(width, height, type);
+		}
 		
 		// Make an empty wrapper.
 		Buffer();
@@ -131,14 +139,14 @@ class Buffer {
 		Buffer& operator=(Buffer &&);
 		
 		// Get an explicit copy-by-value of this buffer.
-		Buffer clone();
+		Buffer clone() const;
 		
 		// Set rotation of the buffer.
 		// 0 is not rotated, each unit is one quarter turn counter-clockwise.
 		void setRotation(int rotation);
 		// Get rotation of the buffer.
 		// 0 is not rotated, each unit is one quarter turn counter-clockwise.
-		int getRotation();
+		int getRotation() const;
 		// Scroll the buffer, filling with a placeholder color.
 		void scroll(Color placeholder, int x, int y);
 		// Scroll the buffer using fill color as placeholder.
@@ -152,23 +160,31 @@ class Buffer {
 		// Get a pointer to the underlying C API pax_buf_t*.
 		// Note: Doing so is less memory safe than to use the C++ API, but still compatible.
 		pax_buf_t *getInternal();
-		// Get a pointer to the memory stored in the pixel buffer.
-		// The arrangement is left-to-right then top-to-bottom, packed (sub byte-aligned rows will partially share a byte with the next).
+		// Get a pointer to the underlying C API pax_buf_t*.
+		// Note: Doing so is less memory safe than to use the C++ API, but still compatible.
+		const pax_buf_t *getInternal() const;
+		// Get a pointer to the image data.
+		// See <../docs/pixelformat.md> for the format.
 		void *getPixelBuffer();
+		// Get a pointer to the image data.
+		// See <../docs/pixelformat.md> for the format.
+		const void *getPixelBuffer() const;
+		// Get the byte size of the image data.
+		size_t getPixelBufferSize() const;
 		
 		// Deletion operator.
 		~Buffer();
 		
 		// Get the width, in pixels, of the buffer.
-		int width();
+		int width() const;
 		// Get the height, in pixels, of the buffer.
-		int height();
+		int height() const;
 		// Get the width, in pixels, of the buffer.
-		float widthf() { return (float) width(); }
+		float widthf() const { return (float) width(); }
 		// Get the height, in pixels, of the buffer.
-		float heightf() { return (float) height(); }
+		float heightf() const { return (float) height(); }
 		// Get the type of the buffer.
-		pax_buf_type_t type();
+		pax_buf_type_t type() const;
 		
 		// Fills the entire buffer with the given color.
 		void background(Color color);
@@ -178,88 +194,135 @@ class Buffer {
 		// Draws a rectangle with a custom color.
 		void drawRect(Color color, float x, float y, float width, float height);
 		// Draws a rectangle with a custom shader.
-		// Shader is ignored if NULL.
-		void drawRect(Shader *shader, Quadf *uvs, float x, float y, float width, float height);
+		// If uvs is NULL, a default will be used (0,0; 1,0; 1,1; 0,1).
+		void drawRect(const Shader &shader, const Quadf *uvs, float x, float y, float width, float height);
 		// Draws a rectangle with a custom color and shader.
-		// Shader is ignored if NULL.
-		void drawRect(Color color, Shader *shader, Quadf *uvs, float x, float y, float width, float height);
+		// If uvs is NULL, a default will be used (0,0; 1,0; 1,1; 0,1).
+		void drawRect(Color color, const Shader &shader, const Quadf *uvs, float x, float y, float width, float height);
 		// Outlines a rectangle with the default outline color.
 		void outlineRect(float x, float y, float width, float height);
 		// Outlines a rectangle with a custom outline color.
 		void outlineRect(Color color, float x, float y, float width, float height);
+		// Outlines a rectangle with the default outline color.
+		// If uvs is NULL, a default will be used (0,0; 1,0; 1,1; 0,1).
+		void outlineRect(const Shader &shader, const Quadf *uvs, float x, float y, float width, float height);
+		// Outlines a rectangle with a custom outline color.
+		// If uvs is NULL, a default will be used (0,0; 1,0; 1,1; 0,1).
+		void outlineRect(Color color, const Shader &shader, const Quadf *uvs, float x, float y, float width, float height);
 		
 		// Draws a triangle with the default color.
 		void drawTri(float x0, float y0, float x1, float y1, float x2, float y2);
 		// Draws a triangle with a custom color.
 		void drawTri(Color color, float x0, float y0, float x1, float y1, float x2, float y2);
 		// Draws a triangle with a custom shader.
-		// Shader is ignored if NULL.
-		void drawTri(Shader *shader, Trif *uvs, float x0, float y0, float x1, float y1, float x2, float y2);
+		// If uvs is NULL, a default will be used (0,0; 1,0; 0,1).
+		void drawTri(const Shader &shader, const Trif *uvs, float x0, float y0, float x1, float y1, float x2, float y2);
 		// Draws a triangle with a custom color and shader.
-		// Shader is ignored if NULL.
-		void drawTri(Color color, Shader *shader, Trif *uvs, float x0, float y0, float x1, float y1, float x2, float y2);
+		// If uvs is NULL, a default will be used (0,0; 1,0; 0,1).
+		void drawTri(Color color, const Shader &shader, const Trif *uvs, float x0, float y0, float x1, float y1, float x2, float y2);
 		// Outlines a triangle with the default outline color.
 		void outlineTri(float x0, float y0, float x1, float y1, float x2, float y2);
 		// Outlines a triangle with a custom outline color.
 		void outlineTri(Color color, float x0, float y0, float x1, float y1, float x2, float y2);
+		// Outlines a triangle with the default outline color.
+		// If uvs is NULL, a default will be used (0,0; 1,0; 0,1).
+		void outlineTri(const Shader &shader, const Trif *uvs, float x0, float y0, float x1, float y1, float x2, float y2);
+		// Outlines a triangle with a custom outline color.
+		// If uvs is NULL, a default will be used (0,0; 1,0; 0,1).
+		void outlineTri(Color color, const Shader &shader, const Trif *uvs, float x0, float y0, float x1, float y1, float x2, float y2);
 		
 		// Draws a circle around the given point with the default color.
 		void drawCircle(float x, float y, float radius);
 		// Draws a circle around the given point with a custom color.
 		void drawCircle(Color color, float x, float y, float radius);
 		// Draws a circle around the given point with a custom shader.
-		// Shader is ignored if NULL.
-		void drawCircle(Shader *shader, Quadf *uvs, float x, float y, float radius);
+		// If uvs is NULL, a default will be used (0,0; 1,0; 1,1; 0,1).
+		void drawCircle(const Shader &shader, const Quadf *uvs, float x, float y, float radius);
 		// Draws a circle around the given point with a custom color and shader.
-		// Shader is ignored if NULL.
-		void drawCircle(Color color, Shader *shader, Quadf *uvs, float x, float y, float radius);
+		// If uvs is NULL, a default will be used (0,0; 1,0; 1,1; 0,1).
+		void drawCircle(Color color, const Shader &shader, const Quadf *uvs, float x, float y, float radius);
 		// Outlines a circle with the default outline color.
 		void outlineCircle(float x, float y, float radius);
 		// Outlines a circle with a custom outline color.
 		void outlineCircle(Color color, float x, float y, float radius);
+		// Outlines a circle with the default outline color.
+		// If uvs is NULL, a default will be used (0,0; 1,0; 1,1; 0,1).
+		void outlineCircle(const Shader &shader, const Quadf *uvs, float x, float y, float radius);
+		// Outlines a circle with a custom outline color.
+		// If uvs is NULL, a default will be used (0,0; 1,0; 1,1; 0,1).
+		void outlineCircle(Color color, const Shader &shader, const Quadf *uvs, float x, float y, float radius);
 		
 		// Draws an arc around the given point with the default color.
 		void drawArc(float x, float y, float radius, float startangle, float endangle);
 		// Draws an arc around the given point with a custom color.
 		void drawArc(Color color, float x, float y, float radius, float startangle, float endangle);
 		// Draws an arc around the given point with a custom shader.
-		// Shader is ignored if NULL.
-		void drawArc(Shader *shader, Quadf *uvs, float x, float y, float radius, float startangle, float endangle);
+		// If uvs is NULL, a default will be used (0,0; 1,0; 1,1; 0,1).
+		void drawArc(const Shader &shader, const Quadf *uvs, float x, float y, float radius, float startangle, float endangle);
 		// Draws an arc around the given point with a custom color and shader.
-		// Shader is ignored if NULL.
-		void drawArc(Color color, Shader *shader, Quadf *uvs, float x, float y, float radius, float startangle, float endangle);
+		// If uvs is NULL, a default will be used (0,0; 1,0; 1,1; 0,1).
+		void drawArc(Color color, const Shader &shader, const Quadf *uvs, float x, float y, float radius, float startangle, float endangle);
 		// Outlines an arc with the default outline color.
 		void outlineArc(float x, float y, float radius, float startangle, float endangle);
 		// Outlines an arc with a custom outline color.
 		void outlineArc(Color color, float x, float y, float radius, float startangle, float endangle);
+		// Outlines an arc with the default outline color.
+		// If uvs is NULL, a default will be used (0,0; 1,0; 1,1; 0,1).
+		void outlineArc(const Shader &shader, const Quadf *uvs, float x, float y, float radius, float startangle, float endangle);
+		// Outlines an arc with a custom outline color.
+		// If uvs is NULL, a default will be used (0,0; 1,0; 1,1; 0,1).
+		void outlineArc(Color color, const Shader &shader, const Quadf *uvs, float x, float y, float radius, float startangle, float endangle);
 		
 		// Draws a line with the default outline color.
 		void drawLine(float x0, float y0, float x1, float y1);
 		// Draws a line with a custom outline color.
 		void drawLine(Color color, float x0, float y0, float x1, float y1);
+		// Draws a line with the default outline color.
+		// If uvs is NULL, a default will be used (0,0; 1,0).
+		void drawLine(const Shader &shader, Linef* uvs, float x0, float y0, float x1, float y1);
+		// Draws a line with a custom outline color.
+		// If uvs is NULL, a default will be used (0,0; 1,0).
+		void drawLine(Color color, const Shader &shader, Linef* uvs, float x0, float y0, float x1, float y1);
 		
 		// Outlines an arbitrary shape.
 		void outline(float x, float y, Shape &shape);
 		// Outlines an arbitrary shape.
 		void outline(Color color, float x, float y, Shape &shape);
 		// Outlines an arbitrary shape.
-		void outline(Color color, Shader *shader, float x, float y, Shape &shape);
+		void outline(const Shader &shader, float x, float y, Shape &shape);
+		// Outlines an arbitrary shape.
+		void outline(Color color, const Shader &shader, float x, float y, Shape &shape);
 		
 		// Draws an arbitrary shape.
 		void draw(float x, float y, Shape &shape);
 		// Draws an arbitrary shape.
 		void draw(Color color, float x, float y, Shape &shape);
 		// Draws an arbitrary shape.
-		void draw(Color color, Shader *shader, float x, float y, Shape &shape);
+		void draw(const Shader &shader, float x, float y, Shape &shape);
+		// Draws an arbitrary shape.
+		void draw(Color color, const Shader &shader, float x, float y, Shape &shape);
 		
 		// Draws an image stored in another buffer.
-		void drawImage(pax_buf_t *image, float x, float y);
+		void drawImage(const pax_buf_t *image, float x, float y);
 		// Draws an image stored in another buffer.
-		void drawImage(pax_buf_t *image, float x, float y, float width, float height);
+		void drawImage(const pax_buf_t *image, float x, float y, float width, float height);
 		// Draws an image stored in another buffer.
-		void drawImage(Buffer &image, float x, float y) { drawImage(image.internal, x, y); }
+		void drawImage(const Buffer &image, float x, float y) { drawImage(image.internal, x, y); }
 		// Draws an image stored in another buffer.
-		void drawImage(Buffer &image, float x, float y, float width, float height) { drawImage(image.internal, x, y, width, height); }
+		void drawImage(const Buffer &image, float x, float y, float width, float height) { drawImage(image.internal, x, y, width, height); }
+		
+		// Draws an image stored in another buffer.
+		// Assumes the image is opaque and ignores and transparency.
+		void drawImageOpaque(const pax_buf_t *image, float x, float y);
+		// Draws an image stored in another buffer.
+		// Assumes the image is opaque and ignores and transparency.
+		void drawImageOpaque(const pax_buf_t *image, float x, float y, float width, float height);
+		// Draws an image stored in another buffer.
+		// Assumes the image is opaque and ignores and transparency.
+		void drawImageOpaque(const Buffer &image, float x, float y) { drawImageOpaque(image.internal, x, y); }
+		// Draws an image stored in another buffer.
+		// Assumes the image is opaque and ignores and transparency.
+		void drawImageOpaque(const Buffer &image, float x, float y, float width, float height) { drawImageOpaque(image.internal, x, y, width, height); }
 		
 		// Calculate the size of the string with the given font.
 		// Size is before matrix transformation.
@@ -288,7 +351,7 @@ class Buffer {
 		void clearMatrix(bool full);
 		
 		// Applies a given 2D matrix to the current by matrix multiplication.
-		void applyMatrix(matrix_2d_t matrix);
+		void applyMatrix(Matrix2f matrix);
 		// Scales the current view.
 		void scale(float x, float y);
 		// Scales the current view.
@@ -305,16 +368,20 @@ class Buffer {
 		void rotateAround(float x, float y, float angle);
 		
 		// Gets color at the given point.
-		Color getPixel(int x, int y);
+		Color getPixel(int x, int y) const;
 		// Sets color at the given point.
 		void setPixel(Color color, int x, int y);
+		// Gets the raw pixel data (before color converion) at the given point.
+		Color getPixelRaw(int x, int y) const;
+		// Sets raw pixel data (before color converion) at the given point.
+		void setPixelRaw(Color color, int x, int y);
 		// Overlays the color at the given point (for transparent drawing).
 		void mergePixel(Color color, int x, int y);
 		
 		// Whether or not there has been drawing since last markClean call.
-		bool isDirty();
+		bool isDirty() const;
 		// Gets the rectangle in which it is dirty.
-		Recti getDirtyRect();
+		Recti getDirtyRect() const;
 		// Mark the buffer as clean.
 		void markClean();
 		// Mark the entire buffer as dirty.
@@ -325,14 +392,14 @@ class Buffer {
 		void markDirty(int x, int y, int width, int height);
 		
 		// Apply a clip rectangle to the buffer.
-		// Anothing outside of the clip will not be drawn.
+		// Anything outside of the clip will not be drawn.
 		// This is an operation that ignores matrix transforms (translate, rotate, etc.).
 		void clip(int x, int y, int width, int height);
 		// Disable clipping.
 		// Any effects of previous clip calls are nullified.
 		void noClip();
 		// Obtain a copy of the current clip rect.
-		Recti getClip();
+		Recti getClip() const;
 };
 
 /* ============ COLORS =========== */

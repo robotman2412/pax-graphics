@@ -83,16 +83,16 @@ class InlineElement {
 		virtual ~InlineElement() = default;
 		
 		// Get ascent above baseline.
-		virtual float getAscent(TextBox &ctx, TextStyle &style) { return 0; };
+		virtual float getAscent(TextBox &ctx, TextStyle &style) const { return 0; };
 		// Get descent below baseline.
-		virtual float getDescent(TextBox &ctx, TextStyle &style) { return 0; };
+		virtual float getDescent(TextBox &ctx, TextStyle &style) const { return 0; };
 		// Compute and get dimensions.
 		// This is called once after the start of drawing or when this element's style changes.
 		virtual void calcSize(TextBox &ctx, TextStyle &style) {}
 		// Get width after computation.
-		virtual float getWidth(TextBox &ctx, TextStyle &style) { return 0; }
+		virtual float getWidth(TextBox &ctx, TextStyle &style) const { return 0; }
 		// Get the type of element this is. Different types cause different treatment.
-		virtual Type type() { return GENERIC; }
+		virtual Type type() const { return GENERIC; }
 		// Draw the element.
 		virtual void draw(Buffer &to, TextBox &ctx, TextStyle &style) {}
 };
@@ -116,18 +116,18 @@ class TextElement: public InlineElement {
 		virtual ~TextElement() override = default;
 		
 		// Get ascent above baseline.
-		virtual float getAscent(TextBox &ctx, TextStyle &style) override;
+		float getAscent(TextBox &ctx, TextStyle &style) const override;
 		// Get descent below baseline.
-		virtual float getDescent(TextBox &ctx, TextStyle &style) override;
+		float getDescent(TextBox &ctx, TextStyle &style) const override;
 		// Compute and get dimensions.
 		// This is called once after the start of drawing or when this element's style changes.
-		virtual void calcSize(TextBox &ctx, TextStyle &style) override;
+		void calcSize(TextBox &ctx, TextStyle &style) override;
 		// Get width after computation.
-		virtual float getWidth(TextBox &ctx, TextStyle &style) override;
+		float getWidth(TextBox &ctx, TextStyle &style) const override;
 		// Get the type of element this is. Different types cause different treatment.
-		virtual Type type() override { return TEXT; }
+		Type type() const override { return TEXT; }
 		// Draw the element.
-		virtual void draw(Buffer &to, TextBox &ctx, TextStyle &style) override;
+		void draw(Buffer &to, TextBox &ctx, TextStyle &style) override;
 };
 
 // A space character.
@@ -141,11 +141,11 @@ class SpaceElement: public InlineElement {
 		virtual ~SpaceElement() override = default;
 		// Compute and get dimensions.
 		// This is called once after the start of drawing or when this element's style changes.
-		virtual void calcSize(TextBox &ctx, TextStyle &style) override;
+		void calcSize(TextBox &ctx, TextStyle &style) override;
 		// Get width after computation.
-		virtual float getWidth(TextBox &ctx, TextStyle &style) override;
+		float getWidth(TextBox &ctx, TextStyle &style) const override;
 		// Get the type of element this is. Different types cause different treatment.
-		virtual Type type() override { return SPACE; }
+		Type type() const override { return SPACE; }
 };
 
 // A line break.
@@ -154,37 +154,37 @@ class NewlineElement: public InlineElement {
 		// This class is quite virtual, and so must be the destructor.
 		virtual ~NewlineElement() override = default;
 		// Get the type of element this is. Different types cause different treatment.
-		virtual Type type() override { return NEWLINE; }
+		Type type() const override { return NEWLINE; }
 };
 
 // An inline image made of a pax::Buffer.
-class ImageElement: public InlineElement {
+class InlineImage: public InlineElement {
 	protected:
 		// What teh hel is actually drawn.
 		pax_buf_t *image = NULL;
 		
 	public:
 		// Wow very complicated.
-		ImageElement(pax_buf_t *image);
+		InlineImage(pax_buf_t *image);
 		// Wow very complicated.
-		ImageElement(Buffer *image);
+		InlineImage(Buffer *image);
 		
 		// This class is quite virtual, and so must be the destructor.
-		virtual ~ImageElement() override = default;
+		virtual ~InlineImage() override = default;
 		
 		// Get ascent above baseline.
-		virtual float getAscent(TextBox &ctx, TextStyle &style) override;
+		float getAscent(TextBox &ctx, TextStyle &style) const override;
 		// Get descent below baseline.
-		virtual float getDescent(TextBox &ctx, TextStyle &style) override;
+		float getDescent(TextBox &ctx, TextStyle &style) const override;
 		// Compute and get dimensions.
 		// This is called once after the start of drawing or when this element's style changes.
-		virtual void calcSize(TextBox &ctx, TextStyle &style) override;
+		void calcSize(TextBox &ctx, TextStyle &style) override;
 		// Get width after computation.
-		virtual float getWidth(TextBox &ctx, TextStyle &style) override;
+		float getWidth(TextBox &ctx, TextStyle &style) const override;
 		// Get the type of element this is. Different types cause different treatment.
-		virtual Type type() override { return GENERIC; }
+		Type type() const override { return GENERIC; }
 		// Draw the element.
-		virtual void draw(Buffer &to, TextBox &ctx, TextStyle &style) override;
+		void draw(Buffer &to, TextBox &ctx, TextStyle &style) override;
 };
 
 // Style to apply to text.
@@ -242,6 +242,13 @@ class TextBox {
 		// Method by which to align text.
 		TextAlign alignment;
 		
+		// Make a BOX and set its bounds.
+		TextBox(Rectf _bounds = {0, 0, 100, 100}, TextAlign _alignment = TextAlign::LEFT):
+			bounds(_bounds), alignment(_alignment) {}
+		// Make a BOX and set its bounds.
+		TextBox(Rectf _bounds, const pax_font_t *font, float font_size, TextAlign _alignment = TextAlign::LEFT):
+			textStyle(font, font_size), bounds(_bounds), alignment(_alignment) {}
+		
 		// Append a string of text to the grand list.
 		// Words are broken at whitespace, to override use the non-breaking space character.
 		void appendText(std::string text);
@@ -250,7 +257,7 @@ class TextBox {
 		template <typename Type>
 		void append(Type element) {
 			// Pack it into an entry to preserve subclasses.
-			std::shared_ptr<InlineElement> ptr = std::make_shared<Type>(element);
+			std::shared_ptr<InlineElement> ptr = std::make_shared<Type>(std::move(element));
 			Entry entry(textStyle, ptr);
 			// Have dimensions computed on newly generated copy.
 			entry.second->calcSize(*this, textStyle);
@@ -260,13 +267,13 @@ class TextBox {
 		// Append a style change before the next element.
 		void appendStyle(TextStyle newStyle);
 		// Get a copy of the current text style.
-		const TextStyle &getStyle() { return textStyle; }
+		const TextStyle &getStyle() const { return textStyle; }
 		
 		// Draw the `TextBox` and all it's contents.
 		void draw(Buffer &to);
 		
 		// Test whether a character is treated as whitespace by a `TextBox`.
-		static bool isWhitespace(uint32_t codepoint) { return codepoint <= 0x20; }
+		static constexpr bool isWhitespace(uint32_t codepoint) { return codepoint <= 0x20; }
 };
 
 } // namespace pax

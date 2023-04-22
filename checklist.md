@@ -1,0 +1,34 @@
+
+# Pre-release checklist
+- [ ] All working features documented
+- [ ] Functions tested:
+  - [ ] MCR enabled/disabled consistency.
+  - [ ] Unshaded rect, tri, line, circle, arc.
+  - [ ] Shaded rect, tri, line, circle, arc.
+  - [ ] Images
+  - [ ] Text
+- [ ] Buffer types tested:
+  - [ ] PAX_BUF_1_PAL
+  - [ ] PAX_BUF_2_PAL
+  - [ ] PAX_BUF_4_PAL
+  - [x] PAX_BUF_8_PAL
+  - [ ] PAX_BUF_16_PAL
+  - [ ] PAX_BUF_1_GREY
+  - [ ] PAX_BUF_2_GREY
+  - [ ] PAX_BUF_4_GREY
+  - [ ] PAX_BUF_8_GREY
+  - [ ] PAX_BUF_8_332RGB
+  - [x] PAX_BUF_16_565RGB
+  - [ ] PAX_BUF_4_1111ARGB
+  - [ ] PAX_BUF_8_2222ARGB
+  - [ ] PAX_BUF_16_4444ARGB
+  - [ ] PAX_BUF_32_8888ARGB
+- [x] ESP-IDF:
+  - [x] Builds without warnings
+  - [x] Acceptable performance
+- [ ] RP2040:
+  - [ ] Builds without warnings
+  - [ ] Acceptable performance
+- [ ] Arduino:
+  - [ ] Builds without warnings
+  - [ ] Acceptable performance

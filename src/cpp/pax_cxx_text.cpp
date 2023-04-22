@@ -20,12 +20,12 @@ void TextElement::updateText(std::string str) {
 
 
 // Get ascent above baseline.
-float TextElement::getAscent(TextBox &ctx, TextStyle &style) {
+float TextElement::getAscent(TextBox &ctx, TextStyle &style) const {
 	return style.fontSize;
 }
 
 // Get descent below baseline.
-float TextElement::getDescent(TextBox &ctx, TextStyle &style) {
+float TextElement::getDescent(TextBox &ctx, TextStyle &style) const {
 	return 0;
 }
 
@@ -36,7 +36,7 @@ void TextElement::calcSize(TextBox &ctx, TextStyle &style) {
 }
 
 // Get width after computation.
-float TextElement::getWidth(TextBox &ctx, TextStyle &style) {
+float TextElement::getWidth(TextBox &ctx, TextStyle &style) const {
 	return textWidth;
 }
 
@@ -61,44 +61,44 @@ void SpaceElement::calcSize(TextBox &ctx, TextStyle &style) {
 }
 
 // Get width after computation.
-float SpaceElement::getWidth(TextBox &ctx, TextStyle &style) {
+float SpaceElement::getWidth(TextBox &ctx, TextStyle &style) const {
 	return width;
 }
 
 
 
 // Wow very complicated.
-ImageElement::ImageElement(pax_buf_t *image) {
+InlineImage::InlineImage(pax_buf_t *image) {
 	this->image = image;
 }
 
 // Wow very complicated.
-ImageElement::ImageElement(Buffer *image) {
+InlineImage::InlineImage(Buffer *image) {
 	this->image = image->internal;
 }
 
 
 // Get ascent above baseline.
-float ImageElement::getAscent(TextBox &ctx, TextStyle &style)  {
+float InlineImage::getAscent(TextBox &ctx, TextStyle &style) const {
 	return image ? image->height : 0;
 }
 
 // Get descent below baseline.
-float ImageElement::getDescent(TextBox &ctx, TextStyle &style)  {
+float InlineImage::getDescent(TextBox &ctx, TextStyle &style) const {
 	return 0;
 }
 
 // Compute and get dimensions.
 // This is called once after the start of drawing or when this element's style changes.
-void ImageElement::calcSize(TextBox &ctx, TextStyle &style)  {}
+void InlineImage::calcSize(TextBox &ctx, TextStyle &style) {}
 
 // Get width after computation.
-float ImageElement::getWidth(TextBox &ctx, TextStyle &style)  {
+float InlineImage::getWidth(TextBox &ctx, TextStyle &style) const {
 	return image ? image->width : 0;
 }
 
 // Draw the element.
-void ImageElement::draw(Buffer &to, TextBox &ctx, TextStyle &style)  {
+void InlineImage::draw(Buffer &to, TextBox &ctx, TextStyle &style)  {
 	if (image) {
 		pax_draw_image(to.internal, image, 0, -image->height);
 	}
@@ -198,6 +198,8 @@ void TextBox::draw(Buffer &to) {
 	size_t lastSpace   = 0;
 	// Whether the current line ends with space characters.
 	bool endsWithSpace = false;
+	// Whether the line was broken by a newline.
+	bool explicitBreak = true;
 	// Count of non-whitespace characters in current line.
 	size_t elemCount   = 0;
 	
@@ -223,9 +225,14 @@ void TextBox::draw(Buffer &to) {
 			// Determine whether it shall fit on this line.
 			bool doesItFit = elem.getWidth(*this, style) + lineWidth <= bounds.w;
 			// Edge case: Newlines "never fit" to force line break.
-			if (elem.type() == InlineElement::NEWLINE) doesItFit = false;
+			if (elem.type() == InlineElement::NEWLINE) {
+				doesItFit     = false;
+				explicitBreak = true;
+			}
 			// Edge case: It is too wide to fit, but the line is empty.
-			if (startIndex == endIndex) doesItFit = true;
+			if (startIndex == endIndex) {
+				doesItFit     = true;
+			}
 			
 			if (doesItFit) {
 				// If so, count it up and continue going.
@@ -306,8 +313,12 @@ void TextBox::draw(Buffer &to) {
 			// Draw underline, strikethrough and overline.
 			float decorHeight = 1;
 			if (elem.type() == InlineElement::TEXT || elem.type() == InlineElement::SPACE) {
-				// Edge case: Space characters on justify.
-				if (alignment == JUSTIFY && elem.type() == InlineElement::SPACE) {
+				if (!explicitBreak && i == startIndex && elem.type() == InlineElement::SPACE) {
+					// Edge case: Space after word-wrap.
+					width = 0;
+					
+				} else if (alignment == JUSTIFY && elem.type() == InlineElement::SPACE) {
+					// Edge case: Space characters on justify.
 					if (wasSpace) {
 						// Corner case: Repeated space on justified lines.
 						width = 0;
@@ -352,6 +363,7 @@ void TextBox::draw(Buffer &to) {
 		totalHeight += lineAscent + lineDescent;
 		lineAscent=lineDescent=lineWidth=elementWidth=elemCount=0;
 		startIndex = endIndex;
+		explicitBreak = false;
 	}
 	
 	to.popMatrix();

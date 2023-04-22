@@ -53,6 +53,7 @@ void pax_tri_shaded(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
 	
 	pax_shader_ctx_t shader_ctx = pax_get_shader_ctx(buf, color, shader);
 	if (shader_ctx.skip) return;
+	pax_col_conv_t buf2col = PAX_IS_PALETTE(buf->type) ? pax_col_conv_dummy : buf->buf2col;
 	
 	// Find the appropriate Y for y0, y1 and y2 inside the triangle.
 	float y_post_0 = (int) (y0 + 0.5) + 0.5;
@@ -152,7 +153,7 @@ void pax_tri_shaded(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
 			x_right -= 0.5;
 			for (; x <= x_right; x ++) {
 				// Apply the shader,
-				pax_col_t result = (shader_ctx.callback)(color, shader_ctx.do_getter ? buf->buf2col(buf, buf->getter(buf, x+delta)) : 0, x, y, u, v, shader_ctx.callback_args);
+				pax_col_t result = (shader_ctx.callback)(color, shader_ctx.do_getter ? buf2col(buf, buf->getter(buf, x+delta)) : 0, x, y, u, v, shader_ctx.callback_args);
 				// And simply merge colors accordingly.
 				pax_set_index_conv(buf, result, x+delta);
 				u += du;
@@ -228,7 +229,7 @@ void pax_tri_shaded(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
 			x_right -= 0.5;
 			for (; x <= x_right; x ++) {
 				// Apply the shader,
-				pax_col_t result = (shader_ctx.callback)(color, shader_ctx.do_getter ? buf->buf2col(buf, buf->getter(buf, x+delta)) : 0, x, y, u, v, shader_ctx.callback_args);
+				pax_col_t result = (shader_ctx.callback)(color, shader_ctx.do_getter ? buf2col(buf, buf->getter(buf, x+delta)) : 0, x, y, u, v, shader_ctx.callback_args);
 				// And simply merge colors accordingly.
 				pax_set_index_conv(buf, result, x+delta);
 				u += du;
@@ -334,6 +335,7 @@ void pax_rect_shaded1(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shade
 	
 	pax_shader_ctx_t shader_ctx = pax_get_shader_ctx(buf, color, shader);
 	if (shader_ctx.skip) return;
+	pax_col_conv_t buf2col = PAX_IS_PALETTE(buf->type) ? pax_col_conv_dummy : buf->buf2col;
 	
 	// Fix width and height.
 	if (width < 0) {
@@ -404,7 +406,7 @@ void pax_rect_shaded1(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shade
 	for (int c_y = y + 0.5; c_y <= y + height - 0.5; c_y ++) {
 		float u = u0;
 		for (int c_x = x + 0.5; c_x <= x + width - 0.5; c_x ++) {
-			pax_col_t result = (shader_ctx.callback)(color, shader_ctx.do_getter ? buf->buf2col(buf, buf->getter(buf, c_x+delta)) : 0, x, y, u, v, shader_ctx.callback_args);
+			pax_col_t result = (shader_ctx.callback)(color, shader_ctx.do_getter ? buf2col(buf, buf->getter(buf, c_x+delta)) : 0, x, y, u, v, shader_ctx.callback_args);
 			pax_set_index_conv(buf, result, c_x+delta);
 			u += u0_u1_du;
 		}
@@ -434,6 +436,7 @@ void pax_rect_shaded(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader
 	
 	pax_shader_ctx_t shader_ctx = pax_get_shader_ctx(buf, color, shader);
 	if (shader_ctx.skip) return;
+	pax_col_conv_t buf2col = PAX_IS_PALETTE(buf->type) ? pax_col_conv_dummy : buf->buf2col;
 	
 	// Fix width and height.
 	if (width < 0) {
@@ -553,7 +556,7 @@ void pax_rect_shaded(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader
 		float va_vb_dv = (v_b - v_a) / (max_x - min_x);
 		float u = u_a, v = v_a;
 		for (int c_x = x + 0.5; c_x <= x + width - 0.5; c_x ++) {
-			pax_col_t result = (shader_ctx.callback)(color, shader_ctx.do_getter ? buf->buf2col(buf, buf->getter(buf, c_x+delta)) : 0, c_x, c_y, u, v, shader_ctx.callback_args);
+			pax_col_t result = (shader_ctx.callback)(color, shader_ctx.do_getter ? buf2col(buf, buf->getter(buf, c_x+delta)) : 0, c_x, c_y, u, v, shader_ctx.callback_args);
 			pax_set_index_conv(buf, result, c_x+delta);
 			u += ua_ub_du;
 			v += va_vb_dv;
@@ -571,6 +574,7 @@ void pax_line_shaded(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader
 	
 	pax_shader_ctx_t shader_ctx = pax_get_shader_ctx(buf, color, shader);
 	if (shader_ctx.skip) return;
+	pax_col_conv_t buf2col = PAX_IS_PALETTE(buf->type) ? pax_col_conv_dummy : buf->buf2col;
 	
 	// Sort points vertially.
 	if (y0 > y1) {
@@ -657,7 +661,7 @@ void pax_line_shaded(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader
 		float du = (u1 - u0) / nIter;
 		float dv = (v1 - v0) / nIter;
 		for (int i = x0; i <= x1; i++) {
-			pax_col_t result = (shader_ctx.callback)(color, shader_ctx.do_getter ? buf->buf2col(buf, buf->getter(buf, index + i)) : 0, i, y0, u, v, shader_ctx.callback_args);
+			pax_col_t result = (shader_ctx.callback)(color, shader_ctx.do_getter ? buf2col(buf, buf->getter(buf, index + i)) : 0, i, y0, u, v, shader_ctx.callback_args);
 			pax_set_index_conv(buf, result, index + i);
 			u += du;
 			v += dv;
@@ -669,7 +673,7 @@ void pax_line_shaded(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader
 		float du = (u1 - u0) / nIter;
 		float dv = (v1 - v0) / nIter;
 		for (int i = y0; i <= y1; i++, index += buf->width) {
-			pax_col_t result = (shader_ctx.callback)(color, shader_ctx.do_getter ? buf->buf2col(buf, buf->getter(buf, index)) : 0, x0, i, u, v, shader_ctx.callback_args);
+			pax_col_t result = (shader_ctx.callback)(color, shader_ctx.do_getter ? buf2col(buf, buf->getter(buf, index)) : 0, x0, i, u, v, shader_ctx.callback_args);
 			pax_set_index_conv(buf, result, index);
 			u += du;
 			v += dv;
@@ -677,17 +681,17 @@ void pax_line_shaded(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader
 	} else {
 		float du = (u1 - u0) / nIter;
 		float dv = (v1 - v0) / nIter;
-		long x   = x0 * 0x10000;
-		long y   = y0 * 0x10000;
-		long idx = dx * 0x10000;
-		long idy = dy * 0x10000;
-		long u   = u0 * 0x10000;
-		long v   = v0 * 0x10000;
-		long idu = du * 0x10000;
-		long idv = dv * 0x10000;
+		int_fast32_t x   = x0 * 0x10000;
+		int_fast32_t y   = y0 * 0x10000;
+		int_fast32_t idx = dx * 0x10000;
+		int_fast32_t idy = dy * 0x10000;
+		int_fast32_t u   = u0 * 0x10000;
+		int_fast32_t v   = v0 * 0x10000;
+		int_fast32_t idu = du * 0x10000;
+		int_fast32_t idv = dv * 0x10000;
 		for (int i = 0; i <= nIter; i++) {
-			size_t    delta  = x/0x10000+(int)y/0x10000*buf->width;
-			pax_col_t result = (shader_ctx.callback)(color, shader_ctx.do_getter ? buf->buf2col(buf, buf->getter(buf, delta)) : 0, x/0x10000, y/0x10000, u/(float)0x10000, v/(float)0x10000, shader_ctx.callback_args);
+			size_t    delta  = x/0x10000+y/0x10000*buf->width;
+			pax_col_t result = (shader_ctx.callback)(color, shader_ctx.do_getter ? buf2col(buf, buf->getter(buf, delta)) : 0, x/0x10000, y/0x10000, u/(float)0x10000, v/(float)0x10000, shader_ctx.callback_args);
 			pax_set_index_conv(buf, result, delta);
 			x += idx;
 			y += idy;
