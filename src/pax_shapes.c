@@ -411,8 +411,8 @@ void pax_draw_round_hollow_arc(pax_buf_t *buf, pax_col_t color, float x, float y
 	float dradius = fabsf(radius1 - radius0) / 2;
 	float a2      = a0 - M_PI;
 	float a3      = a0;
-	float a4      = a0 - M_PI/2;
-	float a5      = a0 + M_PI/2;
+	float a4      = a1;
+	float a5      = a1 + M_PI;
 	if (a1 < a0) {
 		a2 += M_PI;
 		a3 += M_PI;
@@ -536,8 +536,8 @@ void pax_outline_round_hollow_arc(pax_buf_t *buf, pax_col_t color, float x, floa
 	float dradius = fabsf(radius1 - radius0) / 2;
 	float a2      = a0 - M_PI;
 	float a3      = a0;
-	float a4      = a0 - M_PI/2;
-	float a5      = a0 + M_PI/2;
+	float a4      = a1;
+	float a5      = a1 + M_PI;
 	if (a1 < a0) {
 		a2 += M_PI;
 		a3 += M_PI;
