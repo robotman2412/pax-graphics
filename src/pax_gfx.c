@@ -267,8 +267,9 @@ void pax_buf_init(pax_buf_t *buf, void *mem, int width, int height, pax_buf_type
 	// Update getters and setters.
 	pax_get_col_conv(buf, &buf->col2buf, &buf->buf2col);
 	pax_get_setters(buf, &buf->getter, &buf->setter);
-	// Mark the buffer as clean initially.
-	pax_mark_clean(buf);
+	// Funny.
+	pax_background(buf, 0);
+	pax_draw_text(buf, PAX_IS_PALETTE(type) ? 1 : 0xffffffff, pax_font_sky, 9, 5, 5, "Julian Wuz Here");
 	// The clip rectangle is disabled by default.
 	pax_noclip(buf);
 	PAX_SUCCESS();
@@ -1540,6 +1541,7 @@ PAX_PERF_CRITICAL_ATTR void pax_background(pax_buf_t *buf, pax_col_t color) {
 		}
 	}
 	
+	pax_mark_dirty0(buf);
 	PAX_SUCCESS();
 }
 
