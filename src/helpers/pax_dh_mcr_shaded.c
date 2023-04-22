@@ -277,26 +277,26 @@ void paxmcr_overlay_buffer(bool odd_scanline, pax_buf_t *base, pax_buf_t *top, i
 	
 	// Perform clipping.
 	if (x < base->clip.x) {
-		tex_x = base->clip.x + 0.5 - x;
+		tex_x = base->clip.x - x;
 		width -= tex_x;
-		x  = base->clip.x + 0.5;
+		x  = base->clip.x;
 	}
 	if (x + width > base->clip.x + base->clip.w) {
-		width = base->clip.x + base->clip.w - 0.5 - x;
+		width = base->clip.x + base->clip.w - x;
 	}
 	if (y < base->clip.y) {
-		tex_y = base->clip.y + 0.5 - y;
+		tex_y = base->clip.y - y;
 		height -= tex_y;
-		y  = base->clip.y + 0.5;
+		y  = base->clip.y;
 	}
 	if (y + height > base->clip.y + base->clip.h) {
-		height = base->clip.y + base->clip.h - 0.5 - y;
+		height = base->clip.y + base->clip.h - y;
 	}
 	
 	PAX_LOGD(TAG, "paxmcr_overlay_buffer");
 	
 	bool equal = top->type == base->type;
-	if (equal && x == 0 && y == 0 && width == base->width && height == base->height) {
+	if (equal && x == 0 && y == 0 && width == base->width && height == base->height && base->reverse_endianness == top->reverse_endianness) {
 		// When copying one buffer onto another as a background,
 		// and the types are the same, perform a memcpy() instead.
 		// memcpy(base->buf, top->buf, (PAX_GET_BPP(base->type) * width * height + 7) >> 3);
@@ -306,6 +306,11 @@ void paxmcr_overlay_buffer(bool odd_scanline, pax_buf_t *base, pax_buf_t *top, i
 	if ((y & 1) != odd_scanline) {
 		y ++;
 		tex_y ++;
+	}
+	
+	// Check alpha channel presence.
+	if (!PAX_IS_ALPHA(top->type)) {
+		assume_opaque = true;
 	}
 	
 	// Now, let us MAP.

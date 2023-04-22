@@ -32,7 +32,7 @@ namespace pax {
 
 // Recalculate the bounds of this shape.
 void Shape::updateBounds() {
-	float x0 = infinityf(), y0 = infinityf(), x1 = -infinityf(), y1 = -infinityf();
+	float x0 = HUGE_VAL, y0 = HUGE_VAL, x1 = -HUGE_VAL, y1 = -HUGE_VAL;
 	
 	// Iterate over outline points.
 	for (size_t i = 0; i < outline.size(); i++) {

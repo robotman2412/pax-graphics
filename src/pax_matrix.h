@@ -94,18 +94,10 @@ typedef struct matrix_stack_2d Matrix2fStack;
 #define PAX_CXX_Vec2f_INDEX() \
 	pax::Vec2f &operator[](int index) { \
 		const size_t _size = sizeof(arr) / 2 / sizeof(float); \
-		if (index < 0 || index >= _size) { \
-			fprintf(stderr, "Error: Index out of bounds: %zd (not in range 0-%zu)\n", index, _size); \
-			abort(); \
-		} \
 		return ((pax::Vec2f*) arr)[index]; \
 	} \
 	const pax::Vec2f &operator[](int index) const { \
 		const size_t _size = sizeof(arr) / 2 / sizeof(float); \
-		if (index < 0 || index >= _size) { \
-			fprintf(stderr, "Error: Index out of bounds: %zd (not in range 0-%zu)\n", index, _size); \
-			abort(); \
-		} \
 		return ((const pax::Vec2f*) arr)[index]; \
 	}
 
@@ -188,18 +180,10 @@ typedef struct matrix_stack_2d Matrix2fStack;
 #define PAX_CXX_Vec2i_INDEX() \
 	pax::Vec2i &operator[](int index) { \
 		const size_t _size = sizeof(arr) / 2 / sizeof(float); \
-		if (index < 0 || index >= _size) { \
-			fprintf(stderr, "Error: Index out of bounds: %zd (not in range 0-%zu)\n", index, _size); \
-			abort(); \
-		} \
 		return ((pax::Vec2i*) arr)[index]; \
 	} \
 	const pax::Vec2i &operator[](int index) const { \
 		const size_t _size = sizeof(arr) / 2 / sizeof(float); \
-		if (index < 0 || index >= _size) { \
-			fprintf(stderr, "Error: Index out of bounds: %zd (not in range 0-%zu)\n", index, _size); \
-			abort(); \
-		} \
 		return ((const pax::Vec2i*) arr)[index]; \
 	}
 

@@ -113,7 +113,7 @@ const pax_font_t *pax_fonts_index[] = {
 	&PRIVATE_pax_font_saira_regular,
 #endif
 };
-const size_t pax_n_fonts = sizeof(pax_fonts_index) / sizeof(pax_font_t);
+const size_t pax_n_fonts = sizeof(pax_fonts_index) / sizeof(const pax_font_t *);
 
 const pax_font_t PRIVATE_pax_font_sky = { // Sky
 	.name         = "Sky",
@@ -123,28 +123,28 @@ const pax_font_t PRIVATE_pax_font_sky = { // Sky
 	.recommend_aa = false,
 };
 const pax_font_t PRIVATE_pax_font_sky_mono = { // Sky mono
-	.name         = "sky mono",
+	.name         = "Sky Mono",
 	.n_ranges     = 3,
 	.ranges       = font_7x9_ranges,
 	.default_size = 9,
 	.recommend_aa = false,
 };
 const pax_font_t PRIVATE_pax_font_marker = { // PermanentMarker
-	.name         = "permanentmarker",
-	.n_ranges     = 23,
+	.name         = "Permanent Marker",
+	.n_ranges     = 3,
 	.ranges       = permanentmarker_ranges,
-	.default_size = 45,
+	.default_size = 22,
 	.recommend_aa = true,
 };
 const pax_font_t PRIVATE_pax_font_saira_condensed = { // Saira condensed
-	.name         = "saira condensed",
-	.n_ranges     = 80,
+	.name         = "Saira Condensed",
+	.n_ranges     = 3,
 	.ranges       = sairacondensed_ranges,
 	.default_size = 45,
 	.recommend_aa = true,
 };
 const pax_font_t PRIVATE_pax_font_saira_regular = { // Saira regular
-	.name         = "saira regular",
+	.name         = "Saira Regular",
 	.n_ranges     = 27,
 	.ranges       = sairaregular_ranges,
 	.default_size = 18,
@@ -153,7 +153,7 @@ const pax_font_t PRIVATE_pax_font_saira_regular = { // Saira regular
 
 #if PAX_COMPILE_FONT_INDEX
 // Finds the built-in font with the given name.
-const pax_font_t *pax_get_font(char *name) {
+const pax_font_t *pax_get_font(const char *name) {
 	for (size_t i = 0; i < PAX_N_FONTS; i++) {
 		if (!strcasecmp(pax_fonts_index[i]->name, name)) {
 			return pax_fonts_index[i];
@@ -162,7 +162,7 @@ const pax_font_t *pax_get_font(char *name) {
 	return NULL;
 }
 #else
-const pax_font_t *pax_get_font(char *name) {
+const pax_font_t *pax_get_font(const char *name) {
 	// Not compiled in, so ignore this.
 	PAX_ERROR1("pax_get_font", PAX_ERR_UNSUPPORTED, NULL);
 }

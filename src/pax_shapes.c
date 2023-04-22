@@ -330,6 +330,236 @@ void pax_vectorise_circle(pax_vec2f *output, size_t num_points, float x, float y
 
 
 
+/* ======= SPECIAL EDITIONS ====== */
+
+// Draw a rounded rectangle.
+void pax_draw_round_rect(pax_buf_t *buf, pax_col_t color, float x, float y, float width, float height, float radius) {
+	// Clamp radius.
+	if (radius > width / 2)  radius = width  / 2;
+	if (radius > height / 2) radius = height / 2;
+	
+	// Draw corners.
+	pax_draw_arc(
+		buf, color,
+		x + radius, y + radius,
+		radius, M_PI*0.5, M_PI*1.0
+	);
+	pax_draw_arc(
+		buf, color,
+		x + width - radius, y + radius,
+		radius, M_PI*0.0, M_PI*0.5
+	);
+	pax_draw_arc(
+		buf, color,
+		x + width - radius, y + height - radius,
+		radius, M_PI*0.0, M_PI*-0.5
+	);
+	pax_draw_arc(
+		buf, color,
+		x + radius, y + height - radius,
+		radius, M_PI*-0.5, M_PI*-1.0
+	);
+	
+	// Draw infill.
+	pax_draw_rect(
+		buf, color,
+		x + radius, y,
+		width - 2*radius, radius
+	);
+	pax_draw_rect(
+		buf, color,
+		x + radius, y + height - radius,
+		width - 2*radius, radius
+	);
+	pax_draw_rect(
+		buf, color,
+		x , y + radius,
+		width, height - 2*radius
+	);
+}
+
+// Draw a hollow circle.
+void pax_draw_hollow_circle(pax_buf_t *buf, pax_col_t color, float x, float y, float radius0, float radius1) {
+	pax_draw_hollow_arc(buf, color, x, y, radius0, radius1, 0, M_PI*2);
+}
+
+// Draw a hollow arc.
+void pax_draw_hollow_arc(pax_buf_t *buf, pax_col_t color, float x, float y, float radius0, float radius1, float a0, float a1) {
+	size_t n_points = 24;
+	pax_vec2f points[n_points];
+	pax_vectorise_arc(points, n_points, 0, 0, 1, a0, a1);
+	for (size_t i = 0; i < n_points - 1; i++) {
+		pax_draw_tri(
+			buf, color,
+			x + points[i  ].x * radius0, y + points[i  ].y * radius0,
+			x + points[i  ].x * radius1, y + points[i  ].y * radius1,
+			x + points[i+1].x * radius1, y + points[i+1].y * radius1
+		);
+		pax_draw_tri(
+			buf, color,
+			x + points[i  ].x * radius0, y + points[i  ].y * radius0,
+			x + points[i+1].x * radius0, y + points[i+1].y * radius0,
+			x + points[i+1].x * radius1, y + points[i+1].y * radius1
+		);
+	}
+}
+
+// Draw a hollow arc.
+void pax_draw_round_hollow_arc(pax_buf_t *buf, pax_col_t color, float x, float y, float radius0, float radius1, float a0, float a1) {
+	pax_draw_hollow_arc(buf, color, x, y, radius0, radius1, a0, a1);
+	float radius  = (radius0 + radius1) / 2;
+	float dradius = fabsf(radius1 - radius0) / 2;
+	float a2      = a0 - M_PI;
+	float a3      = a0;
+	float a4      = a0 - M_PI/2;
+	float a5      = a0 + M_PI/2;
+	if (a1 < a0) {
+		a2 += M_PI;
+		a3 += M_PI;
+		a4 += M_PI;
+		a5 += M_PI;
+	}
+	pax_draw_arc(
+		buf, color,
+		x + cos(a0) * radius, y - sinf(a0) * radius,
+		dradius,
+		a2, a3
+	);
+	pax_draw_arc(
+		buf, color,
+		x + cos(a1) * radius, y - sinf(a1) * radius,
+		dradius,
+		a4, a5
+	);
+}
+
+
+// Outline a rounded rectangle.
+void pax_outline_round_rect(pax_buf_t *buf, pax_col_t color, float x, float y, float width, float height, float radius) {
+	// Clamp radius.
+	if (radius > width / 2)  radius = width  / 2;
+	if (radius > height / 2) radius = height / 2;
+	
+	// Draw corners.
+	pax_outline_arc(
+		buf, color,
+		x + radius, y + radius,
+		radius, M_PI*0.5, M_PI*1.0
+	);
+	pax_outline_arc(
+		buf, color,
+		x + width - radius, y + radius,
+		radius, M_PI*0.0, M_PI*0.5
+	);
+	pax_outline_arc(
+		buf, color,
+		x + width - radius, y + height - radius,
+		radius, M_PI*0.0, M_PI*-0.5
+	);
+	pax_outline_arc(
+		buf, color,
+		x + radius, y + height - radius,
+		radius, M_PI*-0.5, M_PI*-1.0
+	);
+	
+	// Draw infill.
+	pax_draw_line(
+		buf, color,
+		x + radius, y,
+		x + width - radius, y
+	);
+	pax_draw_line(
+		buf, color,
+		x + radius, y + height,
+		x + width - radius, y + height
+	);
+	pax_draw_line(
+		buf, color,
+		x, y + radius,
+		x, y + height - radius
+	);
+	pax_draw_line(
+		buf, color,
+		x + width, y + radius,
+		x + width, y + height - radius
+	);
+}
+
+// Draw a hollow circle.
+void pax_outline_hollow_circle(pax_buf_t *buf, pax_col_t color, float x, float y, float radius0, float radius1) {
+	pax_outline_circle(buf, color, x, y, radius0);
+	pax_outline_circle(buf, color, x, y, radius1);
+}
+
+// Draw a hollow arc.
+static void pax_outline_hollow_arc0(pax_buf_t *buf, pax_col_t color, float x, float y, float radius0, float radius1, float a0, float a1) {
+	size_t n_points = 24;
+	pax_vec2f points[n_points];
+	pax_vectorise_arc(points, n_points, 0, 0, 1, a0, a1);
+	for (size_t i = 0; i < n_points - 1; i++) {
+		pax_draw_line(
+			buf, color,
+			x + points[i  ].x * radius0, y + points[i  ].y * radius0,
+			x + points[i+1].x * radius0, y + points[i+1].y * radius0
+		);
+		pax_draw_line(
+			buf, color,
+			x + points[i  ].x * radius1, y + points[i  ].y * radius1,
+			x + points[i+1].x * radius1, y + points[i+1].y * radius1
+		);
+	}
+}
+
+// Draw a hollow arc.
+void pax_outline_hollow_arc(pax_buf_t *buf, pax_col_t color, float x, float y, float radius0, float radius1, float a0, float a1) {
+	pax_outline_hollow_arc0(buf, color, x, y, radius0, radius1, a0, a1);
+	float sin0 = sinf(a0);
+	float cos0 = cosf(a0);
+	float sin1 = sinf(a1);
+	float cos1 = cosf(a1);
+	pax_draw_line(
+		buf, color,
+		x + cos0 * radius0, y - sin0 * radius0,
+		x + cos0 * radius1, y - sin0 * radius1
+	);
+	pax_draw_line(
+		buf, color,
+		x + cos1 * radius0, y - sin1 * radius0,
+		x + cos1 * radius1, y - sin1 * radius1
+	);
+}
+
+// Outline a hollow arc.
+void pax_outline_round_hollow_arc(pax_buf_t *buf, pax_col_t color, float x, float y, float radius0, float radius1, float a0, float a1) {
+	pax_outline_hollow_arc0(buf, color, x, y, radius0, radius1, a0, a1);
+	float radius  = (radius0 + radius1) / 2;
+	float dradius = fabsf(radius1 - radius0) / 2;
+	float a2      = a0 - M_PI;
+	float a3      = a0;
+	float a4      = a0 - M_PI/2;
+	float a5      = a0 + M_PI/2;
+	if (a1 < a0) {
+		a2 += M_PI;
+		a3 += M_PI;
+		a4 += M_PI;
+		a5 += M_PI;
+	}
+	pax_outline_arc(
+		buf, color,
+		x + cos(a0) * radius, y - sinf(a0) * radius,
+		dradius,
+		a2, a3
+	);
+	pax_outline_arc(
+		buf, color,
+		x + cos(a1) * radius, y - sinf(a1) * radius,
+		dradius,
+		a4, a5
+	);
+}
+
+
+
 /* ======= OUTLINE EDITIONS ====== */
 
 // Draw a rectangle outline.

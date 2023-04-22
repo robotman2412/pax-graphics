@@ -59,6 +59,8 @@ typedef struct pax_font_bmp_args {
 	uint8_t                 ppb;
 	// The bitmask representing the max value that can be stored in bpp bits.
 	uint8_t                 mask;
+	// The bitmask used for truncating sub-byte indices.
+	uint8_t                 index_mask;
 } pax_font_bmp_args_t;
 
 // Texture shader for multi-bpp bitmap fonts on palette buffers.

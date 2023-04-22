@@ -67,9 +67,6 @@ static QueueHandle_t   queue_handle      = NULL;
 #include <unistd.h>
 #include <ptq.h>
 
-pthread_mutex_t        pax_log_mutex     = PTHREAD_MUTEX_INITIALIZER;
-bool                   pax_log_use_mutex = false;
-
 // The thread for multicore helper stuff.
 static pthread_t       multicore_handle;
 // The mutex used to determine IDLE.
@@ -78,6 +75,11 @@ static pthread_mutex_t multicore_mutex   = PTHREAD_MUTEX_INITIALIZER;
 static ptq_queue_t     queue_handle      = NULL;
 
 #endif
+#endif
+
+#ifdef PAX_STANDALONE
+pthread_mutex_t        pax_log_mutex     = PTHREAD_MUTEX_INITIALIZER;
+bool                   pax_log_use_mutex = false;
 #endif
 
 
@@ -587,14 +589,19 @@ void pax_mark_dirty0(pax_buf_t *buf) {
 	PAX_BUF_CHECK("pax_mark_dirty0");
 	buf->dirty_x0 = 0;
 	buf->dirty_y0 = 0;
-	buf->dirty_x1 = buf->width;
-	buf->dirty_y1 = buf->height;
+	buf->dirty_x1 = buf->width  - 1;
+	buf->dirty_y1 = buf->height - 1;
 	PAX_SUCCESS();
 }
 
 // Mark a single point as dirty.
 void pax_mark_dirty1(pax_buf_t *buf, int x, int y) {
 	PAX_BUF_CHECK("pax_mark_dirty1");
+	
+	if (x < 0) x = 0;
+	if (y < 0) y = 0;
+	if (x >= buf->width)  y = buf->width  - 1;
+	if (y >= buf->height) y = buf->height - 1;
 	
 	if (x < buf->dirty_x0) buf->dirty_x0 = x;
 	if (x > buf->dirty_x1) buf->dirty_x1 = x;
@@ -610,8 +617,13 @@ void pax_mark_dirty2(pax_buf_t *buf, int x, int y, int width, int height) {
 	
 	if (x              < buf->dirty_x0) buf->dirty_x0 = x;
 	if (x + width  - 1 > buf->dirty_x1) buf->dirty_x1 = x + width  - 1;
-	if (y              < buf->dirty_x0) buf->dirty_y0 = y;
-	if (y + height - 1 > buf->dirty_x1) buf->dirty_y1 = y + height - 1;
+	if (y              < buf->dirty_y0) buf->dirty_y0 = y;
+	if (y + height - 1 > buf->dirty_y1) buf->dirty_y1 = y + height - 1;
+	
+	if (buf->dirty_x0 < 0) buf->dirty_x0 = 0;
+	if (buf->dirty_y0 < 0) buf->dirty_y0 = 0;
+	if (buf->dirty_x0 >= buf->width)  buf->dirty_x0 = buf->width  - 1;
+	if (buf->dirty_y0 >= buf->height) buf->dirty_y0 = buf->height - 1;
 	
 	PAX_SUCCESS();
 }
