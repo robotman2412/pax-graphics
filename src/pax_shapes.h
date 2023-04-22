@@ -51,6 +51,26 @@ void pax_vectorise_arc        (pax_vec2f *output, size_t num_points, float x, fl
 // Vectorise a circle outline.
 void pax_vectorise_circle     (pax_vec2f *output, size_t num_points, float x, float y, float r);
 
+/* ======= SPECIAL EDITIONS ====== */
+
+// Draw a rounded rectangle.
+void pax_draw_round_rect      (pax_buf_t *buf, pax_col_t color, float x, float y, float width, float height, float radius);
+// Draw a hollow circle.
+void pax_draw_hollow_circle   (pax_buf_t *buf, pax_col_t color, float x, float y, float radius0, float radius1);
+// Draw a hollow arc.
+void pax_draw_hollow_arc      (pax_buf_t *buf, pax_col_t color, float x, float y, float radius0, float radius1, float a0, float a1);
+// Draw a hollow arc.
+void pax_draw_round_hollow_arc(pax_buf_t *buf, pax_col_t color, float x, float y, float radius0, float radius1, float a0, float a1);
+
+// Outline a rounded rectangle.
+void pax_outline_round_rect      (pax_buf_t *buf, pax_col_t color, float x, float y, float width, float height, float radius);
+// Draw a hollow circle.
+void pax_outline_hollow_circle   (pax_buf_t *buf, pax_col_t color, float x, float y, float radius0, float radius1);
+// Draw a hollow arc.
+void pax_outline_hollow_arc      (pax_buf_t *buf, pax_col_t color, float x, float y, float radius0, float radius1, float a0, float a1);
+// Outline a hollow arc.
+void pax_outline_round_hollow_arc(pax_buf_t *buf, pax_col_t color, float x, float y, float radius0, float radius1, float a0, float a1);
+
 /* ======= OUTLINE EDITIONS ====== */
 
 // Draw a rectangle outline.
