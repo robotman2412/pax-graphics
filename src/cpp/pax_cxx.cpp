@@ -401,6 +401,90 @@ GENERIC_WRAPPER_IMPL(Tri,    tri,    Trif,  float x0 COMMA float y0 COMMA float 
 GENERIC_WRAPPER_IMPL(Circle, circle, Quadf, float x COMMA float y COMMA float radius, x COMMA y COMMA radius)
 GENERIC_WRAPPER_IMPL(Arc,    arc,    Quadf, float x COMMA float y COMMA float radius COMMA float startAngle COMMA float endAngle, x COMMA y COMMA radius COMMA startAngle COMMA endAngle)
 
+// Draws a rectangle with rounded corners.
+void Buffer::drawRoundRect(float x, float y, float width, float height, float radius) {
+	GENERIC_VALIDITY_CHECK()
+	pax_draw_round_rect(internal, fillColor, x, y, width, height, radius);
+}
+// Draws a rectangle with rounded corners.
+void Buffer::drawRoundRect(Color color, float x, float y, float width, float height, float radius) {
+	GENERIC_VALIDITY_CHECK()
+	pax_draw_round_rect(internal, color, x, y, width, height, radius);
+}
+// Draws a rectangle with rounded corners.
+void Buffer::outlineRoundRect(float x, float y, float width, float height, float radius) {
+	GENERIC_VALIDITY_CHECK()
+	pax_outline_round_rect(internal, lineColor, x, y, width, height, radius);
+}
+// Draws a rectangle with rounded corners.
+void Buffer::outlineRoundRect(Color color, float x, float y, float width, float height, float radius) {
+	GENERIC_VALIDITY_CHECK()
+	pax_outline_round_rect(internal, color, x, y, width, height, radius);
+}
+
+// Draws a hollow circle using two radii.
+void Buffer::drawHollowCircle(float x, float y, float radius0, float radius1) {
+	GENERIC_VALIDITY_CHECK()
+	pax_draw_hollow_circle(internal, fillColor, x, y, radius0, radius1);
+}
+// Draws a hollow circle using two radii.
+void Buffer::drawHollowCircle(Color color, float x, float y, float radius0, float radius1) {
+	GENERIC_VALIDITY_CHECK()
+	pax_draw_hollow_circle(internal, color, x, y, radius0, radius1);
+}
+// Outlines a hollow circle using two radii.
+void Buffer::outlineHollowCircle(float x, float y, float radius0, float radius1) {
+	GENERIC_VALIDITY_CHECK()
+	pax_outline_hollow_circle(internal, lineColor, x, y, radius0, radius1);
+}
+// Outlines a hollow circle using two radii.
+void Buffer::outlineHollowCircle(Color color, float x, float y, float radius0, float radius1) {
+	GENERIC_VALIDITY_CHECK()
+	pax_outline_hollow_circle(internal, color, x, y, radius0, radius1);
+}
+
+// Draws a hollow arc using two radii.
+void Buffer::drawHollowArc(float x, float y, float radius0, float radius1, float a0, float a1) {
+	GENERIC_VALIDITY_CHECK()
+	pax_draw_hollow_arc(internal, fillColor, x, y, radius0, radius1, a0, a1);
+}
+// Draws a hollow arc using two radii.
+void Buffer::drawHollowArc(Color color, float x, float y, float radius0, float radius1, float a0, float a1) {
+	GENERIC_VALIDITY_CHECK()
+	pax_draw_hollow_arc(internal, color, x, y, radius0, radius1, a0, a1);
+}
+// Outlines a hollow arc using two radii.
+void Buffer::outlineHollowArc(float x, float y, float radius0, float radius1, float a0, float a1) {
+	GENERIC_VALIDITY_CHECK()
+	pax_outline_hollow_arc(internal, lineColor, x, y, radius0, radius1, a0, a1);
+}
+// Outlines a hollow arc using two radii.
+void Buffer::outlineHollowArc(Color color, float x, float y, float radius0, float radius1, float a0, float a1) {
+	GENERIC_VALIDITY_CHECK()
+	pax_outline_hollow_arc(internal, color, x, y, radius0, radius1, a0, a1);
+}
+
+// Draws a hollow arc using two radii.
+void Buffer::drawRoundHollowArc(float x, float y, float radius0, float radius1, float a0, float a1) {
+	GENERIC_VALIDITY_CHECK()
+	pax_draw_round_hollow_arc(internal, fillColor, x, y, radius0, radius1, a0, a1);
+}
+// Draws a hollow arc using two radii.
+void Buffer::drawRoundHollowArc(Color color, float x, float y, float radius0, float radius1, float a0, float a1) {
+	GENERIC_VALIDITY_CHECK()
+	pax_draw_round_hollow_arc(internal, color, x, y, radius0, radius1, a0, a1);
+}
+// Outlines a hollow arc using two radii.
+void Buffer::outlineRoundHollowArc(float x, float y, float radius0, float radius1, float a0, float a1) {
+	GENERIC_VALIDITY_CHECK()
+	pax_outline_round_hollow_arc(internal, lineColor, x, y, radius0, radius1, a0, a1);
+}
+// Outlines a hollow arc using two radii.
+void Buffer::outlineRoundHollowArc(Color color, float x, float y, float radius0, float radius1, float a0, float a1) {
+	GENERIC_VALIDITY_CHECK()
+	pax_outline_round_hollow_arc(internal, color, x, y, radius0, radius1, a0, a1);
+}
+
 // Draws a line with the default outline color.
 void Buffer::drawLine(float x0, float y0, float x1, float y1) {
 	GENERIC_VALIDITY_CHECK()

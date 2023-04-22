@@ -205,6 +205,15 @@ class Buffer {
 		// If uvs is NULL, a default will be used (0,0; 1,0; 1,1; 0,1).
 		void outlineRect(Color color, const Shader &shader, const Quadf *uvs, float x, float y, float width, float height);
 		
+		// Draws a rectangle with rounded corners.
+		void drawRoundRect(float x, float y, float width, float height, float radius);
+		// Draws a rectangle with rounded corners.
+		void drawRoundRect(Color color, float x, float y, float width, float height, float radius);
+		// Draws a rectangle with rounded corners.
+		void outlineRoundRect(float x, float y, float width, float height, float radius);
+		// Draws a rectangle with rounded corners.
+		void outlineRoundRect(Color color, float x, float y, float width, float height, float radius);
+		
 		// Draws a triangle with the default color.
 		void drawTri(float x0, float y0, float x1, float y1, float x2, float y2);
 		// Draws a triangle with a custom color.
@@ -247,6 +256,15 @@ class Buffer {
 		// If uvs is NULL, a default will be used (0,0; 1,0; 1,1; 0,1).
 		void outlineCircle(Color color, const Shader &shader, const Quadf *uvs, float x, float y, float radius);
 		
+		// Draws a hollow circle using two radii.
+		void drawHollowCircle(float x, float y, float radius0, float radius1);
+		// Draws a hollow circle using two radii.
+		void drawHollowCircle(Color color, float x, float y, float radius0, float radius1);
+		// Outlines a hollow circle using two radii.
+		void outlineHollowCircle(float x, float y, float radius0, float radius1);
+		// Outlines a hollow circle using two radii.
+		void outlineHollowCircle(Color color, float x, float y, float radius0, float radius1);
+		
 		// Draws an arc around the given point with the default color.
 		void drawArc(float x, float y, float radius, float startangle, float endangle);
 		// Draws an arc around the given point with a custom color.
@@ -267,6 +285,24 @@ class Buffer {
 		// Outlines an arc with a custom outline color.
 		// If uvs is NULL, a default will be used (0,0; 1,0; 1,1; 0,1).
 		void outlineArc(Color color, const Shader &shader, const Quadf *uvs, float x, float y, float radius, float startangle, float endangle);
+		
+		// Draws a hollow arc using two radii.
+		void drawHollowArc(float x, float y, float radius0, float radius1, float a0, float a1);
+		// Draws a hollow arc using two radii.
+		void drawHollowArc(Color color, float x, float y, float radius0, float radius1, float a0, float a1);
+		// Outlines a hollow arc using two radii.
+		void outlineHollowArc(float x, float y, float radius0, float radius1, float a0, float a1);
+		// Outlines a hollow arc using two radii.
+		void outlineHollowArc(Color color, float x, float y, float radius0, float radius1, float a0, float a1);
+		
+		// Draws a hollow arc using two radii.
+		void drawRoundHollowArc(float x, float y, float radius0, float radius1, float a0, float a1);
+		// Draws a hollow arc using two radii.
+		void drawRoundHollowArc(Color color, float x, float y, float radius0, float radius1, float a0, float a1);
+		// Outlines a hollow arc using two radii.
+		void outlineRoundHollowArc(float x, float y, float radius0, float radius1, float a0, float a1);
+		// Outlines a hollow arc using two radii.
+		void outlineRoundHollowArc(Color color, float x, float y, float radius0, float radius1, float a0, float a1);
 		
 		// Draws a line with the default outline color.
 		void drawLine(float x0, float y0, float x1, float y1);
