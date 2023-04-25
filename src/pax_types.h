@@ -89,6 +89,8 @@ extern "C" {
 #define PAX_ERR_UNSUPPORTED -9
 // Corruption in buffer.
 #define PAX_ERR_CORRUPT     -10
+// Image encoding error.
+#define PAX_ERR_ENCODE      -11
 
 /* ============ TYPES ============ */
 

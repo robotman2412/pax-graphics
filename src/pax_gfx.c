@@ -140,9 +140,10 @@ const char *pax_desc_err(pax_err_t error) {
 		"Image decoding error",
 		"Unsupported operation",
 		"Corrupted buffer",
+		"Image encoding error",
 	};
 	size_t n_desc = sizeof(desc) / sizeof(char *);
-	if (error > 0 || error < -n_desc) return unknown;
+	if (error > 0 || -error > n_desc) return unknown;
 	else return desc[-error];
 }
 
