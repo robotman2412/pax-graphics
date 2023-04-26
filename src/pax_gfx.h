@@ -98,7 +98,7 @@ float     pax_buf_get_widthf      (const pax_buf_t *buf);
 // Retrieve the height of the buffer.
 float     pax_buf_get_heightf     (const pax_buf_t *buf);
 // Retrieve the type of the buffer.
-float     pax_buf_get_type        (const pax_buf_t *buf);
+pax_buf_type_t pax_buf_get_type   (const pax_buf_t *buf);
 
 // Get a const pointer to the image data.
 // See <../docs/pixelformat.md> for the format.
