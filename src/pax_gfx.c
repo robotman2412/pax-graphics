@@ -77,7 +77,7 @@ static ptq_queue_t     queue_handle      = NULL;
 #endif
 #endif
 
-#ifdef PAX_STANDALONE
+#if defined(PAX_STANDALONE) && PAX_COMPILE_MCR
 pthread_mutex_t        pax_log_mutex     = PTHREAD_MUTEX_INITIALIZER;
 bool                   pax_log_use_mutex = false;
 #endif

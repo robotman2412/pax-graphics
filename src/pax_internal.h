@@ -70,11 +70,14 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
+#if PAX_COMPILE_MCR
 #include <pthread.h>
+#endif
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+#if PAX_COMPILE_MCR
 extern pthread_mutex_t pax_log_mutex;
 extern bool pax_log_use_mutex;
 
@@ -89,6 +92,13 @@ extern bool pax_log_use_mutex;
 			pthread_mutex_unlock(&pax_log_mutex);\
 		}\
 	} while(0)
+#else
+#define PRIVATE_PAX_LOG_HELPER(file, prefix, tag, ...) do {\
+		fprintf(file, prefix "%s: ", (tag));\
+		fprintf(file, __VA_ARGS__);\
+		fputs("\033[0m\r\n", file);\
+	} while(0)
+#endif
 
 #define PAX_LOGE(tag, ...) PRIVATE_PAX_LOG_HELPER(stderr, "\033[91mError ", tag, __VA_ARGS__)
 #define PAX_LOGI(tag, ...) PRIVATE_PAX_LOG_HELPER(stdout, "\033[32mInfo  ", tag, __VA_ARGS__)

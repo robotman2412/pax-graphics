@@ -24,7 +24,7 @@
 
 #include "pax_fonts.h"
 #include "pax_internal.h"
-#include <strings.h>
+#include <string.h>
 
 extern const pax_font_range_t pax_font_sky_ranges[];
 extern const pax_font_range_t permanentmarker_ranges[];
@@ -152,10 +152,26 @@ const pax_font_t PRIVATE_pax_font_saira_regular = { // Saira regular
 };
 
 #if PAX_COMPILE_FONT_INDEX
+static char lower(char in) {
+	if (in >= 'A' && in <= 'Z') {
+		return in + 'a' - 'A';
+	} else {
+		return in;
+	}
+}
+
+static bool casecmp(const char *restrict a, const char *restrict b) {
+	while (*a || *b) {
+		if (lower(*a) != lower(*b)) return false;
+		a++; b++;
+	}
+	return true;
+}
+
 // Finds the built-in font with the given name.
 const pax_font_t *pax_get_font(const char *name) {
 	for (size_t i = 0; i < PAX_N_FONTS; i++) {
-		if (!strcasecmp(pax_fonts_index[i]->name, name)) {
+		if (!casecmp(pax_fonts_index[i]->name, name)) {
 			return pax_fonts_index[i];
 		}
 	}
