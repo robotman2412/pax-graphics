@@ -7,6 +7,8 @@ This library is the successor of the revised graphics API for [the old badge.tea
 
 For supported platforms, [see this link](../supported-platforms.md).
 
+**Note: The C++ API is not compiled by default outside of ESP-IDF, define `PAX_COMPILE_CXX` in cmake to include it.**
+
 
 ## PAX Docs overview
 
@@ -25,6 +27,7 @@ For supported platforms, [see this link](../supported-platforms.md).
 
 
 # Getting started
+TODO.
 
 
 
