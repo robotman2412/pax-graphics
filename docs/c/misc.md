@@ -6,7 +6,7 @@ This covers:
  - [Endianness](#endianness)
  - [Clipping](#clipping)
  - [Dirty area](#dirty-area)
- - [Rotation](#screen-rotation)
+ - [Rotation and orientation](#rotation-and-orientation)
  - [Scrolling](#scrolling)
  - [Pixel setting](#pixel-setting)
  - [Multi-core rendering](#multi-core-rendering)
@@ -159,46 +159,80 @@ void disp_sync(pax_buf_t *buf, ILI9341 *display) {
 
 
 
-# Screen rotation
+# Rotation and orientation
 
 Sometimes, the display isn't mounted right-side up.
-To accomodate this, PAX has a rotation feature that accounts for this exact type of rotation.
+To accomodate this, PAX has an orientation feature to account for this.
 
 In quarter-turn counter-clockwise increments, PAX can be told to rotate everything.
 Calls to almost all functions will act as if the buffer has been rotated accordingly.
-It is up to the user to know the new width and height after rotation. However, these are simply swapped each quarter-turn.
 
-| returns   | name                   | arguments
-| :-------- | :--------------------- | :--------
-| void      | pax_buf_set_rotation   | pax_buf_t \*buf, int rotation
-| int       | pax_buf_get_rotation   | pax_buf_t \*buf
-| pax_vec2f | pax_rotate_det_vec2f   | pax_buf_t \*buf, pax_vec2f raw
-| pax_rectf | pax_rotate_det_rectf   | pax_buf_t \*buf, pax_rectf raw
-| pax_vec2i | pax_rotate_det_vec2i   | pax_buf_t \*buf, pax_vec2i raw
-| pax_vec2f | pax_unrotate_det_vec2f | pax_buf_t \*buf, pax_vec2f raw
-| pax_rectf | pax_unrotate_det_rectf | pax_buf_t \*buf, pax_rectf raw
-| pax_vec2i | pax_unrotate_det_vec2i | pax_buf_t \*buf, pax_vec2i raw
+The following functions handle the orientation setting:
+| returns   | name                    | arguments
+| :-------- | :---------------------- | :--------
+| void      | pax_buf_set_orientation | pax_buf_t \*buf, int rotation
+| int       | pax_buf_get_orientation | pax_buf_t \*buf
+| pax_vec2f | pax_orient_det_vec2f    | pax_buf_t \*buf, pax_vec2f raw
+| pax_rectf | pax_orient_det_rectf    | pax_buf_t \*buf, pax_rectf raw
+| pax_vec2i | pax_orient_det_vec2i    | pax_buf_t \*buf, pax_vec2i raw
+| pax_vec2f | pax_unorient_det_vec2f  | pax_buf_t \*buf, pax_vec2f raw
+| pax_rectf | pax_unorient_det_rectf  | pax_buf_t \*buf, pax_rectf raw
+| pax_vec2i | pax_unorient_det_vec2i  | pax_buf_t \*buf, pax_vec2i raw
 
-The first function, `pax_buf_set_rotation` applies this behaviour.
-Similarly, `pax_buf_get_rotation` returns the current rotation increment.
+The first function, `pax_buf_set_orientation` applies this behaviour.
+Similarly, `pax_buf_get_orientation` returns the current orientation.
 
-The `pax_rotate_det_` functions are used to convert co-ordinates from input ("pretended") pixels into real ("rotated") pixels.
-The `pax_unrotate_det_` functions convert in the opposite direction, and are made for shaders to use.
-This is used internally, and can come in handy if you have a shader that needs rotated co-ordinates:
+These functions use one of the values from the following table.
+| name                  | description
+| :-------------------- | :----------
+| PAX_O_UPRIGHT         | No change in orientation.
+| PAX_O_ROT_CCW         | Counter-clockwise rotation.
+| PAX_O_ROT_HALF        | Half turn rotation.
+| PAX_O_ROT_CW          | Clockwise rotation.
+| PAX_O_FLIP_H          | Flip horizontally.
+| PAX_O_ROT_CCW_FLIP_H  | Counter-clockwise rotation then flip horizontally.
+| PAX_O_ROT_HALF_FLIP_H | Half turn rotation then flip horizontally.
+| PAX_O_ROT_CW_FLIP_H   | Clockwise rotation then flip horizontally.
+| PAX_O_FLIP_V          | Flip vertically. Alias to PAX_O_ROT_HALF_FLIP_H.
+| PAX_O_ROT_CCW_FLIP_V  | Counter-clockwise rotation then flip vertically. Alias to PAX_O_ROT_CW_FLIP_H.
+| PAX_O_ROT_HALF_FLIP_V | Half turn rotation then flip vertically. Alias to PAX_O_FLIP_H.
+| PAX_O_ROT_CW_FLIP_V   | Clockwise rotation then flip vertically. Alias to PAX_O_ROT_CCW_FLIP_H.
+| PAX_O_FLIP_H_ROT_CCW  | Flip horizontally then counter-clockwise rotation. Alias to PAX_O_ROT_CW_FLIP_H.
+| PAX_O_FLIP_H_ROT_HALF | Flip horizontally then half turn rotation. Alias to PAX_O_ROT_HALF_FLIP_H.
+| PAX_O_FLIP_H_ROT_CW   | Flip horizontally then clockwise rotation. Alias to PAX_O_ROT_CCW_FLIP_H.
+| PAX_O_FLIP_V_ROT_CCW  | Flip vertically then counter-clockwise rotation. Alias to PAX_O_ROT_CCW_FLIP_H.
+| PAX_O_FLIP_V_ROT_HALF | Flip vertically then half turn rotation. Alias to PAX_O_FLIP_H.
+| PAX_O_FLIP_V_ROT_CW   | Flip vertically then clockwise rotation. Alias to PAX_O_ROT_CW_FLIP_H.
+
+The `pax_orient_det_` functions are used to convert co-ordinates from input ("pretended") co-ordinates into real co-ordinates.
+The `pax_unorient_det_` functions convert in the opposite direction, and are made for shaders to use.
+
+These functions are used internally, and can come in handy if you have a shader that needs rotated co-ordinates:
 
 ## Exceptions
 
-Because the screen doesn't know about the rotation,
-all [the dirty area functions](#dirty-area) will not be affected by rotation settings.
+Notable exceptions to the orientation system are:
+ - `pax_get_pixel`
+ - `pax_set_pixel`
+ - `pax_merge_pixel`
+ - `pax_get_pixel_raw`
+ - `pax_set_pixel_raw`
+ - `pax_get_dirty`
+ - `pax_mark_dirty0`
+ - `pax_mark_dirty1`
+ - `pax_mark_dirty2`
+
+Because the screen doesn't know about the orientation,
+all [the dirty area functions](#dirty-area) will not be affected by orientation settings.
 
 Similarly, the pixel co-ordinates passed to [shader](#shaders.md) are not affected, this time because it would have a performance impact.
-<!-- Shaders can call `pax_unrotate_det_vec2i` to correct for this and get the pretended co-ordinates. -->
+To account for this, you can call the `pax_orient_det_` functions ahead of time for effetcs that are sensitive to real pixel co-ordinates.
 
-**Note: The UV co-ordinates passed to shaders are still affected by rotation.**
+**Note: The UV co-ordinates passed to shaders are still affected by rotation, but real pixel co-ordinates are not.**
 
 ## Example code
 
-Setting up a buffer with rotation:
+Setting up a buffer with orientation:
 ```c
 /* Example code by Julian Scheffers: Public domain */
 
@@ -213,20 +247,9 @@ void set_up_my_buf() {
 	pax_buf_reversed(&buf, true);
 	
 	// Apply a quarter-turn counter-clockwise rotation.
-	pax_buf_set_rotation(&buf, 1);
+	pax_buf_set_orientation(&buf, PAX_O_ROT_CCW);
 }
 ```
-
-<!-- Getting rotated pixel co-ordinates for a shader:
-```c
-/* Example code by Julian Scheffers: Public domain */
-
-// This shader function needs rotated co-ordinates.
-pax_col_t my_shader_callback(pax_col_t tint, pax_col_t existing, int x, int y, float u, float v, void *args) {
-    // Convert pretended co-ordinates.
-	pax_veci unrot = pax_unrotate_det_vec2i()
-}
-``` -->
 
 
 
@@ -252,9 +275,6 @@ Bare-bones terminal using scrolling:
 ```c
 /* Example code by Julian Scheffers: Public domain */
 
-extern const int SCREEN_WIDTH;
-extern const int SCREEN_HEIGHT;
-
 // Scrolls the screen up a bit and draws text at the bottom afterwards.
 void my_simple_terminal(pax_buf_t *buf, const char *text) {
 	// Scroll everything up, leaving a black background.
@@ -264,7 +284,7 @@ void my_simple_terminal(pax_buf_t *buf, const char *text) {
 	pax_draw_text(
 		buf, 0xffffffff,
 		pax_font_sky_mono, 18,
-		0, SCREEN_HEIGHT - 19,
+		0, pax_buf_get_widthf(buf) - 19,
 		text
 	);
 }
