@@ -267,18 +267,16 @@ Buffer Buffer::clone() const {
 }
 
 
-// Set rotation of the buffer.
-// 0 is not rotated, each unit is one quarter turn counter-clockwise.
-void Buffer::setRotation(int rotation) {
+// Set orientation of the buffer.
+void Buffer::setOrientation(int x) {
 	GENERIC_VALIDITY_CHECK();
-	internal->rotation = rotation & 3;
+	internal->orientation = x & 7;
 }
 
-// Get rotation of the buffer.
-// 0 is not rotated, each unit is one quarter turn counter-clockwise.
-int Buffer::getRotation() const {
+// Get orientation of the buffer.
+int Buffer::getOrientation() const {
 	GENERIC_VALIDITY_CHECK(0);
-	return internal->rotation;
+	return internal->orientation;
 }
 
 // Scroll the buffer, filling with a placeholder color.

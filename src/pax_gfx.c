@@ -414,16 +414,14 @@ void *pax_buf_get_pixels_rw(pax_buf_t *buf) { return buf->buf; }
 // Get the byte size of the image data.
 size_t pax_buf_get_size(const pax_buf_t *buf) { return PAX_BUF_CALC_SIZE(buf->width, buf->height, buf->type); }
 
-// Set rotation of the buffer.
-// 0 is not rotated, each unit is one quarter turn counter-clockwise.
-void pax_buf_set_rotation(pax_buf_t *buf, int rotation) {
-	buf->rotation = rotation & 3;
+// Set orientation of the buffer.
+void pax_buf_set_orientation(pax_buf_t *buf, pax_orientation_t x) {
+	buf->orientation = x & 7;
 }
 
-// Get rotation of the buffer.
-// 0 is not rotated, each unit is one quarter turn counter-clockwise.
-int pax_buf_get_rotation(const pax_buf_t *buf) {
-	return buf->rotation;
+// Get orientation of the buffer.
+pax_orientation_t pax_buf_get_orientation(const pax_buf_t *buf) {
+	return buf->orientation;
 }
 
 
@@ -433,15 +431,20 @@ void pax_buf_scroll(pax_buf_t *buf, pax_col_t placeholder, int x, int y) {
 	pax_join();
 	#endif
 	
-	#if PAX_COMPILE_ROTATE
-	int x0=x,y0=y;
-	// Fix direction of scrolling.
-	switch (buf->rotation) {
-		default:
-		case 0: break;
-		case 1: y = -x0; x =  y0; break;
-		case 2: x = -x0; y = -y0; break;
-		case 3: y =  x0; x = -y0; break;
+	#if PAX_COMPILE_ORIENTATION
+	{
+		int x0 = x, y0 = y;
+		// Fix direction of scrolling.
+		switch (buf->orientation & 3) {
+			default:
+			case 0: break;
+			case 1: y = -x0; x =  y0; break;
+			case 2: x = -x0; y = -y0; break;
+			case 3: y =  x0; x = -y0; break;
+		}
+		if (buf->orientation & 4) {
+			x = -x;
+		}
 	}
 	#endif
 	
@@ -487,10 +490,10 @@ void pax_buf_scroll(pax_buf_t *buf, pax_col_t placeholder, int x, int y) {
 		}
 	}
 	
-	#if PAX_COMPILE_ROTATE
-	// Ignore rotation for a moment.
-	int rot = buf->rotation;
-	buf->rotation = 0;
+	#if PAX_COMPILE_ORIENTATION
+	// Ignore orientation for a moment.
+	int rot = buf->orientation;
+	buf->orientation = 0;
 	#endif
 	
 	// Fill the edges.
@@ -505,9 +508,9 @@ void pax_buf_scroll(pax_buf_t *buf, pax_col_t placeholder, int x, int y) {
 		pax_simple_rect(buf, placeholder, 0, buf->height, buf->width, y);
 	}
 	
-	#if PAX_COMPILE_ROTATE
-	// Restore previous rotation.
-	buf->rotation = rot;
+	#if PAX_COMPILE_ORIENTATION
+	// Restore previous orientation.
+	buf->orientation = rot;
 	#endif
 }
 
@@ -858,8 +861,8 @@ pax_col_t pax_col_tint(pax_col_t col, pax_col_t tint) {
 void pax_merge_pixel(pax_buf_t *buf, pax_col_t color, int x, int y) {
 	PAX_BUF_CHECK("pax_merge_pixel");
 	
-	#if PAX_COMPILE_ROTATE
-	pax_vec2i tmp = pax_rotate_det_vec2i(buf, (pax_vec2i) {x, y});
+	#if PAX_COMPILE_ORIENTATION
+	pax_vec2i tmp = pax_orient_det_vec2i(buf, (pax_vec2i) {x, y});
 	x = tmp.x; y = tmp.y;
 	#endif
 	
@@ -889,8 +892,8 @@ void pax_merge_pixel(pax_buf_t *buf, pax_col_t color, int x, int y) {
 void pax_set_pixel(pax_buf_t *buf, pax_col_t color, int x, int y) {
 	PAX_BUF_CHECK("pax_set_pixel");
 	
-	#if PAX_COMPILE_ROTATE
-	pax_vec2i tmp = pax_rotate_det_vec2i(buf, (pax_vec2i) {x, y});
+	#if PAX_COMPILE_ORIENTATION
+	pax_vec2i tmp = pax_orient_det_vec2i(buf, (pax_vec2i) {x, y});
 	x = tmp.x; y = tmp.y;
 	#endif
 	
@@ -916,8 +919,8 @@ void pax_set_pixel(pax_buf_t *buf, pax_col_t color, int x, int y) {
 pax_col_t pax_get_pixel(const pax_buf_t *buf, int x, int y) {
 	PAX_BUF_CHECK1("pax_get_pixel", 0);
 	
-	#if PAX_COMPILE_ROTATE
-	pax_vec2i tmp = pax_rotate_det_vec2i(buf, (pax_vec2i) {x, y});
+	#if PAX_COMPILE_ORIENTATION
+	pax_vec2i tmp = pax_orient_det_vec2i(buf, (pax_vec2i) {x, y});
 	x = tmp.x; y = tmp.y;
 	#endif
 	
@@ -934,8 +937,8 @@ pax_col_t pax_get_pixel(const pax_buf_t *buf, int x, int y) {
 void pax_set_pixel_raw(pax_buf_t *buf, pax_col_t color, int x, int y) {
 	PAX_BUF_CHECK("pax_set_pixel");
 	
-	#if PAX_COMPILE_ROTATE
-	pax_vec2i tmp = pax_rotate_det_vec2i(buf, (pax_vec2i) {x, y});
+	#if PAX_COMPILE_ORIENTATION
+	pax_vec2i tmp = pax_orient_det_vec2i(buf, (pax_vec2i) {x, y});
 	x = tmp.x; y = tmp.y;
 	#endif
 	
@@ -956,8 +959,8 @@ void pax_set_pixel_raw(pax_buf_t *buf, pax_col_t color, int x, int y) {
 pax_col_t pax_get_pixel_raw(const pax_buf_t *buf, int x, int y) {
 	PAX_BUF_CHECK1("pax_get_pixel", 0);
 	
-	#if PAX_COMPILE_ROTATE
-	pax_vec2i tmp = pax_rotate_det_vec2i(buf, (pax_vec2i) {x, y});
+	#if PAX_COMPILE_ORIENTATION
+	pax_vec2i tmp = pax_orient_det_vec2i(buf, (pax_vec2i) {x, y});
 	x = tmp.x; y = tmp.y;
 	#endif
 	
@@ -1038,15 +1041,15 @@ void pax_shade_rect(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
 		height *= buf->stack_2d.value.b1;
 		
 		// Perform rotation.
-		#if PAX_COMPILE_ROTATE
-		pax_rectf tmp = pax_rotate_det_rectf(buf, (pax_rectf) {x, y, width, height});
+		#if PAX_COMPILE_ORIENTATION
+		pax_rectf tmp = pax_orient_det_rectf(buf, (pax_rectf) {x, y, width, height});
 		x=tmp.x;
 		y=tmp.y;
 		width=tmp.w;
 		height=tmp.h;
 		
 		pax_quadf uvs_rotated;
-		if (buf->rotation & 1) {
+		if (buf->orientation & 1) {
 			uvs_rotated = (pax_quadf) {
 				uvs->x0, uvs->y0,
 				uvs->x3, uvs->y3,
@@ -1134,9 +1137,9 @@ void pax_shade_line(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
 	}
 	
 	// Rotate points.
-	pax_vec1_t tmp = pax_rotate_det_vec2f(buf, (pax_vec2f) {x0, y0});
+	pax_vec1_t tmp = pax_orient_det_vec2f(buf, (pax_vec2f) {x0, y0});
 	x0 = tmp.x; y0 = tmp.y;
-	tmp = pax_rotate_det_vec2f(buf, (pax_vec2f) {x1, y1});
+	tmp = pax_orient_det_vec2f(buf, (pax_vec2f) {x1, y1});
 	x1 = tmp.x; y1 = tmp.y;
 	
 	// If any point is outside clip now, we don't draw a line.
@@ -1177,11 +1180,11 @@ void pax_shade_tri(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
 	}
 	
 	// Rotate points.
-	pax_vec1_t tmp = pax_rotate_det_vec2f(buf, (pax_vec2f) {x0, y0});
+	pax_vec1_t tmp = pax_orient_det_vec2f(buf, (pax_vec2f) {x0, y0});
 	x0 = tmp.x; y0 = tmp.y;
-	tmp = pax_rotate_det_vec2f(buf, (pax_vec2f) {x1, y1});
+	tmp = pax_orient_det_vec2f(buf, (pax_vec2f) {x1, y1});
 	x1 = tmp.x; y1 = tmp.y;
-	tmp = pax_rotate_det_vec2f(buf, (pax_vec2f) {x2, y2});
+	tmp = pax_orient_det_vec2f(buf, (pax_vec2f) {x2, y2});
 	x2 = tmp.x; y2 = tmp.y;
 	
 	if (!uvs) {
@@ -1554,7 +1557,7 @@ void pax_simple_rect(pax_buf_t *buf, pax_col_t color, float x, float y, float wi
 	if (!pax_do_draw_col(buf, color)) return;
 	
 	// Do rotation.
-	pax_rectf tmp = pax_rotate_det_rectf(buf, (pax_rectf) {x,y,width,height});
+	pax_rectf tmp = pax_orient_det_rectf(buf, (pax_rectf) {x,y,width,height});
 	x=tmp.x;
 	y=tmp.y;
 	width=tmp.w;
@@ -1632,9 +1635,9 @@ void pax_simple_line(pax_buf_t *buf, pax_col_t color, float x0, float y0, float 
 	}
 	
 	// Rotate points.
-	pax_vec1_t tmp = pax_rotate_det_vec2f(buf, (pax_vec2f) {x0, y0});
+	pax_vec1_t tmp = pax_orient_det_vec2f(buf, (pax_vec2f) {x0, y0});
 	x0 = tmp.x; y0 = tmp.y;
-	tmp = pax_rotate_det_vec2f(buf, (pax_vec2f) {x1, y1});
+	tmp = pax_orient_det_vec2f(buf, (pax_vec2f) {x1, y1});
 	x1 = tmp.x; y1 = tmp.y;
 	
 	// Sort points vertially.
@@ -1708,11 +1711,11 @@ void pax_simple_tri(pax_buf_t *buf, pax_col_t color, float x0, float y0, float x
 	}
 	
 	// Rotate points.
-	pax_vec1_t tmp = pax_rotate_det_vec2f(buf, (pax_vec2f) {x0, y0});
+	pax_vec1_t tmp = pax_orient_det_vec2f(buf, (pax_vec2f) {x0, y0});
 	x0 = tmp.x; y0 = tmp.y;
-	tmp = pax_rotate_det_vec2f(buf, (pax_vec2f) {x1, y1});
+	tmp = pax_orient_det_vec2f(buf, (pax_vec2f) {x1, y1});
 	x1 = tmp.x; y1 = tmp.y;
-	tmp = pax_rotate_det_vec2f(buf, (pax_vec2f) {x2, y2});
+	tmp = pax_orient_det_vec2f(buf, (pax_vec2f) {x2, y2});
 	x2 = tmp.x; y2 = tmp.y;
 	
 	// Mark all points as dirty

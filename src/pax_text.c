@@ -145,15 +145,15 @@ static void pixel_aligned_render(pax_buf_t *buf, pax_col_t color, const pax_shad
 	y = (int) (0.5 + y + buf->stack_2d.value.b2);
 	pax_mark_dirty2(buf, x, y, width, height);
 	
-	#if PAX_COMPILE_ROTATE
-	pax_rectf tmp = pax_rotate_det_rectf(buf, (pax_rectf) {x, y, width, height});
+	#if PAX_COMPILE_ORIENTATION
+	pax_rectf tmp = pax_orient_det_rectf(buf, (pax_rectf) {x, y, width, height});
 	x=tmp.x;
 	y=tmp.y;
 	width=tmp.w;
 	height=tmp.h;
 	
 	pax_quadf uvs_rotated;
-	if (buf->rotation & 1) {
+	if (buf->orientation & 1) {
 		uvs_rotated = (pax_quadf) {
 			uvs->x0, uvs->y0,
 			uvs->x3, uvs->y3,

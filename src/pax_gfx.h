@@ -30,6 +30,7 @@
 #include "pax_text.h"
 #include "pax_shapes.h"
 #include "pax_shaders.h"
+#include "pax_orientation.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -109,12 +110,10 @@ void       *pax_buf_get_pixels_rw (pax_buf_t *buf);
 // Get the byte size of the image data.
 size_t      pax_buf_get_size      (const pax_buf_t *buf);
 
-// Set rotation of the buffer.
-// 0 is not rotated, each unit is one quarter turn counter-clockwise.
-void      pax_buf_set_rotation    (pax_buf_t *buf, int rotation);
-// Get rotation of the buffer.
-// 0 is not rotated, each unit is one quarter turn counter-clockwise.
-int       pax_buf_get_rotation    (const pax_buf_t *buf);
+// Set orientation of the buffer.
+void      pax_buf_set_orientation (pax_buf_t *buf, pax_orientation_t x);
+// Get orientation of the buffer.
+pax_orientation_t pax_buf_get_orientation (const pax_buf_t *buf);
 // Scroll the buffer, filling with a placeholder color.
 void      pax_buf_scroll          (pax_buf_t *buf, pax_col_t placeholder, int x, int y);
 
@@ -137,180 +136,6 @@ void      pax_mark_dirty0         (pax_buf_t *buf);
 void      pax_mark_dirty1         (pax_buf_t *buf, int x, int y);
 // Mark a rectangle as dirty.
 void      pax_mark_dirty2         (pax_buf_t *buf, int x, int y, int width, int height);
-
-
-
-/* ======= ROTATION HELPERS ====== */
-
-// Transforms the co-ordinates as 1x counter-clockwise rotation.
-static inline pax_vec2f pax_rotate_ccw1_vec2f(const pax_buf_t *buf, pax_vec2f vec) {
-	return (pax_vec2f) {
-		vec.y,
-		buf->height - vec.x,
-	};
-}
-
-// Transforms the co-ordinates as 2x counter-clockwise rotation.
-static inline pax_vec2f pax_rotate_ccw2_vec2f(const pax_buf_t *buf, pax_vec2f vec) {
-	return (pax_vec2f) {
-		buf->width  - vec.x,
-		buf->height - vec.y,
-	};
-}
-
-// Transforms the co-ordinates as 2x counter-clockwise rotation.
-static inline pax_vec2f pax_rotate_ccw3_vec2f(const pax_buf_t *buf, pax_vec2f vec) {
-	return (pax_vec2f) {
-		buf->width - vec.y,
-		vec.x,
-	};
-}
-
-// Detects rotations and transforms co-ordinates accordingly.
-static inline pax_vec2f pax_rotate_det_vec2f(const pax_buf_t *buf, pax_vec2f vec) {
-	#if PAX_COMPILE_ROTATE
-	switch (buf->rotation) {
-		default:
-		case 0: return vec;
-		case 1: return pax_rotate_ccw1_vec2f(buf, vec);
-		case 2: return pax_rotate_ccw2_vec2f(buf, vec);
-		case 3: return pax_rotate_ccw3_vec2f(buf, vec);
-	}
-	#else
-	return vec;
-	#endif
-}
-
-// Detects rotations and transforms co-ordinates accordingly.
-static inline pax_vec2f pax_unrotate_det_vec2f(const pax_buf_t *buf, pax_vec2f vec) {
-	#if PAX_COMPILE_ROTATE
-	switch (buf->rotation) {
-		default:
-		case 0: return vec;
-		case 3: return pax_rotate_ccw1_vec2f(buf, vec);
-		case 2: return pax_rotate_ccw2_vec2f(buf, vec);
-		case 1: return pax_rotate_ccw3_vec2f(buf, vec);
-	}
-	#else
-	return vec;
-	#endif
-}
-
-
-// Transforms the co-ordinates as 1x counter-clockwise rotation.
-static inline pax_rectf pax_rotate_ccw1_rectf(const pax_buf_t *buf, pax_rectf vec) {
-	return (pax_rectf) {
-		vec.y,
-		buf->height - vec.x,
-		vec.h,
-		-vec.w,
-	};
-}
-
-// Transforms the co-ordinates as 2x counter-clockwise rotation.
-static inline pax_rectf pax_rotate_ccw2_rectf(const pax_buf_t *buf, pax_rectf vec) {
-	return (pax_rectf) {
-		buf->width  - vec.x,
-		buf->height - vec.y,
-		-vec.w,
-		-vec.h,
-	};
-}
-
-// Transforms the co-ordinates as 2x counter-clockwise rotation.
-static inline pax_rectf pax_rotate_ccw3_rectf(const pax_buf_t *buf, pax_rectf vec) {
-	return (pax_rectf) {
-		buf->width - vec.y,
-		vec.x,
-		-vec.h,
-		vec.w,
-	};
-}
-
-// Detects rotations and transforms co-ordinates accordingly.
-static inline pax_rectf pax_rotate_det_rectf(const pax_buf_t *buf, pax_rectf vec) {
-	#if PAX_COMPILE_ROTATE
-	switch (buf->rotation) {
-		default:
-		case 0: return vec;
-		case 1: return pax_rotate_ccw1_rectf(buf, vec);
-		case 2: return pax_rotate_ccw2_rectf(buf, vec);
-		case 3: return pax_rotate_ccw3_rectf(buf, vec);
-	}
-	#else
-	return vec;
-	#endif
-}
-
-// Detects rotations and transforms co-ordinates accordingly.
-static inline pax_rectf pax_unrotate_det_rectf(const pax_buf_t *buf, pax_rectf vec) {
-	#if PAX_COMPILE_ROTATE
-	switch (buf->rotation) {
-		default:
-		case 0: return vec;
-		case 3: return pax_rotate_ccw1_rectf(buf, vec);
-		case 2: return pax_rotate_ccw2_rectf(buf, vec);
-		case 1: return pax_rotate_ccw3_rectf(buf, vec);
-	}
-	#else
-	return vec;
-	#endif
-}
-
-
-// Transforms the co-ordinates as 1x counter-clockwise rotation.
-static inline pax_vec2i pax_rotate_ccw1_vec2i(const pax_buf_t *buf, pax_vec2i vec) {
-	return (pax_vec2i) {
-		vec.y,
-		buf->height - 1 - vec.x,
-	};
-}
-
-// Transforms the co-ordinates as 2x counter-clockwise rotation.
-static inline pax_vec2i pax_rotate_ccw2_vec2i(const pax_buf_t *buf, pax_vec2i vec) {
-	return (pax_vec2i) {
-		buf->width  - 1 - vec.x,
-		buf->height - 1 - vec.y,
-	};
-}
-
-// Transforms the co-ordinates as 2x counter-clockwise rotation.
-static inline pax_vec2i pax_rotate_ccw3_vec2i(const pax_buf_t *buf, pax_vec2i vec) {
-	return (pax_vec2i) {
-		buf->width - 1 - vec.y,
-		vec.x,
-	};
-}
-
-// Detects rotations and transforms co-ordinates accordingly.
-static inline pax_vec2i pax_rotate_det_vec2i(const pax_buf_t *buf, pax_vec2i vec) {
-	#if PAX_COMPILE_ROTATE
-	switch (buf->rotation) {
-		default:
-		case 0: return vec;
-		case 1: return pax_rotate_ccw1_vec2i(buf, vec);
-		case 2: return pax_rotate_ccw2_vec2i(buf, vec);
-		case 3: return pax_rotate_ccw3_vec2i(buf, vec);
-	}
-	#else
-	return vec;
-	#endif
-}
-
-// Detects rotations and transforms co-ordinates accordingly.
-static inline pax_vec2i pax_unrotate_det_vec2i(const pax_buf_t *buf, pax_vec2i vec) {
-	#if PAX_COMPILE_ROTATE
-	switch (buf->rotation) {
-		default:
-		case 0: return vec;
-		case 3: return pax_rotate_ccw1_vec2i(buf, vec);
-		case 2: return pax_rotate_ccw2_vec2i(buf, vec);
-		case 1: return pax_rotate_ccw3_vec2i(buf, vec);
-	}
-	#else
-	return vec;
-	#endif
-}
 
 
 
@@ -450,8 +275,6 @@ void        pax_simple_circle       (pax_buf_t *buf, pax_col_t color, float x,  
 
 #ifdef __cplusplus
 } // extern "C"
-
-#include "cpp/pax_cxx.hpp"
 #endif //__cplusplus
 
 #endif //PAX_GFX_H

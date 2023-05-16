@@ -32,6 +32,7 @@
 namespace pax {
 class Buffer;
 typedef pax_col_t Color;
+typedef pax_oriantation_t Orientation;
 }
 
 #include <functional>
@@ -136,12 +137,10 @@ class Buffer {
 		// Get an explicit copy-by-value of this buffer.
 		Buffer clone() const;
 		
-		// Set rotation of the buffer.
-		// 0 is not rotated, each unit is one quarter turn counter-clockwise.
-		void setRotation(int rotation);
-		// Get rotation of the buffer.
-		// 0 is not rotated, each unit is one quarter turn counter-clockwise.
-		int getRotation() const;
+		// Set orientation of the buffer.
+		void setOrientation(Orientation x);
+		// Get orientation of the buffer.
+		Orientation getOrientation() const;
 		// Scroll the buffer, filling with a placeholder color.
 		void scroll(Color placeholder, int x, int y);
 		// Scroll the buffer using fill color as placeholder.

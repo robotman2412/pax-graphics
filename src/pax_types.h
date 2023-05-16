@@ -121,6 +121,50 @@ enum pax_buf_type {
 	PAX_BUF_32_8888ARGB = 0x00888820
 };
 
+// Buffer orientation settings.
+enum pax_orientation {
+	// No change in orientation.
+	PAX_O_UPRIGHT,
+	// Counter-clockwise rotation.
+	PAX_O_ROT_CCW,
+	// Half turn rotation.
+	PAX_O_ROT_HALF,
+	// Clockwise rotation.
+	PAX_O_ROT_CW,
+	
+	// Flip horizontally.
+	PAX_O_FLIP_H,
+	// Counter-clockwise rotation then flip horizontally.
+	PAX_O_ROT_CCW_FLIP_H,
+	// Half turn rotation then flip horizontally.
+	PAX_O_ROT_HALF_FLIP_H,
+	// Clockwise rotation then flip horizontally.
+	PAX_O_ROT_CW_FLIP_H,
+};
+
+// Flip vertically.
+#define PAX_O_FLIP_V PAX_O_ROT_HALF_FLIP_H
+// Counter-clockwise rotation then flip vertically.
+#define PAX_O_ROT_CCW_FLIP_V PAX_O_ROT_CW_FLIP_H
+// Half turn rotation then flip vertically.
+#define PAX_O_ROT_HALF_FLIP_V PAX_O_FLIP_H
+// Clockwise rotation then flip vertically.
+#define PAX_O_ROT_CW_FLIP_V PAX_O_ROT_CCW_FLIP_H
+
+// Flip horizontally then counter-clockwise rotation.
+#define PAX_O_FLIP_H_ROT_CCW PAX_O_ROT_CW_FLIP_H
+// Flip horizontally then half turn rotation.
+#define PAX_O_FLIP_H_ROT_HALF PAX_O_ROT_HALF_FLIP_H
+// Flip horizontally then clockwise rotation.
+#define PAX_O_FLIP_H_ROT_CW PAX_O_ROT_CCW_FLIP_H
+
+// Flip vertically then counter-clockwise rotation.
+#define PAX_O_FLIP_V_ROT_CCW PAX_O_ROT_CCW_FLIP_H
+// Flip vertically then half turn rotation.
+#define PAX_O_FLIP_V_ROT_HALF PAX_O_FLIP_H
+// Flip vertically then clockwise rotation.
+#define PAX_O_FLIP_V_ROT_CW PAX_O_ROT_CW_FLIP_H
+
 // A way in which to perform word wrap.
 enum pax_word_wrap {
 	// Do not perform word wrap.
@@ -153,6 +197,7 @@ enum pax_font_type {
 };
 
 typedef enum   pax_buf_type    pax_buf_type_t;
+typedef enum   pax_orientation pax_orientation_t;
 typedef enum   pax_word_wrap   pax_word_wrap_t;
 typedef enum   pax_task_type   pax_task_type_t;
 typedef enum   pax_font_type   pax_font_type_t;
@@ -290,9 +335,8 @@ struct pax_buf {
 	// The top most entry is used to transform shapes.
 	matrix_stack_2d_t stack_2d;
 	
-	// Rotation increment.
-	// 0 is not rotated, each unit is one quarter turn counter-clockwise.
-	int rotation;
+	// Orientation setting.
+	pax_orientation_t orientation;
 };
 
 // A shader definition, used by pax_shade_ methods.

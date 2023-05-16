@@ -64,9 +64,9 @@
 	#define PAX_COMPILE_MCR true
 #endif
 
-#ifndef PAX_COMPILE_ROTATE
-// Compile in buffer rotation.
-	#define PAX_COMPILE_ROTATE true
+#ifndef PAX_COMPILE_ORIENTATION
+// Compile in buffer orientation settings.
+	#define PAX_COMPILE_ORIENTATION true
 #endif
 
 #ifndef PAX_QUEUE_SIZE
