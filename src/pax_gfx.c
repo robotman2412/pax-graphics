@@ -1556,12 +1556,14 @@ void pax_simple_rect(pax_buf_t *buf, pax_col_t color, float x, float y, float wi
 	PAX_BUF_CHECK("pax_simple_rect");
 	if (!pax_do_draw_col(buf, color)) return;
 	
+	#if PAX_COMPILE_ORIENTATION
 	// Do rotation.
 	pax_rectf tmp = pax_orient_det_rectf(buf, (pax_rectf) {x,y,width,height});
 	x=tmp.x;
 	y=tmp.y;
 	width=tmp.w;
 	height=tmp.h;
+	#endif
 	
 	// Fix rect dimensions.
 	if (width < 0) {
@@ -1634,11 +1636,13 @@ void pax_simple_line(pax_buf_t *buf, pax_col_t color, float x0, float y0, float 
 		return;
 	}
 	
+	#if PAX_COMPILE_ORIENTATION
 	// Rotate points.
 	pax_vec1_t tmp = pax_orient_det_vec2f(buf, (pax_vec2f) {x0, y0});
 	x0 = tmp.x; y0 = tmp.y;
 	tmp = pax_orient_det_vec2f(buf, (pax_vec2f) {x1, y1});
 	x1 = tmp.x; y1 = tmp.y;
+	#endif
 	
 	// Sort points vertially.
 	if (y0 > y1) PAX_SWAP_POINTS(x0, y0, x1, y1);
@@ -1710,6 +1714,7 @@ void pax_simple_tri(pax_buf_t *buf, pax_col_t color, float x0, float y0, float x
 		return;
 	}
 	
+	#if PAX_COMPILE_ORIENTATION
 	// Rotate points.
 	pax_vec1_t tmp = pax_orient_det_vec2f(buf, (pax_vec2f) {x0, y0});
 	x0 = tmp.x; y0 = tmp.y;
@@ -1717,6 +1722,7 @@ void pax_simple_tri(pax_buf_t *buf, pax_col_t color, float x0, float y0, float x
 	x1 = tmp.x; y1 = tmp.y;
 	tmp = pax_orient_det_vec2f(buf, (pax_vec2f) {x2, y2});
 	x2 = tmp.x; y2 = tmp.y;
+	#endif
 	
 	// Mark all points as dirty
 	pax_mark_dirty1(buf, x0 - 0.5, y0 - 0.5);
