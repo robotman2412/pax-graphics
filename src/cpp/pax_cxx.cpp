@@ -268,14 +268,14 @@ Buffer Buffer::clone() const {
 
 
 // Set orientation of the buffer.
-void Buffer::setOrientation(int x) {
+void Buffer::setOrientation(Orientation x) {
 	GENERIC_VALIDITY_CHECK();
-	internal->orientation = x & 7;
+	internal->orientation = (Orientation) ((int) x & 7);
 }
 
 // Get orientation of the buffer.
-int Buffer::getOrientation() const {
-	GENERIC_VALIDITY_CHECK(0);
+Orientation Buffer::getOrientation() const {
+	GENERIC_VALIDITY_CHECK(PAX_O_UPRIGHT);
 	return internal->orientation;
 }
 

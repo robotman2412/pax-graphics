@@ -32,7 +32,7 @@
 namespace pax {
 class Buffer;
 typedef pax_col_t Color;
-typedef pax_oriantation_t Orientation;
+typedef pax_orientation_t Orientation;
 }
 
 #include <functional>
