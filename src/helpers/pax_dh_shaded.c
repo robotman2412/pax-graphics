@@ -75,23 +75,23 @@ void pax_tri_shaded(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
 	
 	// Clip: Y axis.
 	if (y_post_0 > buf->clip.y + buf->clip.h) {
-		y_post_0 = (int) (buf->clip.y + buf->clip.h - 0.5) + 0.5;
+		y_post_0 = (int) (buf->clip.y + buf->clip.h) + 0.5;
 	}
 	if (y_post_1 > buf->clip.y + buf->clip.h) {
-		y_post_1 = (int) (buf->clip.y + buf->clip.h - 0.5) + 0.5;
+		y_post_1 = (int) (buf->clip.y + buf->clip.h) + 0.5;
 	}
 	if (y_pre_2  > buf->clip.y + buf->clip.h) {
-		y_pre_2  = (int) (buf->clip.y + buf->clip.h - 0.5) + 0.5;
+		y_pre_2  = (int) (buf->clip.y + buf->clip.h) + 0.5;
 	}
 	
 	if (y_pre_2  < buf->clip.y) {
-		y_pre_2  = (int) (buf->clip.y + 0.5) + 0.5;
+		y_pre_2  = (int) (buf->clip.y) + 0.5;
 	}
 	if (y_post_1 < buf->clip.y) {
-		y_post_1 = (int) (buf->clip.y + 0.5) + 0.5;
+		y_post_1 = (int) (buf->clip.y) + 0.5;
 	}
 	if (y_post_0 < buf->clip.y) {
-		y_post_0 = (int) (buf->clip.y + 0.5) + 0.5;
+		y_post_0 = (int) (buf->clip.y) + 0.5;
 	}
 	
 	// Draw top half.
