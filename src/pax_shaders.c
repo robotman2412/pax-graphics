@@ -108,10 +108,8 @@ pax_col_t pax_shader_font_bmp_hi_aa(pax_col_t base, pax_col_t existing, int x, i
 	u -= 0.5;
 	v -= 0.5;
 	// Get texture coords, round down instead of round to 0.
-	int glyph_x = (float) (u + 1);
-	int glyph_y = (float) (v + 1);
-	glyph_x --;
-	glyph_y --;
+	int glyph_x = floorf(u);
+	int glyph_y = floorf(v);
 	// Get subpixel coords.
 	float dx = pax_interp_value(u - glyph_x);
 	float dy = pax_interp_value(v - glyph_y);
@@ -219,10 +217,8 @@ pax_col_t pax_shader_font_bmp_aa(pax_col_t base, pax_col_t existing, int x, int 
 	u -= 0.5;
 	v -= 0.5;
 	// Get texture coords, round down instead of round to 0.
-	int glyph_x = (float) (u + 1);
-	int glyph_y = (float) (v + 1);
-	glyph_x --;
-	glyph_y --;
+	int glyph_x = floorf(u);
+	int glyph_y = floorf(v);
 	// Get subpixel coords.
 	float dx = pax_interp_value(u - glyph_x);
 	float dy = pax_interp_value(v - glyph_y);
@@ -317,10 +313,8 @@ pax_col_t pax_shader_texture_aa(pax_col_t tint, pax_col_t existing, int x, int y
 	v -= 0.5;
 	
 	// Get texture coords, round down instead of round to 0.
-	int tex_x = (float) (u + 1);
-	int tex_y = (float) (v + 1);
-	tex_x --;
-	tex_y --;
+	int tex_x = floorf(u);
+	int tex_y = floorf(v);
 	// Get subpixel coords.
 	float dx = pax_interp_value(u - tex_x);
 	float dy = pax_interp_value(v - tex_y);
