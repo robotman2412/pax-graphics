@@ -182,8 +182,6 @@ pax_shader_ctx_t pax_get_shader_ctx(pax_buf_t *buf, pax_col_t color, const pax_s
 	};
 }
 
-bool pax_enable_shape_aa = false;
-
 #define PAX_GFX_C
 
 // Single-core rendering.

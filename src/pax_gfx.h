@@ -60,8 +60,6 @@ void       pax_disable_multicore   ();
 
 /* ============ BUFFER =========== */
 
-extern bool pax_enable_shape_aa;
-
 // Get the bits per pixel for the given buffer type.
 #define PAX_GET_BPP(type)         ((type) & 0xff)
 // Reflects whether the buffer type is greyscale.
