@@ -287,28 +287,25 @@ pax_col_t pax_shader_font_bmp_aa(pax_col_t base, pax_col_t existing, int x, int 
 
 
 
-// Texture shader. No interpolation.
-pax_col_t pax_shader_texture(pax_col_t tint, int x, int y, float u, float v, void *args) {
-	if (!args) {
-		// Make a default texture.
-		return (u < 0.5) ^ (v >= 0.5) ? 0xffff00ff : 0xff1f1f1f;
-	}
-	
+// Texture shader without interpolation.
+pax_col_t pax_shader_texture(pax_col_t tint, pax_col_t existing, int x, int y, float u, float v, void *args) {
 	// Pointer cast to texture thingy.
 	const pax_buf_t *image = (const pax_buf_t *) args;
 	// Simply get a pixel.
-	pax_col_t  color = pax_get_pixel(image, u*image->width, v*image->height);
+	pax_col_t color = pax_get_pixel(image, u*image->width, v*image->height);
 	// And return it.
-	return pax_col_tint(color, tint);
+	if (tint != 0xffffffff) {
+		color = pax_col_tint(color, tint);
+	}
+	if ((color | 0x00ffffff) == 0xffffffff) {
+		return pax_col_merge(existing, color);
+	} else {
+		return color;
+	}
 }
 
-// Texture shader. No interpolation.
-pax_col_t pax_shader_texture_aa(pax_col_t tint, int x, int y, float u, float v, void *args) {
-	if (!args) {
-		// Make a default texture.
-		return (u < 0.5) ^ (v >= 0.5) ? 0xffff00ff : 0xff1f1f1f;
-	}
-	
+// Texture shader with interpolation.
+pax_col_t pax_shader_texture_aa(pax_col_t tint, pax_col_t existing, int x, int y, float u, float v, void *args) {
 	// Pointer cast to texture thingy.
 	const pax_buf_t *image = (const pax_buf_t *) args;
 	
@@ -329,18 +326,41 @@ pax_col_t pax_shader_texture_aa(pax_col_t tint, int x, int y, float u, float v, 
 	float dy = pax_interp_value(v - tex_y);
 	
 	// Get four pixels.
-	pax_col_t  col0 = pax_get_pixel(image, tex_x,   tex_y);
-	pax_col_t  col1 = pax_get_pixel(image, tex_x+1, tex_y);
-	pax_col_t  col2 = pax_get_pixel(image, tex_x+1, tex_y+1);
-	pax_col_t  col3 = pax_get_pixel(image, tex_x,   tex_y+1);
+	pax_col_union_t col0 = { .col = pax_get_pixel(image, tex_x,   tex_y) };
+	pax_col_union_t col1 = { .col = pax_get_pixel(image, tex_x+1, tex_y) };
+	pax_col_union_t col2 = { .col = pax_get_pixel(image, tex_x+1, tex_y+1) };
+	pax_col_union_t col3 = { .col = pax_get_pixel(image, tex_x,   tex_y+1) };
 	
-	// First stage interpolation.
-	pax_col_t col_a = pax_col_lerp(dx*255, col0, col1);
-	pax_col_t col_b = pax_col_lerp(dx*255, col3, col2);
+	// Compute interpolation coefficients.
+	uint_fast32_t coeffx = dx*256;
+	uint_fast32_t coeffy = dy*256;
+	uint_fast32_t coeff0 = (256-coeffx) * (256-coeffy);
+	uint_fast32_t coeff1 = coeffx * (256-coeffy);
+	uint_fast32_t coeff2 = coeffx * coeffy;
+	uint_fast32_t coeff3 = (256-coeffx) * coeffy;
 	
-	// Second stage interpolation.
-	pax_col_t col   = pax_col_lerp(dy*255, col_a, col_b);
+	pax_col_union_t col_out;
+	
+	// Interpolate alpha.
+	bool do_alpha = (col0.a & col1.a & col2.a & col3.a) != 255;
+	if (do_alpha) {
+		col_out.a = (col0.a*coeff0 + col1.a*coeff1 + col2.a*coeff2 + col3.a*coeff3) >> 16;
+	} else {
+		col_out.a = 255;
+	}
+	// Interpolate RGB.
+	col_out.r = (col0.r*coeff0 + col1.r*coeff1 + col2.r*coeff2 + col3.r*coeff3) >> 16;
+	col_out.g = (col0.g*coeff0 + col1.g*coeff1 + col2.g*coeff2 + col3.g*coeff3) >> 16;
+	col_out.b = (col0.b*coeff0 + col1.b*coeff1 + col2.b*coeff2 + col3.b*coeff3) >> 16;
+	pax_col_t color = col_out.col;
 	
 	// And return it.
-	return pax_col_tint(col, tint);
+	if (tint != 0xffffffff) {
+		color = pax_col_tint(color, tint);
+	}
+	if (do_alpha) {
+		return pax_col_merge(existing, color);
+	} else {
+		return color;
+	}
 }

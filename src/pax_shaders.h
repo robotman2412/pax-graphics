@@ -85,14 +85,14 @@ pax_col_t pax_shader_font_bmp_aa(pax_col_t tint, pax_col_t existing, int x, int 
 
 // Create a shader_t of the given texture.
 // Texture format is pax_but_t*.
-#define PAX_SHADER_TEXTURE(texture) (pax_shader_t) { .schema_version = 0, .schema_complement = (uint8_t) ~0, .renderer_id = PAX_RENDERER_ID_SWR, .promise_callback = NULL, .callback = (void *) pax_shader_texture_aa, .callback_args = (void *) (texture), .alpha_promise_0=true, .alpha_promise_255=false }
+#define PAX_SHADER_TEXTURE(texture) (pax_shader_t) { .schema_version = 1, .schema_complement = (uint8_t) ~1, .renderer_id = PAX_RENDERER_ID_SWR, .promise_callback = NULL, .callback = (void *) pax_shader_texture_aa, .callback_args = (void *) (texture), .alpha_promise_0=true, .alpha_promise_255=false }
 // Create a shader_t of the given texture, assumes the texture is opaque.
 // Texture format is pax_but_t*.
-#define PAX_SHADER_TEXTURE_OP(texture) (pax_shader_t) { .schema_version = 0, .schema_complement = (uint8_t) ~0, .renderer_id = PAX_RENDERER_ID_SWR, .promise_callback = NULL, .callback = (void *) pax_shader_texture_aa, .callback_args = (void *) (texture), .alpha_promise_0=true, .alpha_promise_255=true }
-// Texture shader. No interpolation.
-pax_col_t pax_shader_texture(pax_col_t tint, int x, int y, float u, float v, void *args);
+#define PAX_SHADER_TEXTURE_OP(texture) (pax_shader_t) { .schema_version = 1, .schema_complement = (uint8_t) ~1, .renderer_id = PAX_RENDERER_ID_SWR, .promise_callback = NULL, .callback = (void *) pax_shader_texture_aa, .callback_args = (void *) (texture), .alpha_promise_0=true, .alpha_promise_255=true }
+// Texture shader without interpolation.
+pax_col_t pax_shader_texture(pax_col_t tint, pax_col_t existing, int x, int y, float u, float v, void *args);
 // Texture shader with interpolation.
-pax_col_t pax_shader_texture_aa(pax_col_t tint, int x, int y, float u, float v, void *args);
+pax_col_t pax_shader_texture_aa(pax_col_t tint, pax_col_t existing, int x, int y, float u, float v, void *args);
 
 #ifdef __cplusplus
 }

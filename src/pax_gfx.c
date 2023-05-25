@@ -1596,9 +1596,6 @@ void pax_simple_rect(pax_buf_t *buf, pax_col_t color, float x, float y, float wi
 	#if PAX_COMPILE_MCR
 	if (pax_do_multicore) {
 		// Assign worker task.
-		float shape[4] = {
-			x, y, width, height
-		};
 		pax_task_t task = {
 			.buffer     = buf,
 			.type       = PAX_TASK_RECT,

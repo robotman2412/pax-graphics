@@ -224,6 +224,8 @@ struct pax_font_range;
 
 struct pax_task;
 
+union pax_col_union;
+
 typedef struct pax_buf         pax_buf_t;
 typedef struct pax_shader      pax_shader_t;
 typedef struct pax_task        pax_task_t;
@@ -234,6 +236,21 @@ typedef struct pax_font_range  pax_font_range_t;
 
 typedef int32_t                pax_err_t;
 typedef uint32_t               pax_col_t;
+typedef union pax_col_union    pax_col_union_t;
+
+// Union for splitting ARGB.
+union pax_col_union {
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+	struct {
+		uint8_t a, r, g, b;
+	};
+#else
+	struct {
+		uint8_t b, g, r, a;
+	};
+#endif
+	pax_col_t col;
+};
 
 // Helper for color conversion.
 // Used for both buffer type to ARGB and vice versa.
