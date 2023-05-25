@@ -184,7 +184,7 @@ void pax_tri_shaded(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
 		float v_b = v0 + v0_v2_dv * coeff0;
 		// Precalc index stuff.
 		int delta = ((int) y_post_1) * buf->width;
-		for (int y = y_post_1; y <= (int) y_pre_2; y++) {
+		for (int y = y_post_1; y <= y_pre_2; y++) {
 			// Plot the horizontal line.
 			float x_left, x_right;
 			float u_left, u_right;

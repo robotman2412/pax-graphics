@@ -124,7 +124,7 @@ void pax_tri_unshaded(pax_buf_t *buf, pax_col_t color,
 		float x_a = x1 + x1_x2_dx * (y_post_1 - y1);
 		float x_b = x0 + x0_x2_dx * (y_post_1 - y0);
 		int delta = ((int) y_post_1) * buf->width;
-		for (int y = y_post_1; y <= (int) y_pre_2; y++) {
+		for (int y = y_post_1; y <= y_pre_2; y++) {
 			// Plot the horizontal line.
 			float x_left, x_right;
 			if (x_a < x_b) {

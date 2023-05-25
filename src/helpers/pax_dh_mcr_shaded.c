@@ -207,7 +207,7 @@ void paxmcr_tri_shaded(bool odd_scanline, pax_buf_t *buf, pax_col_t color, const
 		}
 		// Precalc index stuff.
 		int delta = y * buf->width;
-		for (; y <= (int) y_pre_2; y += 2) {
+		for (; y <= y_pre_2; y += 2) {
 			// Plot the horizontal line.
 			float x_left, x_right;
 			float u_left, u_right;
