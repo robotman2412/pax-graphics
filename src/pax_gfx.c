@@ -1064,19 +1064,16 @@ void pax_shade_rect(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
 		#if PAX_COMPILE_MCR
 		if (pax_do_multicore) {
 			// Assign worker task.
-			float shape[4] = {
-				x, y, width, height
-			};
-			// Copies are made by paxmcr_add_task.
 			pax_task_t task = {
-				.buffer    = buf,
-				.type      = PAX_TASK_RECT,
-				.color     = color,
-				.shader    = (pax_shader_t *) shader,
-				.quad_uvs  = (pax_quadf *) uvs,
-				.shape     = (float *) shape,
-				.shape_len = 4
+				.buffer     = buf,
+				.type       = PAX_TASK_RECT,
+				.color      = color,
+				.use_shader = shader,
+				.quad_uvs   = *uvs,
+				.shape      = { x, y, width, height },
+				.shape_len  = 4
 			};
+			if (shader) task.shader = *shader;
 			paxmcr_add_task(&task);
 			// Draw our part.
 			paxmcr_rect_shaded(
@@ -1209,19 +1206,16 @@ void pax_shade_tri(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
 	#if PAX_COMPILE_MCR
 	if (pax_do_multicore) {
 		// Assign worker task.
-		float shape[6] = {
-			x0, y0, x1, y1, x2, y2
-		};
-			// Copies are made by paxmcr_add_task.
 		pax_task_t task = {
-			.buffer    = buf,
-			.type      = PAX_TASK_TRI,
-			.color     = color,
-			.shader    = (pax_shader_t *) shader,
-			.tri_uvs   = (pax_trif *) uvs,
-			.shape     = (float *) shape,
-			.shape_len = 6
+			.buffer     = buf,
+			.type       = PAX_TASK_TRI,
+			.color      = color,
+			.use_shader = shader,
+			.tri_uvs    = *uvs,
+			.shape      = { x0, y0, x1, y1, x2, y2 },
+			.shape_len  = 6
 		};
+		if (shader) task.shader = *shader;
 		paxmcr_add_task(&task);
 		// Draw our part.
 		paxmcr_tri_shaded(
@@ -1606,12 +1600,12 @@ void pax_simple_rect(pax_buf_t *buf, pax_col_t color, float x, float y, float wi
 			x, y, width, height
 		};
 		pax_task_t task = {
-			.buffer    = buf,
-			.type      = PAX_TASK_RECT,
-			.color     = color,
-			.shader    = NULL,
-			.shape     = shape,
-			.shape_len = 4
+			.buffer     = buf,
+			.type       = PAX_TASK_RECT,
+			.color      = color,
+			.use_shader = false,
+			.shape      = { x, y, width, height },
+			.shape_len  = 4
 		};
 		paxmcr_add_task(&task);
 		// Draw our part.
@@ -1735,16 +1729,13 @@ void pax_simple_tri(pax_buf_t *buf, pax_col_t color, float x0, float y0, float x
 	#if PAX_COMPILE_MCR
 	if (pax_do_multicore) {
 		// Add worker task.
-		float shape[6] = {
-			x0, y0, x1, y1, x2, y2
-		};
 		pax_task_t task = {
-			.buffer    = buf,
-			.type      = PAX_TASK_TRI,
-			.color     = color,
-			.shader    = NULL,
-			.shape     = shape,
-			.shape_len = 6
+			.buffer     = buf,
+			.type       = PAX_TASK_TRI,
+			.color      = color,
+			.use_shader = false,
+			.shape      = { x0, y0, x1, y1, x2, y2 },
+			.shape_len  = 6
 		};
 		paxmcr_add_task(&task);
 		// Draw our part.

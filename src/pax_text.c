@@ -168,18 +168,15 @@ static void pixel_aligned_render(pax_buf_t *buf, pax_col_t color, const pax_shad
 	#if PAX_COMPILE_MCR
 	if (pax_do_multicore) {
 		// Assign worker task.
-		float shape[4] = {
-			x, y, width, height
-		};
-		// Copies are made by paxmcr_add_task.
 		pax_task_t task = {
-			.buffer    = buf,
-			.type      = PAX_TASK_RECT,
-			.color     = color,
-			.shader    = (pax_shader_t *) shader,
-			.quad_uvs  = (pax_quadf *) uvs,
-			.shape     = (float *) shape,
-			.shape_len = 4
+			.buffer     = buf,
+			.type       = PAX_TASK_RECT,
+			.color      = color,
+			.shader     = *shader,
+			.use_shader = true,
+			.quad_uvs   = *uvs,
+			.shape      = { x, y, width, height },
+			.shape_len  = 4
 		};
 		paxmcr_add_task(&task);
 		// Draw our part.

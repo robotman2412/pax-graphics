@@ -43,58 +43,13 @@
 
 // The scheduler for multicore rendering.
 void paxmcr_add_task(pax_task_t *task) {
-	// Create a copy.
-	pax_task_t copy    = *task;
-	
-	// Of the shape,
-	if (copy.shape) {
-		copy.shape     = malloc(copy.shape_len * sizeof(float));
-		if (!copy.shape) goto abort;
-		memcpy(copy.shape, task->shape, copy.shape_len * sizeof(float));
-	}
-	
-	// The shader,
-	if (copy.shader) {
-		copy.shader    = malloc(sizeof(pax_shader_t));
-		if (!copy.shader) {
-			if (copy.shape) free(copy.shape);
-			goto abort;
-		}
-		*copy.shader   = *task->shader;
-	}
-	
-	// And the UVs.
-	if (copy.type == PAX_TASK_TRI && copy.tri_uvs) {
-		copy.tri_uvs   = malloc(sizeof(pax_trif));
-		if (!copy.tri_uvs) {
-			if (copy.shape) free(copy.shape);
-			if (copy.shader) free(copy.shape);
-			goto abort;
-		}
-		*copy.tri_uvs  = *task->tri_uvs;
-	} else if (copy.type == PAX_TASK_RECT && copy.quad_uvs) {
-		copy.quad_uvs  = malloc(sizeof(pax_quadf));
-		if (!copy.quad_uvs) {
-			if (copy.shape) free(copy.shape);
-			if (copy.shader) free(copy.shape);
-			goto abort;
-		}
-		*copy.quad_uvs = *task->quad_uvs;
-	}
-	
 	// Snedt it.
-	esp_err_t res = xQueueSend(queue_handle, &copy, pdMS_TO_TICKS(100));
+	esp_err_t res = xQueueSend(queue_handle, task, pdMS_TO_TICKS(10));
 	if (res != pdTRUE) {
-		PAX_LOGE(TAG, "No space in queue after 100ms!");
+		PAX_LOGE(TAG, "No space in queue after 10ms!");
 		PAX_LOGW(TAG, "Reverting to disabling MCR.");
 		pax_disable_multicore();
 	}
-	return;
-	
-	abort:
-	PAX_LOGE(TAG, "Out of memory for MCR operation!");
-	PAX_LOGW(TAG, "Reverting to disabling MCR.");
-	pax_disable_multicore();
 }
 
 // The actual task for multicore rendering.
@@ -120,28 +75,28 @@ static void pax_multicore_task_function(void *args) {
 		}
 		
 		// Now, we actually DRAW.will end itself
-		if (tsk.shader) {
+		if (tsk.use_shader) {
 			if (tsk.type == PAX_TASK_RECT) {
 				paxmcr_rect_shaded(
 					true, tsk.buffer,
-					tsk.color, tsk.shader,
+					tsk.color, &tsk.shader,
 					tsk.shape[0], tsk.shape[1],
 					tsk.shape[2], tsk.shape[3],
-					tsk.quad_uvs->x0, tsk.quad_uvs->y0,
-					tsk.quad_uvs->x1, tsk.quad_uvs->y1,
-					tsk.quad_uvs->x2, tsk.quad_uvs->y2,
-					tsk.quad_uvs->x3, tsk.quad_uvs->y3
+					tsk.quad_uvs.x0, tsk.quad_uvs.y0,
+					tsk.quad_uvs.x1, tsk.quad_uvs.y1,
+					tsk.quad_uvs.x2, tsk.quad_uvs.y2,
+					tsk.quad_uvs.x3, tsk.quad_uvs.y3
 				);
 			} else if (tsk.type == PAX_TASK_TRI) {
 				paxmcr_tri_shaded(
 					true, tsk.buffer,
-					tsk.color, tsk.shader,
+					tsk.color, &tsk.shader,
 					tsk.shape[0], tsk.shape[1],
 					tsk.shape[2], tsk.shape[3],
 					tsk.shape[4], tsk.shape[5],
-					tsk.tri_uvs->x0, tsk.tri_uvs->y0,
-					tsk.tri_uvs->x1, tsk.tri_uvs->y1,
-					tsk.tri_uvs->x2, tsk.tri_uvs->y2
+					tsk.tri_uvs.x0, tsk.tri_uvs.y0,
+					tsk.tri_uvs.x1, tsk.tri_uvs.y1,
+					tsk.tri_uvs.x2, tsk.tri_uvs.y2
 				);
 			}
 		} else {
@@ -162,14 +117,6 @@ static void pax_multicore_task_function(void *args) {
 				);
 			}
 		}
-		
-		// Free up our memories.
-		if (tsk.shape)
-			free(tsk.shape);
-		if (tsk.shader)
-			free(tsk.shader);
-		if (tsk.tri_uvs)
-			free(tsk.tri_uvs);
 	}
 	
 	// Cleaning.
@@ -234,10 +181,7 @@ void pax_disable_multicore() {
 	// Notify that multicore is disabled.
 	pax_do_multicore = false;
 	pax_task_t stopper = {
-		.type    = PAX_TASK_STOP,
-		.shader  = NULL,
-		.shape   = NULL,
-		.tri_uvs = NULL,
+		.type    = PAX_TASK_STOP
 	};
 	paxmcr_add_task(&stopper);
 	

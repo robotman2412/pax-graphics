@@ -432,17 +432,19 @@ struct pax_task {
 	// Color to use.
 	pax_col_t       color;
 	// Shader to use.
-	pax_shader_t   *shader;
+	pax_shader_t    shader;
+	// Whether to use a shader.
+	bool            use_shader;
 	// UVs to use.
 	union {
 		// UVs to use for rects and arcs.
-		pax_quadf *quad_uvs;
+		pax_quadf  quad_uvs;
 		// UVs to use for triangle.
-		pax_trif  *tri_uvs;
+		pax_trif   tri_uvs;
 	};
 	// Additional parameters.
 	// This is an array of floats for X, Y, and dimensions of shapes.
-	float          *shape;
+	float           shape[8];
 	// Number of floats in the shape array.
 	size_t          shape_len;
 };
