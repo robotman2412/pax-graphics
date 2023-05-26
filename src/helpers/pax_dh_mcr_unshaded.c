@@ -165,24 +165,6 @@ void paxmcr_tri_unshaded(bool odd_scanline, pax_buf_t *buf, pax_col_t color,
 
 // Multi-core method for rectangle drawing.
 // If odd_scanline is true, the odd (counted from 0) lines are drawn, otherwise the even lines are drawn.
-void paxmcr_rect_unshaded(bool odd_scanline, pax_buf_t *buf, pax_col_t color,
-		float x, float y, float width, float height) {
-	
-	pax_index_setter_t setter = pax_get_setter(buf, &color, NULL);
-	if (!setter) return;
-	
-	// Snap c_y to the correct line.
-	int c_y = y + 0.5;
-	if ((c_y & 1) != odd_scanline) {
-		c_y ++;
-	}
-	
-	// Pixel time.
-	int delta = c_y * buf->width;
-	for (; c_y <= y + height - 0.5; c_y += 2) {
-		for (int c_x = x + 0.5; c_x <= x + width - 0.5; c_x ++) {
-			setter(buf, color, c_x+delta);
-		}
-		delta += 2*buf->width;
-	}
-}
+#define PDHG_NAME paxmcr_rect_unshaded
+#define PDHG_MCR
+#include "pax_dh_generic_rect.h"

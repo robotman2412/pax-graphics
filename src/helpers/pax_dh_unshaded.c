@@ -148,27 +148,9 @@ void pax_tri_unshaded(pax_buf_t *buf, pax_col_t color,
 	}
 }
 
+// Internal method for rectangle drawing.
 #define PDHG_NAME pax_rect_unshaded
 #include "pax_dh_generic_rect.h"
-/*
-// Internal method for rectangle drawing.
-void pax_rect_unshaded(pax_buf_t *buf, pax_col_t color,
-		float x, float y, float width, float height) {
-	
-	// pax_setter_t setter = color >= 0xff000000 ? pax_set_pixel : pax_merge_pixel;
-	pax_index_setter_t setter = pax_get_setter(buf, &color, NULL);
-	if (!setter) return;
-	
-	// Pixel time.
-	int delta = (int) (y + 0.5) * buf->width;
-	for (int c_y = y + 0.5; c_y <= y + height - 0.5; c_y ++) {
-		for (int c_x = x + 0.5; c_x <= x + width - 0.5; c_x ++) {
-			setter(buf, color, c_x+delta);
-		}
-		delta += buf->width;
-	}
-}
-*/
 
 // Internal method for line drawing.
 void pax_line_unshaded(pax_buf_t *buf, pax_col_t color, float x0, float y0, float x1, float y1) {

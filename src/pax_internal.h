@@ -359,11 +359,6 @@ void paxmcr_tri_shaded(bool odd_scanline, pax_buf_t *buf, pax_col_t color, const
 // If odd_scanline is true, the odd (counted from 0) lines are drawn, otherwise the even lines are drawn.
 void paxmcr_overlay_buffer(bool odd_scanline, pax_buf_t *base, pax_buf_t *top, int x, int y, int width, int height, bool assume_opaque);
 
-// Multi-core optimisation which makes more assumptions about UVs.
-// If odd_scanline is true, the odd (counted from 0) lines are drawn, otherwise the even lines are drawn.
-void paxmcr_rect_shaded1(bool odd_scanline, pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
-		float x, float y, float width, float height, float u0, float v0, float u1, float v1);
-
 //  Multi-core  method for shaded rects.
 // If odd_scanline is true, the odd (counted from 0) lines are drawn, otherwise the even lines are drawn.
 void paxmcr_rect_shaded(bool odd_scanline, pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
@@ -394,10 +389,6 @@ void pax_tri_shaded(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
 // Optimisation which maps a buffer directly onto another.
 // If assume_opaque is true, the overlay is done without transparency.
 void pax_overlay_buffer(pax_buf_t *base, pax_buf_t *top, int x, int y, int width, int height, bool assume_opaque);
-
-// Optimisation which makes more assumptions about UVs.
-void pax_rect_shaded1(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
-		float x, float y, float width, float height, float u0, float v0, float u1, float v1);
 
 // Internal method for shaded rects.
 void pax_rect_shaded(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,

@@ -356,100 +356,31 @@ void paxmcr_overlay_buffer(bool odd_scanline, pax_buf_t *base, pax_buf_t *top, i
 	}
 }
 
+// Multi-core optimisation which does not have UVs.
+// If odd_scanline is true, the odd (counted from 0) lines are drawn, otherwise the even lines are drawn.
+#define PDHG_NAME paxmcr_rect_shaded2
+#define PDHG_SHADED
+#define PDHG_IGNORE_UV
+#define PDHG_MCR
+#define PDHG_STATIC
+#include "pax_dh_generic_rect.h"
+
 // Multi-core optimisation which makes more assumptions about UVs.
 // If odd_scanline is true, the odd (counted from 0) lines are drawn, otherwise the even lines are drawn.
-void paxmcr_rect_shaded1(bool odd_scanline, pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
-		float x, float y, float width, float height, float u0, float v0, float u1, float v1) {
-	
-	pax_shader_ctx_t shader_ctx = pax_get_shader_ctx(buf, color, shader);
-	if (shader_ctx.skip) return;
-	pax_col_conv_t buf2col = PAX_IS_PALETTE(buf->type) ? pax_col_conv_dummy : buf->buf2col;
-	
-	// Fix width and height.
-	if (width < 0) {
-		x += width;
-		width = -width;
-		PAX_SWAP(float, u0, u1);
-	}
-	if (height < 0) {
-		y += height;
-		height = -height;
-		PAX_SWAP(float, v0, v1);
-	}
-	
-	// Clip rect in inside of buffer.
-	if (x < buf->clip.x) {
-		float part = (buf->clip.x - x) / width;
-		u0 = u0 + (u1 - u0) * part;
-		
-		width -= buf->clip.x - x;
-		x = buf->clip.x;
-	}
-	if (x + width > buf->clip.x + buf->clip.w) {
-		float part = (buf->clip.x + buf->clip.w - x) / width;
-		u1 = u0 + (u1 - u0) * part;
-		
-		width = buf->clip.x + buf->clip.w - x;
-	}
-	if (y < buf->clip.y) {
-		float part = (buf->clip.y - y) / height;
-		v0 = v0 + (v1 - v0) * part;
-		
-		height -= buf->clip.y - y;
-		y = buf->clip.y;
-	}
-	if (y + height > buf->clip.y + buf->clip.h) {
-		float part = (buf->clip.y + buf->clip.h - y) / height;
-		v1 = v0 + (v1 - v0) * part;
-		
-		height = buf->clip.y + buf->clip.h - y;
-	}
-	
-	// Adjust UVs to match pixel co-ordinates.
-	float min_x = (int) (x + 0.5)          + 0.5;
-	float max_x = (int) (x + width - 0.5)  + 0.5;
-	float min_y = (int) (y + 0.5)          + 0.5;
-	float max_y = (int) (y + height - 0.5) + 0.5;
-	{ // Adjust the X part.
-		float new_u0 = u0 + (u1 - u0) / width * (min_x - x);
-		float new_u1 = u0 + (u1 - u0) / width * (max_x - x);
-		u0 = new_u0;
-		u1 = new_u1;
-	}
-	{ // Adjust the Y part.
-		float new_v0 = v0 + (v1 - v0) / height * (min_y - y);
-		float new_v1 = v0 + (v1 - v0) / height * (max_y - y);
-		v0 = new_v0;
-		v1 = new_v1;
-	}
-	
-	// Find UV deltas.
-	float u0_u1_du = (u1 - u0) / (max_x - min_x);
-	float v0_v1_dv = (v1 - v0) / (max_y - min_y);
-	
-	float v = v0;
-	
-	// Snap c_y to the correct line.
-	int c_y = y + 0.5;
-	if ((c_y & 1) != odd_scanline) {
-		c_y ++;
-		v += v0_v1_dv;
-	}
-	
-	// Pixel time.
-	int delta = c_y * buf->width;
-	for (; c_y <= y + height - 0.5; c_y += 2) {
-		float u = u0;
-		for (int c_x = x + 0.5; c_x <= x + width - 0.5; c_x ++) {
-			pax_col_t result = (shader_ctx.callback)(color, shader_ctx.do_getter ? buf2col(buf, buf->getter(buf, c_x+delta)) : 0, c_x, c_y, u, v, shader_ctx.callback_args);
-			pax_set_index_conv(buf, result, c_x+delta);
-			u += u0_u1_du;
-		}
-		v     += 2*v0_v1_dv;
-		delta += 2*buf->width;
-	}
-	
-}
+#define PDHG_NAME paxmcr_rect_shaded1
+#define PDHG_SHADED
+#define PDHG_RESTRICT_UV
+#define PDHG_MCR
+#define PDHG_STATIC
+#include "pax_dh_generic_rect.h"
+
+// Multi-core method for shaded rects.
+// If odd_scanline is true, the odd (counted from 0) lines are drawn, otherwise the even lines are drawn.
+#define PDHG_NAME paxmcr_rect_shaded0
+#define PDHG_SHADED
+#define PDHG_MCR
+#define PDHG_STATIC
+#include "pax_dh_generic_rect.h"
 
 // Multi-core method for shaded rects.
 // If odd_scanline is true, the odd (counted from 0) lines are drawn, otherwise the even lines are drawn.
@@ -457,161 +388,30 @@ void paxmcr_rect_shaded(bool odd_scanline, pax_buf_t *buf, pax_col_t color, cons
 		float x, float y, float width, float height,
 		float u0, float v0, float u1, float v1, float u2, float v2, float u3, float v3) {
 	
+	pax_promise_func_t fn = shader->promise_callback;
+	uint32_t promise = fn ? fn(buf, color, shader->callback_args) : 0;
+	
+	if (promise & PAX_PROMISE_IGNORE_UVS) {
+		// Ignore UVs.
+		paxmcr_rect_shaded2(odd_scanline, buf, color, shader, x, y, width, height);
+		return;
+	}
+	
 	bool is_default_uv = u0 == 0 && v0 == 0 && u1 == 1 && v1 == 0 && u2 == 1 && v2 == 1 && u3 == 0 && v3 == 1;
-	// Try to perform a mapping optimisation.
+	
 	if ((shader->callback == pax_shader_texture || shader->callback == pax_shader_texture_aa) && color == 0xffffffff) {
+		// Use a more direct copying of textures.
 		pax_buf_t *top = (pax_buf_t *) shader->callback_args;
 		if (is_default_uv && (int) (width + 0.5) == top->width && (int) (height + 0.5) == top->height) {
 			paxmcr_overlay_buffer(odd_scanline, buf, top, x + 0.5, y + 0.5, width + 0.5, height + 0.5, shader->alpha_promise_255);
 			return;
 		}
 	} else if (is_default_uv || (v0 == v1 && v2 == v3 && u0 == u3 && u1 == u2)) {
+		// Make some assumptions about UVs.
 		paxmcr_rect_shaded1(odd_scanline, buf, color, shader, x, y, width, height, u0, v0, u2, v2);
 		return;
 	}
 	
-	pax_shader_ctx_t shader_ctx = pax_get_shader_ctx(buf, color, shader);
-	if (shader_ctx.skip) return;
-	pax_col_conv_t buf2col = PAX_IS_PALETTE(buf->type) ? pax_col_conv_dummy : buf->buf2col;
-	
-	// Fix width and height.
-	if (width < 0) {
-		x += width;
-		width = -width;
-		PAX_SWAP_POINTS(u0, v0, u1, v1);
-		PAX_SWAP_POINTS(u2, v2, u3, v3);
-	}
-	if (height < 0) {
-		y += height;
-		height = -height;
-		PAX_SWAP_POINTS(u0, v0, u3, v3);
-		PAX_SWAP_POINTS(u1, v1, u2, v2);
-	}
-	
-	// Clip rect in inside of buffer.
-	if (x < buf->clip.x) {
-		float part = (buf->clip.x - x) / width;
-		u0 = u0 + (u1 - u0) * part;
-		v0 = v0 + (v1 - v0) * part;
-		u3 = u3 + (u2 - u3) * part;
-		v3 = v3 + (v2 - v3) * part;
-		
-		width -= buf->clip.x - x;
-		x = buf->clip.x;
-	}
-	if (x + width > buf->clip.x + buf->clip.w) {
-		float part = (buf->clip.x + buf->clip.w - x) / width;
-		u1 = u0 + (u1 - u0) * part;
-		v1 = v0 + (v1 - v0) * part;
-		u2 = u3 + (u2 - u3) * part;
-		v2 = v3 + (v2 - v3) * part;
-		
-		width = buf->clip.x + buf->clip.w - x;
-	}
-	if (y < buf->clip.y) {
-		float part = (buf->clip.y - y) / height;
-		u0 = u0 + (u3 - u0) * part;
-		v0 = v0 + (v3 - v0) * part;
-		u1 = u1 + (u2 - u1) * part;
-		v1 = v1 + (v2 - v1) * part;
-		
-		height -= buf->clip.y - y;
-		y = buf->clip.y;
-	}
-	if (y + height > buf->clip.y + buf->clip.h) {
-		float part = (buf->clip.y + buf->clip.h - y) / height;
-		u3 = u0 + (u3 - u0) * part;
-		v3 = v0 + (v3 - v0) * part;
-		u2 = u1 + (u2 - u1) * part;
-		v2 = v1 + (v2 - v1) * part;
-		
-		height = buf->clip.y + buf->clip.h - y;
-	}
-	
-	// Adjust UVs to match pixel co-ordinates.
-	float min_x = (int) (x + 0.5)          + 0.5;
-	float max_x = (int) (x + width - 0.5)  + 0.5;
-	float min_y = (int) (y + 0.5)          + 0.5;
-	float max_y = (int) (y + height - 0.5) + 0.5;
-	// Adjust X part.
-	{ // Adjust UV0 and UV1.
-		float new_u0 = u0 + (u1 - u0) / width * (min_x - x);
-		float new_u1 = u0 + (u1 - u0) / width * (max_x - x);
-		float new_v0 = v0 + (v1 - v0) / width * (min_x - x);
-		float new_v1 = v0 + (v1 - v0) / width * (max_x - x);
-		u0 = new_u0;
-		u1 = new_u1;
-		v0 = new_v0;
-		v1 = new_v1;
-	}
-	{ // Adjust UV3 and UV2.
-		float new_u3 = u3 + (u2 - u3) / width * (min_x - x);
-		float new_u2 = u3 + (u2 - u3) / width * (max_x - x);
-		float new_v3 = v3 + (v2 - v3) / width * (min_x - x);
-		float new_v2 = v3 + (v2 - v3) / width * (max_x - x);
-		u3 = new_u3;
-		u2 = new_u2;
-		v3 = new_v3;
-		v2 = new_v2;
-	}
-	// Adjust Y part.
-	{ // Adjust UV1 and UV2.
-		float new_u1 = u1 + (u2 - u1) / height * (min_y - y);
-		float new_u2 = u1 + (u2 - u1) / height * (max_y - y);
-		float new_v1 = v1 + (v2 - v1) / height * (min_y - y);
-		float new_v2 = v1 + (v2 - v1) / height * (max_y - y);
-		u1 = new_u1;
-		u2 = new_u2;
-		v1 = new_v1;
-		v2 = new_v2;
-	}
-	{ // Adjust UV0 and UV3.
-		float new_u0 = u0 + (u3 - u0) / height * (min_y - y);
-		float new_u3 = u0 + (u3 - u0) / height * (max_y - y);
-		float new_v0 = v0 + (v3 - v0) / height * (min_y - y);
-		float new_v3 = v0 + (v3 - v0) / height * (max_y - y);
-		u0 = new_u0;
-		u3 = new_u3;
-		v0 = new_v0;
-		v3 = new_v3;
-	}
-	
-	// Find UV deltas.
-	float u0_u3_du = (u3 - u0) / (max_y - min_y);
-	float v0_v3_dv = (v3 - v0) / (max_y - min_y);
-	float u1_u2_du = (u2 - u1) / (max_y - min_y);
-	float v1_v2_dv = (v2 - v1) / (max_y - min_y);
-	
-	float u_a = u0, v_a = v0;
-	float u_b = u1, v_b = v1;
-	
-	// Snap c_y to the correct line.
-	int c_y = y + 0.5;
-	if ((c_y & 1) != odd_scanline) {
-		c_y ++;
-		u_a += u0_u3_du;
-		v_a += v0_v3_dv;
-		u_b += u1_u2_du;
-		v_b += v1_v2_dv;
-	}
-	
-	// Pixel time.
-	int delta = c_y * buf->width;
-	for (; c_y <= y + height - 0.5; c_y += 2) {
-		float ua_ub_du = (u_b - u_a) / (max_x - min_x);
-		float va_vb_dv = (v_b - v_a) / (max_x - min_x);
-		float u = u_a, v = v_a;
-		for (int c_x = x + 0.5; c_x <= x + width - 0.5; c_x ++) {
-			pax_col_t result = (shader_ctx.callback)(color, shader_ctx.do_getter ? buf2col(buf, buf->getter(buf, c_x+delta)) : 0, c_x, c_y, u, v, shader_ctx.callback_args);
-			pax_set_index_conv(buf, result, c_x+delta);
-			u += ua_ub_du;
-			v += va_vb_dv;
-		}
-		u_a   += 2*u0_u3_du;
-		v_a   += 2*v0_v3_dv;
-		u_b   += 2*u1_u2_du;
-		v_b   += 2*v1_v2_dv;
-		delta += 2*buf->width;
-	}
-	
+	// Use the more expensive generic implementation.
+	paxmcr_rect_shaded0(odd_scanline, buf, color, shader, x, y, width, height, u0, v0, u1, v1, u2, v2, u3, v3);
 }
