@@ -31,22 +31,20 @@ static const char *TAG = "pax_gfx";
 #include <string.h>
 #include <math.h>
 
-#include <helpers/precalculated.c>
-
 #ifdef PAX_ESP_IDF
 #include <esp_timer.h>
 #endif
 
 // The last error reported.
-pax_err_t              pax_last_error    = PAX_OK;
+pax_err_t       pax_last_error    = PAX_OK;
 // Whether multi-core rendering is enabled.
 // You should not modify this variable.
-bool                   pax_do_multicore  = false;
+bool            pax_do_multicore  = false;
 
 #if PAX_COMPILE_MCR
 
 // Whether or not the multicore task is currently busy.
-static bool            multicore_busy    = false;
+bool            multicore_busy    = false;
 
 #ifdef PAX_ESP_IDF
 
@@ -55,11 +53,11 @@ static bool            multicore_busy    = false;
 #include <freertos/queue.h>
 
 // The task handle for the main core.
-static TaskHandle_t    main_handle       = NULL;
+TaskHandle_t    main_handle       = NULL;
 // The task handle for the other core.
-static TaskHandle_t    multicore_handle  = NULL;
+TaskHandle_t    multicore_handle  = NULL;
 // The render queue for the other core.
-static QueueHandle_t   queue_handle      = NULL;
+QueueHandle_t   queue_handle      = NULL;
 
 #elif defined(PAX_STANDALONE)
 
@@ -68,11 +66,11 @@ static QueueHandle_t   queue_handle      = NULL;
 #include <ptq.h>
 
 // The thread for multicore helper stuff.
-static pthread_t       multicore_handle;
+pthread_t       multicore_handle;
 // The mutex used to determine IDLE.
-static pthread_mutex_t multicore_mutex   = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t multicore_mutex   = PTHREAD_MUTEX_INITIALIZER;
 // The render queue for the multicore helper.
-static ptq_queue_t     queue_handle      = NULL;
+ptq_queue_t     queue_handle      = NULL;
 
 #endif
 #endif
@@ -181,41 +179,6 @@ pax_shader_ctx_t pax_get_shader_ctx(pax_buf_t *buf, pax_col_t color, const pax_s
 		.skip          = false,
 	};
 }
-
-#define PAX_GFX_C
-
-// Single-core rendering.
-#include "helpers/pax_dh_unshaded.c"
-#include "helpers/pax_dh_shaded.c"
-
-// Multi-core rendering.
-#if PAX_COMPILE_MCR
-#include "helpers/pax_dh_mcr_unshaded.c"
-#include "helpers/pax_dh_mcr_shaded.c"
-
-#ifdef PAX_ESP_IDF
-
-// ESP32 FreeRTOS multicore implementation
-#include "helpers/pax_mcr_esp32.c"
-
-#elif defined(PAX_STANDALONE)
-
-// Pthread multicore implementation.
-#include "helpers/pax_mcr_pthread.c"
-
-#else
-
-// No valid multicore implementation.
-#error "No valid threading implementation (neither ESP32 nor standalone target)"
-
-#endif
-
-#else
-
-// Included because of API dependencies.
-#include "helpers/pax_mcr_dummy.c"
-
-#endif //PAX_COMPILE_MCR
 
 // Dummy UVs used for quad UVs where NULL is provided.
 static const pax_quadf dummy_quad_uvs = {

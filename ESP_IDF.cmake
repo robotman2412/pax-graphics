@@ -14,6 +14,15 @@ idf_component_register(
 	"src/pax_setters.c"
 	"src/pax_orientation.c"
 	
+	"src/helpers/pax_dh_mcr_shaded.c"
+	"src/helpers/pax_dh_mcr_unshaded.c"
+	"src/helpers/pax_dh_shaded.c"
+	"src/helpers/pax_dh_unshaded.c"
+	"src/helpers/pax_mcr_dummy.c"
+	"src/helpers/pax_mcr_esp32.c"
+	"src/helpers/pax_mcr_pthread.c"
+	"src/helpers/pax_precalculated.c"
+	
 	"src/fonts/font_bitmap_7x9.c"
 	"src/fonts/font_bitmap_sky.c"
 	"src/fonts/font_bitmap_permanentmarker.c"

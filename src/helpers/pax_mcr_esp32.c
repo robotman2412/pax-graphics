@@ -22,14 +22,9 @@
 	SOFTWARE.
 */
 
-#ifndef PAX_GFX_C
-#ifndef ARDUINO
-#pragma message "This file should not be compiled on it's own."
-#endif
-#else
-
 #include "pax_internal.h"
 
+#ifdef PAX_ESP_IDF
 
 /* ===== MULTI-CORE RENDERING ==== */
 
@@ -37,9 +32,22 @@
 #include <freertos/task.h>
 #include <freertos/queue.h>
 
+#include <esp_log.h>
 #include <esp_timer.h>
 #include <esp_pm.h>
 
+
+// Whether or not the multicore task is currently busy.
+extern bool            multicore_busy;
+// The task handle for the main core.
+extern TaskHandle_t    main_handle;
+// The task handle for the other core.
+extern TaskHandle_t    multicore_handle;
+// The render queue for the other core.
+extern QueueHandle_t   queue_handle;
+
+
+static const char *TAG = "pax-mcr";
 
 // The scheduler for multicore rendering.
 void paxmcr_add_task(pax_task_t *task) {

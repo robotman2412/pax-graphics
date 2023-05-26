@@ -26,6 +26,8 @@
 #define PAX_INTERNAL_H
 
 #include "pax_gfx.h"
+#include "helpers/pax_precalculated.h"
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -401,6 +403,9 @@ void pax_rect_shaded1(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shade
 void pax_rect_shaded(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
 		float x, float y, float width, float height,
 		float u0, float v0, float u1, float v1, float u2, float v2, float u3, float v3);
+
+// Internal method for line drawing.
+void pax_line_shaded(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader, float u0, float v0, float u1, float v1, float x0, float y0, float x1, float y1);
 
 
 

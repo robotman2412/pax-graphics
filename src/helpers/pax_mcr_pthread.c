@@ -22,15 +22,9 @@
 	SOFTWARE.
 */
 
-#define PAX_GFX_C
-#ifndef PAX_GFX_C
-#ifndef ARDUINO
-#pragma message "This file should not be compiled on it's own."
-#endif
-#else
-
 #include "pax_internal.h"
 
+#ifdef PAX_STANDALONE
 
 /* ===== MULTI-CORE RENDERING ==== */
 
@@ -40,6 +34,14 @@
 #include <unistd.h>
 #include <sys/time.h>
 
+// Whether or not the multicore task is currently busy.
+extern bool            multicore_busy;
+// The thread for multicore helper stuff.
+extern pthread_t       multicore_handle;
+// The mutex used to determine IDLE.
+extern pthread_mutex_t multicore_mutex;
+// The render queue for the multicore helper.
+extern ptq_queue_t     queue_handle;
 
 // The scheduler for multicore rendering.
 void paxmcr_add_task(pax_task_t *task) {

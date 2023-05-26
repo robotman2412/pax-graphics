@@ -22,13 +22,8 @@
 	SOFTWARE.
 */
 
-#ifndef PAX_GFX_C
-#ifndef ARDUINO
-#pragma message "This file should not be compiled on it's own."
-#endif
-#else
-
 #include "pax_internal.h"
+#include <string.h>
 
 /* ======== SHADED DRAWING ======= */
 
@@ -705,5 +700,3 @@ void pax_line_shaded(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader
 		}
 	}
 }
-
-#endif

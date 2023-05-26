@@ -22,14 +22,9 @@
 	SOFTWARE.
 */
 
-#ifndef PAX_GFX_C
-#ifndef ARDUINO
-#pragma message "This file should not be compiled on it's own."
-#endif
-#else
+#include "../pax_internal.h"
 
-#include "pax_internal.h"
-
+#if !defined(PAX_COMPILE_MCR) || (!defined(PAX_ESP_IDF) && !defined(PAX_STANDALONE))
 
 /* ===== MULTI-CORE RENDERING ==== */
 

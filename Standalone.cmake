@@ -19,6 +19,15 @@ set(PAX_SRCS
 	${CMAKE_CURRENT_LIST_DIR}/src/pax_text.c
 	${CMAKE_CURRENT_LIST_DIR}/src/pax_setters.c
 	${CMAKE_CURRENT_LIST_DIR}/src/pax_orientation.c
+	
+	${CMAKE_CURRENT_LIST_DIR}/src/helpers/pax_dh_mcr_shaded.c
+	${CMAKE_CURRENT_LIST_DIR}/src/helpers/pax_dh_mcr_unshaded.c
+	${CMAKE_CURRENT_LIST_DIR}/src/helpers/pax_dh_shaded.c
+	${CMAKE_CURRENT_LIST_DIR}/src/helpers/pax_dh_unshaded.c
+	${CMAKE_CURRENT_LIST_DIR}/src/helpers/pax_mcr_dummy.c
+	${CMAKE_CURRENT_LIST_DIR}/src/helpers/pax_mcr_esp32.c
+	${CMAKE_CURRENT_LIST_DIR}/src/helpers/pax_mcr_pthread.c
+	${CMAKE_CURRENT_LIST_DIR}/src/helpers/pax_precalculated.c
 
 	${CMAKE_CURRENT_LIST_DIR}/src/fonts/font_bitmap_7x9.c
 	${CMAKE_CURRENT_LIST_DIR}/src/fonts/font_bitmap_sky.c
