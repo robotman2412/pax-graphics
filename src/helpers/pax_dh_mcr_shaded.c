@@ -293,8 +293,6 @@ void paxmcr_overlay_buffer(bool odd_scanline, pax_buf_t *base, pax_buf_t *top, i
 		height = base->clip.y + base->clip.h - y;
 	}
 	
-	PAX_LOGD(TAG, "paxmcr_overlay_buffer");
-	
 	bool equal = top->type == base->type;
 	if (equal && x == 0 && y == 0 && width == base->width && height == base->height && base->reverse_endianness == top->reverse_endianness) {
 		// When copying one buffer onto another as a background,
