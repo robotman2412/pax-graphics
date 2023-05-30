@@ -28,11 +28,11 @@
 
 // Internal method for unshaded triangles.
 #define PDHG_NAME pax_tri_unshaded
-#include "pax_dh_generic_tri.h"
+#include "pax_dh_generic_tri.hpp"
 
 // Internal method for rectangle drawing.
 #define PDHG_NAME pax_rect_unshaded
-#include "pax_dh_generic_rect.h"
+#include "pax_dh_generic_rect.hpp"
 
 // Internal method for line drawing.
 void pax_line_unshaded(pax_buf_t *buf, pax_col_t color, float x0, float y0, float x1, float y1) {

@@ -23,6 +23,7 @@
 */
 
 #include "pax_internal.h"
+#include "pax_fixpt.hpp"
 
 #ifdef PDHG_NAME
 
@@ -60,14 +61,36 @@ void PDHG_NAME(
 #ifdef PDHG_SHADED
 		const pax_shader_t *shader,
 #endif
-		float x, float y, float width, float height
+		float _x, float _y, float _width, float _height
 #ifdef PDHG_NORMAL_UV
-		, float u0, float v0, float u1, float v1, float u2, float v2, float u3, float v3
+		, float _u0, float _v0, float _u1, float _v1, float _u2, float _v2, float _u3, float _v3
 #endif
 #ifdef PDHG_RESTRICT_UV
-		, float u0, float v0, float u1, float v1
+		, float _u0, float _v0, float _u1, float _v1
 #endif
 		) {
+	
+	// Float to fixed point.
+	fixpt_t x = _x;
+	fixpt_t y = _y;
+	fixpt_t width = _width;
+	fixpt_t height = _height;
+#ifdef PDHG_NORMAL_UV
+	fixpt_t u0 = _u0;
+	fixpt_t v0 = _v0;
+	fixpt_t u1 = _u1;
+	fixpt_t v1 = _v1;
+	fixpt_t u2 = _u2;
+	fixpt_t v2 = _v2;
+	fixpt_t u3 = _u3;
+	fixpt_t v3 = _v3;
+#endif
+#ifdef PDHG_RESTRICT_UV
+	fixpt_t u0 = _u0;
+	fixpt_t v0 = _v0;
+	fixpt_t u1 = _u1;
+	fixpt_t v1 = _v1;
+#endif
 	
 	#ifdef PDHG_SHADED
 	// Get shader context.
@@ -90,7 +113,7 @@ void PDHG_NAME(
 		PAX_SWAP_POINTS(u2, v2, u3, v3);
 		#endif
 		#ifdef PDHG_RESTRICT_UV
-		PAX_SWAP(float, u0, u1)
+		PAX_SWAP(fixpt_t, u0, u1)
 		#endif
 	}
 	if (height < 0) {
@@ -101,21 +124,21 @@ void PDHG_NAME(
 		PAX_SWAP_POINTS(u1, v1, u2, v2);
 		#endif
 		#ifdef PDHG_RESTRICT_UV
-		PAX_SWAP(float, v0, v1)
+		PAX_SWAP(fixpt_t, v0, v1)
 		#endif
 	}
 	
 	// Clip rect in inside of buffer.
 	if (x < buf->clip.x) {
 		#ifdef PDHG_NORMAL_UV
-		float part = (buf->clip.x - x) / width;
+		fixpt_t part = (buf->clip.x - x) / width;
 		u0 = u0 + (u1 - u0) * part;
 		v0 = v0 + (v1 - v0) * part;
 		u3 = u3 + (u2 - u3) * part;
 		v3 = v3 + (v2 - v3) * part;
 		#endif
 		#ifdef PDHG_RESTRICT_UV
-		float part = (buf->clip.x - x) / width;
+		fixpt_t part = (buf->clip.x - x) / width;
 		u0 = u0 + (u1 - u0) * part;
 		#endif
 		
@@ -124,14 +147,14 @@ void PDHG_NAME(
 	}
 	if (x + width > buf->clip.x + buf->clip.w) {
 		#ifdef PDHG_NORMAL_UV
-		float part = (buf->clip.x + buf->clip.w - x) / width;
+		fixpt_t part = (buf->clip.x + buf->clip.w - x) / width;
 		u1 = u0 + (u1 - u0) * part;
 		v1 = v0 + (v1 - v0) * part;
 		u2 = u3 + (u2 - u3) * part;
 		v2 = v3 + (v2 - v3) * part;
 		#endif
 		#ifdef PDHG_RESTRICT_UV
-		float part = (buf->clip.x + buf->clip.w - x) / width;
+		fixpt_t part = (buf->clip.x + buf->clip.w - x) / width;
 		u1 = u0 + (u1 - u0) * part;
 		#endif
 		
@@ -139,14 +162,14 @@ void PDHG_NAME(
 	}
 	if (y < buf->clip.y) {
 		#ifdef PDHG_NORMAL_UV
-		float part = (buf->clip.y - y) / height;
+		fixpt_t part = (buf->clip.y - y) / height;
 		u0 = u0 + (u3 - u0) * part;
 		v0 = v0 + (v3 - v0) * part;
 		u1 = u1 + (u2 - u1) * part;
 		v1 = v1 + (v2 - v1) * part;
 		#endif
 		#ifdef PDHG_RESTRICT_UV
-		float part = (buf->clip.y - y) / height;
+		fixpt_t part = (buf->clip.y - y) / height;
 		v0 = v0 + (v1 - v0) * part;
 		#endif
 		
@@ -155,14 +178,14 @@ void PDHG_NAME(
 	}
 	if (y + height > buf->clip.y + buf->clip.h) {
 		#ifdef PDHG_NORMAL_UV
-		float part = (buf->clip.y + buf->clip.h - y) / height;
+		fixpt_t part = (buf->clip.y + buf->clip.h - y) / height;
 		u3 = u0 + (u3 - u0) * part;
 		v3 = v0 + (v3 - v0) * part;
 		u2 = u1 + (u2 - u1) * part;
 		v2 = v1 + (v2 - v1) * part;
 		#endif
 		#ifdef PDHG_RESTRICT_UV
-		float part = (buf->clip.y + buf->clip.h - y) / height;
+		fixpt_t part = (buf->clip.y + buf->clip.h - y) / height;
 		v1 = v0 + (v1 - v0) * part;
 		#endif
 		
@@ -171,29 +194,29 @@ void PDHG_NAME(
 	
 	#if defined(PDHG_NORMAL_UV) || defined(PDHG_RESTRICT_UV)
 	// Adjust UVs to match pixel co-ordinates.
-	float min_x = (int) (x + 0.5)          + 0.5;
-	float max_x = (int) (x + width - 0.5)  + 0.5;
-	float min_y = (int) (y + 0.5)          + 0.5;
-	float max_y = (int) (y + height - 0.5) + 0.5;
+	fixpt_t min_x = (int) (x + 0.5)          + 0.5;
+	fixpt_t max_x = (int) (x + width - 0.5)  + 0.5;
+	fixpt_t min_y = (int) (y + 0.5)          + 0.5;
+	fixpt_t max_y = (int) (y + height - 0.5) + 0.5;
 	#endif
 	
 	#ifdef PDHG_NORMAL_UV
 	// Adjust X part.
 	{ // Adjust UV0 and UV1.
-		float new_u0 = u0 + (u1 - u0) / width * (min_x - x);
-		float new_u1 = u0 + (u1 - u0) / width * (max_x - x);
-		float new_v0 = v0 + (v1 - v0) / width * (min_x - x);
-		float new_v1 = v0 + (v1 - v0) / width * (max_x - x);
+		fixpt_t new_u0 = u0 + (u1 - u0) / width * (min_x - x);
+		fixpt_t new_u1 = u0 + (u1 - u0) / width * (max_x - x);
+		fixpt_t new_v0 = v0 + (v1 - v0) / width * (min_x - x);
+		fixpt_t new_v1 = v0 + (v1 - v0) / width * (max_x - x);
 		u0 = new_u0;
 		u1 = new_u1;
 		v0 = new_v0;
 		v1 = new_v1;
 	}
 	{ // Adjust UV3 and UV2.
-		float new_u3 = u3 + (u2 - u3) / width * (min_x - x);
-		float new_u2 = u3 + (u2 - u3) / width * (max_x - x);
-		float new_v3 = v3 + (v2 - v3) / width * (min_x - x);
-		float new_v2 = v3 + (v2 - v3) / width * (max_x - x);
+		fixpt_t new_u3 = u3 + (u2 - u3) / width * (min_x - x);
+		fixpt_t new_u2 = u3 + (u2 - u3) / width * (max_x - x);
+		fixpt_t new_v3 = v3 + (v2 - v3) / width * (min_x - x);
+		fixpt_t new_v2 = v3 + (v2 - v3) / width * (max_x - x);
 		u3 = new_u3;
 		u2 = new_u2;
 		v3 = new_v3;
@@ -201,20 +224,20 @@ void PDHG_NAME(
 	}
 	// Adjust Y part.
 	{ // Adjust UV1 and UV2.
-		float new_u1 = u1 + (u2 - u1) / height * (min_y - y);
-		float new_u2 = u1 + (u2 - u1) / height * (max_y - y);
-		float new_v1 = v1 + (v2 - v1) / height * (min_y - y);
-		float new_v2 = v1 + (v2 - v1) / height * (max_y - y);
+		fixpt_t new_u1 = u1 + (u2 - u1) / height * (min_y - y);
+		fixpt_t new_u2 = u1 + (u2 - u1) / height * (max_y - y);
+		fixpt_t new_v1 = v1 + (v2 - v1) / height * (min_y - y);
+		fixpt_t new_v2 = v1 + (v2 - v1) / height * (max_y - y);
 		u1 = new_u1;
 		u2 = new_u2;
 		v1 = new_v1;
 		v2 = new_v2;
 	}
 	{ // Adjust UV0 and UV3.
-		float new_u0 = u0 + (u3 - u0) / height * (min_y - y);
-		float new_u3 = u0 + (u3 - u0) / height * (max_y - y);
-		float new_v0 = v0 + (v3 - v0) / height * (min_y - y);
-		float new_v3 = v0 + (v3 - v0) / height * (max_y - y);
+		fixpt_t new_u0 = u0 + (u3 - u0) / height * (min_y - y);
+		fixpt_t new_u3 = u0 + (u3 - u0) / height * (max_y - y);
+		fixpt_t new_v0 = v0 + (v3 - v0) / height * (min_y - y);
+		fixpt_t new_v3 = v0 + (v3 - v0) / height * (max_y - y);
 		u0 = new_u0;
 		u3 = new_u3;
 		v0 = new_v0;
@@ -222,34 +245,34 @@ void PDHG_NAME(
 	}
 	
 	// Find UV deltas.
-	float u0_u3_du = (u3 - u0) / (height - 1);
-	float v0_v3_dv = (v3 - v0) / (height - 1);
-	float u1_u2_du = (u2 - u1) / (height - 1);
-	float v1_v2_dv = (v2 - v1) / (height - 1);
+	fixpt_t u0_u3_du = (u3 - u0) / (height - 1);
+	fixpt_t v0_v3_dv = (v3 - v0) / (height - 1);
+	fixpt_t u1_u2_du = (u2 - u1) / (height - 1);
+	fixpt_t v1_v2_dv = (v2 - v1) / (height - 1);
 	
-	float u_a = u0, v_a = v0;
-	float u_b = u1, v_b = v1;
+	fixpt_t u_a = u0, v_a = v0;
+	fixpt_t u_b = u1, v_b = v1;
 	#endif // PDHG_NORMAL_UV
 	
 	#ifdef PDHG_RESTRICT_UV
 	{ // Adjust the X part.
-		float new_u0 = u0 + (u1 - u0) / width * (min_x - x);
-		float new_u1 = u0 + (u1 - u0) / width * (max_x - x);
+		fixpt_t new_u0 = u0 + (u1 - u0) / width * (min_x - x);
+		fixpt_t new_u1 = u0 + (u1 - u0) / width * (max_x - x);
 		u0 = new_u0;
 		u1 = new_u1;
 	}
 	{ // Adjust the Y part.
-		float new_v0 = v0 + (v1 - v0) / height * (min_y - y);
-		float new_v1 = v0 + (v1 - v0) / height * (max_y - y);
+		fixpt_t new_v0 = v0 + (v1 - v0) / height * (min_y - y);
+		fixpt_t new_v1 = v0 + (v1 - v0) / height * (max_y - y);
 		v0 = new_v0;
 		v1 = new_v1;
 	}
 	
 	// Find UV deltas.
-	float u0_u1_du = (u1 - u0) / (max_x - min_x);
-	float v0_v1_dv = (v1 - v0) / (max_y - min_y);
+	fixpt_t u0_u1_du = (u1 - u0) / (max_x - min_x);
+	fixpt_t v0_v1_dv = (v1 - v0) / (max_y - min_y);
 	
-	float v = v0;
+	fixpt_t v = v0;
 	#endif // PDHG_RESTRICT_UV
 	
 	int c_y = y + 0.5;
@@ -273,12 +296,12 @@ void PDHG_NAME(
 	int delta = c_y * buf->width;
 	for (; c_y <= y + height - 0.5; c_y += PDHG_INCREMENT) {
 		#ifdef PDHG_NORMAL_UV
-		float ua_ub_du = (u_b - u_a) / (max_x - min_x);
-		float va_vb_dv = (v_b - v_a) / (max_x - min_x);
-		float u = u_a, v = v_a;
+		fixpt_t ua_ub_du = (u_b - u_a) / (max_x - min_x);
+		fixpt_t va_vb_dv = (v_b - v_a) / (max_x - min_x);
+		fixpt_t u = u_a, v = v_a;
 		#endif
 		#ifdef PDHG_RESTRICT_UV
-		float u = u0;
+		fixpt_t u = u0;
 		#endif
 		for (int c_x = x + 0.5; c_x <= x + width - 0.5; c_x ++) {
 			#ifdef PDHG_NORMAL_UV

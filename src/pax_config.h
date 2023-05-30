@@ -74,4 +74,9 @@
 	#define PAX_QUEUE_SIZE 32
 #endif
 
+#ifndef PAX_USE_FIXED_POINT
+// Whether to use fixed-point arithmetic internally.
+	#define PAX_USE_FIXED_POINT true
+#endif
+
 #endif //PAX_CONFIG_H

@@ -33,13 +33,13 @@
 #define PDHG_STATIC
 #define PDHG_IGNORE_UV
 #define PDHG_NAME pax_tri_shaded1
-#include "pax_dh_generic_tri.h"
+#include "pax_dh_generic_tri.hpp"
 
 // Internal method for shaded triangles.
 #define PDHG_SHADED
 #define PDHG_STATIC
 #define PDHG_NAME pax_tri_shaded0
-#include "pax_dh_generic_tri.h"
+#include "pax_dh_generic_tri.hpp"
 
 // Internal method for shaded triangles.
 void pax_tri_shaded(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
@@ -148,27 +148,27 @@ void pax_overlay_buffer(pax_buf_t *base, pax_buf_t *top, int x, int y, int width
 #define PDHG_IGNORE_UV
 #define PDHG_STATIC
 #define PDHG_NAME pax_rect_shaded2
-#include "pax_dh_generic_rect.h"
+#include "pax_dh_generic_rect.hpp"
 
 // Optimisation which makes more assumptions about UVs.
 #define PDHG_SHADED
 #define PDHG_RESTRICT_UV
 #define PDHG_STATIC
 #define PDHG_NAME pax_rect_shaded1
-#include "pax_dh_generic_rect.h"
+#include "pax_dh_generic_rect.hpp"
 
 // Internal method for shaded rects.
 #define PDHG_SHADED
 #define PDHG_STATIC
 #define PDHG_NAME pax_rect_shaded0
-#include "pax_dh_generic_rect.h"
+#include "pax_dh_generic_rect.hpp"
 
 // Internal method for shaded rects.
 void pax_rect_shaded(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
 		float x, float y, float width, float height,
 		float u0, float v0, float u1, float v1, float u2, float v2, float u3, float v3) {
 	
-	pax_promise_func_t fn = shader->promise_callback;
+	pax_promise_func_t fn = (pax_promise_func_t) shader->promise_callback;
 	uint32_t promise = fn ? fn(buf, color, shader->callback_args) : 0;
 	
 	if (promise & PAX_PROMISE_IGNORE_UVS) {

@@ -23,6 +23,7 @@
 */
 
 #include "pax_internal.h"
+#include "pax_fixpt.hpp"
 
 #ifdef PDHG_NAME
 
@@ -70,9 +71,9 @@ static void PDHG_TRAPEZOID_NAME(
 #ifdef PDHG_SHADED
 		const pax_shader_t *shader,
 #endif
-		float x0a, float x0b, float y0, float x1a, float x1b, float y1
+		fixpt_t x0a, fixpt_t x0b, fixpt_t y0, fixpt_t x1a, fixpt_t x1b, fixpt_t y1
 #ifdef PDHG_NORMAL_UV
-		, float u0a, float v0a, float u0b, float v0b, float u1a, float v1a, float u1b, float v1b
+		, fixpt_t u0a, fixpt_t v0a, fixpt_t u0b, fixpt_t v0b, fixpt_t u1a, fixpt_t v1a, fixpt_t u1b, fixpt_t v1b
 #endif
 		) {
 	
@@ -94,13 +95,13 @@ static void PDHG_TRAPEZOID_NAME(
 	
 	// Sort points by X.
 	if (x0a > x0b || x1a > x1b) {
-		PAX_SWAP(float, x0a, x0b);
-		PAX_SWAP(float, x1a, x1b);
+		PAX_SWAP(fixpt_t, x0a, x0b);
+		PAX_SWAP(fixpt_t, x1a, x1b);
 		#ifdef PDHG_NORMAL_UV
-		PAX_SWAP(float, u0a, u0b);
-		PAX_SWAP(float, u1a, u1b);
-		PAX_SWAP(float, v0a, v0b);
-		PAX_SWAP(float, v1a, v1b);
+		PAX_SWAP(fixpt_t, u0a, u0b);
+		PAX_SWAP(fixpt_t, u1a, u1b);
+		PAX_SWAP(fixpt_t, v0a, v0b);
+		PAX_SWAP(fixpt_t, v1a, v1b);
 		#endif
 	}
 	
@@ -126,28 +127,28 @@ static void PDHG_TRAPEZOID_NAME(
 	#endif
 	
 	// Determine X deltas.
-	float x0a_x1a_dx = (x1a - x0a) / (y1 - y0);
-	float x0b_x1b_dx = (x1b - x0b) / (y1 - y0);
+	fixpt_t x0a_x1a_dx = (x1a - x0a) / (y1 - y0);
+	fixpt_t x0b_x1b_dx = (x1b - x0b) / (y1 - y0);
 	
 	#ifdef PDHG_NORMAL_UV
 	// Determine UV deltas.
-	float u0a_u1a_du = (u1a - u0a) / (y1 - y0);
-	float u0b_u1b_du = (u1b - u0b) / (y1 - y0);
-	float v0a_v1a_dv = (v1a - v0a) / (y1 - y0);
-	float v0b_v1b_dv = (v1b - v0b) / (y1 - y0);
+	fixpt_t u0a_u1a_du = (u1a - u0a) / (y1 - y0);
+	fixpt_t u0b_u1b_du = (u1b - u0b) / (y1 - y0);
+	fixpt_t v0a_v1a_dv = (v1a - v0a) / (y1 - y0);
+	fixpt_t v0b_v1b_dv = (v1b - v0b) / (y1 - y0);
 	#endif
 	
 	// Initial X interpolation.
-	float coeff = (iy0 + 0.5f) - y0;
-	float x_a = x0a + x0a_x1a_dx * coeff;
-	float x_b = x0b + x0b_x1b_dx * coeff;
+	fixpt_t coeff = (iy0 + 0.5f) - y0;
+	fixpt_t x_a = x0a + x0a_x1a_dx * coeff;
+	fixpt_t x_b = x0b + x0b_x1b_dx * coeff;
 	
 	#ifdef PDHG_NORMAL_UV
 	// Initial UV interpolation.
-	float u_a = u0a + u0a_u1a_du * coeff;
-	float u_b = u0b + u0b_u1b_du * coeff;
-	float v_a = v0a + v0a_v1a_dv * coeff;
-	float v_b = v0b + v0b_v1b_dv * coeff;
+	fixpt_t u_a = u0a + u0a_u1a_du * coeff;
+	fixpt_t u_b = u0b + u0b_u1b_du * coeff;
+	fixpt_t v_a = v0a + v0a_v1a_dv * coeff;
+	fixpt_t v_b = v0b + v0b_v1b_dv * coeff;
 	#endif
 	
 	// Vertical drawing loop.
@@ -171,13 +172,13 @@ static void PDHG_TRAPEZOID_NAME(
 		
 		#ifdef PDHG_NORMAL_UV
 		// Determine UV deltas.
-		float du = (u_b - u_a) / (x_b - x_a);
-		float dv = (v_b - v_a) / (x_b - x_a);
+		fixpt_t du = (u_b - u_a) / (x_b - x_a);
+		fixpt_t dv = (v_b - v_a) / (x_b - x_a);
 		
 		// Interpolate UV.
 		coeff = (ixa + 0.5) - x_a;
-		float u = u_a + du * coeff;
-		float v = v_a + dv * coeff;
+		fixpt_t u = u_a + du * coeff;
+		fixpt_t v = v_a + dv * coeff;
 		#endif
 		
 		// Horizontal drawing loop.
@@ -230,11 +231,26 @@ void PDHG_NAME (
 #ifdef PDHG_SHADED
 		const pax_shader_t *shader,
 #endif
-		float x0, float y0, float x1, float y1, float x2, float y2
+		float _x0, float _y0, float _x1, float _y1, float _x2, float _y2
 #ifdef PDHG_NORMAL_UV
-		, float u0, float v0, float u1, float v1, float u2, float v2
+		, float _u0, float _v0, float _u1, float _v1, float _u2, float _v2
 #endif
 		) {
+	
+	fixpt_t x0 = _x0;
+	fixpt_t y0 = _y0;
+	fixpt_t x1 = _x1;
+	fixpt_t y1 = _y1;
+	fixpt_t x2 = _x2;
+	fixpt_t y2 = _y2;
+	#ifdef PDHG_NORMAL_UV
+	fixpt_t u0 = _u0;
+	fixpt_t v0 = _v0;
+	fixpt_t u1 = _u1;
+	fixpt_t v1 = _v1;
+	fixpt_t u2 = _u2;
+	fixpt_t v2 = _v2;
+	#endif
 	
 	// Sort points by height.
 	if (y1 < y0) {
@@ -257,11 +273,11 @@ void PDHG_NAME (
 	}
 	
 	// Interpolate coordinates.
-	float coeff = (y1 - y0) / (y2 - y0);
-	float x1b = x0 + (x2 - x0) * coeff;
+	fixpt_t coeff = (y1 - y0) / (y2 - y0);
+	fixpt_t x1b = x0 + (x2 - x0) * coeff;
 	#ifdef PDHG_NORMAL_UV
-	float u1b = u0 + (u2 - u0) * coeff;
-	float v1b = v0 + (v2 - v0) * coeff;
+	fixpt_t u1b = u0 + (u2 - u0) * coeff;
+	fixpt_t v1b = v0 + (v2 - v0) * coeff;
 	#endif
 	
 	// Top half.

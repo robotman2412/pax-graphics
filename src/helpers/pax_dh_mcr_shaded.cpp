@@ -34,7 +34,7 @@
 #define PDHG_STATIC
 #define PDHG_IGNORE_UV
 #define PDHG_MCR
-#include "pax_dh_generic_tri.h"
+#include "pax_dh_generic_tri.hpp"
 
 // Multi-core method for shaded triangles.
 // If odd_scanline is true, the odd (counted from 0) lines are drawn, otherwise the even lines are drawn.
@@ -42,7 +42,7 @@
 #define PDHG_SHADED
 #define PDHG_STATIC
 #define PDHG_MCR
-#include "pax_dh_generic_tri.h"
+#include "pax_dh_generic_tri.hpp"
 
 // Multi-core method for shaded triangles.
 // If odd_scanline is true, the odd (counted from 0) lines are drawn, otherwise the even lines are drawn.
@@ -158,7 +158,7 @@ void paxmcr_overlay_buffer(bool odd_scanline, pax_buf_t *base, pax_buf_t *top, i
 #define PDHG_IGNORE_UV
 #define PDHG_MCR
 #define PDHG_STATIC
-#include "pax_dh_generic_rect.h"
+#include "pax_dh_generic_rect.hpp"
 
 // Multi-core optimisation which makes more assumptions about UVs.
 // If odd_scanline is true, the odd (counted from 0) lines are drawn, otherwise the even lines are drawn.
@@ -167,7 +167,7 @@ void paxmcr_overlay_buffer(bool odd_scanline, pax_buf_t *base, pax_buf_t *top, i
 #define PDHG_RESTRICT_UV
 #define PDHG_MCR
 #define PDHG_STATIC
-#include "pax_dh_generic_rect.h"
+#include "pax_dh_generic_rect.hpp"
 
 // Multi-core method for shaded rects.
 // If odd_scanline is true, the odd (counted from 0) lines are drawn, otherwise the even lines are drawn.
@@ -175,7 +175,7 @@ void paxmcr_overlay_buffer(bool odd_scanline, pax_buf_t *base, pax_buf_t *top, i
 #define PDHG_SHADED
 #define PDHG_MCR
 #define PDHG_STATIC
-#include "pax_dh_generic_rect.h"
+#include "pax_dh_generic_rect.hpp"
 
 // Multi-core method for shaded rects.
 // If odd_scanline is true, the odd (counted from 0) lines are drawn, otherwise the even lines are drawn.
@@ -183,7 +183,7 @@ void paxmcr_rect_shaded(bool odd_scanline, pax_buf_t *buf, pax_col_t color, cons
 		float x, float y, float width, float height,
 		float u0, float v0, float u1, float v1, float u2, float v2, float u3, float v3) {
 	
-	pax_promise_func_t fn = shader->promise_callback;
+	pax_promise_func_t fn = (pax_promise_func_t) shader->promise_callback;
 	uint32_t promise = fn ? fn(buf, color, shader->callback_args) : 0;
 	
 	if (promise & PAX_PROMISE_IGNORE_UVS) {

@@ -20,10 +20,10 @@ set(PAX_SRCS
 	${CMAKE_CURRENT_LIST_DIR}/src/pax_setters.c
 	${CMAKE_CURRENT_LIST_DIR}/src/pax_orientation.c
 	
-	${CMAKE_CURRENT_LIST_DIR}/src/helpers/pax_dh_mcr_shaded.c
-	${CMAKE_CURRENT_LIST_DIR}/src/helpers/pax_dh_mcr_unshaded.c
-	${CMAKE_CURRENT_LIST_DIR}/src/helpers/pax_dh_shaded.c
-	${CMAKE_CURRENT_LIST_DIR}/src/helpers/pax_dh_unshaded.c
+	${CMAKE_CURRENT_LIST_DIR}/src/helpers/pax_dh_mcr_shaded.cpp
+	${CMAKE_CURRENT_LIST_DIR}/src/helpers/pax_dh_mcr_unshaded.cpp
+	${CMAKE_CURRENT_LIST_DIR}/src/helpers/pax_dh_shaded.cpp
+	${CMAKE_CURRENT_LIST_DIR}/src/helpers/pax_dh_unshaded.cpp
 	${CMAKE_CURRENT_LIST_DIR}/src/helpers/pax_mcr_dummy.c
 	${CMAKE_CURRENT_LIST_DIR}/src/helpers/pax_mcr_esp32.c
 	${CMAKE_CURRENT_LIST_DIR}/src/helpers/pax_mcr_pthread.c
