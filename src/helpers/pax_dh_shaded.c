@@ -28,218 +28,32 @@
 /* ======== SHADED DRAWING ======= */
 
 // Internal method for shaded triangles.
+// Has no UV co-ordinates.
+#define PDHG_SHADED
+#define PDHG_STATIC
+#define PDHG_IGNORE_UV
+#define PDHG_NAME pax_tri_shaded1
+#include "pax_dh_generic_tri.h"
+
+// Internal method for shaded triangles.
+#define PDHG_SHADED
+#define PDHG_STATIC
+#define PDHG_NAME pax_tri_shaded0
+#include "pax_dh_generic_tri.h"
+
+// Internal method for shaded triangles.
 void pax_tri_shaded(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader,
 		float x0, float y0, float x1, float y1, float x2, float y2,
 		float u0, float v0, float u1, float v1, float u2, float v2) {
-	
-	// Sort points by height.
-	if (y1 < y0) {
-		PAX_SWAP_POINTS(x0, y0, x1, y1);
-		PAX_SWAP_POINTS(u0, v0, u1, v1);
-	}
-	if (y2 < y0) {
-		PAX_SWAP_POINTS(x0, y0, x2, y2);
-		PAX_SWAP_POINTS(u0, v0, u2, v2);
-	}
-	if (y2 < y1) {
-		PAX_SWAP_POINTS(x1, y1, x2, y2);
-		PAX_SWAP_POINTS(u1, v1, u2, v2);
-	}
-	
-	pax_shader_ctx_t shader_ctx = pax_get_shader_ctx(buf, color, shader);
-	if (shader_ctx.skip) return;
-	pax_col_conv_t buf2col = PAX_IS_PALETTE(buf->type) ? pax_col_conv_dummy : buf->buf2col;
-	
-	// Find the appropriate Y for y0, y1 and y2 inside the triangle.
-	float y_post_0 = (int) (y0 + 0.5) + 0.5;
-	float y_post_1 = (int) (y1 + 0.5) + 0.5;
-	float y_pre_2  = (int) (y2 - 0.5) + 0.5;
-	
-	// And the coefficients for x0->x1, x1->x2 and x0->x2.
-	float x0_x1_dx = (x1 - x0) / (y1 - y0);
-	float x1_x2_dx = (x2 - x1) / (y2 - y1);
-	float x0_x2_dx = (x2 - x0) / (y2 - y0);
-	
-	// And UVs.
-	float u0_u1_du = (u1 - u0) / (y1 - y0);
-	float v0_v1_dv = (v1 - v0) / (y1 - y0);
-	float u0_u2_du = (u2 - u0) / (y2 - y0);
-	float v0_v2_dv = (v2 - v0) / (y2 - y0);
-	float u1_u2_du = (u2 - u1) / (y2 - y1);
-	float v1_v2_dv = (v2 - v1) / (y2 - y1);
-	
-	// Clip: Y axis.
-	if (y_post_0 > buf->clip.y + buf->clip.h) {
-		y_post_0 = (int) (buf->clip.y + buf->clip.h - 0.5) + 0.5;
-	}
-	if (y_post_1 > buf->clip.y + buf->clip.h) {
-		y_post_1 = (int) (buf->clip.y + buf->clip.h - 0.5) + 0.5;
-	}
-	if (y_pre_2  > buf->clip.y + buf->clip.h) {
-		y_pre_2  = (int) (buf->clip.y + buf->clip.h - 0.5) + 0.5;
-	}
-	
-	if (y_pre_2  < buf->clip.y) {
-		y_pre_2  = (int) (buf->clip.y + 0.5) + 0.5;
-	}
-	if (y_post_1 < buf->clip.y) {
-		y_post_1 = (int) (buf->clip.y + 0.5) + 0.5;
-	}
-	if (y_post_0 < buf->clip.y) {
-		y_post_0 = (int) (buf->clip.y + 0.5) + 0.5;
-	}
-	
-	// Draw top half.
-	// This condition is false if no one point is inside the triangle and above y1.
-	if (y_post_0 < y_post_1 && y_post_0 >= y0) {
-		float coeff = (y_post_0 - y0);
-		// Find the X counterparts to the other points we found.
-		float x_a = x0 + x0_x1_dx * coeff;
-		float x_b = x0 + x0_x2_dx * coeff;
-		// And UV ranges.
-		float u_a = u0 + u0_u1_du * coeff;
-		float v_a = v0 + v0_v1_dv * coeff;
-		float u_b = u0 + u0_u2_du * coeff;
-		float v_b = v0 + v0_v2_dv * coeff;
-		// Precalc index stuff.
-		int delta = ((int) y_post_0) * buf->width;
-		for (int y = y_post_0; y < (int) y_post_1; y++) {
-			// Plot the horizontal line.
-			float x_left, x_right;
-			float u_left, u_right;
-			float v_left, v_right;
-			if (x_a < x_b) {
-				x_left  = x_a;
-				x_right = x_b;
-				u_left  = u_a;
-				u_right = u_b;
-				v_left  = v_a;
-				v_right = v_b;
-			} else {
-				x_left  = x_b;
-				x_right = x_a;
-				u_left  = u_b;
-				u_right = u_a;
-				v_left  = v_b;
-				v_right = v_a;
-			}
-			// Clip: X axis.
-			if (x_right > buf->clip.x + buf->clip.w - 1) {
-				float new_x_right = buf->clip.x + buf->clip.w - 1;
-				float delta = (new_x_right - x_left) / (x_right - x_left);
-				x_right = new_x_right;
-				u_right = u_left + (u_right - u_left) * delta;
-				v_right = v_left + (v_right - v_left) * delta;
-			}
-			if (x_left < buf->clip.x) {
-				float new_x_left = buf->clip.x;
-				float delta = (new_x_left - x_left) / (x_right - x_left);
-				x_left = new_x_left;
-				u_left = u_left + (u_right - u_left) * delta;
-				v_left = v_left + (v_right - v_left) * delta;
-			}
-			// Find UV ranges.
-			int x = x_left + 0.5;
-			int nIter = x_right - x;
-			// Fix UVs.
-			float u = u_left, v = v_left;
-			float du = (u_right - u_left) / nIter;
-			float dv = (v_right - v_left) / nIter;
-			x_right -= 0.5;
-			for (; x <= x_right; x ++) {
-				// Apply the shader,
-				pax_col_t result = (shader_ctx.callback)(color, shader_ctx.do_getter ? buf2col(buf, buf->getter(buf, x+delta)) : 0, x, y, u, v, shader_ctx.callback_args);
-				// And simply merge colors accordingly.
-				pax_set_index_conv(buf, result, x+delta);
-				u += du;
-				v += dv;
-			}
-			// Move X.
-			x_a   += x0_x1_dx;
-			x_b   += x0_x2_dx;
-			u_a   += u0_u1_du;
-			v_a   += v0_v1_dv;
-			u_b   += u0_u2_du;
-			v_b   += v0_v2_dv;
-			delta += buf->width;
+	if (shader->promise_callback) {
+		uint32_t promises = (*(pax_promise_func_t) shader->promise_callback)(buf, color, shader->callback_args);
+		if (promises & PAX_PROMISE_INVISIBLE) return;
+		if (promises & PAX_PROMISE_IGNORE_UVS) {
+			pax_tri_shaded1(buf, color, shader, x0, y0, x1, y1, x2, y2);
+			return;
 		}
 	}
-	// Draw bottom half.
-	// This condition might be confusing, but it's false if no point at all is inside the triangle.
-	if (y_post_0 <= y_pre_2 && y_post_1 >= y1 && y_pre_2 <= y2) {
-		float coeff0 = (y_post_1 - y0);
-		float coeff1 = (y_post_1 - y1);
-		// Find the X counterparts to the other points we found.
-		float x_a = x1 + x1_x2_dx * coeff1;
-		float x_b = x0 + x0_x2_dx * coeff0;
-		// And UV ranges.
-		float u_a = u1 + u1_u2_du * coeff1;
-		float v_a = v1 + v1_v2_dv * coeff1;
-		float u_b = u0 + u0_u2_du * coeff0;
-		float v_b = v0 + v0_v2_dv * coeff0;
-		// Precalc index stuff.
-		int delta = ((int) y_post_1) * buf->width;
-		for (int y = y_post_1; y <= (int) y_pre_2; y++) {
-			// Plot the horizontal line.
-			float x_left, x_right;
-			float u_left, u_right;
-			float v_left, v_right;
-			if (x_a < x_b) {
-				x_left  = x_a;
-				x_right = x_b;
-				u_left  = u_a;
-				u_right = u_b;
-				v_left  = v_a;
-				v_right = v_b;
-			} else {
-				x_left  = x_b;
-				x_right = x_a;
-				u_left  = u_b;
-				u_right = u_a;
-				v_left  = v_b;
-				v_right = v_a;
-			}
-			// Clip: X axis.
-			if (x_right > buf->clip.x + buf->clip.w - 1) {
-				float new_x_right = buf->clip.x + buf->clip.w - 1;
-				float delta = (new_x_right - x_left) / (x_right - x_left);
-				x_right = new_x_right;
-				u_right = u_left + (u_right - u_left) * delta;
-				v_right = v_left + (v_right - v_left) * delta;
-			}
-			if (x_left < buf->clip.x) {
-				float new_x_left = buf->clip.x;
-				float delta = (new_x_left - x_left) / (x_right - x_left);
-				x_left = new_x_left;
-				u_left = u_left + (u_right - u_left) * delta;
-				v_left = v_left + (v_right - v_left) * delta;
-			}
-			// Find UV ranges.
-			int x = x_left + 0.5;
-			int nIter = x_right - x;
-			// Fix UVs.
-			float u = u_left, v = v_left;
-			float du = (u_right - u_left) / nIter;
-			float dv = (v_right - v_left) / nIter;
-			x_right -= 0.5;
-			for (; x <= x_right; x ++) {
-				// Apply the shader,
-				pax_col_t result = (shader_ctx.callback)(color, shader_ctx.do_getter ? buf2col(buf, buf->getter(buf, x+delta)) : 0, x, y, u, v, shader_ctx.callback_args);
-				// And simply merge colors accordingly.
-				pax_set_index_conv(buf, result, x+delta);
-				u += du;
-				v += dv;
-			}
-			// Move X.
-			x_a   += x1_x2_dx;
-			x_b   += x0_x2_dx;
-			u_a   += u1_u2_du;
-			v_a   += v1_v2_dv;
-			u_b   += u0_u2_du;
-			v_b   += v0_v2_dv;
-			delta += buf->width;
-		}
-	}
+	pax_tri_shaded0(buf, color, shader, x0, y0, x1, y1, x2, y2, u0, v0, u1, v1, u2, v2);
 }
 
 // Optimisation which maps a buffer directly onto another.
