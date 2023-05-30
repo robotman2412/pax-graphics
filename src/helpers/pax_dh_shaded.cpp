@@ -320,8 +320,8 @@ void pax_line_shaded(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader
 		int_fast32_t idu = du * 0x10000;
 		int_fast32_t idv = dv * 0x10000;
 		for (int i = 0; i <= nIter; i++) {
-			size_t    delta  = x/0x10000+y/0x10000*buf->width;
-			pax_col_t result = (shader_ctx.callback)(color, shader_ctx.do_getter ? buf2col(buf, buf->getter(buf, delta)) : 0, x/0x10000, y/0x10000, u/(float)0x10000, v/(float)0x10000, shader_ctx.callback_args);
+			size_t    delta  = (x>>16)+(y>>16)*buf->width;
+			pax_col_t result = (shader_ctx.callback)(color, shader_ctx.do_getter ? buf2col(buf, buf->getter(buf, delta)) : 0, x>>16, y>>16, u/(float)0x10000, v/(float)0x10000, shader_ctx.callback_args);
 			pax_set_index_conv(buf, result, delta);
 			x += idx;
 			y += idy;
