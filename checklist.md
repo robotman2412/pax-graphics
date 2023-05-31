@@ -29,6 +29,3 @@
 - [ ] RP2040:
   - [ ] Builds without warnings
   - [ ] Acceptable performance
-- [ ] Arduino:
-  - [ ] Builds without warnings
-  - [ ] Acceptable performance

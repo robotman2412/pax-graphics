@@ -9,47 +9,16 @@ set(CMAKE_CXX_STANDARD 17)
 # Helpful for IDE users.
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# Add C sources.
-set(PAX_SRCS
-	${CMAKE_CURRENT_LIST_DIR}/src/pax_matrix.c
-	${CMAKE_CURRENT_LIST_DIR}/src/pax_gfx.c
-	${CMAKE_CURRENT_LIST_DIR}/src/pax_shaders.c
-	${CMAKE_CURRENT_LIST_DIR}/src/pax_shapes.c
-	${CMAKE_CURRENT_LIST_DIR}/src/pax_fonts.c
-	${CMAKE_CURRENT_LIST_DIR}/src/pax_text.c
-	${CMAKE_CURRENT_LIST_DIR}/src/pax_setters.c
-	${CMAKE_CURRENT_LIST_DIR}/src/pax_orientation.c
-	
-	${CMAKE_CURRENT_LIST_DIR}/src/helpers/pax_dh_mcr_shaded.cpp
-	${CMAKE_CURRENT_LIST_DIR}/src/helpers/pax_dh_mcr_unshaded.cpp
-	${CMAKE_CURRENT_LIST_DIR}/src/helpers/pax_dh_shaded.cpp
-	${CMAKE_CURRENT_LIST_DIR}/src/helpers/pax_dh_unshaded.cpp
-	${CMAKE_CURRENT_LIST_DIR}/src/helpers/pax_mcr_dummy.c
-	${CMAKE_CURRENT_LIST_DIR}/src/helpers/pax_mcr_esp32.c
-	${CMAKE_CURRENT_LIST_DIR}/src/helpers/pax_mcr_pthread.c
-	${CMAKE_CURRENT_LIST_DIR}/src/helpers/pax_precalculated.c
-
-	${CMAKE_CURRENT_LIST_DIR}/src/fonts/font_bitmap_7x9.c
-	${CMAKE_CURRENT_LIST_DIR}/src/fonts/font_bitmap_sky.c
-	${CMAKE_CURRENT_LIST_DIR}/src/fonts/font_bitmap_permanentmarker.c
-	${CMAKE_CURRENT_LIST_DIR}/src/fonts/font_bitmap_sairaregular.c
-	${CMAKE_CURRENT_LIST_DIR}/src/fonts/font_bitmap_sairacondensed.c
-)
-
-# Add C++ sources.
+# Add sources.
+include(${CMAKE_CURRENT_LIST_DIR}/sources.cmake)
 if(DEFINED PAX_COMPILE_CXX)
-set(PAX_SRCS
-	${PAX_SRCS}
-	${CMAKE_CURRENT_LIST_DIR}/src/cpp/pax_cxx.cpp
-	${CMAKE_CURRENT_LIST_DIR}/src/cpp/pax_cxx_shape.cpp
-	${CMAKE_CURRENT_LIST_DIR}/src/cpp/pax_cxx_text.cpp
-)
+	set(PAX_SRCS ${PAX_SRCS_C})
+	set(PAX_INCLUDE ${PAX_INCLUDE_C})
+else()
+	set(PAX_SRCS ${PAX_SRCS_C} ${PAX_SRCS_CXX})
+	set(PAX_INCLUDE ${PAX_INCLUDE_C} ${PAX_INCLUDE_CXX})
 endif()
 
 # Create output object.
 add_library(pax_graphics STATIC ${PAX_SRCS})
-
-target_include_directories(pax_graphics PUBLIC
-	${CMAKE_CURRENT_LIST_DIR}/src
-	${CMAKE_CURRENT_LIST_DIR}/src/cpp
-)
+target_include_directories(pax_graphics PUBLIC ${PAX_INCLUDE})
