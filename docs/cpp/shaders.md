@@ -1,1 +1,0 @@
-# PAX Docs: `pax::Shader`

@@ -8,44 +8,17 @@ This library is the successor of the revised graphics API for [the old badge.tea
 For supported platforms, [see this link](supported-platforms.md).
 
 ## Overview
-- [For C++ developers](#for-c-developers)
-- [For C developers](#for-c-developers-1)
+- [For C developers](#for-c-developers)
 - [Build system](#build-system)
-    - [For Arduino](#build-system-for-arduino)
     - [For ESP32](#build-system-for-esp32)
     - [For Pi Pico](#build-system-for-pi-pico)
 - [Image data format](pixelformat.md)
 
 
 
-# For C++ developers
-
-The new recommend way to use PAX is to use [the C++ API](cpp/README.md).
-It has better memory and is easier to use than the C API.
-
-**Note: Because the C++ API is quite new, the documentation might not be complete.**
-
-
-## Overview
-
-From the [C++ API overview](cpp/README.md):
-- [Getting started](#getting-started) (TODO)
-- [API overview](#api-overview)
-  - [Drawing functions](drawing.md)
-  - [`pax::Buffer`](buffer.md)
-  - [`pax::TextBox`](textbox.md)
-  - [Shaders](shaders.md)
-  - [Vector types](matrix.md)
-- [Example code](#example-code)
-  - [`pax::Buffer`](#example-paxbuffer)
-  - [`pax::Shader`](#example-paxshader)
-  - [`pax::Vec2f` and other vector types](#example-pax-vectors)
-
-
 # For C developers
 
-The old way to use PAX is to use [the C API](c/README.md).
-While it does have the same rendering features, it is not recommended for new applications.
+PAX is built on [a C API](c/README.md) which exposes 2D primitives and some simple compound shapes. It features matrix transformations, a clipping rectangle, highly accurate rendering and more.
 
 
 ## Overview
@@ -123,14 +96,6 @@ If this ever changes, there will be an implicit conversion to the C++ type.
 # Build system
 
 In order to support multiple targets and platforms, the build system for PAX has grown somewhat complex.
-
-## Build system: for Arduino
-
-PAX has been constructed such that it used directly as an Arduino library.
-Simply install via the library manager or clone directly into your libraries folder.
-
-**Warning: Platforms like the Arduino uno and Nano are not powerful enough to run PAX.**
-For supported platforms, [see this link](supported-platforms.md).
 
 ## Build system: for ESP32
 

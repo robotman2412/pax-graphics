@@ -10,7 +10,7 @@ I have created some overviews of supported platforms:
    - [Raspberry Pi Pico](#details-pi-pico)
  - [Why certain platforms are unsupported](#why-is-it-unsupported)
    - [Why ESP8266 is unsupported](#unsupported-esp8266)
-   - [Why Arduino Uno/Nano are unsupported](#unsupported-arduino-uno-nano)
+   - [Why Arduino Uno/Nano are unsupported](#unsupported-arduino-sdk)
 
 
 
@@ -29,7 +29,7 @@ This is a list of platforms that are known not to be powerful enough to run PAX.
 | platform         | processor      | reason
 | :--------------- | :------------- | :-----
 | ESP8266          | Tensilica L106 | Powerful enough but doesn't use ESP-IDF
-| Arduino Nano/Uno | ATMega/ATTiny  | Too slow, not enough memory
+| Arduino SDK      | N/A            | Build system is too restricting
 
 
 
@@ -66,11 +66,12 @@ Add to your `CMakeLists.txt`, after `target_include_directories`:
 add_subdirectory(pax-graphics)
 
 # This tells CMake we would like to use PAX as a library.
-target_link_libraries(your_project_name ${CMAKE_CURRENT_LIST_DIR}/pax-graphics/build/pax_graphics)
+target_link_libraries(your_project_name pax_graphics)
 ```
 
 ### 3. Profit!
 Raspberry Pi Pico support is currently in beta.
+
 
 
 # Why is it unsupported?
@@ -79,11 +80,11 @@ This is only about the more popular microcontrollers.
 
 
 ## Unsupported: ESP8266
-The ESP8266 is technically powerful enough to run PAX, but PAX supports ESP-IDF and the ESP8266 does not.
+The ESP8266 is technically powerful enough to run PAX, but PAX supports ESP-IDF and the ESP8266 does not use ESP-IDF.
 With enough requests, I could theoretically add support for ESP8266.
 
 
-## Unsupported: Arduino Uno/Nano
-Arduino Uno and Arduino Nano, specifically the AVR-based ones.
-This is because they do not have enough memory to support PAX.
-And although speed isn't technically preventing it, the AVR arduinos are usually about 16MHz, which is quite slow for software rendering.
+## Unsupported: Arduino SDK
+The Arduino SDK is unsupported because its build system is too limiting.
+Thing the Arduino build system can't do include setting include directories, explicitly listing source files to compile (Arduino builds all .c and .cpp files without any further consideration), and more.
+This is just barely limiting enough that the effort of porting to Arduino is not worth it to me.

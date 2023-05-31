@@ -35,12 +35,8 @@ set(PAX_INCLUDE_C
 
 # C++ source files.
 set(PAX_SRCS_CXX
-	${CMAKE_CURRENT_LIST_DIR}/src/cpp/pax_cxx.cpp
-	${CMAKE_CURRENT_LIST_DIR}/src/cpp/pax_cxx_shape.cpp
-	${CMAKE_CURRENT_LIST_DIR}/src/cpp/pax_cxx_text.cpp
 )
 
 # C include directories.
 set(PAX_INCLUDE_CXX
-	${CMAKE_CURRENT_LIST_DIR}/src/cpp
 )
