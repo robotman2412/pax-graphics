@@ -1,7 +1,7 @@
 # PAX graphics documentation
 
 The PAX graphics stack is being developed for the [MCH2022 badge](https://bodge.team/docs/badges/mch2022/).
-It's goal is to allow anyone to, in C and/or C++, use a powerful list of drawing features with good optimisation.
+It's goal is to allow anyone to, in C, use a powerful list of drawing features with good optimisation.
 
 This library is the successor of the revised graphics API for [the old badge.team firmware](https://github.com/badgeteam/ESP32-platform-firmware).
 
@@ -35,61 +35,6 @@ From the [C API overview](c/README.md):
     - [Clipping](c/README.md#api-reference-clipping)
     - [Matrix transformations](c/README.md#api-reference-matrix-transformations)
     - [Shaders](c/README.md#api-reference-shaders)
-
-
-
-# Mixing C and C++ APIs
-
-It is possible to use *both* the C API and C++ API at the same time.
-
-The C++ API accepts types from the C API where relevant.
-Some other types can be implicitly converted.
-
-
-## `pax_*vec2f` and related types
-
-These types have aliased names (`pax::Vec2f` for example) and added operators.
-
-They are fully backwards compatible and can thus be constructed in C++ and passed to C API functions.
-
-
-## `pax_buf_t`
-
-Most C api functions use a `pax_buf_t *` parameter.
-
-There is an implicit conversion to `pax::Buffer`, the drawing API made of member functions.
-This object becomes a **non-owning** reference (C-style `pax_buf_t` not destroyed when C++ `pax::Buffer` is destroyed).
-
-Example:
-```c++
-extern pax_buf_t *graphics;
-void myFunction() {
-	// Simple conversion that doesn't do any allocation.
-	pax::Buffer betterGraphics(graphics);
-	
-	// Example C++ API usage.
-	betterGraphics.drawCircle(10, 10, 50);
-}
-```
-
-The opposite conversion direction is also possible: the function `pax::Buffer::getInternal` returns a **non-owning** pointer to the C-style `pax_buf_t`.
-
-Example:
-```c++
-extern pax::Buffer betterGraphics;
-void myFunction() {
-	// Simple conversion that doesn't do any allocation.
-	pax_buf_t *graphics = betterGraphics.getInternal();
-	
-	// Example C API usage.
-	pax_draw_circle(graphics, 0xffff0000, 10, 10, 50);
-}
-```
-
-## `pax_font_t *`
-
-The C++ api currently uses this type directly.
-If this ever changes, there will be an implicit conversion to the C++ type.
 
 
 

@@ -1,14 +1,11 @@
 # PAX graphics documentation: C API
 
 The PAX graphics stack is being developed for the [MCH2022 badge](https://bodge.team/docs/badges/mch2022/).
-It's goal is to allow anyone to, in C and/or C++, use a powerful list of drawing features with good optimisation.
+It's goal is to allow anyone to, in C, use a powerful list of drawing features with good optimisation.
 
 This library is the successor of the revised graphics API for [the old badge.team firmware](https://github.com/badgeteam/ESP32-platform-firmware).
 
 For supported platforms, [see this link](../supported-platforms.md).
-
-## Note: This is documentation for the C API
-**[The C++ API](../cpp/README.md) is recommended for new applications, but the C API will remain supported.**
 
 ## PAX Docs overview
 - [Getting started](#getting-started)

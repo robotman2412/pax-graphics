@@ -70,9 +70,7 @@ Palette pixel types can have between 1 and 8 bits per pixel:
 There is no color conversion done, simply tructation.
 
 However, this does not mean that palette colors are simply one integer;
-Palette colors are treated as *fully opaque* when alpha (bits 31-24) is nonzero,
-otherwise the color is treated as *fully transparent*.
-This allows for a bit more flexibility: Suppose you have some mandatory draw call but you can change the color. All you have to do is set alpha to 0 to effectively not draw anything.
+Palette colors are treated as *fully opaque* the color index in within the range in the palette (which means N < M where N is color index and M is amount of palette entries). If it is not in this range, the color is treated as *fully transparent*. This means that a `pax_col_t` value of 0x10000 to 0xff0000 is treated as transparent by both ARGB and palette color math.
 
 ## Pixel types: RGB
 
@@ -96,7 +94,7 @@ ARGB pixel types can have 4 to 32 bits per pixel
 | PAX_BUF_32_8888ARGB | 32             | 8
 
 As ARGB is the type in which color math is performed, conversion is minimal; simply scaling the values to fit the new bits per channel.
-Additionally, `PAX_BUF_32_8888ARGB` represents the same pixel type as the ARGB colors in `pax_col_t` (C API) and `pax::Color` (C++ API).
+Additionally, `PAX_BUF_32_8888ARGB` represents the same pixel type as the ARGB colors in `pax_col_t` and no conversion is required.
 
 
 
@@ -132,7 +130,7 @@ There is no exceptions for crossing rows; If the amount of columns is not in int
 The single-byte addressing method simply indexes bytes without further conversion.
 
 Finally, more than one byte means potential *endianness conversion*.
-When `pax_buf_reversed(true)` (C API) or `pax::Buffer::reverseEndianness(true)` (C++ API) is called,
+When `pax_buf_reversed(true)` is called,
 endianness conversion will happen on both reads from and writes to the pixel buffer.
 Depending on architecture, this can incur a few instructions worth of overhead.
 

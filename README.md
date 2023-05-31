@@ -10,21 +10,10 @@ Documentation can be found [here](docs).
 # Target v1.1.0 TODO list
 - [x] Fix all remaining build warnings
 - [x] More advanced text options
-- [x] Comprehensive C++ wrapper
 - [x] Triangulation that can handle simple inputs
 - [x] Add `const` to all read-only accesses
 - [x] Add special case to text functions for buffers with palette types
 - [ ] Check for other buffer type inconsistencies
-- [ ] Complete C++ docs
-  - [ ] Images
-  - [ ] Examples
-  - [x] `buffer.md`
-  - [x] `drawing.md`
-  - [x] `matrix.md`
-  - [ ] `README.md`
-  - [ ] `shaders.md`
-  - [ ] `shapes.md`
-  - [ ] `textbox.md`
 - [x] Leave this box unchecked
 
 # Feature wishlist
