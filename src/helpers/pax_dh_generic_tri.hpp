@@ -305,7 +305,7 @@ void PDHG_NAME (
 		#endif
 		x1, x1b, y1, x2, x2, y2
 		#ifdef PDHG_NORMAL_UV
-		, u1, u1b, v1, v1b, u2, v2, u2, v2
+		, u1, v1, u1b, v1b, u2, v2, u2, v2
 		#endif
 	);
 }
