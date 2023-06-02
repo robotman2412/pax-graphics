@@ -1522,38 +1522,6 @@ void pax_simple_rect(pax_buf_t *buf, pax_col_t color, float x, float y, float wi
 	height=tmp.h;
 	#endif
 	
-	// Fix rect dimensions.
-	if (width < 0) {
-		width = -width;
-		x -= width;
-	}
-	if (height < 0) {
-		height = -height;
-		y -= height;
-	}
-	
-	// Clip rect in inside of buffer.
-	if (x < buf->clip.x) {
-		width -= buf->clip.x - x;
-		x = buf->clip.x;
-	}
-	if (y < buf->clip.y) {
-		height -= buf->clip.y - y;
-		y = buf->clip.y;
-	}
-	if (x + width > buf->clip.x + buf->clip.w) {
-		width = buf->clip.x + buf->clip.w - x;
-	}
-	if (y + height > buf->clip.y + buf->clip.h) {
-		height = buf->clip.y + buf->clip.h - y;
-	}
-	
-	// Check whether the rect is inside clip at all.
-	if (width < 0 || height < 0 || x > buf->clip.x + buf->clip.w || y > buf->clip.y + buf->clip.h) {
-		PAX_SUCCESS();
-		return;
-	}
-	
 	// Mark dirty area.
 	pax_mark_dirty2(buf, x - 0.5, y - 0.5, width + 1, height + 1);
 	#if PAX_COMPILE_MCR
@@ -1598,49 +1566,6 @@ void pax_simple_line(pax_buf_t *buf, pax_col_t color, float x0, float y0, float 
 	x1 = tmp.x; y1 = tmp.y;
 	#endif
 	
-	// Sort points vertially.
-	if (y0 > y1) {
-		PAX_SWAP(float, x0, x1)
-		PAX_SWAP(float, y0, y1)
-	}
-	
-	// Determine whether the line might fall within the clip rect.
-	if (!buf->clip.w || !buf->clip.h) goto noneed;
-	if (y1 < buf->clip.y || y0 > buf->clip.y + buf->clip.h - 1) goto noneed;
-	if (x0 == x1 && (x0 < buf->clip.x || x0 > buf->clip.x + buf->clip.w - 1)) goto noneed;
-	if (x0 < buf->clip.x && x1 < buf->clip.x) goto noneed;
-	if (x0 > buf->clip.x + buf->clip.w - 1 && x1 > buf->clip.x + buf->clip.w - 1) goto noneed;
-	
-	// Clip top.
-	if (y0 < buf->clip.y) {
-		x0 = x0 + (x1 - x0) * (buf->clip.y - y0) / (y1 - y0);
-		y0 = buf->clip.y;
-	}
-	// Clip bottom.
-	if (y1 > buf->clip.y + buf->clip.h - 1) {
-		x1 = x0 + (x1 - x0) * (buf->clip.y + buf->clip.h - 1 - y0) / (y1 - y0);
-		y1 = buf->clip.y + buf->clip.h - 1;
-	}
-	// Clip left.
-	if (x1 < buf->clip.x) {
-		y1 = y0 + (y1 - y0) * (buf->clip.x - x0) / (x1 - x0);
-		x1 = buf->clip.x;
-	} else if (x0 < buf->clip.x) {
-		y0 = y0 + (y1 - y0) * (buf->clip.x - x0) / (x1 - x0);
-		x0 = buf->clip.x;
-	}
-	// Clip right.
-	if (x1 > buf->clip.x + buf->clip.w - 1) {
-		y1 = y0 + (y1 - y0) * (buf->clip.x + buf->clip.w - 1 - x0) / (x1 - x0);
-		x1 = buf->clip.x + buf->clip.w - 1;
-	} else if (x0 > buf->clip.x + buf->clip.w - 1) {
-		y0 = y0 + (y1 - y0) * (buf->clip.x + buf->clip.w - 1 - x0) / (x1 - x0);
-		x0 = buf->clip.x + buf->clip.w - 1;
-	}
-	
-	// If any point is outside clip now, we don't draw a line.
-	if (y0 < buf->clip.y || y1 > buf->clip.y + buf->clip.h - 1) goto noneed;
-	
 	pax_mark_dirty1(buf, x0, y0);
 	pax_mark_dirty1(buf, x1, y1);
 	#if PAX_COMPILE_MCR
@@ -1649,8 +1574,6 @@ void pax_simple_line(pax_buf_t *buf, pax_col_t color, float x0, float y0, float 
 	#endif
 	pax_line_unshaded(buf, color, x0, y0, x1, y1);
 	
-	// This label is used if there's no need to try to draw a line.
-	noneed:
 	PAX_SUCCESS();
 }
 
