@@ -130,7 +130,7 @@ class fixpt_t {
 		
 		/* ==== Assignment math operators ==== */
 		fixpt_t &operator+=(fixpt_t other) { raw_value = raw_value + other.raw_value; return *this; }
-		fixpt_t &operator-=(fixpt_t other) { raw_value = raw_value + other.raw_value; return *this; }
+		fixpt_t &operator-=(fixpt_t other) { raw_value = raw_value - other.raw_value; return *this; }
 		fixpt_t &operator*=(fixpt_t other) { raw_value = _mul(raw_value, other.raw_value); return *this; }
 		fixpt_t &operator/=(fixpt_t other) { raw_value = _div(raw_value, other.raw_value); return *this; }
 		fixpt_t &operator<<=(int other) { raw_value = raw_value << other; return *this; }
