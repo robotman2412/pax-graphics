@@ -157,10 +157,6 @@ extern bool pax_do_multicore;
 
 // Swap two variables.
 #define PAX_SWAP(type, a, b) { type tmp = a; a = b; b = tmp; }
-// Swap two points represented by floats.
-#define PAX_SWAP_POINTS(x0, y0, x1, y1) { float tmp = x1; x1 = x0; x0 = tmp; tmp = y1; y1 = y0; y0 = tmp; }
-// Sort two points represented by floats.
-#define PAX_SORT_POINTS(x0, y0, x1, y1) { if (y1 < y0) PAX_SWAP_POINTS(x0, y0, x1, y1) }
 
 // Prints a simple error report of an error code.
 void pax_report_error(const char *where, pax_err_t errno);

@@ -41,7 +41,8 @@ void pax_line_unshaded(pax_buf_t *buf, pax_col_t color, float x0, float y0, floa
 	if (!setter) return;
 	
 	if (y1 < y0) {
-		PAX_SWAP_POINTS(x0, y0, x1, y1);
+		PAX_SWAP(float, x0, x1)
+		PAX_SWAP(float, y0, y1)
 	}
 	
 	// Clip: left.

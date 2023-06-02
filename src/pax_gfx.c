@@ -1599,7 +1599,10 @@ void pax_simple_line(pax_buf_t *buf, pax_col_t color, float x0, float y0, float 
 	#endif
 	
 	// Sort points vertially.
-	if (y0 > y1) PAX_SWAP_POINTS(x0, y0, x1, y1);
+	if (y0 > y1) {
+		PAX_SWAP(float, x0, x1)
+		PAX_SWAP(float, y0, y1)
+	}
 	
 	// Determine whether the line might fall within the clip rect.
 	if (!buf->clip.w || !buf->clip.h) goto noneed;

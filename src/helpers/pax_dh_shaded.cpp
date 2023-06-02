@@ -205,8 +205,10 @@ void pax_line_shaded(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader
 	
 	// Sort points vertially.
 	if (y0 > y1) {
-		PAX_SWAP_POINTS(x0, y0, x1, y1);
-		PAX_SWAP_POINTS(u0, v0, u1, v1);
+		PAX_SWAP(float, x0, x1)
+		PAX_SWAP(float, y0, y1)
+		PAX_SWAP(float, u0, u1)
+		PAX_SWAP(float, v0, v1)
 	}
 	
 	// Determine whether the line might fall within the clip rect.
@@ -282,7 +284,8 @@ void pax_line_shaded(pax_buf_t *buf, pax_col_t color, const pax_shader_t *shader
 		int index = (int) y0 * buf->width;
 		if (dx < 0) {
 			PAX_SWAP(float, x0, x1);
-			PAX_SWAP_POINTS(u0, v0, u1, v1);
+			PAX_SWAP(float, u0, u1)
+			PAX_SWAP(float, v0, v1)
 		}
 		nIter = (int) x1 - (int) x0 + 1;
 		float u = u0, v = v0;

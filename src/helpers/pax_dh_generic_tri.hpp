@@ -254,21 +254,27 @@ void PDHG_NAME (
 	
 	// Sort points by height.
 	if (y1 < y0) {
-		PAX_SWAP_POINTS(x0, y0, x1, y1);
+		PAX_SWAP(fixpt_t, x0, x1)
+		PAX_SWAP(fixpt_t, y0, y1)
 		#ifdef PDHG_NORMAL_UV
-		PAX_SWAP_POINTS(u0, v0, u1, v1);
+		PAX_SWAP(fixpt_t, u0, u1)
+		PAX_SWAP(fixpt_t, v0, v1)
 		#endif
 	}
 	if (y2 < y0) {
-		PAX_SWAP_POINTS(x0, y0, x2, y2);
+		PAX_SWAP(fixpt_t, x0, x2)
+		PAX_SWAP(fixpt_t, y0, y2)
 		#ifdef PDHG_NORMAL_UV
-		PAX_SWAP_POINTS(u0, v0, u2, v2);
+		PAX_SWAP(fixpt_t, u0, u2)
+		PAX_SWAP(fixpt_t, v0, v2)
 		#endif
 	}
 	if (y2 < y1) {
-		PAX_SWAP_POINTS(x1, y1, x2, y2);
+		PAX_SWAP(fixpt_t, x1, x2)
+		PAX_SWAP(fixpt_t, y1, y2)
 		#ifdef PDHG_NORMAL_UV
-		PAX_SWAP_POINTS(u1, v1, u2, v2);
+		PAX_SWAP(fixpt_t, u1, u2)
+		PAX_SWAP(fixpt_t, v1, v2)
 		#endif
 	}
 	

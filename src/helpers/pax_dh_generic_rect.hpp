@@ -109,8 +109,10 @@ void PDHG_NAME(
 		x += width;
 		width = -width;
 		#ifdef PDHG_NORMAL_UV
-		PAX_SWAP_POINTS(u0, v0, u1, v1);
-		PAX_SWAP_POINTS(u2, v2, u3, v3);
+		PAX_SWAP(fixpt_t, u0, u1)
+		PAX_SWAP(fixpt_t, v0, v1)
+		PAX_SWAP(fixpt_t, u2, u3)
+		PAX_SWAP(fixpt_t, v2, v3)
 		#endif
 		#ifdef PDHG_RESTRICT_UV
 		PAX_SWAP(fixpt_t, u0, u1)
@@ -120,8 +122,10 @@ void PDHG_NAME(
 		y += height;
 		height = -height;
 		#ifdef PDHG_NORMAL_UV
-		PAX_SWAP_POINTS(u0, v0, u3, v3);
-		PAX_SWAP_POINTS(u1, v1, u2, v2);
+		PAX_SWAP(fixpt_t, u0, u3)
+		PAX_SWAP(fixpt_t, v0, v3)
+		PAX_SWAP(fixpt_t, u1, u2)
+		PAX_SWAP(fixpt_t, v1, v2)
 		#endif
 		#ifdef PDHG_RESTRICT_UV
 		PAX_SWAP(fixpt_t, v0, v1)
