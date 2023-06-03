@@ -62,13 +62,13 @@ pax_vec2f  pax_draw_text     (pax_buf_t *buf, pax_col_t color, const pax_font_t 
 // Draw a string with the given font and return it's size.
 // Size is before matrix transformation.
 // Font is scaled up without interpolation, overriding it's default.
-__attribute__((warning ("DEPRECATION NOTICE: This function is subject to be removed in release v2.0.0")))
+__attribute__((deprecated))
 pax_vec2f  pax_draw_text_noaa(pax_buf_t *buf, pax_col_t color, const pax_font_t *font, float font_size, float x, float y, const char *text);
 // DEPRECATION NOTICE: This function is subject to be removed
 // Draw a string with the given font and return it's size.
 // Size is before matrix transformation.
 // Font is scaled up with interpolation, overriding it's default.
-__attribute__((warning ("DEPRECATION NOTICE: This function is subject to be removed in release v2.0.0")))
+__attribute__((deprecated))
 pax_vec2f  pax_draw_text_aa  (pax_buf_t *buf, pax_col_t color, const pax_font_t *font, float font_size, float x, float y, const char *text);
 // Calculate the size of the string with the given font.
 // Size is before matrix transformation.

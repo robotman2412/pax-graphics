@@ -309,12 +309,14 @@ struct pax_buf {
 	
 	union {
 	// Pallette for buffers with a pallette type.
+	__attribute__((deprecated))
 	pax_col_t        *pallette;
 	// Pallette for buffers with a pallette type.
 	pax_col_t        *palette;
 	};
 	union {
 	// The number of colors in the pallette.
+	__attribute__((deprecated))
 	size_t            pallette_size;
 	// The number of colors in the pallette.
 	size_t            palette_size;
