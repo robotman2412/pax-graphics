@@ -305,7 +305,7 @@ void pax_get_col_conv(const pax_buf_t *buf, pax_col_conv_t *col2buf, pax_col_con
 		
 	case (PAX_BUF_8_2222ARGB):
 		*col2buf = pax_col_to_2222_argb;
-		*buf2col = pax_col_to_2222_argb;
+		*buf2col = pax_2222_argb_to_col;
 		break;
 		
 	case (PAX_BUF_16_4444ARGB):

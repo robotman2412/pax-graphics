@@ -1,6 +1,5 @@
 # PAX graphics
-An MIT graphics library for the MCH2022 badge firmware.
-ESP-IDF module and Arduino library.
+An MIT graphics library for [Badge.team](https://badge.team/).
 
 Version: v1.1.0-snapshot
 

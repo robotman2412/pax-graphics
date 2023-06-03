@@ -29,6 +29,8 @@
 
 #if !PAX_USE_FIXED_POINT
 typedef float fixpt_t;
+static inline constexpr fixpt_t operator ""_fix(unsigned long long in) { return in; }
+static inline constexpr fixpt_t operator ""_fix(long double in) { return in; }
 #else
 
 #define PAX_FIXPT_INT_BITS  12
@@ -136,6 +138,9 @@ class fixpt_t {
 		fixpt_t &operator<<=(int other) { raw_value = raw_value << other; return *this; }
 		fixpt_t &operator>>=(int other) { raw_value = raw_value >> other; return *this; }
 };
+
+/* ==== Miscellaneous math functions ==== */
+static inline constexpr fixpt_t abs(fixpt_t in) { return fixpt_t::from_raw(abs(in.raw_value)); }
 
 /* ==== Literal operator ==== */
 static inline constexpr fixpt_t operator ""_fix(unsigned long long in) { return fixpt_t((int) in); }
