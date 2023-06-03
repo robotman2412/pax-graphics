@@ -51,11 +51,11 @@ extern "C" {
 #define PAX_RENDERER_ID_SWR 0x00
 
 // A human-readable representation of the current version number.
-#define PAX_VERSION_STR "1.1.0-snapshot"
+#define PAX_VERSION_STR "1.1.0"
 // A numeric representation of the version, one decimal digit per version part (MAJOR.MINOR.PATCH).
 #define PAX_VERSION_NUMBER 110
 // Whether this is a prerelease version of PAX.
-#define PAX_VERSION_IS_SNAPSHOT true
+#define PAX_VERSION_IS_SNAPSHOT false
 // The MAJOR part of the version (MAJOR.MINOR.PATCH).
 #define PAX_VERSION_MAJOR 1
 // The MINOR part of the version (MAJOR.MINOR.PATCH).

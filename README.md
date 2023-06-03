@@ -1,19 +1,10 @@
 # PAX graphics
 An MIT graphics library for [Badge.team](https://badge.team/).
 
-Version: v1.1.0-snapshot
+Version: v1.1.0
 
 # Documentation
 Documentation can be found [here](docs).
-
-# Target v1.1.0 TODO list
-- [x] Fix all remaining build warnings
-- [x] More advanced text options
-- [x] Triangulation that can handle simple inputs
-- [x] Add `const` to all read-only accesses
-- [x] Add special case to text functions for buffers with palette types
-- [ ] Check for other buffer type inconsistencies
-- [x] Leave this box unchecked
 
 # Feature wishlist
 - GPU acceleration
