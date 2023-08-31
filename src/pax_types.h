@@ -308,17 +308,19 @@ struct pax_buf {
 	int               bpp;
 	
 	union {
-	// Pallette for buffers with a pallette type.
+	// DEPRECATION NOTICE: Misspelled, use `palette` instead.
+	// Palette for buffers with a pallete type.
 	__attribute__((deprecated))
 	pax_col_t        *pallette;
-	// Pallette for buffers with a pallette type.
+	// Palette for buffers with a pallete type.
 	pax_col_t        *palette;
 	};
 	union {
-	// The number of colors in the pallette.
+	// DEPRECATION NOTICE: Misspelled, use `palette_size` instead.
+	// The number of colors in the palette.
 	__attribute__((deprecated))
 	size_t            pallette_size;
-	// The number of colors in the pallette.
+	// The number of colors in the palette.
 	size_t            palette_size;
 	};
 	

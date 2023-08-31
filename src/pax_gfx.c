@@ -224,7 +224,7 @@ void pax_buf_init(pax_buf_t *buf, void *mem, int width, int height, pax_buf_type
 		.do_free     = use_alloc,
 		.do_free_pal = false,
 		.reverse_endianness = false,
-		.pallette    = NULL
+		.palette    = NULL
 	};
 	// Bit of workaround because 16BPP screens almost always require this option.
 	if (PAX_GET_BPP(type) == 16) buf->reverse_endianness = true;
@@ -271,8 +271,8 @@ void pax_buf_destroy(pax_buf_t *buf) {
 	if (buf->do_free) {
 		free(buf->buf);
 	}
-	if (buf->pallette && buf->do_free_pal) {
-		free(buf->pallette);
+	if (buf->palette && buf->do_free_pal) {
+		free(buf->palette);
 	}
 	
 	// A safety mechanism to prevent use-after-free on the user's behalf.
@@ -1469,7 +1469,7 @@ PAX_PERF_CRITICAL_ATTR void pax_background(pax_buf_t *buf, pax_col_t color) {
 	
 	uint32_t value;
 	if (PAX_IS_PALETTE(buf->type)) {
-		if (color > buf->pallette_size) value = 0;
+		if (color > buf->palette_size) value = 0;
 		else value = color;
 	} else {
 		value = buf->col2buf(buf, color);

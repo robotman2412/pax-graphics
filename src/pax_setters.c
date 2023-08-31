@@ -437,8 +437,8 @@ pax_col_t pax_col_to_4444_argb(const pax_buf_t *buf, pax_col_t color) {
 // Performs a palette lookup based on the input.
 pax_col_t pax_pal_lookup(const pax_buf_t *buf, pax_col_t index) {
 	return (index >= buf->palette_size)
-		   ? *buf->pallette
-		   :  buf->pallette[index];
+		   ? *buf->palette
+		   :  buf->palette[index];
 }
 
 

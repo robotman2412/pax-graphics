@@ -140,7 +140,7 @@ class fixpt_t {
 };
 
 /* ==== Miscellaneous math functions ==== */
-static inline constexpr fixpt_t abs(fixpt_t in) { return fixpt_t::from_raw(abs(in.raw_value)); }
+static inline constexpr fixpt_t abs(fixpt_t in) { return fixpt_t::from_raw(in.raw_value < 0 ? -in.raw_value : in.raw_value); }
 
 /* ==== Literal operator ==== */
 static inline constexpr fixpt_t operator ""_fix(unsigned long long in) { return fixpt_t((int) in); }
