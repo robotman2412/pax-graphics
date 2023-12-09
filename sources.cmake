@@ -37,6 +37,6 @@ set(PAX_INCLUDE_C
 set(PAX_SRCS_CXX
 )
 
-# C include directories.
+# C++ include directories.
 set(PAX_INCLUDE_CXX
 )
