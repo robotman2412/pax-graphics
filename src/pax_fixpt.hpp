@@ -20,6 +20,8 @@ static inline constexpr fixpt_t operator""_fix(long double in) {
 #define PAX_FIXPT_INT_BITS  12
 #define PAX_FIXPT_FRAC_BITS 20
 #define PAX_FIXPT_MUL       0x00100000
+#define FIXPT_MAX           ((long double)INT32_MAX / PAX_FIXPT_MUL)
+#define FIXPT_MIN           ((long double)INT32_MIN / PAX_FIXPT_MUL)
 
 class fixpt_t {
   public:
@@ -27,18 +29,41 @@ class fixpt_t {
 
   private:
     static constexpr int32_t _div(int32_t a, int32_t b) {
-        return b ? (((int64_t)a << PAX_FIXPT_FRAC_BITS) / (int64_t)b) : (a > 0 ? INT32_MAX : INT32_MIN);
+        int64_t tmp = b ? (((int64_t)a << PAX_FIXPT_FRAC_BITS) / (int64_t)b) : (a > 0 ? INT32_MAX : INT32_MIN);
+        if (tmp <= INT32_MIN)
+            return INT32_MIN;
+        if (tmp >= INT32_MAX)
+            return INT32_MAX;
+        return tmp;
     }
     static constexpr int32_t _mul(int32_t a, int32_t b) {
-        return ((int64_t)a * (int64_t)b) >> PAX_FIXPT_FRAC_BITS;
+        int64_t tmp = ((int64_t)a * (int64_t)b) >> PAX_FIXPT_FRAC_BITS;
+        if (tmp <= INT32_MIN)
+            return INT32_MIN;
+        if (tmp >= INT32_MAX)
+            return INT32_MAX;
+        return tmp;
     }
     template <typename T> static constexpr int32_t _from(T in) {
+        if (in >= FIXPT_MAX)
+            return INT32_MAX;
+        if (in <= FIXPT_MIN)
+            return INT32_MIN;
         return in * PAX_FIXPT_MUL;
     }
     template <typename T> static constexpr T _to(int32_t in) {
         return (T)(in / (T)PAX_FIXPT_MUL);
     }
     constexpr fixpt_t(int32_t val, bool dummy) : raw_value(val) {
+    }
+    static int32_t constexpr saturate_add(int32_t a, int32_t b) {
+        if (a > 0 && b > INT32_MAX - a) {
+            return INT32_MAX;
+        } else if (a <= 0 && b < INT32_MIN - a) {
+            return INT32_MIN;
+        } else {
+            return a + b;
+        }
     }
 
   public:
@@ -135,10 +160,10 @@ class fixpt_t {
 
     /* ==== Binary math operators ==== */
     constexpr fixpt_t operator+(fixpt_t other) const {
-        return from_raw(raw_value + other.raw_value);
+        return from_raw(saturate_add(raw_value, other.raw_value));
     }
     constexpr fixpt_t operator-(fixpt_t other) const {
-        return from_raw(raw_value - other.raw_value);
+        return from_raw(saturate_add(raw_value, -other.raw_value));
     }
     constexpr fixpt_t operator*(fixpt_t other) const {
         return from_raw(_mul(raw_value, other.raw_value));
@@ -146,10 +171,10 @@ class fixpt_t {
     constexpr fixpt_t operator/(fixpt_t other) const {
         return from_raw(_div(raw_value, other.raw_value));
     }
-    constexpr fixpt_t operator<<(int other) const {
+    constexpr bool operator<<(int other) const {
         return from_raw(raw_value << other);
     }
-    constexpr fixpt_t operator>>(int other) const {
+    constexpr bool operator>>(int other) const {
         return from_raw(raw_value >> other);
     }
 
@@ -161,34 +186,36 @@ class fixpt_t {
         return *this;
     }
     constexpr fixpt_t operator-() const {
+        if (raw_value == INT32_MIN)
+            return from_raw(INT32_MAX);
         return from_raw(-raw_value);
     }
     fixpt_t &operator++() {
-        raw_value += PAX_FIXPT_MUL;
+        raw_value = saturate_add(raw_value, PAX_FIXPT_MUL);
         return *this;
     }
     fixpt_t &operator--() {
-        raw_value -= PAX_FIXPT_MUL;
+        raw_value = saturate_add(raw_value, -PAX_FIXPT_MUL);
         return *this;
     }
     fixpt_t operator++(int) {
-        auto pre   = *this;
-        raw_value += PAX_FIXPT_MUL;
+        auto pre  = *this;
+        raw_value = saturate_add(raw_value, PAX_FIXPT_MUL);
         return pre;
     }
     fixpt_t operator--(int) {
-        auto pre   = *this;
-        raw_value -= PAX_FIXPT_MUL;
+        auto pre  = *this;
+        raw_value = saturate_add(raw_value, -PAX_FIXPT_MUL);
         return pre;
     }
 
     /* ==== Assignment math operators ==== */
     fixpt_t &operator+=(fixpt_t other) {
-        raw_value = raw_value + other.raw_value;
+        raw_value = saturate_add(raw_value, other.raw_value);
         return *this;
     }
     fixpt_t &operator-=(fixpt_t other) {
-        raw_value = raw_value - other.raw_value;
+        raw_value = saturate_add(raw_value, -other.raw_value);
         return *this;
     }
     fixpt_t &operator*=(fixpt_t other) {
@@ -235,22 +262,22 @@ static inline constexpr fixpt_t operator*(int a, fixpt_t b) {
 static inline constexpr fixpt_t operator/(int a, fixpt_t b) {
     return fixpt_t(a) / fixpt_t(b);
 }
-static inline constexpr fixpt_t operator==(int a, fixpt_t b) {
+static inline constexpr bool operator==(int a, fixpt_t b) {
     return fixpt_t(a) == fixpt_t(b);
 }
-static inline constexpr fixpt_t operator!=(int a, fixpt_t b) {
+static inline constexpr bool operator!=(int a, fixpt_t b) {
     return fixpt_t(a) != fixpt_t(b);
 }
-static inline constexpr fixpt_t operator<=(int a, fixpt_t b) {
+static inline constexpr bool operator<=(int a, fixpt_t b) {
     return fixpt_t(a) <= fixpt_t(b);
 }
-static inline constexpr fixpt_t operator>=(int a, fixpt_t b) {
+static inline constexpr bool operator>=(int a, fixpt_t b) {
     return fixpt_t(a) >= fixpt_t(b);
 }
-static inline constexpr fixpt_t operator<(int a, fixpt_t b) {
+static inline constexpr bool operator<(int a, fixpt_t b) {
     return fixpt_t(a) < fixpt_t(b);
 }
-static inline constexpr fixpt_t operator>(int a, fixpt_t b) {
+static inline constexpr bool operator>(int a, fixpt_t b) {
     return fixpt_t(a) > fixpt_t(b);
 }
 
@@ -266,22 +293,22 @@ static inline constexpr fixpt_t operator*(fixpt_t a, int b) {
 static inline constexpr fixpt_t operator/(fixpt_t a, int b) {
     return fixpt_t(a) / fixpt_t(b);
 }
-static inline constexpr fixpt_t operator==(fixpt_t a, int b) {
+static inline constexpr bool operator==(fixpt_t a, int b) {
     return fixpt_t(a) == fixpt_t(b);
 }
-static inline constexpr fixpt_t operator!=(fixpt_t a, int b) {
+static inline constexpr bool operator!=(fixpt_t a, int b) {
     return fixpt_t(a) != fixpt_t(b);
 }
-static inline constexpr fixpt_t operator<=(fixpt_t a, int b) {
+static inline constexpr bool operator<=(fixpt_t a, int b) {
     return fixpt_t(a) <= fixpt_t(b);
 }
-static inline constexpr fixpt_t operator>=(fixpt_t a, int b) {
+static inline constexpr bool operator>=(fixpt_t a, int b) {
     return fixpt_t(a) >= fixpt_t(b);
 }
-static inline constexpr fixpt_t operator<(fixpt_t a, int b) {
+static inline constexpr bool operator<(fixpt_t a, int b) {
     return fixpt_t(a) < fixpt_t(b);
 }
-static inline constexpr fixpt_t operator>(fixpt_t a, int b) {
+static inline constexpr bool operator>(fixpt_t a, int b) {
     return fixpt_t(a) > fixpt_t(b);
 }
 
@@ -298,22 +325,22 @@ static inline constexpr fixpt_t operator*(float a, fixpt_t b) {
 static inline constexpr fixpt_t operator/(float a, fixpt_t b) {
     return fixpt_t(a) / fixpt_t(b);
 }
-static inline constexpr fixpt_t operator==(float a, fixpt_t b) {
+static inline constexpr bool operator==(float a, fixpt_t b) {
     return fixpt_t(a) == fixpt_t(b);
 }
-static inline constexpr fixpt_t operator!=(float a, fixpt_t b) {
+static inline constexpr bool operator!=(float a, fixpt_t b) {
     return fixpt_t(a) != fixpt_t(b);
 }
-static inline constexpr fixpt_t operator<=(float a, fixpt_t b) {
+static inline constexpr bool operator<=(float a, fixpt_t b) {
     return fixpt_t(a) <= fixpt_t(b);
 }
-static inline constexpr fixpt_t operator>=(float a, fixpt_t b) {
+static inline constexpr bool operator>=(float a, fixpt_t b) {
     return fixpt_t(a) >= fixpt_t(b);
 }
-static inline constexpr fixpt_t operator<(float a, fixpt_t b) {
+static inline constexpr bool operator<(float a, fixpt_t b) {
     return fixpt_t(a) < fixpt_t(b);
 }
-static inline constexpr fixpt_t operator>(float a, fixpt_t b) {
+static inline constexpr bool operator>(float a, fixpt_t b) {
     return fixpt_t(a) > fixpt_t(b);
 }
 
@@ -329,22 +356,22 @@ static inline constexpr fixpt_t operator*(fixpt_t a, float b) {
 static inline constexpr fixpt_t operator/(fixpt_t a, float b) {
     return fixpt_t(a) / fixpt_t(b);
 }
-static inline constexpr fixpt_t operator==(fixpt_t a, float b) {
+static inline constexpr bool operator==(fixpt_t a, float b) {
     return fixpt_t(a) == fixpt_t(b);
 }
-static inline constexpr fixpt_t operator!=(fixpt_t a, float b) {
+static inline constexpr bool operator!=(fixpt_t a, float b) {
     return fixpt_t(a) != fixpt_t(b);
 }
-static inline constexpr fixpt_t operator<=(fixpt_t a, float b) {
+static inline constexpr bool operator<=(fixpt_t a, float b) {
     return fixpt_t(a) <= fixpt_t(b);
 }
-static inline constexpr fixpt_t operator>=(fixpt_t a, float b) {
+static inline constexpr bool operator>=(fixpt_t a, float b) {
     return fixpt_t(a) >= fixpt_t(b);
 }
-static inline constexpr fixpt_t operator<(fixpt_t a, float b) {
+static inline constexpr bool operator<(fixpt_t a, float b) {
     return fixpt_t(a) < fixpt_t(b);
 }
-static inline constexpr fixpt_t operator>(fixpt_t a, float b) {
+static inline constexpr bool operator>(fixpt_t a, float b) {
     return fixpt_t(a) > fixpt_t(b);
 }
 
@@ -361,22 +388,22 @@ static inline constexpr fixpt_t operator*(double a, fixpt_t b) {
 static inline constexpr fixpt_t operator/(double a, fixpt_t b) {
     return fixpt_t(a) / fixpt_t(b);
 }
-static inline constexpr fixpt_t operator==(double a, fixpt_t b) {
+static inline constexpr bool operator==(double a, fixpt_t b) {
     return fixpt_t(a) == fixpt_t(b);
 }
-static inline constexpr fixpt_t operator!=(double a, fixpt_t b) {
+static inline constexpr bool operator!=(double a, fixpt_t b) {
     return fixpt_t(a) != fixpt_t(b);
 }
-static inline constexpr fixpt_t operator<=(double a, fixpt_t b) {
+static inline constexpr bool operator<=(double a, fixpt_t b) {
     return fixpt_t(a) <= fixpt_t(b);
 }
-static inline constexpr fixpt_t operator>=(double a, fixpt_t b) {
+static inline constexpr bool operator>=(double a, fixpt_t b) {
     return fixpt_t(a) >= fixpt_t(b);
 }
-static inline constexpr fixpt_t operator<(double a, fixpt_t b) {
+static inline constexpr bool operator<(double a, fixpt_t b) {
     return fixpt_t(a) < fixpt_t(b);
 }
-static inline constexpr fixpt_t operator>(double a, fixpt_t b) {
+static inline constexpr bool operator>(double a, fixpt_t b) {
     return fixpt_t(a) > fixpt_t(b);
 }
 
@@ -392,22 +419,22 @@ static inline constexpr fixpt_t operator*(fixpt_t a, double b) {
 static inline constexpr fixpt_t operator/(fixpt_t a, double b) {
     return fixpt_t(a) / fixpt_t(b);
 }
-static inline constexpr fixpt_t operator==(fixpt_t a, double b) {
+static inline constexpr bool operator==(fixpt_t a, double b) {
     return fixpt_t(a) == fixpt_t(b);
 }
-static inline constexpr fixpt_t operator!=(fixpt_t a, double b) {
+static inline constexpr bool operator!=(fixpt_t a, double b) {
     return fixpt_t(a) != fixpt_t(b);
 }
-static inline constexpr fixpt_t operator<=(fixpt_t a, double b) {
+static inline constexpr bool operator<=(fixpt_t a, double b) {
     return fixpt_t(a) <= fixpt_t(b);
 }
-static inline constexpr fixpt_t operator>=(fixpt_t a, double b) {
+static inline constexpr bool operator>=(fixpt_t a, double b) {
     return fixpt_t(a) >= fixpt_t(b);
 }
-static inline constexpr fixpt_t operator<(fixpt_t a, double b) {
+static inline constexpr bool operator<(fixpt_t a, double b) {
     return fixpt_t(a) < fixpt_t(b);
 }
-static inline constexpr fixpt_t operator>(fixpt_t a, double b) {
+static inline constexpr bool operator>(fixpt_t a, double b) {
     return fixpt_t(a) > fixpt_t(b);
 }
 
