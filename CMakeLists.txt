@@ -10,6 +10,7 @@ elseif(DEFINED PICO_SDK_PATH)
 	project(pax_graphics C CXX)
 	
 	message(STATUS "Building PAX Graphics for Pi Pico SDK.")
+	add_definitions(-DPAX_STANDALONE=0)
 	add_definitions(-DPAX_COMPILE_MCR=0)
 	add_definitions(-DPAX_PI_PICO=1)
 	include(${CMAKE_CURRENT_LIST_DIR}/standalone.cmake)
