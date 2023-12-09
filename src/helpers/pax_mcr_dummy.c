@@ -3,9 +3,11 @@
 
 #include "../pax_internal.h"
 
-#if !defined(PAX_COMPILE_MCR) || (!defined(PAX_ESP_IDF) && !defined(PAX_STANDALONE))
+#if !PAX_COMPILE_MCR
 
 /* ===== MULTI-CORE RENDERING ==== */
+
+static char const *TAG = "pax-mcr";
 
 // If multi-core rendering is enabled, wait for the other core.
 void pax_join() {
