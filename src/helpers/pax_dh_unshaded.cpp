@@ -15,7 +15,6 @@
 
 // Internal method for line drawing.
 void pax_line_unshaded(pax_buf_t *buf, pax_col_t color, float x0, float y0, float x1, float y1) {
-
     pax_index_setter_t setter = pax_get_setter(buf, &color, NULL);
     if (!setter)
         return;
@@ -23,6 +22,12 @@ void pax_line_unshaded(pax_buf_t *buf, pax_col_t color, float x0, float y0, floa
     if (y1 < y0) {
         PAX_SWAP(float, x0, x1)
         PAX_SWAP(float, y0, y1)
+    }
+
+    // Bounds check.
+    if ((x0 < 0 && x1 < 0) || (x0 >= buf->clip.x + buf->clip.w && x1 >= buf->clip.x + buf->clip.w) ||
+        (y0 < 0 && y1 < 0) || (y0 >= buf->clip.y + buf->clip.h && y1 >= buf->clip.y + buf->clip.h)) {
+        return;
     }
 
     // Clip: left.

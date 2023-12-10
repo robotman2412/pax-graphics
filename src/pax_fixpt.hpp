@@ -17,50 +17,66 @@ static inline constexpr fixpt_t operator""_fix(long double in) {
 }
 #else
 
+#if PAX_USE_LONG_FIXED_POINT && defined(__SIZEOF_INT128__)
+#define PAX_FIXPT_INT_BITS  16ll
+#define PAX_FIXPT_FRAC_BITS 48ll
+#define PAX_FIXPT_MUL       0x0001000000000000ll
+#define FIXPT_RAW_MAX       INT64_MAX
+#define FIXPT_RAW_MIN       INT64_MIN
+typedef int64_t  fixpt_raw_t;
+typedef __int128 fixpt_long_raw_t;
+#else
 #define PAX_FIXPT_INT_BITS  12
 #define PAX_FIXPT_FRAC_BITS 20
 #define PAX_FIXPT_MUL       0x00100000
-#define FIXPT_MAX           ((long double)INT32_MAX / PAX_FIXPT_MUL)
-#define FIXPT_MIN           ((long double)INT32_MIN / PAX_FIXPT_MUL)
+#define FIXPT_RAW_MAX       INT32_MAX
+#define FIXPT_RAW_MIN       INT32_MIN
+typedef int32_t fixpt_raw_t;
+typedef int64_t fixpt_long_raw_t;
+#endif
+
+#define FIXPT_MAX ((long double)INT64_MAX / PAX_FIXPT_MUL)
+#define FIXPT_MIN ((long double)INT64_MIN / PAX_FIXPT_MUL)
 
 class fixpt_t {
   public:
-    int32_t raw_value;
+    fixpt_raw_t raw_value;
 
   private:
-    static constexpr int32_t _div(int32_t a, int32_t b) {
-        int64_t tmp = b ? (((int64_t)a << PAX_FIXPT_FRAC_BITS) / (int64_t)b) : (a > 0 ? INT32_MAX : INT32_MIN);
-        if (tmp <= INT32_MIN)
-            return INT32_MIN;
-        if (tmp >= INT32_MAX)
-            return INT32_MAX;
+    static constexpr fixpt_raw_t _div(fixpt_raw_t a, fixpt_raw_t b) {
+        fixpt_long_raw_t tmp = b ? (((fixpt_long_raw_t)a << PAX_FIXPT_FRAC_BITS) / (fixpt_long_raw_t)b)
+                                 : (a > 0 ? FIXPT_RAW_MAX : FIXPT_RAW_MIN);
+        if (tmp <= FIXPT_RAW_MIN)
+            return FIXPT_RAW_MIN;
+        if (tmp >= FIXPT_RAW_MAX)
+            return FIXPT_RAW_MAX;
         return tmp;
     }
-    static constexpr int32_t _mul(int32_t a, int32_t b) {
-        int64_t tmp = ((int64_t)a * (int64_t)b) >> PAX_FIXPT_FRAC_BITS;
-        if (tmp <= INT32_MIN)
-            return INT32_MIN;
-        if (tmp >= INT32_MAX)
-            return INT32_MAX;
+    static constexpr fixpt_raw_t _mul(fixpt_raw_t a, fixpt_raw_t b) {
+        fixpt_long_raw_t tmp = ((fixpt_long_raw_t)a * (fixpt_long_raw_t)b) >> PAX_FIXPT_FRAC_BITS;
+        if (tmp <= FIXPT_RAW_MIN)
+            return FIXPT_RAW_MIN;
+        if (tmp >= FIXPT_RAW_MAX)
+            return FIXPT_RAW_MAX;
         return tmp;
     }
-    template <typename T> static constexpr int32_t _from(T in) {
+    template <typename T> static constexpr fixpt_raw_t _from(T in) {
         if (in >= FIXPT_MAX)
-            return INT32_MAX;
+            return FIXPT_RAW_MAX;
         if (in <= FIXPT_MIN)
-            return INT32_MIN;
+            return FIXPT_RAW_MIN;
         return in * PAX_FIXPT_MUL;
     }
-    template <typename T> static constexpr T _to(int32_t in) {
-        return (T)(in / (T)PAX_FIXPT_MUL);
+    template <typename T> static constexpr T _to(fixpt_raw_t in) {
+        return (T)(in / (long double)PAX_FIXPT_MUL);
     }
-    constexpr fixpt_t(int32_t val, bool dummy) : raw_value(val) {
+    constexpr fixpt_t(fixpt_raw_t val, bool dummy) : raw_value(val) {
     }
-    static int32_t constexpr saturate_add(int32_t a, int32_t b) {
-        if (a > 0 && b > INT32_MAX - a) {
-            return INT32_MAX;
-        } else if (a <= 0 && b < INT32_MIN - a) {
-            return INT32_MIN;
+    static fixpt_raw_t constexpr saturate_add(fixpt_raw_t a, fixpt_raw_t b) {
+        if (a > 0 && b > FIXPT_RAW_MAX - a) {
+            return FIXPT_RAW_MAX;
+        } else if (a <= 0 && b < FIXPT_RAW_MIN - a) {
+            return FIXPT_RAW_MIN;
         } else {
             return a + b;
         }
@@ -68,7 +84,7 @@ class fixpt_t {
 
   public:
     // Create from raw value (instead of conversion).
-    static constexpr fixpt_t from_raw(int32_t raw) {
+    static constexpr fixpt_t from_raw(fixpt_raw_t raw) {
         return fixpt_t(raw, false);
     }
 

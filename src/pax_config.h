@@ -58,4 +58,11 @@
 #define PAX_USE_FIXED_POINT true
 #endif
 
+#if PAX_USE_FIXED_POINT
+#ifndef PAX_USE_LONG_FIXED_POINT
+// Whether to use 64-bit instead of 32-bit fixed-point arithmetic.
+#define PAX_USE_LONG_FIXED_POINT true
+#endif
+#endif
+
 #endif // PAX_CONFIG_H
