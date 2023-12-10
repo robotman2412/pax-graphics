@@ -12,10 +12,6 @@ set(PAX_SRCS_C
 	${CMAKE_CURRENT_LIST_DIR}/src/pax_setters.c
 	${CMAKE_CURRENT_LIST_DIR}/src/pax_orientation.c
 	
-	${CMAKE_CURRENT_LIST_DIR}/src/helpers/pax_dh_mcr_shaded.cpp
-	${CMAKE_CURRENT_LIST_DIR}/src/helpers/pax_dh_mcr_unshaded.cpp
-	${CMAKE_CURRENT_LIST_DIR}/src/helpers/pax_dh_shaded.cpp
-	${CMAKE_CURRENT_LIST_DIR}/src/helpers/pax_dh_unshaded.cpp
 	${CMAKE_CURRENT_LIST_DIR}/src/helpers/pax_mcr_dummy.c
 	${CMAKE_CURRENT_LIST_DIR}/src/helpers/pax_mcr_esp32.c
 	${CMAKE_CURRENT_LIST_DIR}/src/helpers/pax_mcr_pthread.c
@@ -35,6 +31,10 @@ set(PAX_INCLUDE_C
 
 # C++ source files.
 set(PAX_SRCS_CXX
+	${CMAKE_CURRENT_LIST_DIR}/src/helpers/pax_dh_mcr_shaded.cpp
+	${CMAKE_CURRENT_LIST_DIR}/src/helpers/pax_dh_mcr_unshaded.cpp
+	${CMAKE_CURRENT_LIST_DIR}/src/helpers/pax_dh_shaded.cpp
+	${CMAKE_CURRENT_LIST_DIR}/src/helpers/pax_dh_unshaded.cpp
 )
 
 # C++ include directories.

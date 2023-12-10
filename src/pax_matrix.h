@@ -50,6 +50,7 @@ typedef struct matrix_stack_2d matrix_stack_2d_t;
 #ifdef __cplusplus
 #include <assert.h>
 #include <memory>
+#include <initializer_list>
 
 namespace pax {
 
