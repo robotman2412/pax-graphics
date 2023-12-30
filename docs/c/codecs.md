@@ -34,6 +34,6 @@ An example of drawing a PNG in PAX:
 ```c
 void draw_my_png(pax_buf_t *draw_to, void *png_data, size_t png_data_len) {
     // Decode a PNG straight into the buffer.
-    pax_insert_png_buf(draw_to, png_data, png_data_len, 0, 0, PAX_BUF_32_8888ARGB);
+    pax_insert_png_buf(draw_to, png_data, png_data_len, 0, 0, 0);
 }
 ```
