@@ -1,12 +1,13 @@
 
 # Pre-release checklist
 - [ ] All working features documented
-- [x] Functions tested:
+- [X] Functions tested:
   - [x] MCR enabled/disabled consistency.
   - [x] Unshaded rect, tri, line, circle, arc.
   - [x] Shaded rect, tri, line, circle, arc.
   - [x] Images
   - [x] Text
+  - [X] Orientation functions
 - [x] Buffer types tested:
   - [x] PAX_BUF_1_PAL
   - [x] PAX_BUF_2_PAL

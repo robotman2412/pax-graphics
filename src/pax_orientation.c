@@ -59,7 +59,7 @@ static inline pax_vec2f pax_orient_ccw2_flip_vec2f(pax_buf_t const *buf, pax_vec
     };
 }
 
-// Transforms the co-ordinates as 2x counter-clockwise rotation and flip horizontally.
+// Transforms the co-ordinates as 3x counter-clockwise rotation and flip horizontally.
 static inline pax_vec2f pax_orient_ccw3_flip_vec2f(pax_buf_t const *buf, pax_vec2f vec) __attribute__((pure));
 static inline pax_vec2f pax_orient_ccw3_flip_vec2f(pax_buf_t const *buf, pax_vec2f vec) {
     return (pax_vec2f){
@@ -145,7 +145,7 @@ static inline pax_rectf pax_orient_flip_rectf(pax_buf_t const *buf, pax_rectf ve
 static inline pax_rectf pax_orient_flip_rectf(pax_buf_t const *buf, pax_rectf vec) {
     return (pax_rectf){
         buf->width - vec.x,
-        buf->height - vec.y,
+        vec.y,
         -vec.w,
         vec.h,
     };
