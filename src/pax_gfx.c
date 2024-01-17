@@ -343,19 +343,27 @@ void pax_buf_convert(pax_buf_t *dst, pax_buf_t *src, pax_buf_type_t type) {
 
 // Retrieve the width of the buffer.
 int pax_buf_get_width(pax_buf_t const *buf) {
-    return buf->width;
+    if (buf->orientation & 1) {
+        return buf->height;
+    } else {
+        return buf->width;
+    }
 }
 // Retrieve the height of the buffer.
 int pax_buf_get_height(pax_buf_t const *buf) {
-    return buf->height;
+    if (buf->orientation & 1) {
+        return buf->width;
+    } else {
+        return buf->height;
+    }
 }
 // Retrieve the width of the buffer.
 float pax_buf_get_widthf(pax_buf_t const *buf) {
-    return (float)buf->width;
+    return (float)pax_buf_get_width(buf);
 }
 // Retrieve the height of the buffer.
 float pax_buf_get_heightf(pax_buf_t const *buf) {
-    return (float)buf->height;
+    return (float)pax_buf_get_height(buf);
 }
 // Retrieve the type of the buffer.
 pax_buf_type_t pax_buf_get_type(pax_buf_t const *buf) {
