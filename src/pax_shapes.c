@@ -525,14 +525,7 @@ void pax_outline_arc(pax_buf_t *buf, pax_col_t color, float x, float y, float r,
     }
 
     // Pick an appropriate number of divisions.
-    int         n_div;
-    matrix_2d_t matrix = buf->stack_2d.value;
-    float       c_r =
-        r * sqrtf(matrix.a0 * matrix.a0 + matrix.b0 * matrix.b0) * sqrtf(matrix.a1 * matrix.a1 + matrix.b1 * matrix.b1);
-    if (c_r > 30)
-        n_div = (a1 - a0) / M_PI * 32 + 1;
-    else
-        n_div = (a1 - a0) / M_PI * 16 + 1;
+    int n_div = pax_pick_arc_divs(&buf->stack_2d.value, r, a0, a1);
 
     // Get the sine and cosine of one division, used for rotation in the loop.
     float div_angle = (a1 - a0) / n_div;
@@ -560,7 +553,24 @@ void pax_outline_arc(pax_buf_t *buf, pax_col_t color, float x, float y, float r,
 
 // Draw a circle outline.
 void pax_outline_circle(pax_buf_t *buf, pax_col_t color, float x, float y, float r) {
-    pax_outline_arc(buf, color, x, y, r, 0, M_PI * 2);
+    PAX_BUF_CHECK("pax_outline_circle");
+    if (!pax_do_draw_col(buf, color))
+        return;
+
+    // Use precalcualted circles for speed because the user can't tell anyway.
+    pax_vec2f const *preset;
+    pax_trif const  *uv_set;
+    size_t           size = pax_pick_circle(&buf->stack_2d.value, r, &preset, &uv_set);
+
+    // Use the builtin matrix stuff to our advantage.
+    pax_push_2d(buf);
+    pax_apply_2d(buf, matrix_2d_translate(x, y));
+    pax_apply_2d(buf, matrix_2d_scale(r, r));
+    // Plot all the lines in the ROM.
+    for (size_t i = 0; i < size; i++) {
+        pax_draw_line(buf, color, preset[i].x, preset[i].y, preset[i + 1].x, preset[i + 1].y);
+    }
+    pax_pop_2d(buf);
 }
 
 
@@ -665,14 +675,7 @@ void pax_shade_outline_arc(
     }
 
     // Pick an appropriate number of divisions.
-    int         n_div;
-    matrix_2d_t matrix = buf->stack_2d.value;
-    float       c_r =
-        r * sqrtf(matrix.a0 * matrix.a0 + matrix.b0 * matrix.b0) * sqrtf(matrix.a1 * matrix.a1 + matrix.b1 * matrix.b1);
-    if (c_r > 30)
-        n_div = (a1 - a0) / M_PI * 32 + 1;
-    else
-        n_div = (a1 - a0) / M_PI * 16 + 1;
+    int n_div = pax_pick_arc_divs(&buf->stack_2d.value, r, a0, a1);
 
     // Get the sine and cosine of one division, used for rotation in the loop.
     float div_angle = (a1 - a0) / n_div;

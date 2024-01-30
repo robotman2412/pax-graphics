@@ -131,6 +131,40 @@ char const *pax_desc_err(pax_err_t error) {
 
 /* ======= DRAWING HELPERS ======= */
 
+// Select a number of divisions for an arc.
+int pax_pick_arc_divs(matrix_2d_t const *matrix, float r, float a0, float a1) {
+    float c_r = r * sqrtf(matrix->a0 * matrix->a0 + matrix->b0 * matrix->b0) *
+                sqrtf(matrix->a1 * matrix->a1 + matrix->b1 * matrix->b1);
+    int n_div;
+    if (c_r > 30) {
+        n_div = (a1 - a0) / M_PI * 24;
+    } else if (c_r > 7) {
+        n_div = (a1 - a0) / M_PI * 16;
+    } else {
+        n_div = (a1 - a0) / M_PI * 8;
+    }
+    return n_div <= 1 ? 1 : n_div;
+}
+
+// Select an appropriate precalculated circle.
+int pax_pick_circle(matrix_2d_t const *matrix, float r, pax_vec2f const **vertex, pax_trif const **uv) {
+    float c_r = r * sqrtf(matrix->a0 * matrix->a0 + matrix->b0 * matrix->b0) *
+                sqrtf(matrix->a1 * matrix->a1 + matrix->b1 * matrix->b1);
+    if (c_r > 30) {
+        *vertex = pax_precalc_circle_24;
+        *uv     = pax_precalc_uv_circle_24;
+        return 24;
+    } else if (c_r > 7) {
+        *vertex = pax_precalc_circle_16;
+        *uv     = pax_precalc_uv_circle_16;
+        return 16;
+    } else {
+        *vertex = pax_precalc_circle_8;
+        *uv     = pax_precalc_uv_circle_8;
+        return 8;
+    }
+}
+
 // A wrapper callback to support V0 shader callbacks.
 static pax_col_t
     pax_shader_wrapper_for_v0(pax_col_t tint, pax_col_t existing, int x, int y, float u, float v, void *args0) {
@@ -1360,14 +1394,7 @@ void pax_shade_arc(
     }
 
     // Pick an appropriate number of divisions.
-    int         n_div;
-    matrix_2d_t matrix = buf->stack_2d.value;
-    float       c_r =
-        r * sqrtf(matrix.a0 * matrix.a0 + matrix.b0 * matrix.b0) * sqrtf(matrix.a1 * matrix.a1 + matrix.b1 * matrix.b1);
-    if (c_r > 30)
-        n_div = (a1 - a0) / M_PI * 32 + 1;
-    else
-        n_div = (a1 - a0) / M_PI * 16 + 1;
+    int n_div = pax_pick_arc_divs(&buf->stack_2d.value, r, a0, a1);
 
     // Get the sine and cosine of one division, used for rotation in the loop.
     float div_angle = (a1 - a0) / n_div;
@@ -1414,26 +1441,7 @@ void pax_shade_circle(
     // Use precalcualted circles for speed because the user can't tell anyway.
     pax_vec2f const *preset;
     pax_trif const  *uv_set;
-    size_t           size;
-
-    // Pick a suitable number of subdivisions.
-    matrix_2d_t matrix = buf->stack_2d.value;
-    float       c_r =
-        r * sqrtf(matrix.a0 * matrix.a0 + matrix.b0 * matrix.b0) * sqrtf(matrix.a1 * matrix.a1 + matrix.b1 * matrix.b1);
-
-    if (c_r > 30) {
-        preset = pax_precalc_circle_24;
-        uv_set = pax_precalc_uv_circle_24;
-        size   = 24;
-    } else if (c_r > 7) {
-        preset = pax_precalc_circle_16;
-        uv_set = pax_precalc_uv_circle_16;
-        size   = 16;
-    } else {
-        preset = pax_precalc_circle_4;
-        uv_set = pax_precalc_uv_circle_4;
-        size   = 4;
-    }
+    size_t           size = pax_pick_circle(&buf->stack_2d.value, r, &preset, &uv_set);
 
     // Use the builtin matrix stuff to our advantage.
     pax_push_2d(buf);
@@ -1556,14 +1564,7 @@ void pax_draw_arc(pax_buf_t *buf, pax_col_t color, float x, float y, float r, fl
     }
 
     // Pick an appropriate number of divisions.
-    int         n_div;
-    matrix_2d_t matrix = buf->stack_2d.value;
-    float       c_r =
-        r * sqrtf(matrix.a0 * matrix.a0 + matrix.b0 * matrix.b0) * sqrtf(matrix.a1 * matrix.a1 + matrix.b1 * matrix.b1);
-    if (c_r > 30)
-        n_div = (a1 - a0) / M_PI * 32 + 1;
-    else
-        n_div = (a1 - a0) / M_PI * 16 + 1;
+    int n_div = pax_pick_arc_divs(&buf->stack_2d.value, r, a0, a1);
 
     // Get the sine and cosine of one division, used for rotation in the loop.
     float div_angle = (a1 - a0) / n_div;
@@ -1597,23 +1598,8 @@ void pax_draw_circle(pax_buf_t *buf, pax_col_t color, float x, float y, float r)
 
     // Use precalcualted circles for speed because the user can't tell anyway.
     pax_vec2f const *preset;
-    size_t           size;
-
-    // Pick a suitable number of subdivisions.
-    matrix_2d_t matrix = buf->stack_2d.value;
-    float       c_r =
-        r * sqrtf(matrix.a0 * matrix.a0 + matrix.b0 * matrix.b0) * sqrtf(matrix.a1 * matrix.a1 + matrix.b1 * matrix.b1);
-
-    if (c_r > 30) {
-        preset = pax_precalc_circle_24;
-        size   = 24;
-    } else if (c_r > 7) {
-        preset = pax_precalc_circle_16;
-        size   = 16;
-    } else {
-        preset = pax_precalc_circle_4;
-        size   = 4;
-    }
+    pax_trif const  *uv_set;
+    size_t           size = pax_pick_circle(&buf->stack_2d.value, r, &preset, &uv_set);
 
     // Use the builtin matrix stuff to our advantage.
     pax_push_2d(buf);

@@ -182,6 +182,11 @@ void pax_report_error(char const *where, pax_err_t errno);
 
 /* ===== GETTERS AND SETTERS ===== */
 
+// Select a number of divisions for an arc.
+int pax_pick_arc_divs(matrix_2d_t const *matrix, float radius, float a0, float a1);
+// Select an appropriate precalculated circle.
+int pax_pick_circle(matrix_2d_t const *matrix, float radius, pax_vec2f const **vertex, pax_trif const **uv);
+
 // Gets the index getters and setters for the given buffer.
 void pax_get_setters(pax_buf_t const *buf, pax_index_getter_t *getter, pax_index_setter_t *setter);
 

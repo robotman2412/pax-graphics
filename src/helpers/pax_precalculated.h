@@ -1,12 +1,11 @@
 // WARNING: This is a generated file, do not edit it!
 // This file contains precalculated math operations.
-
 #include "pax_types.h"
 
-// Circle: 4 segments
-extern const pax_vec2f pax_precalc_circle_4[5];
-// Circle UVs: 4 segments
-extern const pax_trif pax_precalc_uv_circle_4[3];
+// Circle: 8 segments
+extern const pax_vec2f pax_precalc_circle_8[9];
+// Circle UVs: 8 segments
+extern const pax_trif pax_precalc_uv_circle_8[7];
 
 // Circle: 16 segments
 extern const pax_vec2f pax_precalc_circle_16[17];
