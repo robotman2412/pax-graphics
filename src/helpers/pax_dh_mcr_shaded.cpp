@@ -211,7 +211,7 @@ void paxmcr_rect_shaded(
     if ((shader->callback == pax_shader_texture || shader->callback == pax_shader_texture_aa) && color == 0xffffffff) {
         // Use a more direct copying of textures.
         pax_buf_t *top = (pax_buf_t *)shader->callback_args;
-        if (is_default_uv && (int)(width + 0.5) == top->width && (int)(height + 0.5) == top->height) {
+        if (is_default_uv && roundf(width) == top->width && roundf(height) == top->height) {
             paxmcr_overlay_buffer(
                 odd_scanline,
                 buf,

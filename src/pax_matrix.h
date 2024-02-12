@@ -49,8 +49,8 @@ typedef struct matrix_stack_2d matrix_stack_2d_t;
 
 #ifdef __cplusplus
 #include <assert.h>
-#include <memory>
 #include <initializer_list>
+#include <memory>
 
 namespace pax {
 
@@ -129,7 +129,7 @@ typedef struct matrix_stack_2d Matrix2fStack;
         _type        out;                                                                                              \
         const size_t _size = sizeof(arr) / sizeof(float);                                                              \
         for (size_t i = 0; i < _size; i++) {                                                                           \
-            out.arr[i] = (int)(arr[i] + 0.5);                                                                          \
+            out.arr[i] = roundf(arr[i]);                                                                               \
         }                                                                                                              \
         return out;                                                                                                    \
     }                                                                                                                  \
@@ -567,7 +567,7 @@ PAX_CXX_Vecf_union struct_pax_rectf {
     }
 
     pax::Rectf round() const {
-        return pax::Rectf{(float)(int)(x + 0.5), (float)(int)(y + 0.5), (float)(int)(w + 0.5), (float)(int)(h + 0.5)};
+        return pax::Rectf{floorf(x), floorf(y), floorf(w), floorf(h)};
     }
 
     // Get average position, i.e. center, of the rectangle.

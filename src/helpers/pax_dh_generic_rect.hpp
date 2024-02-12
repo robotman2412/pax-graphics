@@ -196,10 +196,10 @@ static
 
 #if defined(PDHG_NORMAL_UV) || defined(PDHG_RESTRICT_UV)
     // Adjust UVs to match pixel co-ordinates.
-    fixpt_t min_x = (int)(x + 0.5) + 0.5;
-    fixpt_t max_x = (int)(x + width - 0.5) + 0.5;
-    fixpt_t min_y = (int)(y + 0.5) + 0.5;
-    fixpt_t max_y = (int)(y + height - 0.5) + 0.5;
+    fixpt_t min_x = floorf(x + 0.5) + 0.5;
+    fixpt_t max_x = floorf(x + width - 0.5) + 0.5;
+    fixpt_t min_y = floorf(y + 0.5) + 0.5;
+    fixpt_t max_y = floorf(y + height - 0.5) + 0.5;
 #endif
 
 #ifdef PDHG_NORMAL_UV

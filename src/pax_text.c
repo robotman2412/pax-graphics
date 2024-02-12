@@ -127,8 +127,8 @@ static void pixel_aligned_render(
     float               height
 ) {
     // Offset and pixel-align co-ordinates.
-    x = (int)(0.5 + x + buf->stack_2d.value.a2);
-    y = (int)(0.5 + y + buf->stack_2d.value.b2);
+    x = floorf(0.5 + x + buf->stack_2d.value.a2);
+    y = floorf(0.5 + y + buf->stack_2d.value.b2);
     pax_mark_dirty2(buf, x, y, width, height);
 
 #if PAX_COMPILE_ORIENTATION
