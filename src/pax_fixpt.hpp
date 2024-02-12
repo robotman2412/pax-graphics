@@ -44,28 +44,28 @@ class fixpt_t {
 
   private:
     static constexpr fixpt_raw_t _div(fixpt_raw_t a, fixpt_raw_t b) {
-        fixpt_long_raw_t tmp = b ? (((fixpt_long_raw_t)a << PAX_FIXPT_FRAC_BITS) / (fixpt_long_raw_t)b)
-                                 : (a > 0 ? FIXPT_RAW_MAX : FIXPT_RAW_MIN);
-        if (tmp <= FIXPT_RAW_MIN)
-            return FIXPT_RAW_MIN;
-        if (tmp >= FIXPT_RAW_MAX)
-            return FIXPT_RAW_MAX;
-        return tmp;
+        // clang-format off
+        #define  div_tmp (b ? (((fixpt_long_raw_t)a << PAX_FIXPT_FRAC_BITS) / (fixpt_long_raw_t)b) \
+                            : (a > 0 ? FIXPT_RAW_MAX : FIXPT_RAW_MIN))
+        return (div_tmp <= FIXPT_RAW_MIN) ? FIXPT_RAW_MIN :
+               (div_tmp >= FIXPT_RAW_MAX) ? FIXPT_RAW_MAX :
+                                            div_tmp;
+        // clang-format on
     }
     static constexpr fixpt_raw_t _mul(fixpt_raw_t a, fixpt_raw_t b) {
-        fixpt_long_raw_t tmp = ((fixpt_long_raw_t)a * (fixpt_long_raw_t)b) >> PAX_FIXPT_FRAC_BITS;
-        if (tmp <= FIXPT_RAW_MIN)
-            return FIXPT_RAW_MIN;
-        if (tmp >= FIXPT_RAW_MAX)
-            return FIXPT_RAW_MAX;
-        return tmp;
+        // clang-format off
+        #define mul_tmp (((fixpt_long_raw_t)a * (fixpt_long_raw_t)b) >> PAX_FIXPT_FRAC_BITS)
+        return (mul_tmp <= FIXPT_RAW_MIN) ? FIXPT_RAW_MIN :
+               (mul_tmp >= FIXPT_RAW_MAX) ? FIXPT_RAW_MAX :
+                                            mul_tmp;
+        // clang-format on
     }
     template <typename T> static constexpr fixpt_raw_t _from(T in) {
-        if (in >= FIXPT_MAX)
-            return FIXPT_RAW_MAX;
-        if (in <= FIXPT_MIN)
-            return FIXPT_RAW_MIN;
-        return in * PAX_FIXPT_MUL;
+        // clang-format off
+        return (in >= FIXPT_MAX) ? FIXPT_RAW_MAX :
+               (in <= FIXPT_MIN) ? FIXPT_RAW_MIN :
+                                   in * PAX_FIXPT_MUL;
+        // clang-format on
     }
     template <typename T> static constexpr T _to(fixpt_raw_t in) {
         return (T)(in / (long double)PAX_FIXPT_MUL);
@@ -73,13 +73,11 @@ class fixpt_t {
     constexpr fixpt_t(fixpt_raw_t val, bool dummy) : raw_value(val) {
     }
     static fixpt_raw_t constexpr saturate_add(fixpt_raw_t a, fixpt_raw_t b) {
-        if (a > 0 && b > FIXPT_RAW_MAX - a) {
-            return FIXPT_RAW_MAX;
-        } else if (a <= 0 && b < FIXPT_RAW_MIN - a) {
-            return FIXPT_RAW_MIN;
-        } else {
-            return a + b;
-        }
+        // clang-format off
+        return (a >  0 && b > FIXPT_RAW_MAX - a) ? FIXPT_RAW_MAX :
+               (a <= 0 && b < FIXPT_RAW_MIN - a) ? FIXPT_RAW_MIN :
+                                                   a + b;
+        // clang-format on
     }
 
   public:
@@ -202,9 +200,7 @@ class fixpt_t {
         return *this;
     }
     constexpr fixpt_t operator-() const {
-        if (raw_value == INT32_MIN)
-            return from_raw(INT32_MAX);
-        return from_raw(-raw_value);
+        return (raw_value == INT32_MIN) ? from_raw(INT32_MAX) : from_raw(-raw_value);
     }
     fixpt_t &operator++() {
         raw_value = saturate_add(raw_value, PAX_FIXPT_MUL);
