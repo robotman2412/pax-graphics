@@ -16,7 +16,7 @@ endif()
 idf_component_register(
 	SRCS ${PAX_SRCS}
 	INCLUDE_DIRS ${PAX_INCLUDE}
-	REQUIRES esp_timer esp_pm
+	REQUIRES esp_system esp_timer esp_pm
 )
 
 # Disable unused constant warning because of built-in fonts.
