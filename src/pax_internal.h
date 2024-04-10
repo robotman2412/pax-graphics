@@ -204,15 +204,15 @@ pax_col_t pax_index_getter_4bpp(pax_buf_t const *buf, int index);
 // Gets a raw value from a 8BPP buffer.
 pax_col_t pax_index_getter_8bpp(pax_buf_t const *buf, int index);
 // Gets a raw value from a 16BPP buffer.
-pax_col_t pax_index_getter_16bpp(const pax_buf_t *buf, int index);
+pax_col_t pax_index_getter_16bpp(pax_buf_t const *buf, int index);
 // Gets a raw value from a 24BPP buffer.
-pax_col_t pax_index_getter_24bpp(const pax_buf_t *buf, int index);
+pax_col_t pax_index_getter_24bpp(pax_buf_t const *buf, int index);
 // Gets a raw value from a 32BPP buffer.
 pax_col_t pax_index_getter_32bpp(pax_buf_t const *buf, int index);
 // Gets a raw value from a 16BPP buffer, reversed endianness.
-pax_col_t pax_index_getter_16bpp_rev(const pax_buf_t *buf, int index);
+pax_col_t pax_index_getter_16bpp_rev(pax_buf_t const *buf, int index);
 // Gets a raw value from a 24BPP buffer, reversed endianness.
-pax_col_t pax_index_getter_24bpp_rev(const pax_buf_t *buf, int index);
+pax_col_t pax_index_getter_24bpp_rev(pax_buf_t const *buf, int index);
 // Gets a raw value from a 32BPP buffer, reversed endianness.
 pax_col_t pax_index_getter_32bpp_rev(pax_buf_t const *buf, int index);
 
@@ -321,9 +321,9 @@ pax_col_t pax_1111_argb_to_col(pax_buf_t const *buf, pax_col_t color);
 // Converts 2 bit per channel ARGB to ARGB.
 pax_col_t pax_2222_argb_to_col(pax_buf_t const *buf, pax_col_t color);
 // Converts 4 bit per channel ARGB to ARGB.
-pax_col_t pax_4444_argb_to_col(const pax_buf_t *buf, pax_col_t color);
+pax_col_t pax_4444_argb_to_col(pax_buf_t const *buf, pax_col_t color);
 // Converts 8 bit per channel RGB to ARGB.
-pax_col_t pax_888_rgb_to_col(const pax_buf_t *buf, pax_col_t color);
+pax_col_t pax_888_rgb_to_col(pax_buf_t const *buf, pax_col_t color);
 
 
 
@@ -363,7 +363,7 @@ static inline uint16_t pax_rev_endian_16(uint16_t in) {
 
 // Reverse endianness for 24-bit things.
 static inline uint32_t pax_rev_endian_24(uint32_t in) {
-	return ((in >> 16) & 0x00000ff) | (in & 0x00ff00) | ((in << 16) & 0xff0000);
+    return ((in >> 16) & 0x00000ff) | (in & 0x00ff00) | ((in << 16) & 0xff0000);
 }
 
 // Reverse endianness for 32-bit things.

@@ -1,7 +1,7 @@
 # PAX graphics
 An MIT graphics library for [Badge.team](https://badge.team/).
 
-Version: v1.1.1
+Version: v1.1.2-snapshot
 
 # Documentation
 Documentation can be found [here](docs).

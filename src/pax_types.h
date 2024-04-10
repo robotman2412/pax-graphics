@@ -30,11 +30,11 @@ extern "C" {
 #define PAX_RENDERER_ID_SWR     0x00
 
 // A human-readable representation of the current version number.
-#define PAX_VERSION_STR         "1.1.1"
+#define PAX_VERSION_STR         "1.1.2"
 // A numeric representation of the version, one decimal digit per version part (MAJOR.MINOR.PATCH).
-#define PAX_VERSION_NUMBER      111
+#define PAX_VERSION_NUMBER      112
 // Whether this is a prerelease version of PAX.
-#define PAX_VERSION_IS_SNAPSHOT false
+#define PAX_VERSION_IS_SNAPSHOT true
 // The MAJOR part of the version (MAJOR.MINOR.PATCH).
 #define PAX_VERSION_MAJOR       1
 // The MINOR part of the version (MAJOR.MINOR.PATCH).
@@ -80,19 +80,19 @@ extern "C" {
 
 // The way pixel data is to be stored in a buffer.
 enum pax_buf_type {
-    PAX_BUF_1_PAL       = 0x20000001,
-    PAX_BUF_2_PAL       = 0x20000002,
-    PAX_BUF_4_PAL       = 0x20000004,
-    PAX_BUF_8_PAL       = 0x20000008,
-    PAX_BUF_16_PAL      = 0x20000010,
+    PAX_BUF_1_PAL  = 0x20000001,
+    PAX_BUF_2_PAL  = 0x20000002,
+    PAX_BUF_4_PAL  = 0x20000004,
+    PAX_BUF_8_PAL  = 0x20000008,
+    PAX_BUF_16_PAL = 0x20000010,
 
-    PAX_BUF_1_GREY      = 0x10000001,
-    PAX_BUF_2_GREY      = 0x10000002,
-    PAX_BUF_4_GREY      = 0x10000004,
-    PAX_BUF_8_GREY      = 0x10000008,
+    PAX_BUF_1_GREY = 0x10000001,
+    PAX_BUF_2_GREY = 0x10000002,
+    PAX_BUF_4_GREY = 0x10000004,
+    PAX_BUF_8_GREY = 0x10000008,
 
-    PAX_BUF_8_332RGB    = 0x00033208,
-    PAX_BUF_16_565RGB   = 0x00056510,
+    PAX_BUF_8_332RGB  = 0x00033208,
+    PAX_BUF_16_565RGB = 0x00056510,
 
     PAX_BUF_4_1111ARGB  = 0x00111104,
     PAX_BUF_8_2222ARGB  = 0x00444408,

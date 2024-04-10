@@ -7,28 +7,28 @@
 /* ===== GETTERS AND SETTERS ===== */
 
 // Gets the index getters and setters for the given buffer.
-void pax_get_setters(const pax_buf_t *buf, pax_index_getter_t *getter, pax_index_setter_t *setter) {
+void pax_get_setters(pax_buf_t const *buf, pax_index_getter_t *getter, pax_index_setter_t *setter) {
     switch (buf->bpp) {
         case (1):
             *getter = pax_index_getter_1bpp;
             *setter = pax_index_setter_1bpp;
             break;
-            
+
         case (2):
             *getter = pax_index_getter_2bpp;
             *setter = pax_index_setter_2bpp;
             break;
-            
+
         case (4):
             *getter = pax_index_getter_4bpp;
             *setter = pax_index_setter_4bpp;
             break;
-            
+
         case (8):
             *getter = pax_index_getter_8bpp;
             *setter = pax_index_setter_8bpp;
             break;
-            
+
         case (16):
             if (buf->reverse_endianness) {
                 *getter = pax_index_getter_16bpp_rev;
@@ -38,7 +38,7 @@ void pax_get_setters(const pax_buf_t *buf, pax_index_getter_t *getter, pax_index
                 *setter = pax_index_setter_16bpp;
             }
             break;
-            
+
         case (24):
             if (buf->reverse_endianness) {
                 *getter = pax_index_getter_24bpp_rev;
@@ -48,7 +48,7 @@ void pax_get_setters(const pax_buf_t *buf, pax_index_getter_t *getter, pax_index
                 *setter = pax_index_setter_24bpp;
             }
             break;
-            
+
         case (32):
             if (buf->reverse_endianness) {
                 *getter = pax_index_getter_32bpp_rev;
@@ -87,9 +87,9 @@ pax_col_t pax_index_getter_16bpp(pax_buf_t const *buf, int index) {
 }
 
 // Gets a raw value from a 24BPP buffer.
-pax_col_t pax_index_getter_24bpp(const pax_buf_t *buf, int index) {
-    index += 2*index;
-    return (buf->buf_8bpp[index+0]<<0) | (buf->buf_8bpp[index+1]<<8) | (buf->buf_8bpp[index+2]<<16);
+pax_col_t pax_index_getter_24bpp(pax_buf_t const *buf, int index) {
+    index += 2 * index;
+    return (buf->buf_8bpp[index + 0] << 0) | (buf->buf_8bpp[index + 1] << 8) | (buf->buf_8bpp[index + 2] << 16);
 }
 
 // Gets a raw value from a 32BPP buffer.
@@ -103,9 +103,9 @@ pax_col_t pax_index_getter_16bpp_rev(pax_buf_t const *buf, int index) {
 }
 
 // Gets a raw value from a 24BPP buffer, reversed endianness.
-pax_col_t pax_index_getter_24bpp_rev(const pax_buf_t *buf, int index) {
-    index += 2*index;
-    return (buf->buf_8bpp[index+0]<<16) | (buf->buf_8bpp[index+1]<<8) | (buf->buf_8bpp[index+2]<<0);
+pax_col_t pax_index_getter_24bpp_rev(pax_buf_t const *buf, int index) {
+    index += 2 * index;
+    return (buf->buf_8bpp[index + 0] << 16) | (buf->buf_8bpp[index + 1] << 8) | (buf->buf_8bpp[index + 2] << 0);
 }
 
 // Gets a raw value from a 32BPP buffer, reversed endianness.
@@ -163,10 +163,10 @@ void pax_index_setter_16bpp(pax_buf_t *buf, pax_col_t color, int index) {
 
 // Sets a raw value from a 24BPP buffer.
 void pax_index_setter_24bpp(pax_buf_t *buf, pax_col_t color, int index) {
-    index += 2*index;
-    buf->buf_8bpp[index+0] = color >> 0;
-    buf->buf_8bpp[index+1] = color >> 8;
-    buf->buf_8bpp[index+2] = color >> 16;
+    index                    += 2 * index;
+    buf->buf_8bpp[index + 0]  = color >> 0;
+    buf->buf_8bpp[index + 1]  = color >> 8;
+    buf->buf_8bpp[index + 2]  = color >> 16;
 }
 
 // Sets a raw value from a 32BPP buffer.
@@ -181,10 +181,10 @@ void pax_index_setter_16bpp_rev(pax_buf_t *buf, pax_col_t color, int index) {
 
 // Sets a raw value from a 24BPP buffer, reversed endianness.
 void pax_index_setter_24bpp_rev(pax_buf_t *buf, pax_col_t color, int index) {
-    index += 2*index;
-    buf->buf_8bpp[index+0] = color >> 16;
-    buf->buf_8bpp[index+1] = color >> 8;
-    buf->buf_8bpp[index+2] = color >> 0;
+    index                    += 2 * index;
+    buf->buf_8bpp[index + 0]  = color >> 16;
+    buf->buf_8bpp[index + 1]  = color >> 8;
+    buf->buf_8bpp[index + 2]  = color >> 0;
 }
 
 // Sets a raw value from a 32BPP buffer, reversed endianness.
@@ -277,91 +277,90 @@ void pax_merge_index(pax_buf_t *buf, pax_col_t col, int index) {
 /* ======= COLOR CONVERSION ====== */
 
 // Get the correct color conversion methods for the buffer type.
-void pax_get_col_conv(const pax_buf_t *buf, pax_col_conv_t *col2buf, pax_col_conv_t *buf2col) {
+void pax_get_col_conv(pax_buf_t const *buf, pax_col_conv_t *col2buf, pax_col_conv_t *buf2col) {
     switch (buf->type) {
-    case (PAX_BUF_1_PAL):
-        *col2buf = pax_trunc_to_1;
-        *buf2col = pax_pal_lookup;
-        break;
-        
-    case (PAX_BUF_2_PAL):
-        *col2buf = pax_trunc_to_2;
-        *buf2col = pax_pal_lookup;
-        break;
-        
-    case (PAX_BUF_4_PAL):
-        *col2buf = pax_trunc_to_4;
-        *buf2col = pax_pal_lookup;
-        break;
-        
-    case (PAX_BUF_8_PAL):
-        *col2buf = pax_trunc_to_8;
-        *buf2col = pax_pal_lookup;
-        break;
-        
-    case (PAX_BUF_16_PAL):
-        *col2buf = pax_trunc_to_16;
-        *buf2col = pax_pal_lookup;
-        break;
-        
-        
-    case (PAX_BUF_1_GREY):
-        *col2buf = pax_col_to_1_grey;
-        *buf2col = pax_1_grey_to_col;
-        break;
-        
-    case (PAX_BUF_2_GREY):
-        *col2buf = pax_col_to_2_grey;
-        *buf2col = pax_2_grey_to_col;
-        break;
-        
-    case (PAX_BUF_4_GREY):
-        *col2buf = pax_col_to_4_grey;
-        *buf2col = pax_4_grey_to_col;
-        break;
-        
-    case (PAX_BUF_8_GREY):
-        *col2buf = pax_col_to_8_grey;
-        *buf2col = pax_8_grey_to_col;
-        break;
-        
-        
-    case (PAX_BUF_8_332RGB):
-        *col2buf = pax_col_to_332_rgb;
-        *buf2col = pax_332_rgb_to_col;
-        break;
-        
-    case (PAX_BUF_16_565RGB):
-        *col2buf = pax_col_to_565_rgb;
-        *buf2col = pax_565_rgb_to_col;
-        break;
-        
-        
-    case (PAX_BUF_4_1111ARGB):
-        *col2buf = pax_col_to_1111_argb;
-        *buf2col = pax_1111_argb_to_col;
-        break;
-        
-    case (PAX_BUF_8_2222ARGB):
-        *col2buf = pax_col_to_2222_argb;
-        *buf2col = pax_2222_argb_to_col;
-        break;
-        
-    case (PAX_BUF_16_4444ARGB):
-        *col2buf = pax_col_to_4444_argb;
-        *buf2col = pax_4444_argb_to_col;
-        break;
-        
-    case (PAX_BUF_24_888RGB):
-        *col2buf = pax_col_conv_dummy;
-        *buf2col = pax_888_rgb_to_col;
-        break;
-        
-    case (PAX_BUF_32_8888ARGB):
-        *col2buf = pax_col_conv_dummy;
-        *buf2col = pax_col_conv_dummy;
-        break;
-        
+        case (PAX_BUF_1_PAL):
+            *col2buf = pax_trunc_to_1;
+            *buf2col = pax_pal_lookup;
+            break;
+
+        case (PAX_BUF_2_PAL):
+            *col2buf = pax_trunc_to_2;
+            *buf2col = pax_pal_lookup;
+            break;
+
+        case (PAX_BUF_4_PAL):
+            *col2buf = pax_trunc_to_4;
+            *buf2col = pax_pal_lookup;
+            break;
+
+        case (PAX_BUF_8_PAL):
+            *col2buf = pax_trunc_to_8;
+            *buf2col = pax_pal_lookup;
+            break;
+
+        case (PAX_BUF_16_PAL):
+            *col2buf = pax_trunc_to_16;
+            *buf2col = pax_pal_lookup;
+            break;
+
+
+        case (PAX_BUF_1_GREY):
+            *col2buf = pax_col_to_1_grey;
+            *buf2col = pax_1_grey_to_col;
+            break;
+
+        case (PAX_BUF_2_GREY):
+            *col2buf = pax_col_to_2_grey;
+            *buf2col = pax_2_grey_to_col;
+            break;
+
+        case (PAX_BUF_4_GREY):
+            *col2buf = pax_col_to_4_grey;
+            *buf2col = pax_4_grey_to_col;
+            break;
+
+        case (PAX_BUF_8_GREY):
+            *col2buf = pax_col_to_8_grey;
+            *buf2col = pax_8_grey_to_col;
+            break;
+
+
+        case (PAX_BUF_8_332RGB):
+            *col2buf = pax_col_to_332_rgb;
+            *buf2col = pax_332_rgb_to_col;
+            break;
+
+        case (PAX_BUF_16_565RGB):
+            *col2buf = pax_col_to_565_rgb;
+            *buf2col = pax_565_rgb_to_col;
+            break;
+
+
+        case (PAX_BUF_4_1111ARGB):
+            *col2buf = pax_col_to_1111_argb;
+            *buf2col = pax_1111_argb_to_col;
+            break;
+
+        case (PAX_BUF_8_2222ARGB):
+            *col2buf = pax_col_to_2222_argb;
+            *buf2col = pax_2222_argb_to_col;
+            break;
+
+        case (PAX_BUF_16_4444ARGB):
+            *col2buf = pax_col_to_4444_argb;
+            *buf2col = pax_4444_argb_to_col;
+            break;
+
+        case (PAX_BUF_24_888RGB):
+            *col2buf = pax_col_conv_dummy;
+            *buf2col = pax_888_rgb_to_col;
+            break;
+
+        case (PAX_BUF_32_8888ARGB):
+            *col2buf = pax_col_conv_dummy;
+            *buf2col = pax_col_conv_dummy;
+            break;
     }
 }
 
@@ -574,6 +573,6 @@ pax_col_t pax_4444_argb_to_col(pax_buf_t const *buf, pax_col_t value) {
 }
 
 // Converts 8 bit per channel RGB to ARGB.
-pax_col_t pax_888_rgb_to_col(const pax_buf_t *buf, pax_col_t color) {
+pax_col_t pax_888_rgb_to_col(pax_buf_t const *buf, pax_col_t color) {
     return color | 0xff000000;
 }
