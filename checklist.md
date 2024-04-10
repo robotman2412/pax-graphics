@@ -23,6 +23,7 @@
   - [x] PAX_BUF_4_1111ARGB
   - [x] PAX_BUF_8_2222ARGB
   - [x] PAX_BUF_16_4444ARGB
+  - [x] PAX_BUF_24_888RGB
   - [x] PAX_BUF_32_8888ARGB
 - [x] ESP-IDF:
   - [x] Builds without warnings
