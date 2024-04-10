@@ -1,10 +1,25 @@
 # PAX graphics
-An MIT graphics library for [Badge.team](https://badge.team/).
+An advanced 2D graphics library for games and GUIs on embedded systems.
+Supports affine transformations, shaders, text scaling, and multi-CPU software rendering.
+
+Made for [Badge.team](https://badge.team/) and licensed MIT.
 
 Version: v1.1.2-snapshot
 
 # Documentation
 Documentation can be found [here](docs).
+
+# Short-term TODO list (v1.1.2)
+- Re-work CMakeLists to be cleaner
+- Create horizontal line fill method (opaque shape optimization)
+
+# Long-term TODO list (v2.0.0)
+- Abstract the API layer from the rendering layer
+- Create a source file per group of shapes (e.g. `pax_shape_circle.c` for circle and arc variants)
+- Add support for compiled or dynamically switched alternative renderers
+- Add support for ESP32-P4 hardware acceleration
+- Consolidate "horizontal line segment" for different shape rendering functions into one
+- Completely re-build shaders from the ground up
 
 # Feature wishlist
 - GPU acceleration
@@ -23,7 +38,5 @@ The badge is an electronic event badge which can do much more than just show you
 To accomplish all the cool graphics people can draw, this graphics stack was made.
 
 # See also
-- https://github.com/badgeteam/mch2022-firmware-esp32 (firmware for which this was made)
-- https://github.com/robotman2412/mch2022-badge-tests (firmware i use to test changes)
-- https://mch2022.org/ (the associated hacker camp)
+- https://why2025.org/ (the associated hacker camp)
 - https://badge.team/  (the team for which i volunteer)
