@@ -32,14 +32,20 @@ pax_font_t *pax_load_font(FILE *fd);
 void        pax_store_font(FILE *fd, pax_font_t const *font);
 
 // Draw a string with the given font and return it's size.
+// Size is before matrix transformation.
+pax_vec2f pax_draw_text(
+    pax_buf_t *buf, pax_col_t color, pax_font_t const *font, float font_size, float x, float y, char const *text
+);
+// Draw a string with the given font and return it's size.
 // Text is center-aligned on every line.
 // Size is before matrix transformation.
 pax_vec2f pax_center_text(
     pax_buf_t *buf, pax_col_t color, pax_font_t const *font, float font_size, float x, float y, char const *text
 );
 // Draw a string with the given font and return it's size.
+// Text is right-aligned on every line.
 // Size is before matrix transformation.
-pax_vec2f pax_draw_text(
+pax_vec2f pax_right_text(
     pax_buf_t *buf, pax_col_t color, pax_font_t const *font, float font_size, float x, float y, char const *text
 );
 // DEPRECATION NOTICE: This function is subject to be removed

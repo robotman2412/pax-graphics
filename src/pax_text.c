@@ -504,6 +504,10 @@ pax_vec2f pax_center_text(
 
     // Allocate a buffer since we might go splitting up lines.
     char *buffer = malloc(strlen(text) + 1);
+    if (!buffer) {
+        // Out of memory fallback: center-align entire block.
+        return pax_center_line(buf, color, font, font_size, x, y, text);
+    }
 
     // Continuously look for newlines.
     while (*text) {
@@ -530,6 +534,69 @@ pax_vec2f pax_center_text(
 
             // Draw this line individually.
             pax_vec2f dims = pax_center_line(buf, color, font, font_size, x, y + height, buffer);
+            if (dims.x > width)
+                width = dims.x;
+            height += dims.y;
+
+            // Set text pointer to next line.
+            text = next;
+        }
+    }
+
+    // Clean up and return total size.
+    free(buffer);
+    return (pax_vec2f){width, height};
+}
+
+// A single line of `pax_right_text`.
+static pax_vec2f pax_right_line(
+    pax_buf_t *buf, pax_col_t color, pax_font_t const *font, float font_size, float x, float y, char const *text
+) {
+    pax_vec2f dims = pax_text_size(font, font_size, text);
+    pax_draw_text(buf, color, font, font_size, x - dims.x, y, text);
+    return dims;
+}
+
+// Draw a string with the given font and return it's size.
+// Text is center-aligned on every line.
+// Size is before matrix transformation.
+pax_vec2f pax_right_text(
+    pax_buf_t *buf, pax_col_t color, pax_font_t const *font, float font_size, float x, float y, char const *text
+) {
+    float width = 0, height = 0;
+
+    // Allocate a buffer since we might go splitting up lines.
+    char *buffer = malloc(strlen(text) + 1);
+    if (!buffer) {
+        // Out of memory fallback: right-align entire block.
+        return pax_right_line(buf, color, font, font_size, x, y, text);
+    }
+
+    // Continuously look for newlines.
+    while (*text) {
+        // Look for newline characters.
+        char *cr    = strchr(text, '\r');
+        char *lf    = strchr(text, '\n');
+        // Determine which comes earlier.
+        char *found = cr && (!lf || cr < lf) ? cr : lf;
+        // Determine where to keep going afterwards.
+        char *next  = cr && lf && (lf == cr + 1) ? lf + 1 : found + 1;
+
+        if (!cr && !lf) {
+            // Nothing special left to do.
+            pax_vec2f dims = pax_right_line(buf, color, font, font_size, x, y + height, text);
+            if (dims.x > width)
+                width = dims.x;
+            height += dims.y;
+            break;
+
+        } else {
+            // Copy string segment into buffer.
+            memcpy(buffer, text, found - text);
+            buffer[found - text] = 0;
+
+            // Draw this line individually.
+            pax_vec2f dims = pax_right_line(buf, color, font, font_size, x, y + height, buffer);
             if (dims.x > width)
                 width = dims.x;
             height += dims.y;
