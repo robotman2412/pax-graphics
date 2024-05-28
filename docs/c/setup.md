@@ -68,7 +68,7 @@ If you don't need the buffer anymore, use `pax_buf_destroy`:
 pax_buf_destroy(&buffer);
 ```
 
-### With a palette
+## With a palette
 
 If you're using one of the palette buffer types, you need to assign the palette before you can use it.
 The relevant variables are `palette`, `palette_size` and `do_free_pal` of `pax_buf_t`:

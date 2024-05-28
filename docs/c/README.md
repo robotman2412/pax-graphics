@@ -19,6 +19,7 @@ For supported platforms, [see this link](../supported-platforms.md).
     - [Clipping](#api-reference-clipping)
     - [Matrix transformations](#api-reference-matrix-transformations)
     - [Shaders](#api-reference-shaders)
+    - [Buffer orientation](#api-reference-orientation)
 
 # Getting started
 
@@ -459,7 +460,7 @@ pax_apply_2d(&buffer, matrix_2d_rotate(angle));
 
 ## API reference: Shaders
 
-The shader is PAX' most advanced feature.<br>
+The [shader](shaders.md) is PAX' most advanced feature.<br>
 Internally, they are used for boring things like drawing text, but you can truly turn it into anything you'd like.
 
 The way most users will see shaders is with [`PAX_SHADER_TEXTURE`](shaders.md#built-in-shaders):
@@ -485,3 +486,20 @@ pax_shader_t my_shader = {
 The `callback_args` property is passed directly to the selected callback as the `args` parameter.
 
 For more information on how to make and use your own shaders, and how the `alpha_promise_` attributes work, see [shaders.md](shaders.md#making-your-own-shaders).
+
+## API reference: Orientation
+
+The [orientation](orientation.md) feature is designed to help with changing the orientation of or mirroring displays. It effectively transforms all drawing APIs with the appropriate orientation to make supporting displays with any orientation or order of framebuffer easier.
+
+Take, for example, the 128x64 SSD1306 display: Its framebuffer orientation starts at the bottom right corner and goes bottom to top, right to left.
+To use this display, make an appropriate framebuffer and set the orientation to the inverse of what the display uses (counter-clockwise rotation then flip horizontally):
+```c
+// Create a buffer for the SSD1306 display.
+void create_my_buffer(pax_buf_t *gfx) {
+    // Create the buffer matching the screen.
+    // Notice that the screen is physically 128x64, but logically 64x128.
+    pax_buf_init(gfx, NULL, 64, 128, PAX_BUF_1_GRAY);
+    // Apply the orientation to allow the rest of the code to draw for a 128x64 display.
+    pax_buf_set_orientation(gfx, PAX_O_ROT_CCW_FLIP_H);
+}
+```
