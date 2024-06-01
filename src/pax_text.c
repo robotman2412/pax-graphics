@@ -58,7 +58,7 @@ char *pax_utf8_getch(char const *cstr, uint32_t *out) {
         // Null pointer.
         *out = 0xfffd; // Something something invalid UTF8.
         return (char *)cstr;
-    } else if (*cstr <= 0x7f) {
+    } else if (!(*cstr & 0x80)) {
         // ASCII point.
         *out = *cstr;
         return (char *)cstr + 1;
@@ -158,16 +158,15 @@ static void pixel_aligned_render(
 #if PAX_COMPILE_MCR
     if (pax_do_multicore) {
         // Assign worker task.
-        pax_task_t task = {
-            .buffer     = buf,
-            .type       = PAX_TASK_RECT,
-            .color      = color,
-            .shader     = *shader,
-            .use_shader = true,
-            .quad_uvs   = *uvs,
-            .shape      = {x, y, width, height},
-            .shape_len  = 4
-        };
+        pax_task_t task
+            = {.buffer     = buf,
+               .type       = PAX_TASK_RECT,
+               .color      = color,
+               .shader     = *shader,
+               .use_shader = true,
+               .quad_uvs   = *uvs,
+               .shape      = {x, y, width, height},
+               .shape_len  = 4};
         paxmcr_add_task(&task);
         // Draw our part.
         paxmcr_rect_shaded(
@@ -860,8 +859,8 @@ pax_font_t *pax_load_font(FILE *fd) {
     xreadnum_assert(&n_ranges, sizeof(uint64_t), fd);
 
     // Calculate required size.
-    size_t required_size =
-        sizeof(pax_font_t) + n_ranges * sizeof(pax_font_range_t) + n_bmpv * sizeof(pax_bmpv_t) + n_bitmap + n_name + 1;
+    size_t required_size = sizeof(pax_font_t) + n_ranges * sizeof(pax_font_range_t) + n_bmpv * sizeof(pax_bmpv_t)
+                           + n_bitmap + n_name + 1;
 
     // Validate required size.
     if (required_size < PAX_FONT_LOADER_MINUMUM_SIZE) {
