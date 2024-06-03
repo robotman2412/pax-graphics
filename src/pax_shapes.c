@@ -321,11 +321,32 @@ void pax_vectorise_circle(pax_vec2f *output, size_t num_points, float x, float y
 
 // Draw a rounded rectangle.
 void pax_draw_round_rect(pax_buf_t *buf, pax_col_t color, float x, float y, float width, float height, float radius) {
+    if (radius <= 0) {
+        pax_draw_rect(buf, color, x, y, width, height);
+        return;
+    }
+
+    // Clamp size.
+    if (width < 0) {
+        x     += width;
+        width  = -width;
+    }
+    if (height < 0) {
+        y      += height;
+        height  = -height;
+    }
+
     // Clamp radius.
-    if (radius > width / 2)
-        radius = width / 2;
-    if (radius > height / 2)
-        radius = height / 2;
+    if (radius < 0) {
+        radius = 0;
+    } else {
+        if (radius > width / 2) {
+            radius = width / 2;
+        }
+        if (radius > height / 2) {
+            radius = height / 2;
+        }
+    }
 
     // Draw corners.
     pax_draw_arc(buf, color, x + radius, y + radius, radius, M_PI * 0.5, M_PI * 1.0);
@@ -334,9 +355,114 @@ void pax_draw_round_rect(pax_buf_t *buf, pax_col_t color, float x, float y, floa
     pax_draw_arc(buf, color, x + radius, y + height - radius, radius, M_PI * -0.5, M_PI * -1.0);
 
     // Draw infill.
-    pax_draw_rect(buf, color, x + radius, y, width - 2 * radius, radius);
-    pax_draw_rect(buf, color, x + radius, y + height - radius, width - 2 * radius, radius);
-    pax_draw_rect(buf, color, x, y + radius, width, height - 2 * radius);
+    if (width > 2 * radius) {
+        pax_draw_rect(buf, color, x + radius, y, width - 2 * radius, radius);
+        pax_draw_rect(buf, color, x + radius, y + height - radius, width - 2 * radius, radius);
+    }
+    if (height > 2 * radius) {
+        pax_draw_rect(buf, color, x, y + radius, width, height - 2 * radius);
+    }
+}
+
+// Draw a rounded rectangle with different radii per corner.
+// The radii start top-left and go clockwise.
+void pax_draw_round_rect4(
+    pax_buf_t *buf, pax_col_t color, float x, float y, float width, float height, float r0, float r1, float r2, float r3
+) {
+    if (r0 <= 0) {
+        r0 = 0;
+    }
+    if (r1 <= 0) {
+        r1 = 0;
+    }
+    if (r2 <= 0) {
+        r2 = 0;
+    }
+    if (r3 <= 0) {
+        r3 = 0;
+    }
+    if (r0 == r1 && r1 == r2 && r2 == r3) {
+        pax_draw_round_rect(buf, color, x, y, width, height, r0);
+        return;
+    }
+
+    // Clamp size.
+    if (width < 0) {
+        PAX_SWAP(float, r0, r1);
+        PAX_SWAP(float, r3, r2);
+        x     += width;
+        width  = -width;
+    }
+    if (height < 0) {
+        PAX_SWAP(float, r0, r3);
+        PAX_SWAP(float, r1, r2);
+        y      += height;
+        height  = -height;
+    }
+
+    // Clamp radius.
+    if (r0 > width / 2) {
+        r0 = width / 2;
+    }
+    if (r1 > width / 2) {
+        r1 = width / 2;
+    }
+    if (r2 > width / 2) {
+        r2 = width / 2;
+    }
+    if (r3 > width / 2) {
+        r3 = width / 2;
+    }
+    if (r0 > height / 2) {
+        r0 = height / 2;
+    }
+    if (r1 > height / 2) {
+        r1 = height / 2;
+    }
+    if (r2 > height / 2) {
+        r2 = height / 2;
+    }
+    if (r3 > height / 2) {
+        r3 = height / 2;
+    }
+
+    // Draw corners.
+    if (r0) {
+        pax_draw_arc(buf, color, x + r0, y + r0, r0, M_PI * 0.5, M_PI * 1.0);
+    }
+    if (r1) {
+        pax_draw_arc(buf, color, x + width - r1, y + r1, r1, M_PI * 0.0, M_PI * 0.5);
+    }
+    if (r2) {
+        pax_draw_arc(buf, color, x + width - r2, y + height - r2, r2, M_PI * 0.0, M_PI * -0.5);
+    }
+    if (r3) {
+        pax_draw_arc(buf, color, x + r3, y + height - r3, r3, M_PI * -0.5, M_PI * -1.0);
+    }
+
+    // Draw infill.
+    if (r0 && r1) {
+        pax_draw_rect(buf, color, x + r0, y, width - r0 - r1, fminf(r0, r1));
+    }
+    if (r0 != r1) {
+        pax_draw_rect(buf, color, r0 < r1 ? x : x + r0, y + fminf(r0, r1), width - fmaxf(r0, r1), fabsf(r0 - r1));
+    }
+    if (fmaxf(r0, r1) + fmaxf(r2, r3) < height) {
+        pax_draw_rect(buf, color, x, y + fmaxf(r0, r1), width, height - fmaxf(r0, r1) - fmaxf(r2, r3));
+    }
+    if (r3 != r2) {
+        pax_draw_rect(
+            buf,
+            color,
+            r3 < r2 ? x : x + r3,
+            y + height - fmaxf(r3, r2),
+            height - fmaxf(r3, r2),
+            fabsf(r3 - r2)
+        );
+    }
+    if (r2 && r3) {
+        pax_draw_rect(buf, color, x + r3, y + height - fminf(r3, r2), width - r3 - r2, fminf(r3, r2));
+    }
 }
 
 // Draw a hollow circle.
@@ -401,11 +527,32 @@ void pax_draw_round_hollow_arc(
 void pax_outline_round_rect(
     pax_buf_t *buf, pax_col_t color, float x, float y, float width, float height, float radius
 ) {
+    if (radius <= 0) {
+        pax_outline_rect(buf, color, x, y, width, height);
+        return;
+    }
+
+    // Clamp size.
+    if (width < 0) {
+        x     += width;
+        width  = -width;
+    }
+    if (height < 0) {
+        y      += height;
+        height  = -height;
+    }
+
     // Clamp radius.
-    if (radius > width / 2)
-        radius = width / 2;
-    if (radius > height / 2)
-        radius = height / 2;
+    if (radius < 0) {
+        radius = 0;
+    } else {
+        if (radius > width / 2) {
+            radius = width / 2;
+        }
+        if (radius > height / 2) {
+            radius = height / 2;
+        }
+    }
 
     // Draw corners.
     pax_outline_arc(buf, color, x + radius, y + radius, radius, M_PI * 0.5, M_PI * 1.0);
@@ -418,6 +565,97 @@ void pax_outline_round_rect(
     pax_draw_line(buf, color, x + radius, y + height, x + width - radius, y + height);
     pax_draw_line(buf, color, x, y + radius, x, y + height - radius);
     pax_draw_line(buf, color, x + width, y + radius, x + width, y + height - radius);
+}
+
+// Outline a rounded rectangle with different radii per corner.
+// The radii start top-left and go clockwise.
+void pax_outline_round_rect4(
+    pax_buf_t *buf, pax_col_t color, float x, float y, float width, float height, float r0, float r1, float r2, float r3
+) {
+    if (r0 <= 0) {
+        r0 = 0;
+    }
+    if (r1 <= 0) {
+        r1 = 0;
+    }
+    if (r2 <= 0) {
+        r2 = 0;
+    }
+    if (r3 <= 0) {
+        r3 = 0;
+    }
+    if (r0 == r1 && r1 == r2 && r2 == r3) {
+        pax_outline_round_rect(buf, color, x, y, width, height, r0);
+        return;
+    }
+
+    // Clamp size.
+    if (width < 0) {
+        PAX_SWAP(float, r0, r1);
+        PAX_SWAP(float, r3, r2);
+        x     += width;
+        width  = -width;
+    }
+    if (height < 0) {
+        PAX_SWAP(float, r0, r3);
+        PAX_SWAP(float, r1, r2);
+        y      += height;
+        height  = -height;
+    }
+
+    // Clamp radius.
+    if (r0 > width / 2) {
+        r0 = width / 2;
+    }
+    if (r1 > width / 2) {
+        r1 = width / 2;
+    }
+    if (r2 > width / 2) {
+        r2 = width / 2;
+    }
+    if (r3 > width / 2) {
+        r3 = width / 2;
+    }
+    if (r0 > height / 2) {
+        r0 = height / 2;
+    }
+    if (r1 > height / 2) {
+        r1 = height / 2;
+    }
+    if (r2 > height / 2) {
+        r2 = height / 2;
+    }
+    if (r3 > height / 2) {
+        r3 = height / 2;
+    }
+
+    // Draw corners.
+    if (r0) {
+        pax_outline_arc(buf, color, x + r0, y + r0, r0, M_PI * 0.5, M_PI * 1.0);
+    }
+    if (r1) {
+        pax_outline_arc(buf, color, x + width - r1, y + r1, r1, M_PI * 0.0, M_PI * 0.5);
+    }
+    if (r2) {
+        pax_outline_arc(buf, color, x + width - r2, y + height - r2, r2, M_PI * 0.0, M_PI * -0.5);
+    }
+    if (r3) {
+        pax_outline_arc(buf, color, x + r3, y + height - r3, r3, M_PI * -0.5, M_PI * -1.0);
+    }
+
+    // Draw edges.
+    if (r0 + r1 < width) {
+        pax_draw_line(buf, color, x + r0, y, x + width - r1, y);
+    }
+    if (r3 + r2 < width) {
+        pax_draw_line(buf, color, x + r3, y + height, x + width - r2, y + height);
+    }
+    if (r3 + r0 < height) {
+        pax_draw_line(buf, color, x, y + r0, x, y + height - r3);
+    }
+    if (r1 + r2 < height) {
+        pax_draw_line(buf, color, x + width, y + r1, x + width, y + height - r2);
+    }
 }
 
 // Draw a hollow circle.
@@ -525,7 +763,11 @@ void pax_outline_arc(pax_buf_t *buf, pax_col_t color, float x, float y, float r,
     }
 
     // Pick an appropriate number of divisions.
-    int n_div = pax_pick_arc_divs(&buf->stack_2d.value, r, a0, a1);
+    int n_div  = pax_pick_arc_divs(&buf->stack_2d.value, r, a0, a1);
+    n_div     /= 2;
+    if (!n_div) {
+        n_div = 1;
+    }
 
     // Get the sine and cosine of one division, used for rotation in the loop.
     float div_angle = (a1 - a0) / n_div;
@@ -986,8 +1228,8 @@ static bool line_intersects_line(pax_2vec2f line_a, pax_2vec2f line_b, pax_vec2f
     float y = x * rc_a + dy_a;
 
     // If this lies within both bounding boxes, the lines intersect.
-    bool intersects =
-        bounding_box_contains(box_a, (pax_vec2f){x, y}) && bounding_box_contains(box_b, (pax_vec2f){x, y});
+    bool intersects
+        = bounding_box_contains(box_a, (pax_vec2f){x, y}) && bounding_box_contains(box_b, (pax_vec2f){x, y});
     if (intersects && intersection) {
         *intersection = (pax_vec2f){x, y};
     }
@@ -1075,12 +1317,13 @@ size_t pax_triang_concave(size_t **output, size_t raw_num_points, pax_vec2f cons
             bool attempt = is_clockwise(num_points, points, i, 3, dy);
 
             // It is an ear when the clockwisedness matches and the line does not intersect any of the source lines.
-            bool is_ear = clockwise == attempt && !line_intersects_outline(
-                                                      raw_num_points,
-                                                      raw_points,
-                                                      points[i].vector,
-                                                      points[(i + 2) % num_points].vector
-                                                  );
+            bool is_ear = clockwise == attempt
+                          && !line_intersects_outline(
+                              raw_num_points,
+                              raw_points,
+                              points[i].vector,
+                              points[(i + 2) % num_points].vector
+                          );
             if (is_ear) {
                 // We found an EAR, now we CONVERT IT.
                 tris[tri_index] = points[i % num_points].index;

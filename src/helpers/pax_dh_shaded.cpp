@@ -76,8 +76,8 @@ void pax_overlay_buffer(pax_buf_t *base, pax_buf_t *top, int x, int y, int width
 
     bool equal = top->type == base->type;
 
-    if (equal && x == 0 && y == 0 && width == base->width && height == base->height &&
-        base->reverse_endianness == top->reverse_endianness) {
+    if (equal && x == 0 && y == 0 && width == base->width && height == base->height
+        && base->reverse_endianness == top->reverse_endianness) {
         // When copying one buffer onto another as a background,
         // and the types are the same, perform a memcpy() instead.
         memcpy(base->buf, top->buf, (PAX_GET_BPP(base->type) * width * height + 7) >> 3);
@@ -359,8 +359,8 @@ void pax_line_shaded(
         // Any other line.
         float        du  = (u1 - u0) / nIter;
         float        dv  = (v1 - v0) / nIter;
-        int_fast32_t x   = x0 * 0x10000;
-        int_fast32_t y   = y0 * 0x10000;
+        int_fast32_t x   = x0 * 0x10000 + 0x08000;
+        int_fast32_t y   = y0 * 0x10000 + 0x08000;
         int_fast32_t idx = dx * 0x10000;
         int_fast32_t idy = dy * 0x10000;
         int_fast32_t u   = u0 * 0x10000;

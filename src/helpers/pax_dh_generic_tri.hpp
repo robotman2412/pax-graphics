@@ -150,7 +150,7 @@ static void PDHG_TRAPEZOID_NAME(
     // Vertical drawing loop.
     int delta = buf->width * iy0;
     for (int y = iy0; y < iy1; y += PDHG_INCREMENT) {
-        int ixa = x_a + 0.5, ixb = x_b + 0.5;
+        int ixa = x_a + 0.4999999, ixb = x_b + 0.5;
 
         // Clip: X axis.
         if (ixa < buf->clip.x) {

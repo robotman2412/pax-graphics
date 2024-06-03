@@ -95,16 +95,16 @@ static pax_font_range_t const font_7x9_ranges[] = {
 
 pax_font_t const *pax_fonts_index[] = {
 #if PAX_COMPILE_FONT_INDEX
-    &PRIVATE_pax_font_sky,
-    &PRIVATE_pax_font_sky_mono,
-    &PRIVATE_pax_font_marker,
-    &PRIVATE_pax_font_saira_condensed,
-    &PRIVATE_pax_font_saira_regular,
+    &pax_font_sky_raw,
+    &pax_font_sky_mono_raw,
+    &pax_font_marker_raw,
+    &pax_font_saira_condensed_raw,
+    &pax_font_saira_regular_raw,
 #endif
 };
 size_t const pax_n_fonts = sizeof(pax_fonts_index) / sizeof(pax_font_t const *);
 
-pax_font_t const PRIVATE_pax_font_sky = {
+pax_font_t const pax_font_sky_raw = {
     // Sky
     .name         = "Sky",
     .n_ranges     = 6,
@@ -112,7 +112,7 @@ pax_font_t const PRIVATE_pax_font_sky = {
     .default_size = 9,
     .recommend_aa = false,
 };
-pax_font_t const PRIVATE_pax_font_sky_mono = {
+pax_font_t const pax_font_sky_mono_raw = {
     // Sky mono
     .name         = "Sky Mono",
     .n_ranges     = 3,
@@ -120,7 +120,7 @@ pax_font_t const PRIVATE_pax_font_sky_mono = {
     .default_size = 9,
     .recommend_aa = false,
 };
-pax_font_t const PRIVATE_pax_font_marker = {
+pax_font_t const pax_font_marker_raw = {
     // PermanentMarker
     .name         = "Permanent Marker",
     .n_ranges     = 3,
@@ -128,7 +128,7 @@ pax_font_t const PRIVATE_pax_font_marker = {
     .default_size = 22,
     .recommend_aa = true,
 };
-pax_font_t const PRIVATE_pax_font_saira_condensed = {
+pax_font_t const pax_font_saira_condensed_raw = {
     // Saira condensed
     .name         = "Saira Condensed",
     .n_ranges     = 3,
@@ -136,7 +136,7 @@ pax_font_t const PRIVATE_pax_font_saira_condensed = {
     .default_size = 45,
     .recommend_aa = true,
 };
-pax_font_t const PRIVATE_pax_font_saira_regular = {
+pax_font_t const pax_font_saira_regular_raw = {
     // Saira regular
     .name         = "Saira Regular",
     .n_ranges     = 27,

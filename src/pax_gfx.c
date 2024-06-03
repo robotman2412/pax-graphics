@@ -133,8 +133,8 @@ char const *pax_desc_err(pax_err_t error) {
 
 // Select a number of divisions for an arc.
 int pax_pick_arc_divs(matrix_2d_t const *matrix, float r, float a0, float a1) {
-    float c_r = r * sqrtf(matrix->a0 * matrix->a0 + matrix->b0 * matrix->b0) *
-                sqrtf(matrix->a1 * matrix->a1 + matrix->b1 * matrix->b1);
+    float c_r = r * sqrtf(matrix->a0 * matrix->a0 + matrix->b0 * matrix->b0)
+                * sqrtf(matrix->a1 * matrix->a1 + matrix->b1 * matrix->b1);
     int n_div;
     if (c_r > 30) {
         n_div = (a1 - a0) / M_PI * 24;
@@ -148,8 +148,8 @@ int pax_pick_arc_divs(matrix_2d_t const *matrix, float r, float a0, float a1) {
 
 // Select an appropriate precalculated circle.
 int pax_pick_circle(matrix_2d_t const *matrix, float r, pax_vec2f const **vertex, pax_trif const **uv) {
-    float c_r = r * sqrtf(matrix->a0 * matrix->a0 + matrix->b0 * matrix->b0) *
-                sqrtf(matrix->a1 * matrix->a1 + matrix->b1 * matrix->b1);
+    float c_r = r * sqrtf(matrix->a0 * matrix->a0 + matrix->b0 * matrix->b0)
+                * sqrtf(matrix->a1 * matrix->a1 + matrix->b1 * matrix->b1);
     if (c_r > 30) {
         *vertex = pax_precalc_circle_24;
         *uv     = pax_precalc_uv_circle_24;
@@ -238,13 +238,13 @@ void pax_buf_init(pax_buf_t *buf, void *mem, int width, int height, pax_buf_type
     // Update getters and setters.
     pax_get_col_conv(buf, &buf->col2buf, &buf->buf2col);
     pax_get_setters(buf, &buf->getter, &buf->setter);
+    // The clip rectangle is disabled by default.
+    pax_noclip(buf);
+    // Easter egg.
     if (use_alloc) {
-        // Funny.
         pax_background(buf, 0);
         pax_draw_text(buf, PAX_IS_PALETTE(type) ? 1 : 0xffffffff, pax_font_sky, 9, 5, 5, "Julian Wuz Here");
     }
-    // The clip rectangle is disabled by default.
-    pax_noclip(buf);
     PAX_SUCCESS();
 }
 
@@ -862,8 +862,8 @@ void pax_undo_hsv_alt(pax_col_t in, uint16_t *h, uint8_t *s, uint8_t *v) {
 
 // Linearly interpolates between from and to, including alpha.
 pax_col_t pax_col_lerp(uint8_t part, pax_col_t from, pax_col_t to) {
-    return (pax_lerp(part, from >> 24, to >> 24) << 24) | (pax_lerp(part, from >> 16, to >> 16) << 16) |
-           (pax_lerp(part, from >> 8, to >> 8) << 8) | pax_lerp(part, from, to);
+    return (pax_lerp(part, from >> 24, to >> 24) << 24) | (pax_lerp(part, from >> 16, to >> 16) << 16)
+           | (pax_lerp(part, from >> 8, to >> 8) << 8) | pax_lerp(part, from, to);
 }
 
 // Merges the two colors, based on alpha.
@@ -872,8 +872,8 @@ pax_col_t pax_col_merge(pax_col_t base, pax_col_t top) {
 
     // Otherwise, do a full alpha blend.
     uint8_t part = top >> 24;
-    return (pax_lerp(part, base >> 24, 255) << 24) | (pax_lerp(part, base >> 16, top >> 16) << 16) |
-           (pax_lerp(part, base >> 8, top >> 8) << 8) | pax_lerp(part, base, top);
+    return (pax_lerp(part, base >> 24, 255) << 24) | (pax_lerp(part, base >> 16, top >> 16) << 16)
+           | (pax_lerp(part, base >> 8, top >> 8) << 8) | pax_lerp(part, base, top);
 }
 
 // Tints the color, commonly used for textures.
@@ -881,8 +881,8 @@ pax_col_t pax_col_tint(pax_col_t col, pax_col_t tint) {
     // It is not more optimal to add exceptions for full or zero alpha due to linearity.
 
     // Otherwise, do a full tint.
-    return (pax_lerp(tint >> 24, 0, col >> 24) << 24) | (pax_lerp(tint >> 16, 0, col >> 16) << 16) |
-           (pax_lerp(tint >> 8, 0, col >> 8) << 8) | pax_lerp(tint, 0, col);
+    return (pax_lerp(tint >> 24, 0, col >> 24) << 24) | (pax_lerp(tint >> 16, 0, col >> 16) << 16)
+           | (pax_lerp(tint >> 8, 0, col >> 8) << 8) | pax_lerp(tint, 0, col);
 }
 
 
@@ -1110,15 +1110,14 @@ void pax_shade_rect(
 #if PAX_COMPILE_MCR
         if (pax_do_multicore) {
             // Assign worker task.
-            pax_task_t task = {
-                .buffer     = buf,
-                .type       = PAX_TASK_RECT,
-                .color      = color,
-                .use_shader = shader,
-                .quad_uvs   = *uvs,
-                .shape      = {x, y, width, height},
-                .shape_len  = 4
-            };
+            pax_task_t task
+                = {.buffer     = buf,
+                   .type       = PAX_TASK_RECT,
+                   .color      = color,
+                   .use_shader = shader,
+                   .quad_uvs   = *uvs,
+                   .shape      = {x, y, width, height},
+                   .shape_len  = 4};
             if (shader)
                 task.shader = *shader;
             paxmcr_add_task(&task);
@@ -1301,15 +1300,14 @@ void pax_shade_tri(
 #if PAX_COMPILE_MCR
     if (pax_do_multicore) {
         // Assign worker task.
-        pax_task_t task = {
-            .buffer     = buf,
-            .type       = PAX_TASK_TRI,
-            .color      = color,
-            .use_shader = shader,
-            .tri_uvs    = *uvs,
-            .shape      = {x0, y0, x1, y1, x2, y2},
-            .shape_len  = 6
-        };
+        pax_task_t task
+            = {.buffer     = buf,
+               .type       = PAX_TASK_TRI,
+               .color      = color,
+               .use_shader = shader,
+               .tri_uvs    = *uvs,
+               .shape      = {x0, y0, x1, y1, x2, y2},
+               .shape_len  = 6};
         if (shader)
             task.shader = *shader;
         paxmcr_add_task(&task);
@@ -1690,14 +1688,13 @@ void pax_simple_rect(pax_buf_t *buf, pax_col_t color, float x, float y, float wi
 #if PAX_COMPILE_MCR
     if (pax_do_multicore) {
         // Assign worker task.
-        pax_task_t task = {
-            .buffer     = buf,
-            .type       = PAX_TASK_RECT,
-            .color      = color,
-            .use_shader = false,
-            .shape      = {x, y, width, height},
-            .shape_len  = 4
-        };
+        pax_task_t task
+            = {.buffer     = buf,
+               .type       = PAX_TASK_RECT,
+               .color      = color,
+               .use_shader = false,
+               .shape      = {x, y, width, height},
+               .shape_len  = 4};
         paxmcr_add_task(&task);
         // Draw our part.
         paxmcr_rect_unshaded(false, buf, color, x, y, width, height);
@@ -1785,14 +1782,13 @@ void pax_simple_tri(pax_buf_t *buf, pax_col_t color, float x0, float y0, float x
 #if PAX_COMPILE_MCR
     if (pax_do_multicore) {
         // Add worker task.
-        pax_task_t task = {
-            .buffer     = buf,
-            .type       = PAX_TASK_TRI,
-            .color      = color,
-            .use_shader = false,
-            .shape      = {x0, y0, x1, y1, x2, y2},
-            .shape_len  = 6
-        };
+        pax_task_t task
+            = {.buffer     = buf,
+               .type       = PAX_TASK_TRI,
+               .color      = color,
+               .use_shader = false,
+               .shape      = {x0, y0, x1, y1, x2, y2},
+               .shape_len  = 6};
         paxmcr_add_task(&task);
         // Draw our part.
         paxmcr_tri_unshaded(false, buf, color, x0, y0, x1, y1, x2, y2);

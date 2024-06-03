@@ -30,17 +30,17 @@ extern "C" {
 #define PAX_RENDERER_ID_SWR     0x00
 
 // A human-readable representation of the current version number.
-#define PAX_VERSION_STR         "1.1.2"
+#define PAX_VERSION_STR         "1.2.0"
 // A numeric representation of the version, one decimal digit per version part (MAJOR.MINOR.PATCH).
-#define PAX_VERSION_NUMBER      112
+#define PAX_VERSION_NUMBER      120
 // Whether this is a prerelease version of PAX.
 #define PAX_VERSION_IS_SNAPSHOT true
 // The MAJOR part of the version (MAJOR.MINOR.PATCH).
 #define PAX_VERSION_MAJOR       1
 // The MINOR part of the version (MAJOR.MINOR.PATCH).
-#define PAX_VERSION_MINOR       1
+#define PAX_VERSION_MINOR       2
 // The PATCH part of the version (MAJOR.MINOR.PATCH).
-#define PAX_VERSION_PATCH       1
+#define PAX_VERSION_PATCH       0
 
 /* ========= ERROR DEFS ========== */
 
@@ -157,6 +157,16 @@ enum pax_word_wrap {
     PAX_WW_JUSTIFY,
 };
 
+// To which side text should align.
+enum pax_text_align {
+    // Align text to left.
+    PAX_ALIGN_LEFT,
+    // Align text to center.
+    PAX_ALIGN_CENTER,
+    // Align text to right.
+    PAX_ALIGN_RIGHT,
+};
+
 // Type of task to do.
 // Things like text and arcs will decompose to rects and triangles.
 enum pax_task_type {
@@ -179,6 +189,7 @@ enum pax_font_type {
 typedef enum pax_buf_type    pax_buf_type_t;
 typedef enum pax_orientation pax_orientation_t;
 typedef enum pax_word_wrap   pax_word_wrap_t;
+typedef enum pax_text_align  pax_text_align_t;
 typedef enum pax_task_type   pax_task_type_t;
 typedef enum pax_font_type   pax_font_type_t;
 

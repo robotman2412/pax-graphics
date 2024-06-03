@@ -94,7 +94,11 @@ pax_orientation_t pax_buf_get_orientation(pax_buf_t const *buf);
 void              pax_buf_scroll(pax_buf_t *buf, pax_col_t placeholder, int x, int y);
 
 // Clip the buffer to the desired rectangle.
-void      pax_clip(pax_buf_t *buf, int x, int y, int width, int height);
+void               pax_clip(pax_buf_t *buf, int x, int y, int width, int height);
+// Clip the buffer to the desired rectangle.
+static inline void pax_set_clip(pax_buf_t *buf, pax_recti rect) {
+    pax_clip(buf, rect.x, rect.y, rect.w, rect.h);
+}
 // Get the current clip rectangle.
 pax_recti pax_get_clip(pax_buf_t const *buf);
 // Clip the buffer to it's full size.

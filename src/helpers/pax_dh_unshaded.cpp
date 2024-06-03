@@ -25,8 +25,8 @@ void pax_line_unshaded(pax_buf_t *buf, pax_col_t color, float x0, float y0, floa
     }
 
     // Bounds check.
-    if ((x0 < 0 && x1 < 0) || (x0 >= buf->clip.x + buf->clip.w && x1 >= buf->clip.x + buf->clip.w) ||
-        (y0 < 0 && y1 < 0) || (y0 >= buf->clip.y + buf->clip.h && y1 >= buf->clip.y + buf->clip.h)) {
+    if ((x0 < 0 && x1 < 0) || (x0 >= buf->clip.x + buf->clip.w && x1 >= buf->clip.x + buf->clip.w) || (y0 < 0 && y1 < 0)
+        || (y0 >= buf->clip.y + buf->clip.h && y1 >= buf->clip.y + buf->clip.h)) {
         return;
     }
 
@@ -107,8 +107,8 @@ void pax_line_unshaded(pax_buf_t *buf, pax_col_t color, float x0, float y0, floa
             setter(buf, color, index);
         }
     } else {
-        int_fast32_t x   = x0 * 0x10000;
-        int_fast32_t y   = y0 * 0x10000;
+        int_fast32_t x   = x0 * 0x10000 + 0x08000;
+        int_fast32_t y   = y0 * 0x10000 + 0x08000;
         int_fast32_t idx = dx * 0x10000;
         int_fast32_t idy = dy * 0x10000;
         for (int i = 0; i <= nIter; i++) {

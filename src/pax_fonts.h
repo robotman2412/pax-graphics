@@ -12,17 +12,17 @@ extern "C" {
 
 /* ============ INDEX ============ */
 
-extern pax_font_t const PRIVATE_pax_font_sky;
-extern pax_font_t const PRIVATE_pax_font_sky_mono;
-extern pax_font_t const PRIVATE_pax_font_marker;
-extern pax_font_t const PRIVATE_pax_font_saira_condensed;
-extern pax_font_t const PRIVATE_pax_font_saira_regular;
+extern pax_font_t const pax_font_sky_raw;
+extern pax_font_t const pax_font_sky_mono_raw;
+extern pax_font_t const pax_font_marker_raw;
+extern pax_font_t const pax_font_saira_condensed_raw;
+extern pax_font_t const pax_font_saira_regular_raw;
 
-#define pax_font_sky             (&PRIVATE_pax_font_sky)
-#define pax_font_sky_mono        (&PRIVATE_pax_font_sky_mono)
-#define pax_font_marker          (&PRIVATE_pax_font_marker)
-#define pax_font_saira_condensed (&PRIVATE_pax_font_saira_condensed)
-#define pax_font_saira_regular   (&PRIVATE_pax_font_saira_regular)
+#define pax_font_sky             (&pax_font_sky_raw)
+#define pax_font_sky_mono        (&pax_font_sky_mono_raw)
+#define pax_font_marker          (&pax_font_marker_raw)
+#define pax_font_saira_condensed (&pax_font_saira_condensed_raw)
+#define pax_font_saira_regular   (&pax_font_saira_regular_raw)
 
 // The number of built-in fonts.
 #define PAX_N_FONTS      pax_n_fonts
