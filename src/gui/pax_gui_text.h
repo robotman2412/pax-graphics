@@ -24,11 +24,13 @@ struct pgui_text {
     pax_text_align_t align;
 };
 
-// Draw a text paragraph.
-void pgui_draw_text(pax_buf_t *gfx, pax_vec2f pos, pgui_text_t *elem, pgui_theme_t const *theme, uint32_t flags);
+// Text element type.
+extern pgui_type_t pgui_type_text_raw;
+#define PGUI_TYPE_TEXT (&pgui_type_text_raw)
 
-// Draw a text label.
-void pgui_draw_label(pax_buf_t *gfx, pax_vec2f pos, pgui_label_t *elem, pgui_theme_t const *theme, uint32_t flags);
+// Label element type.
+extern pgui_type_t pgui_type_label_raw;
+#define PGUI_TYPE_LABEL (&pgui_type_label_raw)
 
 #ifdef __cplusplus
 } // extern "C"

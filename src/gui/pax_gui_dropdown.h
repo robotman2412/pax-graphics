@@ -34,15 +34,9 @@ struct pgui_dropdown {
     void              *cookie;
 };
 
-
-
-// Draw a dropdown.
-void pgui_draw_dropdown(
-    pax_buf_t *gfx, pax_vec2f pos, pgui_dropdown_t *elem, pgui_theme_t const *theme, uint32_t flags
-);
-
-// Send an event to a dropdown.
-pgui_resp_t pgui_event_dropdown(pgui_dropdown_t *elem, pgui_event_t event, uint32_t flags);
+// Dropdown element type.
+extern pgui_type_t pgui_type_dropdown_raw;
+#define PGUI_TYPE_DROPDOWN (&pgui_type_dropdown_raw)
 
 #ifdef __cplusplus
 } // extern "C"

@@ -10,7 +10,7 @@ static char const TAG[] = "pax-gui";
 
 
 // Calculate the layout of a grid.
-void pgui_calc_grid(pgui_grid_t *elem, pgui_theme_t const *theme) {
+static void pgui_calc_grid(pgui_grid_t *elem, pgui_theme_t const *theme) {
     // Validate grid.
     if (elem->cells.x < 1 || elem->cells.y < 1) {
         PAX_LOGE(TAG, "Invalid grid size %dx%d", elem->cells.x, elem->cells.y);
@@ -76,7 +76,8 @@ void pgui_calc_grid(pgui_grid_t *elem, pgui_theme_t const *theme) {
 }
 
 // Draw a grid.
-void pgui_draw_grid(pax_buf_t *gfx, pax_vec2f pos, pgui_grid_t *elem, pgui_theme_t const *theme, uint32_t flags) {
+static void
+    pgui_draw_grid(pax_buf_t *gfx, pax_vec2f pos, pgui_grid_t *elem, pgui_theme_t const *theme, uint32_t flags) {
     // Validate grid.
     if (elem->cells.x < 1 || elem->cells.y < 1) {
         PAX_LOGE(TAG, "Invalid grid size %dx%d", elem->cells.x, elem->cells.y);
@@ -139,7 +140,7 @@ static pgui_resp_t pgui_grid_nav(pgui_grid_t *elem, ptrdiff_t dx, ptrdiff_t dy) 
     ptrdiff_t y = (y0 + dy + elem->cells.y) % elem->cells.y;
     while (x != x0 || y != y0) {
         ptrdiff_t i = x + y * elem->cells.x;
-        if (elem->box.children[i] && PGUI_IS_SELECTABLE(elem->box.children[i]->type)) {
+        if (elem->box.children[i] && (elem->box.children[i]->type->attr & PGUI_ATTR_SELECTABLE)) {
             if (elem->box.selected >= 0) {
                 // Unmark previous selection.
                 elem->box.children[elem->box.selected]->flags &= ~PGUI_FLAG_HIGHLIGHT;
@@ -158,12 +159,12 @@ static pgui_resp_t pgui_grid_nav(pgui_grid_t *elem, ptrdiff_t dx, ptrdiff_t dy) 
 }
 
 // Send an event to a grid.
-pgui_resp_t pgui_event_grid(pgui_grid_t *elem, pgui_event_t event, uint32_t flags) {
+static pgui_resp_t pgui_event_grid(pgui_grid_t *elem, pgui_event_t event, uint32_t flags) {
     if (elem->box.selected < 0) {
         if (event.input == PGUI_INPUT_ACCEPT && event.type == PGUI_EVENT_TYPE_RELEASE) {
             // Select lowest-indexed selectable child.
             for (size_t i = 0; i < elem->box.children_len; i++) {
-                if (elem->box.children[i] && PGUI_IS_SELECTABLE(elem->box.children[i]->type)) {
+                if (elem->box.children[i] && (elem->box.children[i]->type->attr & PGUI_ATTR_SELECTABLE)) {
                     elem->box.selected            = i;
                     elem->box.children[i]->flags |= PGUI_FLAG_HIGHLIGHT | PGUI_FLAG_DIRTY;
                     elem->base.flags             |= PGUI_FLAG_DIRTY;
@@ -213,3 +214,11 @@ pgui_resp_t pgui_event_grid(pgui_grid_t *elem, pgui_event_t event, uint32_t flag
         }
     }
 }
+
+// Box element type.
+pgui_type_t pgui_type_grid_raw = {
+    .attr  = PGUI_ATTR_BOX | PGUI_ATTR_SELECTABLE,
+    .draw  = (pgui_draw_fn_t)pgui_draw_grid,
+    .calc  = (pgui_calc_fn_t)pgui_calc_grid,
+    .event = (pgui_event_fn_t)pgui_event_grid,
+};

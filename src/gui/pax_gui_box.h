@@ -26,8 +26,9 @@ struct pgui_box {
     pgui_base_t **children;
 };
 
-// Draw a box.
-void pgui_draw_box(pax_buf_t *gfx, pax_vec2f pos, pgui_box_t *elem, pgui_theme_t const *theme, uint32_t flags);
+// Box element type.
+extern pgui_type_t pgui_type_box_raw;
+#define PGUI_TYPE_BOX (&pgui_type_box_raw)
 
 #ifdef __cplusplus
 } // extern "C"

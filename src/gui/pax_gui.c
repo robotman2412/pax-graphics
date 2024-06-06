@@ -25,7 +25,7 @@ void pgui_draw_base(pax_buf_t *gfx, pax_vec2f pos, pgui_base_t *elem, pgui_theme
 
     // Select background color.
     pax_col_t bg;
-    if (PGUI_IS_BOX(elem->type) || (flags & PGUI_FLAG_INACTIVE)) {
+    if ((elem->type->attr & PGUI_ATTR_BOX) || (flags & PGUI_FLAG_INACTIVE)) {
         bg = theme->bg_col;
     } else if (elem->flags & PGUI_FLAG_ACTIVE) {
         bg = theme->pressed_col;
@@ -149,18 +149,11 @@ void pgui_calc_layout(pgui_base_t *elem, pgui_theme_t const *theme) {
         theme = &pgui_theme_default;
     }
 
-    switch (elem->type) {
-        default: PAX_LOGE(TAG, "Cannot calculate layout of unknown element type %d", elem->type); return;
-        case PGUI_TYPE_BOX: break;
-        case PGUI_TYPE_GRID: pgui_calc_grid((pgui_grid_t *)elem, theme); break;
-        case PGUI_TYPE_BUTTON: break;
-        case PGUI_TYPE_DROPDOWN: break;
-        case PGUI_TYPE_TEXTBOX: break;
-        case PGUI_TYPE_TEXT: break;
-        case PGUI_TYPE_LABEL: break;
+    if (elem->type->calc) {
+        elem->type->calc(elem, theme);
     }
 
-    if (PGUI_IS_BOX(elem->type)) {
+    if (elem->type->attr & PGUI_ATTR_BOX) {
         // Update flags.
         pgui_box_t *box = (pgui_box_t *)elem;
         for (size_t i = 0; i < box->children_len; i++) {
@@ -179,23 +172,10 @@ static void pgui_draw_int(pax_buf_t *gfx, pax_vec2f pos, pgui_base_t *elem, pgui
         return;
     }
 
-    if (flags & PGUI_FLAG_DIRTY) {
-        switch (elem->type) {
-            default:
-                PAX_LOGE(TAG, "Cannot draw unknown element type %d", elem->type);
-                elem->flags |= PGUI_FLAG_HIDDEN;
-                return;
-            case PGUI_TYPE_BOX: pgui_draw_box(gfx, pos, (pgui_box_t *)elem, theme, flags); break;
-            case PGUI_TYPE_GRID: pgui_draw_grid(gfx, pos, (pgui_grid_t *)elem, theme, flags); break;
-            case PGUI_TYPE_BUTTON: pgui_draw_button(gfx, pos, (pgui_button_t *)elem, theme, flags); break;
-            case PGUI_TYPE_DROPDOWN: pgui_draw_dropdown(gfx, pos, (pgui_dropdown_t *)elem, theme, flags); break;
-            case PGUI_TYPE_TEXTBOX: pgui_draw_textbox(gfx, pos, (pgui_textbox_t *)elem, theme, flags); break;
-            case PGUI_TYPE_TEXT: pgui_draw_text(gfx, pos, (pgui_text_t *)elem, theme, flags); break;
-            case PGUI_TYPE_LABEL: pgui_draw_label(gfx, pos, (pgui_label_t *)elem, theme, flags); break;
-        }
-    }
+    // Call its drawing function.
+    elem->type->draw(gfx, pos, elem, theme, flags);
 
-    if (PGUI_IS_BOX(elem->type)) {
+    if (elem->type->attr & PGUI_ATTR_BOX) {
         // Update flags.
         pgui_box_t *box = (pgui_box_t *)elem;
         flags           = (elem->flags | flags) & PGUI_FLAGS_INHERITABLE;
@@ -264,7 +244,7 @@ static pgui_resp_t pgui_event_int(pgui_base_t *elem, pgui_event_t event, uint32_
     flags |= elem->flags;
 
     // Send event to children first.
-    if (PGUI_IS_BOX(elem->type)) {
+    if (elem->type->attr & PGUI_ATTR_BOX) {
         pgui_box_t *box = (pgui_box_t *)elem;
         if (box->selected >= 0 && box->children[box->selected]) {
             pgui_resp_t resp = pgui_event_int(box->children[box->selected], event, flags);
@@ -275,16 +255,10 @@ static pgui_resp_t pgui_event_int(pgui_base_t *elem, pgui_event_t event, uint32_
     }
 
     // Not a box or not captured by children.
-    switch (elem->type) {
-        default: PAX_LOGE(TAG, "Cannot send event to unknown element type %d", elem->type); return PGUI_RESP_IGNORED;
-        case PGUI_TYPE_BOX: return PGUI_RESP_IGNORED;
-        case PGUI_TYPE_GRID: return pgui_event_grid((pgui_grid_t *)elem, event, flags);
-        case PGUI_TYPE_BUTTON: return pgui_event_button((pgui_button_t *)elem, event, flags);
-        case PGUI_TYPE_DROPDOWN: return pgui_event_dropdown((pgui_dropdown_t *)elem, event, flags);
-        case PGUI_TYPE_TEXTBOX: return pgui_event_textbox((pgui_textbox_t *)elem, event, flags);
-        case PGUI_TYPE_TEXT: return PGUI_RESP_IGNORED;
-        case PGUI_TYPE_LABEL: return PGUI_RESP_IGNORED;
+    if (!elem->type->event) {
+        return PGUI_RESP_IGNORED;
     }
+    return elem->type->event(elem, event, flags);
 }
 
 // Handle a button event.

@@ -149,36 +149,39 @@ extern pgui_theme_t const pgui_theme_default;
 #define PGUI_FLAG_NOPADDING    0x00002000
 
 // Whether an element type is one of the boxes.
-#define PGUI_IS_BOX(x) (x == PGUI_TYPE_BOX || x == PGUI_TYPE_GRID)
+#define PGUI_ATTR_BOX        0x00000001
 // Whether an element type is selectable.
-#define PGUI_IS_SELECTABLE(x)                                                                                          \
-    (x == PGUI_TYPE_BOX || x == PGUI_TYPE_GRID || x == PGUI_TYPE_BUTTON || x == PGUI_TYPE_DROPDOWN                     \
-     || x == PGUI_TYPE_TEXTBOX)
-
-// GUI element type.
-typedef enum {
-    // `pgui_box_t` elements.
-    PGUI_TYPE_BOX,
-    // `pgui_grid_t` elements.
-    PGUI_TYPE_GRID,
-    // `pgui_button_t` elements.
-    PGUI_TYPE_BUTTON,
-    // `pgui_dropdown_t` elements.
-    PGUI_TYPE_DROPDOWN,
-    // `pgui_textbox_t` elements.
-    PGUI_TYPE_TEXTBOX,
-    // `pgui_text_t` elements.
-    PGUI_TYPE_TEXT,
-    // `pgui_label_t` elements.
-    PGUI_TYPE_LABEL,
-} pgui_type_t;
+#define PGUI_ATTR_SELECTABLE 0x00000002
 
 // Common GUI element data.
 typedef struct pgui_base pgui_base_t;
+// GUI element type.
+typedef struct pgui_type pgui_type_t;
+
+// GUI element draw call.
+typedef void (*pgui_draw_fn_t)(
+    pax_buf_t *gfx, pax_vec2f pos, pgui_base_t *elem, pgui_theme_t const *theme, uint32_t flags
+);
+// GUI element layout calculation call.
+typedef void (*pgui_calc_fn_t)(pgui_base_t *elem, pgui_theme_t const *theme);
+// GUI element event call.
+typedef pgui_resp_t (*pgui_event_fn_t)(pgui_base_t *elem, pgui_event_t event, uint32_t flags);
+
+// GUI element type.
+struct pgui_type {
+    // Static element attributes.
+    uint32_t        attr;
+    // Draw call (mandatory).
+    pgui_draw_fn_t  draw;
+    // Layout calculation call.
+    pgui_calc_fn_t  calc;
+    // Event call.
+    pgui_event_fn_t event;
+};
 
 struct pgui_base {
     // Element type.
-    pgui_type_t  type;
+    pgui_type_t *type;
     // Relative element position.
     pax_vec2f    pos;
     // Element size.

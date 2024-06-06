@@ -29,16 +29,9 @@ struct pgui_grid {
     pax_vec2f cell_size;
 };
 
-
-
-// Calculate the layout of a grid.
-void pgui_calc_grid(pgui_grid_t *elem, pgui_theme_t const *theme);
-
-// Draw a grid.
-void pgui_draw_grid(pax_buf_t *gfx, pax_vec2f pos, pgui_grid_t *elem, pgui_theme_t const *theme, uint32_t flags);
-
-// Send an event to a grid.
-pgui_resp_t pgui_event_grid(pgui_grid_t *elem, pgui_event_t event, uint32_t flags);
+// Grid element type.
+extern pgui_type_t pgui_type_grid_raw;
+#define PGUI_TYPE_GRID (&pgui_type_grid_raw)
 
 #ifdef __cplusplus
 } // extern "C"

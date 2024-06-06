@@ -8,7 +8,8 @@
 
 
 // Draw a text paragraph.
-void pgui_draw_text(pax_buf_t *gfx, pax_vec2f pos, pgui_text_t *elem, pgui_theme_t const *theme, uint32_t flags) {
+static void
+    pgui_draw_text(pax_buf_t *gfx, pax_vec2f pos, pgui_text_t *elem, pgui_theme_t const *theme, uint32_t flags) {
     switch (elem->align) {
         default:
         case PAX_ALIGN_LEFT:
@@ -48,7 +49,8 @@ void pgui_draw_text(pax_buf_t *gfx, pax_vec2f pos, pgui_text_t *elem, pgui_theme
 }
 
 // Draw a text label.
-void pgui_draw_label(pax_buf_t *gfx, pax_vec2f pos, pgui_label_t *elem, pgui_theme_t const *theme, uint32_t flags) {
+static void
+    pgui_draw_label(pax_buf_t *gfx, pax_vec2f pos, pgui_label_t *elem, pgui_theme_t const *theme, uint32_t flags) {
     pgui_draw_bounded_text(
         gfx,
         theme->fg_col,
@@ -64,3 +66,13 @@ void pgui_draw_label(pax_buf_t *gfx, pax_vec2f pos, pgui_label_t *elem, pgui_the
         elem->align
     );
 }
+
+// Text element type.
+pgui_type_t pgui_type_text_raw = {
+    .draw = (pgui_draw_fn_t)pgui_draw_text,
+};
+
+// Label element type.
+pgui_type_t pgui_type_label_raw = {
+    .draw = (pgui_draw_fn_t)pgui_draw_label,
+};

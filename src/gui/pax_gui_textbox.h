@@ -35,13 +35,9 @@ struct pgui_textbox {
     void             *cookie;
 };
 
-
-
-// Draw a textbox.
-void pgui_draw_textbox(pax_buf_t *gfx, pax_vec2f pos, pgui_textbox_t *elem, pgui_theme_t const *theme, uint32_t flags);
-
-// Send an event to a textbox.
-pgui_resp_t pgui_event_textbox(pgui_textbox_t *elem, pgui_event_t event, uint32_t flags);
+// Textbox element type.
+extern pgui_type_t pgui_type_textbox_raw;
+#define PGUI_TYPE_TEXTBOX (&pgui_type_textbox_raw)
 
 #ifdef __cplusplus
 } // extern "C"

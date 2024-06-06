@@ -10,7 +10,8 @@
 
 
 // Draw a textbox.
-void pgui_draw_textbox(pax_buf_t *gfx, pax_vec2f pos, pgui_textbox_t *elem, pgui_theme_t const *theme, uint32_t flags) {
+static void
+    pgui_draw_textbox(pax_buf_t *gfx, pax_vec2f pos, pgui_textbox_t *elem, pgui_theme_t const *theme, uint32_t flags) {
     if (flags & PGUI_FLAG_INACTIVE) {
         // Stop editing if inactive.
         elem->base.flags &= PGUI_FLAG_ACTIVE;
@@ -96,7 +97,7 @@ void pgui_draw_textbox(pax_buf_t *gfx, pax_vec2f pos, pgui_textbox_t *elem, pgui
 }
 
 // Send an event to a textbox.
-pgui_resp_t pgui_event_textbox(pgui_textbox_t *elem, pgui_event_t event, uint32_t flags) {
+static pgui_resp_t pgui_event_textbox(pgui_textbox_t *elem, pgui_event_t event, uint32_t flags) {
     if (flags & PGUI_FLAG_INACTIVE) {
         // Stop editing if inactive.
         elem->base.flags &= PGUI_FLAG_ACTIVE;
@@ -225,3 +226,10 @@ pgui_resp_t pgui_event_textbox(pgui_textbox_t *elem, pgui_event_t event, uint32_
         return PGUI_RESP_IGNORED;
     }
 }
+
+// Textbox element type.
+pgui_type_t pgui_type_textbox_raw = {
+    .attr  = PGUI_ATTR_SELECTABLE,
+    .draw  = (pgui_draw_fn_t)pgui_draw_textbox,
+    .event = (pgui_event_fn_t)pgui_event_textbox,
+};

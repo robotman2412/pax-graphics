@@ -8,7 +8,8 @@
 
 
 // Draw a button.
-void pgui_draw_button(pax_buf_t *gfx, pax_vec2f pos, pgui_button_t *elem, pgui_theme_t const *theme, uint32_t flags) {
+static void
+    pgui_draw_button(pax_buf_t *gfx, pax_vec2f pos, pgui_button_t *elem, pgui_theme_t const *theme, uint32_t flags) {
     // Draw backdrop.
     pgui_draw_base(gfx, pos, &elem->base, theme, flags);
     pgui_draw_bounded_text(
@@ -28,7 +29,7 @@ void pgui_draw_button(pax_buf_t *gfx, pax_vec2f pos, pgui_button_t *elem, pgui_t
 }
 
 // Send an event to a button.
-pgui_resp_t pgui_event_button(pgui_button_t *elem, pgui_event_t event, uint32_t flags) {
+static pgui_resp_t pgui_event_button(pgui_button_t *elem, pgui_event_t event, uint32_t flags) {
     if (event.input != PGUI_INPUT_ACCEPT) {
         if (elem->base.flags & PGUI_FLAG_ACTIVE) {
             return event.type == PGUI_EVENT_TYPE_RELEASE ? PGUI_RESP_CAPTURED : PGUI_RESP_CAPTURED_ERR;
@@ -50,3 +51,10 @@ pgui_resp_t pgui_event_button(pgui_button_t *elem, pgui_event_t event, uint32_t 
     }
     return PGUI_RESP_CAPTURED;
 }
+
+// Button element type.
+pgui_type_t pgui_type_button_raw = {
+    .attr  = PGUI_ATTR_SELECTABLE,
+    .draw  = (pgui_draw_fn_t)pgui_draw_button,
+    .event = (pgui_event_fn_t)pgui_event_button,
+};

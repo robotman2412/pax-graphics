@@ -30,10 +30,8 @@ struct pgui_button {
     void            *cookie;
 };
 
-// Draw a button.
-void pgui_draw_button(pax_buf_t *gfx, pax_vec2f pos, pgui_button_t *elem, pgui_theme_t const *theme, uint32_t flags);
-
-// Send an event to a button.
-pgui_resp_t pgui_event_button(pgui_button_t *elem, pgui_event_t event, uint32_t flags);
+// Button element type.
+extern pgui_type_t pgui_type_button_raw;
+#define PGUI_TYPE_BUTTON (&pgui_type_button_raw)
 
 #endif // PAX_GUI_BUTTON_H

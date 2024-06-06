@@ -193,7 +193,7 @@ static void pgui_draw_dropdown_menu(
 }
 
 // Draw a dropdown.
-void pgui_draw_dropdown(
+static void pgui_draw_dropdown(
     pax_buf_t *gfx, pax_vec2f pos, pgui_dropdown_t *elem, pgui_theme_t const *theme, uint32_t flags
 ) {
     if (flags & PGUI_FLAG_INACTIVE) {
@@ -271,7 +271,7 @@ void pgui_draw_dropdown(
 }
 
 // Send an event to a dropdown.
-pgui_resp_t pgui_event_dropdown(pgui_dropdown_t *elem, pgui_event_t event, uint32_t flags) {
+static pgui_resp_t pgui_event_dropdown(pgui_dropdown_t *elem, pgui_event_t event, uint32_t flags) {
     if (flags & PGUI_FLAG_INACTIVE) {
         // Close dropdown if inactive.
         elem->base.flags &= PGUI_FLAG_ACTIVE;
@@ -335,3 +335,10 @@ pgui_resp_t pgui_event_dropdown(pgui_dropdown_t *elem, pgui_event_t event, uint3
         }
     }
 }
+
+// Dropdown element type.
+pgui_type_t pgui_type_dropdown_raw = {
+    .attr  = PGUI_ATTR_SELECTABLE,
+    .draw  = (pgui_draw_fn_t)pgui_draw_dropdown,
+    .event = (pgui_event_fn_t)pgui_event_dropdown,
+};

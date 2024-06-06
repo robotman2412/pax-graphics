@@ -7,7 +7,8 @@
 
 
 
-// Draw a box.
-void pgui_draw_box(pax_buf_t *gfx, pax_vec2f pos, pgui_box_t *elem, pgui_theme_t const *theme, uint32_t flags) {
-    pgui_draw_base(gfx, pos, &elem->base, theme, flags);
-}
+// Box element type.
+pgui_type_t pgui_type_box_raw = {
+    .attr = PGUI_ATTR_BOX | PGUI_ATTR_SELECTABLE,
+    .draw = pgui_draw_base,
+};
