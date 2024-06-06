@@ -467,19 +467,19 @@ void pax_buf_scroll(pax_buf_t *buf, pax_col_t placeholder, int x, int y) {
     }
 
     // Pixel index offset for the copy.
-    ssize_t off   = x + y * buf->width;
+    ptrdiff_t off   = x + y * buf->width;
     // Number of pixels that must be copied.
-    size_t  count = buf->width * buf->height - labs(off);
+    size_t    count = buf->width * buf->height - labs(off);
 
     // Bit index version of the offset.
-    ssize_t bit_off   = PAX_GET_BPP(buf->type) * off;
+    ptrdiff_t bit_off   = PAX_GET_BPP(buf->type) * off;
     // Number of bits to copy.
-    size_t  bit_count = PAX_GET_BPP(buf->type) * count;
+    size_t    bit_count = PAX_GET_BPP(buf->type) * count;
 
     if ((bit_off & 7) == 0) {
         // If bit offset lines up to a byte, use memmove.
-        ssize_t byte_off   = bit_off / 8;
-        size_t  byte_count = bit_count / 8;
+        ptrdiff_t byte_off   = bit_off / 8;
+        size_t    byte_count = bit_count / 8;
 
         if (byte_off > 0) {
             memmove(buf->buf_8bpp + byte_off, buf->buf_8bpp, byte_count);
@@ -490,12 +490,12 @@ void pax_buf_scroll(pax_buf_t *buf, pax_col_t placeholder, int x, int y) {
     } else {
         // If it does not, an expensive copy must be performed.
         if (off > 0) {
-            for (ssize_t i = count - 1; i >= 0; i--) {
+            for (ptrdiff_t i = count - 1; i >= 0; i--) {
                 pax_col_t value = buf->getter(buf, off + i);
                 buf->setter(buf, value, i);
             }
         } else {
-            for (ssize_t i = 0; i < count; i++) {
+            for (ptrdiff_t i = 0; i < count; i++) {
                 pax_col_t value = buf->getter(buf, i);
                 buf->setter(buf, value, off + i);
             }
@@ -529,37 +529,40 @@ void pax_buf_scroll(pax_buf_t *buf, pax_col_t placeholder, int x, int y) {
 
 // Clip the buffer to the desired rectangle.
 void pax_clip(pax_buf_t *buf, int x, int y, int width, int height) {
+    // Apply orientation.
+    pax_recti clip = {x, y, width, height};
+    clip           = pax_orient_det_recti(buf, clip);
     // Make width and height positive.
-    if (width < 0) {
-        x     += width;
-        width  = -width;
+    if (clip.w < 0) {
+        clip.x += clip.w;
+        clip.w  = -clip.w;
     }
-    if (height < 0) {
-        y      += height;
-        height  = -height;
+    if (clip.h < 0) {
+        clip.y += clip.h;
+        clip.h  = -clip.h;
     }
     // Clip the entire rectangle to be at most the buffer's size.
-    if (x < 0) {
-        width += x;
-        x      = 0;
+    if (clip.x < 0) {
+        clip.w += clip.x;
+        clip.x  = 0;
     }
-    if (y < 0) {
-        height += y;
-        y       = 0;
+    if (clip.y < 0) {
+        clip.h += clip.y;
+        clip.y  = 0;
     }
-    if (x + width > buf->width) {
-        width = buf->width - x;
+    if (clip.x + clip.w > buf->width) {
+        clip.w = buf->width - clip.x;
     }
-    if (y + height > buf->height) {
-        height = buf->height - y;
+    if (clip.y + clip.h > buf->height) {
+        clip.h = buf->height - clip.y;
     }
     // Apply the clip.
-    buf->clip = (pax_recti){.x = x, .y = y, .w = width, .h = height};
+    buf->clip = clip;
 }
 
 // Get the current clip rectangle.
 pax_recti pax_get_clip(pax_buf_t const *buf) {
-    return buf->clip;
+    return pax_unorient_det_recti(buf, buf->clip);
 }
 
 // Clip the buffer to it's full size.

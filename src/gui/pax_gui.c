@@ -116,6 +116,33 @@ void pgui_draw_scrollbar(
     );
 }
 
+// Adjust a scrollbar to show as much of the desired area as possible.
+float pgui_adjust_scroll(
+    float view_offset, float view_margin, float view_window, float scroll, float window, float total
+) {
+    if (total <= view_window) {
+        // The entire thing fits; scroll to the beginning.
+        return 0;
+
+    } else if (view_window < window + 2 * view_margin) {
+        // It doesn't fit; scroll to the halfway point.
+        scroll = view_offset - (view_window - window) / 2;
+
+    } else if (scroll > view_offset - view_margin) {
+        // Scrolled too far up.
+        scroll = view_offset - view_margin;
+
+    } else if (scroll < view_offset + window + view_margin - view_window) {
+        // Scrolled too far down.
+        scroll = view_offset + window + view_margin - view_window;
+    }
+
+    // Clamp to visible area.
+    scroll = fmaxf(scroll, 0);
+    scroll = fminf(scroll, total - view_window);
+    return scroll;
+}
+
 // Recalculate the position of a GUI element and its children.
 void pgui_calc_layout(pgui_base_t *elem, pgui_theme_t const *theme) {
     if (!theme) {
@@ -205,6 +232,8 @@ static void pgui_draw_int(pax_buf_t *gfx, pax_vec2f pos, pgui_base_t *elem, pgui
     // Clear dirty flag.
     elem->flags &= ~PGUI_FLAG_DIRTY;
 }
+
+
 
 // Draw a GUI element and its children.
 void pgui_draw(pax_buf_t *gfx, pgui_base_t *elem, pgui_theme_t const *theme) {

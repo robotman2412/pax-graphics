@@ -110,31 +110,14 @@ static void pgui_draw_dropdown_menu(
         pax_recti clip = pax_get_clip(gfx);
 
         // Adjust scroll if necessary.
-        float margin = elem->base.size.y;
-        if (view_height < 2 * margin + elem->base.size.y) {
-            // Too little area for proper scrolling; center around element.
-            elem->scroll  = elem->to_select * elem->base.size.y - margin;
-            elem->scroll -= (view_height - elem->base.size.y) / 2 - margin;
-
-        } else if (elem->to_select == 0) {
-            // First is selected; scroll always at the top.
-            elem->scroll = 0;
-
-        } else if (elem->to_select == elem->options_len - 1) {
-            // Last is selected; scroll always at the bottom.
-            elem->scroll = total_height - view_height;
-
-        } else if (elem->scroll > elem->to_select * elem->base.size.y - margin) {
-            // Scrolled too far up.
-            elem->scroll = elem->to_select * elem->base.size.y - margin;
-
-        } else if (elem->scroll < (elem->to_select + 1) * elem->base.size.y + margin - view_height) {
-            // Scrolled too far down.
-            elem->scroll = (elem->to_select + 1) * elem->base.size.y + margin - view_height;
-        }
-        // Clamp scroll.
-        elem->scroll = fmaxf(0, elem->scroll);
-        elem->scroll = fminf(total_height - view_height, elem->scroll);
+        elem->scroll = pgui_adjust_scroll(
+            elem->to_select * elem->base.size.y,
+            elem->base.size.y,
+            view_height,
+            elem->scroll,
+            elem->base.size.y,
+            total_height
+        );
 
         // Compute clip rectangles.
         pax_recti sel_clip = {
@@ -213,6 +196,10 @@ static void pgui_draw_dropdown_menu(
 void pgui_draw_dropdown(
     pax_buf_t *gfx, pax_vec2f pos, pgui_dropdown_t *elem, pgui_theme_t const *theme, uint32_t flags
 ) {
+    if (flags & PGUI_FLAG_INACTIVE) {
+        // Close dropdown if inactive.
+        elem->base.flags &= PGUI_FLAG_ACTIVE;
+    }
     if (flags & PGUI_FLAG_INACTIVE) {
         // Close dropdown if inactive.
         elem->base.flags &= PGUI_FLAG_ACTIVE;

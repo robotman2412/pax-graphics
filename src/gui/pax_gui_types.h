@@ -208,7 +208,12 @@ void pgui_draw_bounded_text(
 
 // Draw a scrollbar.
 void pgui_draw_scrollbar(
-    pax_buf_t *gfx, pax_vec2f pos, pax_vec2f size, pgui_theme_t const *theme, float value, float window, float total
+    pax_buf_t *gfx, pax_vec2f pos, pax_vec2f size, pgui_theme_t const *theme, float scroll, float window, float total
+);
+
+// Adjust a scrollbar to show as much of the desired area as possible.
+float pgui_adjust_scroll(
+    float view_offset, float view_margin, float view_window, float scroll, float window, float total
 );
 
 #ifdef __cplusplus

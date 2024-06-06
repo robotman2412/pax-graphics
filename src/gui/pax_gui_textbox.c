@@ -11,6 +11,10 @@
 
 // Draw a textbox.
 void pgui_draw_textbox(pax_buf_t *gfx, pax_vec2f pos, pgui_textbox_t *elem, pgui_theme_t const *theme, uint32_t flags) {
+    if (flags & PGUI_FLAG_INACTIVE) {
+        // Stop editing if inactive.
+        elem->base.flags &= PGUI_FLAG_ACTIVE;
+    }
     // Draw backdrop.
     pgui_draw_base(gfx, pos, &elem->base, theme, flags);
     // Calculate text bounds.
@@ -25,10 +29,25 @@ void pgui_draw_textbox(pax_buf_t *gfx, pax_vec2f pos, pgui_textbox_t *elem, pgui
     pax_clip(gfx, bounds.x, bounds.y, bounds.w, bounds.h);
 
     if (elem->buf && (flags & PGUI_FLAG_ACTIVE)) {
-        // Draw until cursor.
+        // Measure until cursor.
         char tmp                = elem->buf[elem->cursor];
         elem->buf[elem->cursor] = 0;
-        pax_vec2f size          = pax_draw_text(
+        pax_vec2f size_pre      = pax_text_size(theme->font, theme->font_size, elem->buf);
+        elem->buf[elem->cursor] = tmp;
+        // Measure after cursor.
+        pax_vec2f size_post     = pax_text_size(theme->font, theme->font_size, elem->buf + elem->cursor);
+        // Adjust scroll offset.
+        elem->scroll            = pgui_adjust_scroll(
+            size_pre.x - 2 * theme->font_size,
+            0,
+            bounds.w,
+            elem->scroll,
+            4 * theme->font_size,
+            size_pre.x + size_post.x
+        );
+
+        // Draw all text.
+        pax_draw_text(
             gfx,
             theme->fg_col,
             theme->font,
@@ -37,25 +56,15 @@ void pgui_draw_textbox(pax_buf_t *gfx, pax_vec2f pos, pgui_textbox_t *elem, pgui
             pos.y + (elem->base.size.y - theme->font_size) / 2,
             elem->buf
         );
-        elem->buf[elem->cursor] = tmp;
         // Draw cursor.
+        pax_clip(gfx, pos.x, pos.y, elem->base.size.x, elem->base.size.y);
         pax_draw_line(
             gfx,
             theme->fg_col,
-            bounds.x - elem->scroll + size.x,
+            bounds.x - elem->scroll + size_pre.x,
             pos.y + (elem->base.size.y - theme->font_size) / 2,
-            bounds.x - elem->scroll + size.x,
+            bounds.x - elem->scroll + size_pre.x,
             pos.y + (elem->base.size.y + theme->font_size) / 2
-        );
-        // Draw after cursor.
-        pax_draw_text(
-            gfx,
-            theme->fg_col,
-            theme->font,
-            theme->font_size,
-            bounds.x - elem->scroll + size.x,
-            pos.y + (elem->base.size.y - theme->font_size) / 2,
-            elem->buf + elem->cursor
         );
 
     } else if (flags & PGUI_FLAG_ACTIVE) {
@@ -88,6 +97,10 @@ void pgui_draw_textbox(pax_buf_t *gfx, pax_vec2f pos, pgui_textbox_t *elem, pgui
 
 // Send an event to a textbox.
 pgui_resp_t pgui_event_textbox(pgui_textbox_t *elem, pgui_event_t event, uint32_t flags) {
+    if (flags & PGUI_FLAG_INACTIVE) {
+        // Stop editing if inactive.
+        elem->base.flags &= PGUI_FLAG_ACTIVE;
+    }
     if (flags & PGUI_FLAG_ACTIVE) {
         // Currently in typing mode.
         if (event.input == PGUI_INPUT_LEFT) {
@@ -200,6 +213,10 @@ pgui_resp_t pgui_event_textbox(pgui_textbox_t *elem, pgui_event_t event, uint32_
         // Not in typing mode.
         if (event.input == PGUI_INPUT_ACCEPT) {
             if (event.type == PGUI_EVENT_TYPE_RELEASE) {
+                if (flags & PGUI_FLAG_INACTIVE) {
+                    return PGUI_RESP_CAPTURED_ERR;
+                }
+                // Start typing.
                 elem->base.flags |= PGUI_FLAG_ACTIVE;
                 elem->base.flags |= PGUI_FLAG_DIRTY;
             }

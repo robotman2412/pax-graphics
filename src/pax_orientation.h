@@ -116,6 +116,11 @@ pax_vec2i pax_orient_det_vec2i(pax_buf_t const *buf, pax_vec2i vec) __attribute_
 // Detects orientation and transforms co-ordinates accordingly.
 pax_vec2i pax_unorient_det_vec2i(pax_buf_t const *buf, pax_vec2i vec) __attribute__((pure));
 
+// Detects orientation and transforms co-ordinates accordingly.
+pax_recti pax_orient_det_recti(pax_buf_t const *buf, pax_recti vec) __attribute__((pure));
+// Detects orientation and transforms co-ordinates accordingly.
+pax_recti pax_unorient_det_recti(pax_buf_t const *buf, pax_recti vec) __attribute__((pure));
+
 
 #ifdef __cplusplus
 } // extern "C"
