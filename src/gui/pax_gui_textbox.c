@@ -159,6 +159,7 @@ static pgui_resp_t pgui_event_textbox(pgui_textbox_t *elem, pgui_event_t event, 
             }
             // Mark as dirty.
             elem->base.flags |= PGUI_FLAG_DIRTY;
+            return PGUI_RESP_CAPTURED;
 
         } else if (event.value >= 0x20 && event.value <= 0x7E) {
             // Typable character.
@@ -193,6 +194,7 @@ static pgui_resp_t pgui_event_textbox(pgui_textbox_t *elem, pgui_event_t event, 
             elem->buf_len++;
             // Mark as dirty.
             elem->base.flags |= PGUI_FLAG_DIRTY;
+            return PGUI_RESP_CAPTURED;
 
         } else if (event.input == PGUI_INPUT_ACCEPT || event.input == PGUI_INPUT_BACK) {
             // Finish typing.

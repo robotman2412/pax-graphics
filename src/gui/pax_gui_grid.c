@@ -192,6 +192,7 @@ static pgui_resp_t pgui_event_grid(pgui_grid_t *elem, pgui_event_t event, uint32
             elem->box.children[elem->box.selected]->flags |= PGUI_FLAG_DIRTY;
             elem->box.selected                             = -1;
             elem->base.flags                              |= PGUI_FLAG_HIGHLIGHT | PGUI_FLAG_DIRTY;
+            return PGUI_RESP_CAPTURED;
 
         } else if (event.input == PGUI_INPUT_UP) {
             // Navigate up.
