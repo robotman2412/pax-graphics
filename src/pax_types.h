@@ -160,11 +160,11 @@ enum pax_word_wrap {
 // To which side text should align.
 enum pax_text_align {
     // Align text to left.
-    PAX_ALIGN_LEFT,
+    PAX_ALIGN_BEGIN,
     // Align text to center.
     PAX_ALIGN_CENTER,
     // Align text to right.
-    PAX_ALIGN_RIGHT,
+    PAX_ALIGN_END,
 };
 
 // Type of task to do.
@@ -189,7 +189,7 @@ enum pax_font_type {
 typedef enum pax_buf_type    pax_buf_type_t;
 typedef enum pax_orientation pax_orientation_t;
 typedef enum pax_word_wrap   pax_word_wrap_t;
-typedef enum pax_text_align  pax_text_align_t;
+typedef enum pax_text_align  pax_align_t;
 typedef enum pax_task_type   pax_task_type_t;
 typedef enum pax_font_type   pax_font_type_t;
 

@@ -25,13 +25,11 @@ set(PAX_SRCS
     ${CMAKE_CURRENT_LIST_DIR}/src/fonts/font_bitmap_sairaregular.c
     ${CMAKE_CURRENT_LIST_DIR}/src/fonts/font_bitmap_sairacondensed.c
     
-    ${CMAKE_CURRENT_LIST_DIR}/src/gui/pax_gui_box.c
     ${CMAKE_CURRENT_LIST_DIR}/src/gui/pax_gui_button.c
-    ${CMAKE_CURRENT_LIST_DIR}/src/gui/pax_gui_dropdown.c
     ${CMAKE_CURRENT_LIST_DIR}/src/gui/pax_gui_grid.c
     ${CMAKE_CURRENT_LIST_DIR}/src/gui/pax_gui_text.c
     ${CMAKE_CURRENT_LIST_DIR}/src/gui/pax_gui_textbox.c
-    ${CMAKE_CURRENT_LIST_DIR}/src/gui/pax_gui_themes.c
+    ${CMAKE_CURRENT_LIST_DIR}/src/gui/pax_gui_util.c
     ${CMAKE_CURRENT_LIST_DIR}/src/gui/pax_gui.c
     
     ${CMAKE_CURRENT_LIST_DIR}/src/helpers/pax_dh_mcr_shaded.cpp

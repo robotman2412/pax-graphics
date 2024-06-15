@@ -70,10 +70,8 @@ void pax_buf_convert(pax_buf_t *dst, pax_buf_t *src, pax_buf_type_t type);
 int            pax_buf_get_width(pax_buf_t const *buf);
 // Retrieve the height of the buffer.
 int            pax_buf_get_height(pax_buf_t const *buf);
-// Retrieve the width of the buffer.
-float          pax_buf_get_widthf(pax_buf_t const *buf);
-// Retrieve the height of the buffer.
-float          pax_buf_get_heightf(pax_buf_t const *buf);
+// Retrieve dimensions of the buffer.
+pax_vec2i      pax_buf_get_dims(pax_buf_t const *buf);
 // Retrieve the type of the buffer.
 pax_buf_type_t pax_buf_get_type(pax_buf_t const *buf);
 

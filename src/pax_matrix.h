@@ -723,12 +723,25 @@ static inline matrix_2d_t matrix_2d_shear(float x, float y) {
 #endif
 }
 // 2D rotation matrix: represents a 2D rotation.
-matrix_2d_t matrix_2d_rotate(float angle);
+matrix_2d_t matrix_2d_rotate(float angle) __attribute__((const));
 
 // 2D matrix: applies the transformation that b represents on to a.
-matrix_2d_t matrix_2d_multiply(matrix_2d_t a, matrix_2d_t b);
+matrix_2d_t matrix_2d_multiply(matrix_2d_t a, matrix_2d_t b) __attribute__((const));
 // 2D matrix: applies the transformation that a represents on to a point.
 void        matrix_2d_transform(matrix_2d_t a, float *x, float *y);
+// 2D matrix: applies the transformation that a represents on to a point.
+pax_vec2f   matrix_2d_transform_alt(matrix_2d_t a, pax_vec2f b) __attribute__((const));
+
+// Convert the rectangle to one that covers the same area but with positive size.
+pax_recti pax_recti_abs(pax_recti a) __attribute__((const));
+// Convert the rectangle to one that covers the same area but with positive size.
+pax_rectf pax_rectf_abs(pax_rectf a) __attribute__((const));
+// Get the intersection between two rectangles.
+// Returns {0, 0, 0, 0} if there is no intersection.
+pax_recti pax_recti_intersect(pax_recti a, pax_recti b) __attribute__((const));
+// Get the intersection between two rectangles.
+// Returns {0, 0, 0, 0} if there is no intersection.
+pax_rectf pax_rectf_intersect(pax_rectf a, pax_rectf b) __attribute__((const));
 
 // 2D vector: unifies a given vector (it's magnitude will be 1).
 // Does not work for vectors with all zero.

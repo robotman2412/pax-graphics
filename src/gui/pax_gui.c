@@ -3,220 +3,147 @@
 
 #include "pax_gui.h"
 
+#include "pax_gui_util.h"
 #include "pax_internal.h"
 
-char const TAG[] = "pax-gui";
+#include <math.h>
+
+static char const TAG[] = "pax-gui";
+
+// Default theme.
+pgui_theme_t const pgui_theme_default = {
+    // Element styles.
+    .bg_col                 = 0xff303030,
+    .fg_col                 = 0xffffffff,
+    .input_col              = 0xff404040,
+    .pressed_col            = 0xff202020,
+    .border_col             = 0xff000000,
+    .highlight_col          = 0xff005fcf,
+    .rounding               = 7,
+    .input_padding          = 4,
+    .text_padding           = 4,
+    .box_padding            = 4,
+    // Text style.
+    .font                   = pax_font_saira_regular,
+    .font_size              = 18,
+    // Dropdown style.
+    .dropdown_segmented     = false,
+    .dropdown_solid_arrow   = false,
+    .dropdown_covering_menu = false,
+    // Scrollbar style.
+    .scroll_bg_col          = 0x3f000000,
+    .scroll_fg_col          = 0x7fffffff,
+    .scroll_width           = 6,
+    .scroll_min_size        = 12,
+    .scroll_offset          = 4,
+    .scroll_rounding        = 3,
+};
 
 
-
-// Draw the base of a box or input element.
-void pgui_draw_base(pax_buf_t *gfx, pax_vec2f pos, pgui_base_t *elem, pgui_theme_t const *theme, uint32_t flags) {
-    if (flags & PGUI_FLAG_NOBACKGROUND) {
-        return;
-    }
-
-    // Select border color.
-    pax_col_t border;
-    if (flags & PGUI_FLAG_HIGHLIGHT) {
-        border = theme->highlight_col;
-    } else {
-        border = theme->border_col;
-    }
-
-    // Select background color.
-    pax_col_t bg;
-    if ((elem->type->attr & PGUI_ATTR_BOX) || (flags & PGUI_FLAG_INACTIVE)) {
-        bg = theme->bg_col;
-    } else if (elem->flags & PGUI_FLAG_ACTIVE) {
-        bg = theme->pressed_col;
-    } else {
-        bg = theme->input_col;
-    }
-
-    // Draw the backdrop.
-    pax_draw_round_rect(gfx, bg, pos.x, pos.y, elem->size.x, elem->size.y, theme->rounding);
-    pax_outline_round_rect(gfx, border, pos.x, pos.y, elem->size.x, elem->size.y, theme->rounding);
-}
-
-// Shrink text to fit bounds.
-void pgui_draw_bounded_text(
-    pax_buf_t        *gfx,
-    pax_col_t         color,
-    pax_font_t const *font,
-    float             font_size,
-    char const       *text,
-    pax_rectf         bounds,
-    pax_text_align_t  align
-) {
-    // Measure text size.
-    float     scale = font_size;
-    pax_vec2f size  = pax_text_size(font, scale, text);
-
-    // Scale down to fit.
-    if (size.x > bounds.w) {
-        // Too wide to fit; scale down.
-        float mul  = bounds.w / size.x;
-        scale     *= mul;
-        size.x    *= mul;
-        size.y    *= mul;
-    }
-    if (size.y > bounds.h) {
-        // Too tall to fit; scale down.
-        float mul  = bounds.h / size.y;
-        scale     *= mul;
-        size.x    *= mul;
-        size.y    *= mul;
-    }
-
-    // Draw the label.
-    switch (align) {
-        default:
-        case PAX_ALIGN_LEFT:
-            pax_draw_text(gfx, color, font, scale, bounds.x, bounds.y + (bounds.h - size.y) / 2, text);
-            break;
-        case PAX_ALIGN_CENTER:
-            pax_center_text(gfx, color, font, scale, bounds.x + bounds.w / 2, bounds.y + (bounds.h - size.y) / 2, text);
-            break;
-        case PAX_ALIGN_RIGHT:
-            pax_right_text(gfx, color, font, scale, bounds.x + bounds.w, bounds.y + (bounds.h - size.y) / 2, text);
-            break;
-    }
-}
-
-// Draw a scrollbar.
-void pgui_draw_scrollbar(
-    pax_buf_t *gfx, pax_vec2f pos, pax_vec2f size, pgui_theme_t const *theme, float value, float window, float total
-) {
-    // Calculate scroller size.
-    float total_height    = size.y - 2 * theme->scroll_offset;
-    float scroller_height = window / total * total_height;
-    scroller_height       = fmaxf(scroller_height, theme->scroll_min_size);
-    // Scroller offset multiplier.
-    float off_mul         = (total_height - scroller_height) / (total - window);
-
-    // Scrollbar background.
-    pax_draw_round_rect(
-        gfx,
-        theme->scroll_bg_col,
-        pos.x + size.x - theme->scroll_offset,
-        pos.y + theme->scroll_offset,
-        -theme->scroll_width,
-        size.y - 2 * theme->scroll_offset,
-        theme->scroll_rounding
-    );
-    // Scrollbar foreground.
-    pax_draw_round_rect(
-        gfx,
-        theme->scroll_fg_col,
-        pos.x + size.x - theme->scroll_offset,
-        pos.y + theme->scroll_offset + off_mul * value,
-        -theme->scroll_width,
-        scroller_height,
-        theme->scroll_rounding
-    );
-}
-
-// Adjust a scrollbar to show as much of the desired area as possible.
-float pgui_adjust_scroll(
-    float view_offset, float view_margin, float view_window, float scroll, float window, float total
-) {
-    if (total <= view_window) {
-        // The entire thing fits; scroll to the beginning.
-        return 0;
-
-    } else if (view_window < window + 2 * view_margin) {
-        // It doesn't fit; scroll to the halfway point.
-        scroll = view_offset - (view_window - window) / 2;
-
-    } else if (scroll > view_offset - view_margin) {
-        // Scrolled too far up.
-        scroll = view_offset - view_margin;
-
-    } else if (scroll < view_offset + window + view_margin - view_window) {
-        // Scrolled too far down.
-        scroll = view_offset + window + view_margin - view_window;
-    }
-
-    // Clamp to visible area.
-    scroll = fmaxf(scroll, 0);
-    scroll = fminf(scroll, total - view_window);
-    return scroll;
-}
 
 // Recalculate the position of a GUI element and its children.
-void pgui_calc_layout(pgui_base_t *elem, pgui_theme_t const *theme) {
+static void pgui_calc_layout_int(
+    pax_vec2i gfx_size, pax_vec2i pos, pgui_elem_t *elem, pgui_theme_t const *theme, uint32_t flags
+) {
+    flags |= elem->flags;
     if (!theme) {
         theme = &pgui_theme_default;
     }
 
-    if (elem->type->calc) {
-        elem->type->calc(elem, theme);
+    // Calculate layout of children.
+    uint32_t child_flags = flags & PGUI_FLAGS_INHERITABLE;
+    for (size_t i = 0; i < elem->children_len; i++) {
+        if (elem->children[i]) {
+            pgui_calc_layout_int(
+                gfx_size,
+                (pax_vec2i){
+                    pos.x + elem->children[i]->pos.x,
+                    pos.y + elem->children[i]->pos.y,
+                },
+                elem->children[i],
+                theme,
+                child_flags
+            );
+        }
     }
 
-    if (elem->type->attr & PGUI_ATTR_BOX) {
-        // Update flags.
-        pgui_box_t *box = (pgui_box_t *)elem;
-        for (size_t i = 0; i < box->children_len; i++) {
-            if (box->children[i]) {
-                pgui_calc_layout(box->children[i], theme);
-            }
-        }
+    // Clamp minimum size.
+    if (elem->size.x < elem->type->min_size.x) {
+        elem->size.x = elem->type->min_size.x;
+    }
+    if (elem->size.y < elem->type->min_size.y) {
+        elem->size.y = elem->type->min_size.y;
+    }
+
+    // Calculate layout of this element.
+    if (elem->type->calc) {
+        elem->type->calc(gfx_size, pos, elem, theme, flags);
     }
 }
 
+// Recalculate the position of a GUI element and its children.
+void pgui_calc_layout(pax_vec2i gfx_size, pgui_elem_t *elem, pgui_theme_t const *theme) {
+    if (!theme) {
+        theme = &pgui_theme_default;
+    }
+    pgui_calc_layout_int(gfx_size, (pax_vec2i){0, 0}, elem, theme, 0);
+}
+
+
+
 // Internal GUI drawing function.
-static void pgui_draw_int(pax_buf_t *gfx, pax_vec2f pos, pgui_base_t *elem, pgui_theme_t const *theme, uint32_t flags) {
+static void pgui_draw_int(pax_buf_t *gfx, pax_vec2i pos, pgui_elem_t *elem, pgui_theme_t const *theme, uint32_t flags) {
     flags |= elem->flags;
     if (flags & PGUI_FLAG_HIDDEN) {
         // Don't draw hidden elements.
         return;
     }
 
-    // Call its drawing function.
-    elem->type->draw(gfx, pos, elem, theme, flags);
+    // Draw the base of the element.
+    pgui_drawutil_base(gfx, pos, elem, theme, flags);
+    if (elem->type->draw) {
+        elem->type->draw(gfx, pos, elem, theme, flags);
+    }
 
-    if (elem->type->attr & PGUI_ATTR_BOX) {
-        // Update flags.
-        pgui_box_t *box = (pgui_box_t *)elem;
-        flags           = (elem->flags | flags) & PGUI_FLAGS_INHERITABLE;
-        // Draw children.
-        for (size_t i = 0; i < box->children_len; i++) {
-            if (i != box->selected && box->children[i]) {
-                pgui_draw_int(
-                    gfx,
-                    (pax_vec2f){
-                        pos.x + theme->box_padding + box->children[i]->pos.x,
-                        pos.y + theme->box_padding + box->children[i]->pos.y,
-                    },
-                    box->children[i],
-                    theme,
-                    flags
-                );
-            }
-        }
-        // Draw selected last so it appears on top.
-        if (box->selected >= 0 && box->children[box->selected]) {
+    // Draw children.
+    uint32_t child_flags = flags & PGUI_FLAGS_INHERITABLE;
+    for (size_t i = 0; i < elem->children_len; i++) {
+        if (i != elem->selected && elem->children[i]) {
             pgui_draw_int(
                 gfx,
-                (pax_vec2f){
-                    pos.x + theme->box_padding + box->children[box->selected]->pos.x,
-                    pos.y + theme->box_padding + box->children[box->selected]->pos.y,
+                (pax_vec2i){
+                    pos.x + elem->children[i]->pos.x,
+                    pos.y + elem->children[i]->pos.y,
                 },
-                box->children[box->selected],
+                elem->children[i],
                 theme,
-                flags
+                child_flags
             );
         }
     }
+    // Draw selected last so it appears on top.
+    if (elem->selected >= 0 && elem->selected < elem->children_len && elem->children[elem->selected]) {
+        pgui_draw_int(
+            gfx,
+            (pax_vec2i){
+                pos.x + elem->children[elem->selected]->pos.x,
+                pos.y + elem->children[elem->selected]->pos.y,
+            },
+            elem->children[elem->selected],
+            theme,
+            flags
+        );
+    }
+
+    // Draw the border.
+    pgui_drawutil_border(gfx, pos, elem, theme, flags);
 
     // Clear dirty flag.
     elem->flags &= ~PGUI_FLAG_DIRTY;
 }
 
-
-
 // Draw a GUI element and its children.
-void pgui_draw(pax_buf_t *gfx, pgui_base_t *elem, pgui_theme_t const *theme) {
+void pgui_draw(pax_buf_t *gfx, pgui_elem_t *elem, pgui_theme_t const *theme) {
     if (!theme) {
         theme = &pgui_theme_default;
     }
@@ -228,7 +155,7 @@ void pgui_draw(pax_buf_t *gfx, pgui_base_t *elem, pgui_theme_t const *theme) {
 }
 
 // Re-draw dirty parts of the GUI and mark the elements clean.
-void pgui_redraw(pax_buf_t *gfx, pgui_base_t *elem, pgui_theme_t const *theme) {
+void pgui_redraw(pax_buf_t *gfx, pgui_elem_t *elem, pgui_theme_t const *theme) {
     if (!theme) {
         theme = &pgui_theme_default;
     }
@@ -239,32 +166,47 @@ void pgui_redraw(pax_buf_t *gfx, pgui_base_t *elem, pgui_theme_t const *theme) {
     pax_pop_2d(gfx);
 }
 
+
+
 // Internal event handler.
-static pgui_resp_t pgui_event_int(pgui_base_t *elem, pgui_event_t event, uint32_t flags) {
+static pgui_resp_t pgui_event_int(
+    pax_vec2i gfx_size, pax_vec2i pos, pgui_elem_t *elem, pgui_theme_t const *theme, uint32_t flags, pgui_event_t event
+) {
     flags |= elem->flags;
 
-    // Send event to children first.
-    if (elem->type->attr & PGUI_ATTR_BOX) {
-        pgui_box_t *box = (pgui_box_t *)elem;
-        if (box->selected >= 0 && box->children[box->selected]) {
-            pgui_resp_t resp = pgui_event_int(box->children[box->selected], event, flags);
-            if (resp) {
-                return resp;
-            }
+    // Send event to selected child first.
+    uint32_t child_flags = flags & PGUI_FLAGS_INHERITABLE;
+    if (elem->selected >= 0 && elem->selected < elem->children_len && elem->children[elem->selected]) {
+        pgui_resp_t resp = pgui_event_int(
+            gfx_size,
+            (pax_vec2i){
+                pos.x + elem->children[elem->selected]->pos.x,
+                pos.y + elem->children[elem->selected]->pos.y,
+            },
+            elem->children[elem->selected],
+            theme,
+            flags,
+            event
+        );
+        if (resp) {
+            return resp;
         }
     }
 
-    // Not a box or not captured by children.
-    if (!elem->type->event) {
-        return PGUI_RESP_IGNORED;
+    // Event not captured by children.
+    if (elem->type->event) {
+        return elem->type->event(gfx_size, pos, elem, theme, flags, event);
     }
-    return elem->type->event(elem, event, flags);
+    return PGUI_RESP_IGNORED;
 }
 
 // Handle a button event.
 // Returns whether any element was marked dirty in response.
-pgui_resp_t pgui_event(pgui_base_t *elem, pgui_event_t event) {
-    pgui_resp_t resp = pgui_event_int(elem, event, 0);
+pgui_resp_t pgui_event(pax_vec2i gfx_size, pgui_elem_t *elem, pgui_theme_t const *theme, pgui_event_t event) {
+    if (!theme) {
+        theme = &pgui_theme_default;
+    }
+    pgui_resp_t resp = pgui_event_int(gfx_size, elem->pos, elem, theme, 0, event);
     if (resp == PGUI_RESP_CAPTURED_DIRTY) {
         elem->flags |= PGUI_FLAG_DIRTY;
     }

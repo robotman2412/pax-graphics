@@ -1,165 +1,190 @@
 
 // SPDX-License-Identifier: MIT
 
-#include "pax_gui_textbox.h"
+#include "pax_gui_util.h"
 
-#include "pax_internal.h"
-
+#include <malloc.h>
 #include <string.h>
 
 
 
-// Draw a textbox.
-static void
-    pgui_draw_textbox(pax_buf_t *gfx, pax_vec2f pos, pgui_textbox_t *elem, pgui_theme_t const *theme, uint32_t flags) {
-    if (flags & PGUI_FLAG_INACTIVE) {
-        // Stop editing if inactive.
-        elem->base.flags &= PGUI_FLAG_ACTIVE;
+// Calculate the layout of editable text-based elements.
+void pgui_calc_textbox(
+    pax_vec2i gfx_size, pax_vec2i pos, pgui_elem_t *elem, pgui_theme_t const *theme, uint32_t flags
+) {
+    pgui_text_t *text    = (pgui_text_t *)elem;
+    int          padding = 0;
+    if (!(elem->type->attr & PGUI_ATTR_INPUT)) {
+        padding = theme->text_padding;
+    } else if (!(elem->flags & PGUI_FLAG_NOPADDING)) {
+        padding = theme->input_padding;
     }
-    // Draw backdrop.
-    pgui_draw_base(gfx, pos, &elem->base, theme, flags);
-    // Calculate text bounds.
-    pax_rectf bounds = {
-        pos.x + theme->input_padding,
-        pos.y + theme->input_padding,
-        elem->base.size.x - 2 * theme->input_padding,
-        elem->base.size.y - 2 * theme->input_padding,
+
+    // Compute content size.
+    if (text->shrink_to_fit) {
+        elem->content_size = elem->size;
+    } else {
+        pax_2vec2f s = pax_text_size_adv(
+            theme->font,
+            theme->font_size,
+            text->text,
+            text->text_len,
+            PAX_ALIGN_BEGIN,
+            PAX_ALIGN_BEGIN,
+            -1
+        );
+        elem->content_size.x = roundf(s.x0);
+        elem->content_size.y = roundf(s.y0);
+    }
+
+    // Compute bounds.
+    pax_recti bounds = {
+        0,
+        0,
+        elem->content_size.x,
+        elem->content_size.y,
     };
-    // Adjust clip to bounds of text.
-    pax_recti clip = pax_get_clip(gfx);
-    pax_clip(gfx, bounds.x, bounds.y, bounds.w, bounds.h);
 
-    if (elem->buf && (flags & PGUI_FLAG_ACTIVE)) {
-        // Measure until cursor.
-        char tmp                = elem->buf[elem->cursor];
-        elem->buf[elem->cursor] = 0;
-        pax_vec2f size_pre      = pax_text_size(theme->font, theme->font_size, elem->buf);
-        elem->buf[elem->cursor] = tmp;
-        // Measure after cursor.
-        pax_vec2f size_post     = pax_text_size(theme->font, theme->font_size, elem->buf + elem->cursor);
-        // Adjust scroll offset.
-        elem->scroll            = pgui_adjust_scroll(
-            size_pre.x - 2 * theme->font_size,
-            0,
-            bounds.w,
-            elem->scroll,
-            4 * theme->font_size,
-            size_pre.x + size_post.x
-        );
+    // Compute cursor position.
+    pax_recti cursor = pgui_drawutil_getcursor(
+        theme->font,
+        theme->font_size,
+        text->shrink_to_fit,
+        text->text,
+        text->text_len,
+        text->cursor,
+        bounds,
+        text->text_halign,
+        text->text_valign
+    );
 
-        // Draw all text.
-        pax_draw_text(
-            gfx,
-            theme->fg_col,
-            theme->font,
-            theme->font_size,
-            bounds.x - elem->scroll,
-            pos.y + (elem->base.size.y - theme->font_size) / 2,
-            elem->buf
-        );
-        // Draw cursor.
-        pax_clip(gfx, pos.x, pos.y, elem->base.size.x, elem->base.size.y);
-        pax_draw_line(
-            gfx,
-            theme->fg_col,
-            bounds.x - elem->scroll + size_pre.x,
-            pos.y + (elem->base.size.y - theme->font_size) / 2,
-            bounds.x - elem->scroll + size_pre.x,
-            pos.y + (elem->base.size.y + theme->font_size) / 2
-        );
-
-    } else if (flags & PGUI_FLAG_ACTIVE) {
-        // Draw a dummy cursor.
-        pax_draw_line(
-            gfx,
-            theme->fg_col,
-            bounds.x,
-            pos.y + (elem->base.size.y - theme->font_size) / 2,
-            bounds.x,
-            pos.y + (elem->base.size.y + theme->font_size) / 2
-        );
-
-    } else if (elem->buf) {
-        // Draw all the text at once.
-        pax_draw_text(
-            gfx,
-            theme->fg_col,
-            theme->font,
-            theme->font_size,
-            bounds.x - elem->scroll,
-            pos.y + (elem->base.size.y - theme->font_size) / 2,
-            elem->buf
-        );
-    }
-
-    // Restore original clip.
-    pax_set_clip(gfx, clip);
+    // Update scroll position to match cursor.
+    elem->scroll = pgui_adjust_scroll_2d(
+        cursor,
+        theme->font_size,
+        (pax_vec2i){
+            elem->size.x - 2 * padding,
+            elem->size.y - 2 * padding,
+        },
+        elem->scroll,
+        elem->content_size
+    );
 }
 
-// Send an event to a textbox.
-static pgui_resp_t pgui_event_textbox(pgui_textbox_t *elem, pgui_event_t event, uint32_t flags) {
+// Visuals for editable text-based elements.
+void pgui_draw_textbox(pax_buf_t *gfx, pax_vec2i pos, pgui_elem_t *elem, pgui_theme_t const *theme, uint32_t flags) {
+    pgui_drawutil_textbox(gfx, pos, elem, theme, flags, true);
+}
+
+// Combined logic for nav left/right, backspace/delete and CTRL.
+static pgui_resp_t
+    textbox_nav(pgui_elem_t *elem, pgui_theme_t const *theme, uint32_t flags, bool go_right, bool erase, bool ctrl) {
+    pgui_text_t *text = (pgui_text_t *)elem;
+
+    // Move cursor to the new location.
+    size_t new_cursor;
+    if (go_right) {
+        if (ctrl) {
+            new_cursor = pgui_text_ctrl_right(text->text, text->text_len, text->cursor, !erase);
+        } else {
+            new_cursor = text->cursor < text->text_len ? text->cursor + 1 : text->cursor;
+        }
+    } else {
+        if (ctrl) {
+            new_cursor = pgui_text_ctrl_left(text->text, text->text_len, text->cursor, !erase);
+        } else {
+            new_cursor = text->cursor ? text->cursor - 1 : text->cursor;
+        }
+    }
+
+    // If cursor hasn't moved at all
+    if (new_cursor == text->cursor) {
+        return PGUI_RESP_CAPTURED_ERR;
+    }
+
+    if (erase) {
+        // Delete / backspace.
+        size_t start = go_right ? text->cursor : new_cursor;
+        size_t end   = go_right ? new_cursor : text->cursor;
+
+        // Erase characters.
+        memcpy(text->text + start, text->text + end, text->text_len - end + 1);
+        text->cursor    = start;
+        text->text_len -= end - start;
+
+        // If the buffer is too large, shrink it.
+        if (text->allow_realloc && text->text_cap >= 8 && text->text_cap >= 2 * text->text_len) {
+            void *mem = realloc(text->text, text->text_cap / 2 + 1);
+            if (mem) {
+                text->text      = mem;
+                text->text_cap /= 2;
+            }
+        }
+
+    } else {
+        // Move the cursor.
+        text->cursor = new_cursor;
+    }
+    elem->flags |= PGUI_FLAG_DIRTY;
+    pgui_calc_textbox((pax_vec2i){0}, (pax_vec2i){0}, elem, theme, flags);
+    return PGUI_RESP_CAPTURED;
+}
+
+// Navigation behaviour for editable text-based elements.
+pgui_resp_t pgui_event_textbox(
+    pax_vec2i gfx_size, pax_vec2i pos, pgui_elem_t *elem, pgui_theme_t const *theme, uint32_t flags, pgui_event_t event
+) {
+    pgui_text_t *text = (pgui_text_t *)elem;
     if (flags & PGUI_FLAG_INACTIVE) {
         // Stop editing if inactive.
-        elem->base.flags &= PGUI_FLAG_ACTIVE;
+        elem->flags &= PGUI_FLAG_ACTIVE;
     }
     if (flags & PGUI_FLAG_ACTIVE) {
         // Currently in typing mode.
-        if (event.input == PGUI_INPUT_LEFT) {
+        if (event.input == PGUI_INPUT_HOME) {
+            // Move cursor to the beginning.
+            if (event.type == PGUI_EVENT_TYPE_RELEASE) {
+                return PGUI_RESP_CAPTURED;
+            } else if (!text->cursor) {
+                return PGUI_RESP_CAPTURED_ERR;
+            }
+            text->cursor  = 0;
+            elem->flags  |= PGUI_FLAG_DIRTY;
+            pgui_calc_textbox(gfx_size, pos, elem, theme, flags);
+            return PGUI_RESP_CAPTURED;
+
+        } else if (event.input == PGUI_INPUT_END) {
+            // Move cursor to the end.
+            if (event.type == PGUI_EVENT_TYPE_RELEASE) {
+                return PGUI_RESP_CAPTURED;
+            } else if (text->cursor >= text->text_len) {
+                return PGUI_RESP_CAPTURED_ERR;
+            }
+            text->cursor  = text->text_len;
+            elem->flags  |= PGUI_FLAG_DIRTY;
+            pgui_calc_textbox(gfx_size, pos, elem, theme, flags);
+            return PGUI_RESP_CAPTURED;
+
+        } else if (event.input == PGUI_INPUT_LEFT || event.input == PGUI_INPUT_PREV) {
             // Move cursor left.
             if (event.type == PGUI_EVENT_TYPE_RELEASE) {
                 return PGUI_RESP_CAPTURED;
             }
-            if (elem->cursor) {
-                elem->cursor--;
-                elem->base.flags |= PGUI_FLAG_DIRTY;
-                return PGUI_RESP_CAPTURED;
-            } else {
-                return PGUI_RESP_CAPTURED_ERR;
-            }
+            return textbox_nav(elem, theme, flags, false, false, event.modkeys & PGUI_MODKEY_CTRL);
 
-        } else if (event.input == PGUI_INPUT_RIGHT) {
+        } else if (event.input == PGUI_INPUT_RIGHT || event.input == PGUI_INPUT_NEXT) {
             // Move cursor right.
             if (event.type == PGUI_EVENT_TYPE_RELEASE) {
                 return PGUI_RESP_CAPTURED;
             }
-            if (elem->cursor < elem->buf_len) {
-                elem->cursor++;
-                elem->base.flags |= PGUI_FLAG_DIRTY;
-                return PGUI_RESP_CAPTURED;
-            } else {
-                return PGUI_RESP_CAPTURED_ERR;
-            }
+            return textbox_nav(elem, theme, flags, true, false, event.modkeys & PGUI_MODKEY_CTRL);
 
         } else if (event.value == '\b' || event.value == 0x7F) {
             // Delete / backspace.
             if (event.type == PGUI_EVENT_TYPE_RELEASE) {
                 return PGUI_RESP_CAPTURED;
             }
-            // Adjust cursor position in case of delete.
-            if (event.value == 0x7F) {
-                if (elem->cursor < elem->buf_len) {
-                    elem->cursor++;
-                } else {
-                    return PGUI_RESP_CAPTURED_ERR;
-                }
-            } else if (elem->cursor == 0) {
-                return PGUI_RESP_CAPTURED_ERR;
-            }
-            // Move memory.
-            memmove(elem->buf + elem->cursor - 1, elem->buf + elem->cursor, elem->buf_len - elem->cursor + 1);
-            elem->cursor--;
-            elem->buf_len--;
-            // If the buffer is way too large, shrink it.
-            if (elem->buf_cap >= 8 && elem->buf_cap >= 2 * elem->buf_len) {
-                void *mem = realloc(elem->buf, elem->buf_cap / 2 + 1);
-                if (mem) {
-                    elem->buf      = mem;
-                    elem->buf_cap /= 2;
-                }
-            }
-            // Mark as dirty.
-            elem->base.flags |= PGUI_FLAG_DIRTY;
-            return PGUI_RESP_CAPTURED;
+            return textbox_nav(elem, theme, flags, event.value == 0x7F, true, event.modkeys & PGUI_MODKEY_CTRL);
 
         } else if (event.value >= 0x20 && event.value <= 0x7E) {
             // Typable character.
@@ -167,43 +192,52 @@ static pgui_resp_t pgui_event_textbox(pgui_textbox_t *elem, pgui_event_t event, 
                 return PGUI_RESP_CAPTURED;
             }
 
-            if (!elem->buf) {
+            if (!text->text) {
                 // Allocate memory.
-                elem->buf = malloc(5);
-                if (!elem->buf) {
+                if (!text->allow_realloc) {
                     return PGUI_RESP_CAPTURED_ERR;
                 }
-                elem->buf_cap = 4;
-                elem->buf[0]  = 0;
+                text->text = malloc(5);
+                if (!text->text) {
+                    return PGUI_RESP_CAPTURED_ERR;
+                }
+                text->text_cap = 4;
+                text->text[0]  = 0;
 
-            } else if (elem->buf_len >= elem->buf_cap) {
+            } else if (text->text_len >= text->text_cap) {
                 // Enlarge memory.
-                void *mem = realloc(elem->buf, elem->buf_cap * 2 + 1);
+                if (!text->allow_realloc) {
+                    return PGUI_RESP_CAPTURED_ERR;
+                }
+                void *mem = realloc(text->text, text->text_cap * 2 + 1);
                 if (!mem) {
                     return PGUI_RESP_CAPTURED_ERR;
                 }
-                elem->buf      = mem;
-                elem->buf_cap *= 2;
+                text->text      = mem;
+                text->text_cap *= 2;
             }
 
             // Move text after cursor.
-            memmove(elem->buf + elem->cursor + 1, elem->buf + elem->cursor, elem->buf_len - elem->cursor + 1);
+            memmove(text->text + text->cursor + 1, text->text + text->cursor, text->text_len - text->cursor + 1);
+
             // Insert character.
-            elem->buf[elem->cursor] = event.value;
-            elem->cursor++;
-            elem->buf_len++;
+            text->text[text->cursor] = event.value;
+            text->cursor++;
+            text->text_len++;
+
             // Mark as dirty.
-            elem->base.flags |= PGUI_FLAG_DIRTY;
+            elem->flags |= PGUI_FLAG_DIRTY;
+            pgui_calc_textbox(gfx_size, pos, elem, theme, flags);
             return PGUI_RESP_CAPTURED;
 
         } else if (event.input == PGUI_INPUT_ACCEPT || event.input == PGUI_INPUT_BACK) {
             // Finish typing.
             if (event.type == PGUI_EVENT_TYPE_RELEASE) {
                 if (elem->callback) {
-                    elem->callback(elem, elem->cookie);
+                    elem->callback(elem);
                 }
-                elem->base.flags &= ~PGUI_FLAG_ACTIVE;
-                elem->base.flags |= PGUI_FLAG_DIRTY;
+                elem->flags &= ~PGUI_FLAG_ACTIVE;
+                elem->flags |= PGUI_FLAG_DIRTY;
             }
             return PGUI_RESP_CAPTURED;
 
@@ -220,8 +254,8 @@ static pgui_resp_t pgui_event_textbox(pgui_textbox_t *elem, pgui_event_t event, 
                     return PGUI_RESP_CAPTURED_ERR;
                 }
                 // Start typing.
-                elem->base.flags |= PGUI_FLAG_ACTIVE;
-                elem->base.flags |= PGUI_FLAG_DIRTY;
+                elem->flags |= PGUI_FLAG_ACTIVE;
+                elem->flags |= PGUI_FLAG_DIRTY;
             }
             return PGUI_RESP_CAPTURED;
         }
@@ -229,9 +263,12 @@ static pgui_resp_t pgui_event_textbox(pgui_textbox_t *elem, pgui_event_t event, 
     }
 }
 
+
+
 // Textbox element type.
 pgui_type_t pgui_type_textbox_raw = {
     .attr  = PGUI_ATTR_SELECTABLE,
-    .draw  = (pgui_draw_fn_t)pgui_draw_textbox,
-    .event = (pgui_event_fn_t)pgui_event_textbox,
+    .calc  = pgui_calc_textbox,
+    .draw  = pgui_draw_textbox,
+    .event = pgui_event_textbox,
 };

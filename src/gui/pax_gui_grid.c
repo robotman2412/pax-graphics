@@ -1,8 +1,8 @@
 
 // SPDX-License-Identifier: MIT
 
-#include "pax_gui_grid.h"
-
+#include "pax_gui.h"
+#include "pax_gui_util.h"
 #include "pax_internal.h"
 
 static char const TAG[] = "pax-gui";
@@ -10,165 +10,168 @@ static char const TAG[] = "pax-gui";
 
 
 // Calculate the layout of a grid.
-static void pgui_calc_grid(pgui_grid_t *elem, pgui_theme_t const *theme) {
+void pgui_calc_grid(pax_vec2i gfx_size, pax_vec2i pos, pgui_elem_t *elem, pgui_theme_t const *theme, uint32_t flags) {
+    pgui_grid_t *grid = (pgui_grid_t *)elem;
+
     // Validate grid.
-    if (elem->cells.x < 1 || elem->cells.y < 1) {
-        PAX_LOGE(TAG, "Invalid grid size %dx%d", elem->cells.x, elem->cells.y);
-        elem->base.flags |= PGUI_FLAG_HIDDEN;
+    if (grid->cells.x < 1 || grid->cells.y < 1) {
         return;
     }
-    if (elem->box.children_len != elem->cells.x * elem->cells.y) {
-        PAX_LOGE(
-            TAG,
-            "Invalid number of children for %dx%d grid: %zu",
-            elem->cells.x,
-            elem->cells.y,
-            elem->box.children_len
-        );
-        elem->base.flags |= PGUI_FLAG_HIDDEN;
+    if (elem->children_len != grid->cells.x * grid->cells.y) {
         return;
     }
 
+    // Compute column sizes.
+    elem->content_size.x = 0;
+    for (int x = 0; x < grid->cells.x; x++) {
+        int width = 2 * theme->box_padding;
+        for (int y = 0; y < grid->cells.y; y++) {
+            pgui_elem_t *child = elem->children[y * grid->cells.x + x];
+            if (child && child->size.x > width) {
+                width = child->size.x;
+            }
+        }
+        grid->col_width[x]    = width;
+        elem->content_size.x += width + 2 * theme->box_padding;
+    }
 
-    // Compute size.
-    pax_vec2f padded_size;
-    if (elem->base.flags & PGUI_FLAG_FILLCELL) {
-        // Resize cells to fit bounds.
-        padded_size = (pax_vec2f){
-            elem->base.size.x / elem->cells.x,
-            elem->base.size.y / elem->cells.y,
-        };
-        elem->cell_size = (pax_vec2f){
-            padded_size.x - 2 * theme->box_padding,
-            padded_size.y - 2 * theme->box_padding,
-        };
+    // Compute row sizes.
+    elem->content_size.y = 0;
+    for (int y = 0; y < grid->cells.y; y++) {
+        int height = 2 * theme->box_padding;
+        for (int x = 0; x < grid->cells.x; x++) {
+            pgui_elem_t *child = elem->children[y * grid->cells.x + x];
+            if (child && child->size.y > height) {
+                height = child->size.y;
+            }
+        }
+        grid->row_height[y]   = height;
+        elem->content_size.y += height + 2 * theme->box_padding;
+    }
 
+    // Update element size.
+    if (elem->flags & PGUI_FLAG_FILLCELL) {
+        // TODO.
     } else {
-        // Resize bounds to fit cells.
-        padded_size = (pax_vec2f){
-            elem->cell_size.x + 2 * theme->box_padding,
-            elem->cell_size.y + 2 * theme->box_padding,
-        };
-        elem->base.size = (pax_vec2f){
-            padded_size.x * elem->cells.x,
-            padded_size.y * elem->cells.y,
-        };
+        elem->size = elem->content_size;
     }
 
     // Compute child element positions.
-    for (int y = 0; y < elem->cells.y; y++) {
-        for (int x = 0; x < elem->cells.x; x++) {
-            pgui_base_t *child = elem->box.children[y * elem->cells.x + x];
+    int y_offset = theme->box_padding;
+    for (int y = 0; y < grid->cells.y; y++) {
+        int x_offset = theme->box_padding;
+        for (int x = 0; x < grid->cells.x; x++) {
+            pgui_elem_t *child = elem->children[y * grid->cells.x + x];
             if (!child) {
                 continue;
             }
             if (child->flags & PGUI_FLAG_FILLCELL) {
-                child->pos.x  = x * padded_size.x;
-                child->pos.y  = y * padded_size.y;
-                child->size.x = elem->cell_size.x;
-                child->size.y = elem->cell_size.y;
+                child->pos.x  = x_offset;
+                child->pos.y  = y_offset;
+                child->size.x = grid->col_width[x];
+                child->size.y = grid->row_height[y];
             } else {
-                child->pos.x = x * padded_size.x + (elem->cell_size.x - child->size.x) * 0.5;
-                child->pos.y = y * padded_size.y + (elem->cell_size.y - child->size.y) * 0.5;
+                child->pos.x = x_offset + (grid->col_width[x] - child->size.x) / 2;
+                child->pos.y = y_offset + (grid->row_height[y] - child->size.y) / 2;
             }
+            x_offset += grid->col_width[x] + 2 * theme->box_padding;
         }
+        y_offset += grid->row_height[y] + 2 * theme->box_padding;
     }
 }
 
 // Draw a grid.
-static void
-    pgui_draw_grid(pax_buf_t *gfx, pax_vec2f pos, pgui_grid_t *elem, pgui_theme_t const *theme, uint32_t flags) {
+void pgui_draw_grid(pax_buf_t *gfx, pax_vec2i pos, pgui_elem_t *elem, pgui_theme_t const *theme, uint32_t flags) {
+    pgui_grid_t *grid = (pgui_grid_t *)elem;
+
     // Validate grid.
-    if (elem->cells.x < 1 || elem->cells.y < 1) {
-        PAX_LOGE(TAG, "Invalid grid size %dx%d", elem->cells.x, elem->cells.y);
-        elem->base.flags |= PGUI_FLAG_HIDDEN;
+    if (grid->cells.x < 1 || grid->cells.y < 1) {
+        PAX_LOGE(TAG, "Invalid grid size %dx%d", grid->cells.x, grid->cells.y);
+        elem->flags |= PGUI_FLAG_HIDDEN;
         return;
     }
-    if (elem->box.children_len != elem->cells.x * elem->cells.y) {
+    if (elem->children_len != grid->cells.x * grid->cells.y) {
         PAX_LOGE(
             TAG,
             "Invalid number of children for %dx%d grid: %zu",
-            elem->cells.x,
-            elem->cells.y,
-            elem->box.children_len
+            grid->cells.x,
+            grid->cells.y,
+            elem->children_len
         );
-        elem->base.flags |= PGUI_FLAG_HIDDEN;
+        elem->flags |= PGUI_FLAG_HIDDEN;
         return;
     }
 
-    pax_vec2f padded_size = {
-        elem->cell_size.x + 2 * theme->box_padding,
-        elem->cell_size.y + 2 * theme->box_padding,
-    };
-
-    // Draw background.
-    pgui_draw_base(gfx, pos, &elem->base, theme, flags);
     // Draw cell separators.
     if (flags & PGUI_FLAG_NOSEPARATOR) {
         return;
     }
-    for (int y = 1; y < elem->cells.y; y++) {
-        pax_draw_line(
-            gfx,
-            theme->border_col,
-            pos.x + 1,
-            pos.y + padded_size.y * y,
-            pos.x + elem->base.size.x - 1,
-            pos.y + padded_size.y * y
-        );
+    int y_offset = grid->row_height[0] + 2 * theme->box_padding;
+    for (int y = 1; y < grid->cells.y; y++) {
+        pax_draw_line(gfx, theme->border_col, pos.x + 1, pos.y + y_offset, pos.x + elem->size.x - 1, pos.y + y_offset);
+        y_offset += grid->row_height[y] + 2 * theme->box_padding;
     }
-    for (int x = 1; x < elem->cells.x; x++) {
-        pax_draw_line(
-            gfx,
-            theme->border_col,
-            pos.x + padded_size.x * x,
-            pos.y + 1,
-            pos.x + padded_size.x * x,
-            pos.y + elem->base.size.y - 1
-        );
+    int x_offset = grid->col_width[0] + 2 * theme->box_padding;
+    for (int x = 1; x < grid->cells.x; x++) {
+        pax_draw_line(gfx, theme->border_col, pos.x + x_offset, pos.y + 1, pos.x + x_offset, pos.y + elem->size.y - 1);
+        x_offset += grid->col_width[x] + 2 * theme->box_padding;
     }
 }
 
 // Navigation for grid elements.
-static pgui_resp_t pgui_grid_nav(pgui_grid_t *elem, ptrdiff_t dx, ptrdiff_t dy) {
+static pgui_resp_t pgui_grid_nav(pgui_elem_t *elem, ptrdiff_t dx, ptrdiff_t dy) {
+    pgui_grid_t *grid = (pgui_grid_t *)elem;
+
     // Original position.
-    ptrdiff_t x0 = elem->box.selected % elem->cells.x;
-    ptrdiff_t y0 = elem->box.selected / elem->cells.x;
+    ptrdiff_t x0 = elem->selected % grid->cells.x;
+    ptrdiff_t y0 = elem->selected / grid->cells.x;
 
     // Current position.
-    ptrdiff_t x = (x0 + dx + elem->cells.x) % elem->cells.x;
-    ptrdiff_t y = (y0 + dy + elem->cells.y) % elem->cells.y;
+    ptrdiff_t x = (x0 + dx + grid->cells.x) % grid->cells.x;
+    ptrdiff_t y = (y0 + dy + grid->cells.y) % grid->cells.y;
     while (x != x0 || y != y0) {
-        ptrdiff_t i = x + y * elem->cells.x;
-        if (elem->box.children[i] && (elem->box.children[i]->type->attr & PGUI_ATTR_SELECTABLE)) {
-            if (elem->box.selected >= 0) {
+        ptrdiff_t i = x + y * grid->cells.x;
+        if (elem->children[i] && (elem->children[i]->type->attr & PGUI_ATTR_SELECTABLE)) {
+            if (elem->selected >= 0) {
                 // Unmark previous selection.
-                elem->box.children[elem->box.selected]->flags &= ~PGUI_FLAG_HIGHLIGHT;
-                elem->box.children[elem->box.selected]->flags |= PGUI_FLAG_DIRTY;
+                elem->children[elem->selected]->flags &= ~PGUI_FLAG_HIGHLIGHT;
+                elem->children[elem->selected]->flags |= PGUI_FLAG_DIRTY;
             }
             // Mark new selection.
-            elem->box.selected            = i;
-            elem->box.children[i]->flags |= PGUI_FLAG_HIGHLIGHT | PGUI_FLAG_DIRTY;
+            elem->selected            = i;
+            elem->children[i]->flags |= PGUI_FLAG_HIGHLIGHT | PGUI_FLAG_DIRTY;
             return PGUI_RESP_CAPTURED;
         }
-        x = (x + dx + elem->cells.x) % elem->cells.x;
-        y = (y + dy + elem->cells.y) % elem->cells.y;
+        x = (x + dx + grid->cells.x) % grid->cells.x;
+        y = (y + dy + grid->cells.y) % grid->cells.y;
     }
 
     return PGUI_RESP_CAPTURED_ERR;
 }
 
 // Send an event to a grid.
-static pgui_resp_t pgui_event_grid(pgui_grid_t *elem, pgui_event_t event, uint32_t flags) {
-    if (elem->box.selected < 0) {
+pgui_resp_t pgui_event_grid(
+    pax_vec2i gfx_size, pax_vec2i pos, pgui_elem_t *elem, pgui_theme_t const *theme, uint32_t flags, pgui_event_t event
+) {
+    pgui_grid_t *grid = (pgui_grid_t *)elem;
+
+    // Validate grid.
+    if (grid->cells.x < 1 || grid->cells.y < 1) {
+        return PGUI_RESP_IGNORED;
+    }
+    if (elem->children_len != grid->cells.x * grid->cells.y) {
+        return PGUI_RESP_IGNORED;
+    }
+
+    if (elem->selected < 0 || elem->selected >= elem->children_len) {
         if (event.input == PGUI_INPUT_ACCEPT && event.type == PGUI_EVENT_TYPE_RELEASE) {
             // Select lowest-indexed selectable child.
-            for (size_t i = 0; i < elem->box.children_len; i++) {
-                if (elem->box.children[i] && (elem->box.children[i]->type->attr & PGUI_ATTR_SELECTABLE)) {
-                    elem->box.selected            = i;
-                    elem->box.children[i]->flags |= PGUI_FLAG_HIGHLIGHT | PGUI_FLAG_DIRTY;
-                    elem->base.flags             |= PGUI_FLAG_DIRTY;
-                    elem->base.flags             &= ~PGUI_FLAG_HIGHLIGHT;
+            for (size_t i = 0; i < elem->children_len; i++) {
+                if (elem->children[i] && (elem->children[i]->type->attr & PGUI_ATTR_SELECTABLE)) {
+                    elem->selected            = i;
+                    elem->children[i]->flags |= PGUI_FLAG_HIGHLIGHT | PGUI_FLAG_DIRTY;
+                    elem->flags              |= PGUI_FLAG_DIRTY;
+                    elem->flags              &= ~PGUI_FLAG_HIGHLIGHT;
                     return PGUI_RESP_CAPTURED;
                 }
             }
@@ -188,10 +191,10 @@ static pgui_resp_t pgui_event_grid(pgui_grid_t *elem, pgui_event_t event, uint32
 
         } else if (event.input == PGUI_INPUT_BACK && event.type == PGUI_EVENT_TYPE_PRESS) {
             // Un-select child; re-select self.
-            elem->box.children[elem->box.selected]->flags &= ~PGUI_FLAG_HIGHLIGHT;
-            elem->box.children[elem->box.selected]->flags |= PGUI_FLAG_DIRTY;
-            elem->box.selected                             = -1;
-            elem->base.flags                              |= PGUI_FLAG_HIGHLIGHT | PGUI_FLAG_DIRTY;
+            elem->children[elem->selected]->flags &= ~PGUI_FLAG_HIGHLIGHT;
+            elem->children[elem->selected]->flags |= PGUI_FLAG_DIRTY;
+            elem->selected                         = -1;
+            elem->flags                           |= PGUI_FLAG_HIGHLIGHT | PGUI_FLAG_DIRTY;
             return PGUI_RESP_CAPTURED;
 
         } else if (event.input == PGUI_INPUT_UP) {
@@ -218,8 +221,8 @@ static pgui_resp_t pgui_event_grid(pgui_grid_t *elem, pgui_event_t event, uint32
 
 // Box element type.
 pgui_type_t pgui_type_grid_raw = {
-    .attr  = PGUI_ATTR_BOX | PGUI_ATTR_SELECTABLE,
-    .draw  = (pgui_draw_fn_t)pgui_draw_grid,
-    .calc  = (pgui_calc_fn_t)pgui_calc_grid,
-    .event = (pgui_event_fn_t)pgui_event_grid,
+    .attr  = PGUI_ATTR_SELECTABLE,
+    .draw  = pgui_draw_grid,
+    .calc  = pgui_calc_grid,
+    .event = pgui_event_grid,
 };

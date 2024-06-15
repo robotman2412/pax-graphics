@@ -10,17 +10,41 @@ extern "C" {
 
 #include "pax_gfx.h"
 
-#include <stdio.h>
+#include <string.h>
 
 /* ====== UTF-8 UTILITIES ====== */
+
+// Extracts an UTF-8 code from a string.
+// Returns how many bytes were read.
+// Sets the decoded UTF-8 using a pointer.
+// If the string terminates early or contains invalid unicode, U+FFFD is returned.
+size_t pax_utf8_getch_l(char const *cstr, size_t len, uint32_t *out);
+// Returns how many UTF-8 characters a given string contains.
+size_t pax_utf8_strlen_l(char const *cstr, size_t len);
+// Seek to the next UTF-8 character in a string.
+size_t pax_utf8_seeknext_l(char const *cstr, size_t len, size_t cursor);
+// Seek to the previous UTF-8 character in a string.
+size_t pax_utf8_seekprev_l(char const *cstr, size_t len, size_t cursor);
 
 // Extracts an UTF-8 code from a null-terminated c-string.
 // Returns the new string pointer.
 // Sets the decoded UTF-8 using a pointer.
 // If the string terminates early or contains invalid unicode, U+FFFD is returned.
-char  *pax_utf8_getch(char const *cstr, uint32_t *out);
+static inline char *pax_utf8_getch(char const *cstr, uint32_t *out) {
+    return (char *)cstr + pax_utf8_getch_l(cstr, strlen(cstr), out);
+}
 // Returns how many UTF-8 characters a given c-string contains.
-size_t pax_utf8_strlen(char const *cstr);
+static inline size_t pax_utf8_strlen(char const *cstr) {
+    return pax_utf8_strlen_l(cstr, strlen(cstr));
+}
+// Seek to the next UTF-8 character in a string.
+static inline size_t pax_utf8_seeknext(char const *cstr, size_t len, size_t cursor) {
+    return pax_utf8_seeknext_l(cstr, strlen(cstr), cursor);
+}
+// Seek to the previous UTF-8 character in a string.
+static inline size_t pax_utf8_seekprev(char const *cstr, size_t len, size_t cursor) {
+    return pax_utf8_seekprev_l(cstr, strlen(cstr), cursor);
+}
 
 /* ======= DRAWING: TEXT ======= */
 
@@ -28,43 +52,93 @@ size_t pax_utf8_strlen(char const *cstr);
 // Allocates the entire font in one go, such that only free(pax_font_t*) is required.
 pax_font_t *pax_load_font(FILE *fd);
 // Stores a font to a file descriptor.
-// This is a memory intensive operation and might not succeed on embedded targets.
 void        pax_store_font(FILE *fd, pax_font_t const *font);
+
+// Draw a string with given font, size, alignment and optional cursor index.
+// Returns the text size and relative cursor position in a pax_2vec2f.
+pax_2vec2f pax_draw_text_adv(
+    pax_buf_t        *buf,
+    pax_col_t         color,
+    pax_font_t const *font,
+    float             font_size,
+    float             x,
+    float             y,
+    char const       *text,
+    size_t            len,
+    pax_align_t       halign,
+    pax_align_t       valign,
+    ptrdiff_t         cursorpos
+);
+
+// Measure the size of a string with given font, size, alignment and optional cursor index.
+// Returns the text size and relative cursor position in a pax_2vec2f.
+pax_2vec2f pax_text_size_adv(
+    pax_font_t const *font,
+    float             font_size,
+    char const       *text,
+    size_t            len,
+    pax_align_t       halign,
+    pax_align_t       valign,
+    ptrdiff_t         cursorpos
+);
 
 // Draw a string with the given font and return it's size.
 // Size is before matrix transformation.
-pax_vec2f pax_draw_text(
+static inline pax_vec2f pax_draw_text(
     pax_buf_t *buf, pax_col_t color, pax_font_t const *font, float font_size, float x, float y, char const *text
-);
+) {
+    pax_2vec2f dims = pax_draw_text_adv(
+        buf,
+        color,
+        font,
+        font_size,
+        x,
+        y,
+        text,
+        strlen(text),
+        PAX_ALIGN_BEGIN,
+        PAX_ALIGN_BEGIN,
+        -1
+    );
+    return (pax_vec2f){dims.x0, dims.y0};
+}
 // Draw a string with the given font and return it's size.
 // Text is center-aligned on every line.
 // Size is before matrix transformation.
-pax_vec2f pax_center_text(
+static inline pax_vec2f pax_center_text(
     pax_buf_t *buf, pax_col_t color, pax_font_t const *font, float font_size, float x, float y, char const *text
-);
+) {
+    pax_2vec2f dims = pax_draw_text_adv(
+        buf,
+        color,
+        font,
+        font_size,
+        x,
+        y,
+        text,
+        strlen(text),
+        PAX_ALIGN_CENTER,
+        PAX_ALIGN_BEGIN,
+        -1
+    );
+    return (pax_vec2f){dims.x0, dims.y0};
+}
 // Draw a string with the given font and return it's size.
 // Text is right-aligned on every line.
 // Size is before matrix transformation.
-pax_vec2f pax_right_text(
+static inline pax_vec2f pax_right_text(
     pax_buf_t *buf, pax_col_t color, pax_font_t const *font, float font_size, float x, float y, char const *text
-);
-// DEPRECATION NOTICE: This function is subject to be removed
-// Draw a string with the given font and return it's size.
-// Size is before matrix transformation.
-// Font is scaled up without interpolation, overriding it's default.
-__attribute__((deprecated)) pax_vec2f pax_draw_text_noaa(
-    pax_buf_t *buf, pax_col_t color, pax_font_t const *font, float font_size, float x, float y, char const *text
-);
-// DEPRECATION NOTICE: This function is subject to be removed
-// Draw a string with the given font and return it's size.
-// Size is before matrix transformation.
-// Font is scaled up with interpolation, overriding it's default.
-__attribute__((deprecated)) pax_vec2f pax_draw_text_aa(
-    pax_buf_t *buf, pax_col_t color, pax_font_t const *font, float font_size, float x, float y, char const *text
-);
+) {
+    pax_2vec2f dims
+        = pax_draw_text_adv(buf, color, font, font_size, x, y, text, strlen(text), PAX_ALIGN_END, PAX_ALIGN_BEGIN, -1);
+    return (pax_vec2f){dims.x0, dims.y0};
+}
 // Calculate the size of the string with the given font.
 // Size is before matrix transformation.
-pax_vec2f pax_text_size(pax_font_t const *font, float font_size, char const *text);
+static inline pax_vec2f pax_text_size(pax_font_t const *font, float font_size, char const *text) {
+    pax_2vec2f dims = pax_text_size_adv(font, font_size, text, strlen(text), PAX_ALIGN_BEGIN, PAX_ALIGN_BEGIN, -1);
+    return (pax_vec2f){dims.x0, dims.y0};
+}
 
 #ifdef __cplusplus
 } // extern "C"

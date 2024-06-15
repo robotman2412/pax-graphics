@@ -19,14 +19,13 @@ matrix_2d_t matrix_2d_multiply(matrix_2d_t a, matrix_2d_t b) {
     // [d e f]*[s t u]=[dp+es dq+et dr+eu+f]
     // [0 0 1] [0 0 1] [0     0     1      ]
     return (matrix_2d_t
-    ){.arr = {
-          a.a0 * b.a0 + a.a1 * b.b0,
-          a.a0 * b.a1 + a.a1 * b.b1,
-          a.a0 * b.a2 + a.a1 * b.b2 + a.a2,
-          a.b0 * b.a0 + a.b1 * b.b0,
-          a.b0 * b.a1 + a.b1 * b.b1,
-          a.b0 * b.a2 + a.b1 * b.b2 + a.b2
-      }};
+    ){.arr
+      = {a.a0 * b.a0 + a.a1 * b.b0,
+         a.a0 * b.a1 + a.a1 * b.b1,
+         a.a0 * b.a2 + a.a1 * b.b2 + a.a2,
+         a.b0 * b.a0 + a.b1 * b.b0,
+         a.b0 * b.a1 + a.b1 * b.b1,
+         a.b0 * b.a2 + a.b1 * b.b2 + a.b2}};
 }
 
 // 2D matrix: applies the transformation that a represents on to a point.
@@ -39,12 +38,85 @@ void matrix_2d_transform(matrix_2d_t a, float *x, float *y) {
     *y = a.b0 * c_x + a.b1 * c_y + a.b2;
 }
 
+// 2D matrix: applies the transformation that a represents on to a point.
+pax_vec2f matrix_2d_transform_alt(matrix_2d_t a, pax_vec2f b) {
+    return (pax_vec2f){
+        a.a0 * b.x + a.a1 * b.y + a.a2,
+        a.b0 * b.x + a.b1 * b.y + a.b2,
+    };
+}
+
+// Convert the rectangle to one that covers the same area but with positive size.
+pax_recti pax_recti_abs(pax_recti a) {
+    if (a.w < 0) {
+        a.x += a.w;
+        a.w  = -a.w;
+    }
+    if (a.h < 0) {
+        a.y += a.h;
+        a.h  = -a.h;
+    }
+    return a;
+}
+
+// Convert the rectangle to one that covers the same area but with positive size.
+pax_rectf pax_rectf_abs(pax_rectf a) {
+    if (a.w < 0) {
+        a.x += a.w;
+        a.w  = -a.w;
+    }
+    if (a.h < 0) {
+        a.y += a.h;
+        a.h  = -a.h;
+    }
+    return a;
+}
+
+#define min_macro(a, b) ((a) < (b) ? (a) : (b))
+#define max_macro(a, b) ((a) > (b) ? (a) : (b))
+#define intersect_helper(pos, size, a, b)                                                                              \
+    do {                                                                                                               \
+        if ((a).pos + (a).size > (b).pos && (a).pos < (b).pos + (b).size) {                                            \
+            (a).size  = min_macro((a).pos + (a).size, (b).pos + (b).size);                                             \
+            (a).pos   = max_macro((a).pos, (b).pos);                                                                   \
+            (a).size -= (a).pos;                                                                                       \
+        } else {                                                                                                       \
+            goto nope;                                                                                                 \
+        }                                                                                                              \
+    } while (0)
+
+// Get the intersection between two rectangles.
+// Returns {0, 0, 0, 0} if there is no intersection.
+pax_recti pax_recti_intersect(pax_recti a, pax_recti b) {
+    a = pax_recti_abs(a);
+    b = pax_recti_abs(b);
+    intersect_helper(x, w, a, b);
+    intersect_helper(y, h, a, b);
+    return a;
+nope:
+    return (pax_recti){0, 0, 0, 0};
+}
+
+// Get the intersection between two rectangles.
+// Returns {0, 0, 0, 0} if there is no intersection.
+pax_rectf pax_rectf_intersect(pax_rectf a, pax_rectf b) {
+    a = pax_rectf_abs(a);
+    b = pax_rectf_abs(b);
+    intersect_helper(x, w, a, b);
+    intersect_helper(y, h, a, b);
+    return a;
+nope:
+    return (pax_rectf){0, 0, 0, 0};
+}
+
 // 2D vector: unifies a given vector (it's magnitude will be 1).
 // Does not work for vectors with all zero.
 pax_vec2f vec1_unify(pax_vec2f vec) {
     float magnitude = sqrtf(vec.x * vec.x + vec.y * vec.y);
     return (pax_vec2f){.x = vec.x / magnitude, .y = vec.y / magnitude};
 }
+
+
 
 // Apply the given matrix to the stack.
 void pax_apply_2d(pax_buf_t *buf, matrix_2d_t a) {

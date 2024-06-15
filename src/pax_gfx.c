@@ -391,13 +391,13 @@ int pax_buf_get_height(pax_buf_t const *buf) {
         return buf->height;
     }
 }
-// Retrieve the width of the buffer.
-float pax_buf_get_widthf(pax_buf_t const *buf) {
-    return (float)pax_buf_get_width(buf);
-}
-// Retrieve the height of the buffer.
-float pax_buf_get_heightf(pax_buf_t const *buf) {
-    return (float)pax_buf_get_height(buf);
+// Retrieve dimensions of the buffer.
+pax_vec2i pax_buf_get_dims(pax_buf_t const *buf) {
+    if (buf->orientation & 1) {
+        return (pax_vec2i){buf->height, buf->width};
+    } else {
+        return (pax_vec2i){buf->width, buf->height};
+    }
 }
 // Retrieve the type of the buffer.
 pax_buf_type_t pax_buf_get_type(pax_buf_t const *buf) {
