@@ -267,8 +267,9 @@ pgui_resp_t pgui_event_textbox(
 
 // Textbox element type.
 pgui_type_t pgui_type_textbox_raw = {
-    .attr  = PGUI_ATTR_SELECTABLE,
-    .calc  = pgui_calc_textbox,
-    .draw  = pgui_draw_textbox,
-    .event = pgui_event_textbox,
+    .attr     = PGUI_ATTR_SELECTABLE | PGUI_ATTR_INPUT,
+    .min_size = {100, 30},
+    .calc     = pgui_calc_textbox,
+    .draw     = pgui_draw_textbox,
+    .event    = pgui_event_textbox,
 };

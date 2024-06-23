@@ -12,5 +12,6 @@ void pgui_draw_text(pax_buf_t *gfx, pax_vec2i pos, pgui_elem_t *elem, pgui_theme
 
 // Text element type.
 pgui_type_t pgui_type_text_raw = {
-    .draw = pgui_draw_text,
+    .min_size = {100, 30},
+    .draw     = pgui_draw_text,
 };

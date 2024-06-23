@@ -311,6 +311,59 @@ struct pgui_text {
     bool        allow_newline;
 };
 
+
+
+extern pgui_type_t pgui_type_button_raw;
+extern pgui_type_t pgui_type_text_raw;
+extern pgui_type_t pgui_type_textbox_raw;
+extern pgui_type_t pgui_type_grid_raw;
+#define PGUI_TYPE_BUTTON  &pgui_type_button_raw
+#define PGUI_TYPE_TEXT    &pgui_type_text_raw
+#define PGUI_TYPE_TEXTBOX &pgui_type_textbox_raw
+#define PGUI_TYPE_GRID    &pgui_type_grid_raw
+
+
+
+// Create a simple button.
+#define PGUI_NEW_BUTTON(button_label)                                                                                  \
+    (pgui_text_t) {                                                                                                    \
+        .base = {.type = PGUI_TYPE_BUTTON, .flags = PGUI_FLAG_FILLCELL}, .text_len = strlen(button_label),             \
+        .text = (button_label), .shrink_to_fit = true, .text_halign = PAX_ALIGN_CENTER,                                \
+        .text_valign = PAX_ALIGN_CENTER,                                                                               \
+    }
+
+// Create a simple text label.
+#define PGUI_NEW_LABEL(label_text)                                                                                       \
+    (pgui_text_t) {                                                                                                      \
+        .base     = {.type = PGUI_TYPE_TEXT, .flags = PGUI_FLAG_FILLCELL | PGUI_FLAG_NOBACKGROUND | PGUI_FLAG_NOBORDER}, \
+        .text_len = strlen(label_text), .text = (label_text), .shrink_to_fit = true, .text_halign = PAX_ALIGN_CENTER,    \
+        .text_valign = PAX_ALIGN_CENTER,                                                                                 \
+    }
+
+// Create a simple editable textbox.
+#define PGUI_NEW_TEXTBOX()                                                                                             \
+    (pgui_text_t) {                                                                                                    \
+        .base = {.type = PGUI_TYPE_TEXTBOX, .flags = PGUI_FLAG_FILLCELL}, .allow_realloc = true,                       \
+        .text_halign = PAX_ALIGN_BEGIN, .text_valign = PAX_ALIGN_CENTER,                                               \
+    }
+
+// Create a new scrollable grid.
+#define PGUI_NEW_GRID(pos_x, pos_y, size_x, size_y, cells_x, cells_y, ...)                                             \
+    (pgui_grid_t) {                                                                                                    \
+        .base = {                                                                                           \
+            .type         = PGUI_TYPE_GRID,                                                                            \
+            .pos          = {(pos_x), (pos_y)},                                                                        \
+            .size         = {(size_x), (size_y)},                                                                      \
+            .children_len = (cells_x) * (cells_y),                                                                     \
+            .children     = (void*)(void *[]){__VA_ARGS__},                                                            \
+            .selected     = -1,                                                                                        \
+            .flags        = PGUI_FLAG_FILLCELL,                                                                        \
+        },                                                                                                             \
+        .cells = {(cells_x), (cells_y)}, .col_width = (int[(cells_x)]){0}, .row_height = (int[(cells_y)]){0},          \
+    }
+
+
+
 // Calculate the layout of a grid.
 void pgui_calc_grid(pax_vec2i gfx_size, pax_vec2i pos, pgui_elem_t *elem, pgui_theme_t const *theme, uint32_t flags);
 // Calculate the layout of editable text-based elements.
