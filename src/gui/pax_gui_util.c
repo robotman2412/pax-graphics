@@ -176,10 +176,14 @@ void pgui_drawutil_base(pax_buf_t *gfx, pax_vec2i pos, pgui_elem_t *elem, pgui_t
 
     // Select background color.
     pax_col_t bg;
-    if (!(elem->type->attr & PGUI_ATTR_INPUT) || (flags & PGUI_FLAG_INACTIVE)) {
+    if (!(elem->type->attr & (PGUI_ATTR_INPUT | PGUI_ATTR_BUTTON)) || (flags & PGUI_FLAG_INACTIVE)) {
         bg = theme->bg_col;
-    } else if (elem->flags & PGUI_FLAG_ACTIVE) {
+    } else if ((elem->flags & PGUI_FLAG_ACTIVE) && (elem->type->attr & PGUI_ATTR_BUTTON)) {
         bg = theme->pressed_col;
+    } else if (elem->flags & PGUI_FLAG_ACTIVE) {
+        bg = theme->active_col;
+    } else if (elem->type->attr & PGUI_ATTR_BUTTON) {
+        bg = theme->button_col;
     } else {
         bg = theme->input_col;
     }
@@ -194,16 +198,53 @@ void pgui_drawutil_border(pax_buf_t *gfx, pax_vec2i pos, pgui_elem_t *elem, pgui
         return;
     }
 
-    // Select border color.
-    pax_col_t border;
+    // Select border.
+    pax_col_t color;
+    int       thickness;
     if (flags & PGUI_FLAG_HIGHLIGHT) {
-        border = theme->highlight_col;
+        color     = theme->highlight_col;
+        thickness = theme->highlight_thickness;
     } else {
-        border = theme->border_col;
+        color     = theme->border_col;
+        thickness = theme->border_thickness;
     }
 
-    // Draw the border.
-    pax_outline_round_rect(gfx, border, pos.x, pos.y, elem->size.x, elem->size.y, theme->rounding);
+    if (thickness <= 1) {
+        // Simple thin lines.
+        pax_outline_round_rect(gfx, color, pos.x, pos.y, elem->size.x, elem->size.y, theme->rounding);
+        return;
+    }
+
+    // Clamp rounding.
+    int rounding = theme->rounding;
+    if (rounding > elem->size.x / 2) {
+        rounding = elem->size.x / 2;
+    }
+    if (rounding > elem->size.y / 2) {
+        rounding = elem->size.y / 2;
+    }
+
+    // Draw the corners.
+    pax_vec2i max = {pos.x + elem->size.x, pos.y + elem->size.y};
+    float     a0  = 0;
+    float     a1  = M_PI / 2;
+    float     a2  = 2 * a1;
+    float     a3  = 3 * a1;
+    float     a4  = 4 * a1;
+    pax_draw_hollow_arc(gfx, color, max.x - rounding, pos.y + rounding, rounding - thickness, rounding, a0, a1);
+    pax_draw_hollow_arc(gfx, color, pos.x + rounding, pos.y + rounding, rounding - thickness, rounding, a1, a2);
+    pax_draw_hollow_arc(gfx, color, pos.x + rounding, max.y - rounding, rounding - thickness, rounding, a2, a3);
+    pax_draw_hollow_arc(gfx, color, max.x - rounding, max.y - rounding, rounding - thickness, rounding, a3, a4);
+
+    // Draw the edges.
+    if (elem->size.x > 2 * rounding) {
+        pax_draw_rect(gfx, color, pos.x + rounding, pos.y, elem->size.x - 2 * rounding, thickness);
+        pax_draw_rect(gfx, color, pos.x + rounding, max.y, elem->size.x - 2 * rounding, -thickness);
+    }
+    if (elem->size.y > 2 * rounding) {
+        pax_draw_rect(gfx, color, pos.x, pos.y + rounding, thickness, elem->size.y - 2 * rounding);
+        pax_draw_rect(gfx, color, max.x, pos.y + rounding, -thickness, elem->size.y - 2 * rounding);
+    }
 }
 
 // PAX GUI text measuring helper.

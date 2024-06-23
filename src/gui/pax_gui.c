@@ -13,12 +13,16 @@ static char const TAG[] = "pax-gui";
 // Default theme.
 pgui_theme_t const pgui_theme_default = {
     // Element styles.
-    .bg_col                 = 0xff303030,
-    .fg_col                 = 0xffffffff,
-    .input_col              = 0xff404040,
-    .pressed_col            = 0xff202020,
+    .bg_col                 = 0xffffffff,
+    .fg_col                 = 0xff000000,
+    .input_col              = 0xffffffff,
+    .active_col             = 0xffe0e0e0,
+    .button_col             = 0xffd0d0d0,
+    .pressed_col            = 0xff909090,
     .border_col             = 0xff000000,
-    .highlight_col          = 0xff005fcf,
+    .highlight_col          = 0xff00e0e0,
+    .border_thickness       = 1,
+    .highlight_thickness    = 2,
     .rounding               = 7,
     .padding                = 4,
     // Text style.

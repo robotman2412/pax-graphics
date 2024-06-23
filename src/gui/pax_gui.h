@@ -114,14 +114,22 @@ typedef struct {
     pax_col_t bg_col;
     // Foreground color.
     pax_col_t fg_col;
-    // Button/dropdown background color.
+    // Textbox background color.
     pax_col_t input_col;
+    // Active textbox color.
+    pax_col_t active_col;
+    // Button/dropdown background color.
+    pax_col_t button_col;
     // Pressed button color.
     pax_col_t pressed_col;
     // Border color.
     pax_col_t border_col;
     // Highlighted border color.
     pax_col_t highlight_col;
+    // Normal element border thickness
+    int       border_thickness;
+    // Highlighted element border thickness.
+    int       highlight_thickness;
     // Element corner rounding.
     int       rounding;
     // Internal padding elements.
@@ -193,9 +201,12 @@ extern pgui_theme_t const pgui_theme_default;
 // GUI attribute: Type describes an input.
 // Elements with this type will use the input color scheme.
 #define PGUI_ATTR_INPUT      0x00000002
+// GUI attribute: Type describes a button.
+// Elements with this type will use the button color scheme.
+#define PGUI_ATTR_BUTTON     0x00000004
 // GUI attribute: Type can have scrollbars.
 // Elements with this type won't have their content size set to their actual size.
-#define PGUI_ATTR_SCROLLABLE 0x00000004
+#define PGUI_ATTR_SCROLLABLE 0x00000008
 
 // GUI element type.
 typedef struct pgui_type pgui_type_t;
