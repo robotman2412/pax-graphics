@@ -15,9 +15,9 @@ void pgui_calc_textbox(
     pgui_text_t *text    = (pgui_text_t *)elem;
     int          padding = 0;
     if (!(elem->type->attr & PGUI_ATTR_INPUT)) {
-        padding = theme->text_padding;
+        padding = theme->padding;
     } else if (!(elem->flags & PGUI_FLAG_NOPADDING)) {
-        padding = theme->input_padding;
+        padding = theme->padding;
     }
 
     // Compute content size.

@@ -20,9 +20,7 @@ pgui_theme_t const pgui_theme_default = {
     .border_col             = 0xff000000,
     .highlight_col          = 0xff005fcf,
     .rounding               = 7,
-    .input_padding          = 4,
-    .text_padding           = 4,
-    .box_padding            = 4,
+    .padding                = 4,
     // Text style.
     .font                   = pax_font_saira_regular,
     .font_size              = 18,
@@ -57,8 +55,8 @@ static void pgui_calc_layout_int(
             pgui_calc_layout_int(
                 gfx_size,
                 (pax_vec2i){
-                    pos.x + elem->children[i]->pos.x,
-                    pos.y + elem->children[i]->pos.y,
+                    pos.x + elem->children[i]->pos.x - elem->scroll.x,
+                    pos.y + elem->children[i]->pos.y - elem->scroll.y,
                 },
                 elem->children[i],
                 theme,
@@ -105,6 +103,14 @@ static void pgui_draw_int(pax_buf_t *gfx, pax_vec2i pos, pgui_elem_t *elem, pgui
         elem->type->draw(gfx, pos, elem, theme, flags);
     }
 
+    // Apply clip rectangle to children.
+    pax_recti clip   = pax_get_clip(gfx);
+    pax_recti bounds = {pos.x, pos.y, elem->size.x + 1, elem->size.y + 1};
+    if (!(elem->flags & PGUI_FLAG_NOPADDING)) {
+        bounds = pgui_add_padding(bounds, theme->padding);
+    }
+    pax_set_clip(gfx, pax_recti_intersect(clip, bounds));
+
     // Draw children.
     uint32_t child_flags = flags & PGUI_FLAGS_INHERITABLE;
     for (size_t i = 0; i < elem->children_len; i++) {
@@ -112,8 +118,8 @@ static void pgui_draw_int(pax_buf_t *gfx, pax_vec2i pos, pgui_elem_t *elem, pgui
             pgui_draw_int(
                 gfx,
                 (pax_vec2i){
-                    pos.x + elem->children[i]->pos.x,
-                    pos.y + elem->children[i]->pos.y,
+                    pos.x + elem->children[i]->pos.x - elem->scroll.x,
+                    pos.y + elem->children[i]->pos.y - elem->scroll.y,
                 },
                 elem->children[i],
                 theme,
@@ -126,14 +132,15 @@ static void pgui_draw_int(pax_buf_t *gfx, pax_vec2i pos, pgui_elem_t *elem, pgui
         pgui_draw_int(
             gfx,
             (pax_vec2i){
-                pos.x + elem->children[elem->selected]->pos.x,
-                pos.y + elem->children[elem->selected]->pos.y,
+                pos.x + elem->children[elem->selected]->pos.x - elem->scroll.x,
+                pos.y + elem->children[elem->selected]->pos.y - elem->scroll.y,
             },
             elem->children[elem->selected],
             theme,
             flags
         );
     }
+    pax_set_clip(gfx, clip);
 
     // Draw the border.
     pgui_drawutil_border(gfx, pos, elem, theme, flags);
@@ -180,8 +187,8 @@ static pgui_resp_t pgui_event_int(
         pgui_resp_t resp = pgui_event_int(
             gfx_size,
             (pax_vec2i){
-                pos.x + elem->children[elem->selected]->pos.x,
-                pos.y + elem->children[elem->selected]->pos.y,
+                pos.x + elem->children[elem->selected]->pos.x + elem->scroll.x,
+                pos.y + elem->children[elem->selected]->pos.y + elem->scroll.y,
             },
             elem->children[elem->selected],
             theme,

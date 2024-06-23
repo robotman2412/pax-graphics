@@ -124,12 +124,8 @@ typedef struct {
     pax_col_t highlight_col;
     // Element corner rounding.
     int       rounding;
-    // Internal padding for inputs.
-    int       input_padding;
-    // Internal padding for text and labels.
-    int       text_padding;
-    // Internal padding for boxes grid cells.
-    int       box_padding;
+    // Internal padding elements.
+    int       padding;
 
     /* ==== Text style ==== */
     // GUI font.
