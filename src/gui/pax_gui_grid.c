@@ -141,6 +141,59 @@ void pgui_draw_grid(pax_buf_t *gfx, pax_vec2i pos, pgui_elem_t *elem, pgui_theme
     pax_set_clip(gfx, clip);
 }
 
+// Next/previous for grid elements.
+static pgui_resp_t pgui_grid_next(pgui_elem_t *elem, pgui_theme_t const *theme, uint32_t flags, bool next) {
+    pgui_grid_t *grid    = (pgui_grid_t *)elem;
+    int          padding = flags & PGUI_FLAG_NOPADDING ? 0 : theme->padding;
+
+    // Original index.
+    ptrdiff_t i0 = elem->selected;
+
+    // Current index.
+    ptrdiff_t i = elem->selected;
+    if (next) {
+        i = (i + 1) % elem->children_len;
+    } else {
+        i = (i + elem->children_len - 1) % elem->children_len;
+    }
+
+    while (i != i0) {
+        if (elem->children[i] && (elem->children[i]->type->attr & PGUI_ATTR_SELECTABLE)) {
+            if (elem->selected >= 0) {
+                // Unmark previous selection.
+                elem->children[elem->selected]->flags &= ~PGUI_FLAG_HIGHLIGHT;
+                elem->children[elem->selected]->flags |= PGUI_FLAG_DIRTY;
+            }
+
+            // Mark new selection.
+            elem->selected            = i;
+            elem->children[i]->flags |= PGUI_FLAG_HIGHLIGHT | PGUI_FLAG_DIRTY;
+
+            // Update scroll position.
+            elem->scroll = pgui_adjust_scroll_2d(
+                (pax_recti){
+                    elem->children[i]->pos.x,
+                    elem->children[i]->pos.y,
+                    elem->children[i]->size.x,
+                    elem->children[i]->size.y,
+                },
+                4 * padding,
+                elem->size,
+                elem->scroll,
+                elem->content_size
+            );
+            return PGUI_RESP_CAPTURED;
+        }
+        if (next) {
+            i = (i + 1) % elem->children_len;
+        } else {
+            i = (i + elem->children_len - 1) % elem->children_len;
+        }
+    }
+
+    return PGUI_RESP_CAPTURED_ERR;
+}
+
 // Navigation for grid elements.
 static pgui_resp_t
     pgui_grid_nav(pgui_elem_t *elem, pgui_theme_t const *theme, uint32_t flags, ptrdiff_t dx, ptrdiff_t dy) {
@@ -236,6 +289,14 @@ pgui_resp_t pgui_event_grid(
             elem->selected                         = -1;
             elem->flags                           |= PGUI_FLAG_HIGHLIGHT | PGUI_FLAG_DIRTY;
             return PGUI_RESP_CAPTURED;
+
+        } else if (event.input == PGUI_INPUT_NEXT) {
+            // Navigate next.
+            return pgui_grid_next(elem, theme, flags, true);
+
+        } else if (event.input == PGUI_INPUT_PREV) {
+            // Navigate previous.
+            return pgui_grid_next(elem, theme, flags, false);
 
         } else if (event.input == PGUI_INPUT_UP) {
             // Navigate up.
