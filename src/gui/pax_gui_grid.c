@@ -182,6 +182,7 @@ static pgui_resp_t pgui_grid_next(pgui_elem_t *elem, pgui_theme_t const *theme, 
                 elem->scroll,
                 elem->content_size
             );
+            elem->flags |= PGUI_FLAG_DIRTY;
             return PGUI_RESP_CAPTURED;
         }
         if (next) {
@@ -233,6 +234,7 @@ static pgui_resp_t
                 elem->scroll,
                 elem->content_size
             );
+            elem->flags |= PGUI_FLAG_DIRTY;
             return PGUI_RESP_CAPTURED;
         }
         x = (x + dx + grid->cells.x) % grid->cells.x;

@@ -102,9 +102,11 @@ static void pgui_draw_int(pax_buf_t *gfx, pax_vec2i pos, pgui_elem_t *elem, pgui
     }
 
     // Draw the base of the element.
-    pgui_drawutil_base(gfx, pos, elem, theme, flags);
-    if (elem->type->draw) {
-        elem->type->draw(gfx, pos, elem, theme, flags);
+    if (flags & PGUI_FLAG_DIRTY) {
+        pgui_drawutil_base(gfx, pos, elem, theme, flags);
+        if (elem->type->draw) {
+            elem->type->draw(gfx, pos, elem, theme, flags);
+        }
     }
 
     // Apply clip rectangle to children.
@@ -147,7 +149,9 @@ static void pgui_draw_int(pax_buf_t *gfx, pax_vec2i pos, pgui_elem_t *elem, pgui
     pax_set_clip(gfx, clip);
 
     // Draw the border.
-    pgui_drawutil_border(gfx, pos, elem, theme, flags);
+    if (flags & PGUI_FLAG_DIRTY) {
+        pgui_drawutil_border(gfx, pos, elem, theme, flags);
+    }
 
     // Clear dirty flag.
     elem->flags &= ~PGUI_FLAG_DIRTY;
