@@ -263,14 +263,18 @@ void pax_line_shaded(
         y1          = buf->clip.y + buf->clip.h - 1;
     }
     // Clip left.
-    if (x1 < buf->clip.x) {
+    if (x1 <= x0 && x1 < buf->clip.x) {
+        if (x0 < buf->clip.x)
+            return;
         float coeff = (buf->clip.x - x0) / (x1 - x0);
         u1          = u0 + (u1 - u0) * coeff;
         v1          = v0 + (v1 - v0) * coeff;
         y1          = y0 + (y1 - y0) * coeff;
         x1          = buf->clip.x;
 
-    } else if (x0 < buf->clip.x) {
+    } else if (x0 < x1 && x0 < buf->clip.x) {
+        if (x1 < buf->clip.x)
+            return;
         float coeff = (buf->clip.x - x0) / (x1 - x0);
         u0          = u0 + (u1 - u0) * coeff;
         v0          = v0 + (v1 - v0) * coeff;
@@ -278,14 +282,18 @@ void pax_line_shaded(
         x0          = buf->clip.x;
     }
     // Clip right.
-    if (x1 > buf->clip.x + buf->clip.w - 1) {
+    if (x1 >= x0 && x1 > buf->clip.x + buf->clip.w - 1) {
+        if (x0 > buf->clip.x + buf->clip.w - 1)
+            return;
         float coeff = (buf->clip.x + buf->clip.w - 1 - x0) / (x1 - x0);
         u1          = u0 + (u1 - u0) * coeff;
         v1          = v0 + (v1 - v0) * coeff;
         y1          = y0 + (y1 - y0) * coeff;
         x1          = buf->clip.x + buf->clip.w - 1;
 
-    } else if (x0 > buf->clip.x + buf->clip.w - 1) {
+    } else if (x0 > x1 && x0 > buf->clip.x + buf->clip.w - 1) {
+        if (x1 > buf->clip.x + buf->clip.w - 1)
+            return;
         float coeff = (buf->clip.x + buf->clip.w - 1 - x0) / (x1 - x0);
         u0          = u0 + (u1 - u0) * coeff;
         v0          = v0 + (v1 - v0) * coeff;

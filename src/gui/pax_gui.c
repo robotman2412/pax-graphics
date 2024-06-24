@@ -109,7 +109,7 @@ static void pgui_draw_int(pax_buf_t *gfx, pax_vec2i pos, pgui_elem_t *elem, pgui
 
     // Apply clip rectangle to children.
     pax_recti clip   = pax_get_clip(gfx);
-    pax_recti bounds = {pos.x, pos.y, elem->size.x + 1, elem->size.y + 1};
+    pax_recti bounds = {pos.x - 1, pos.y - 1, elem->size.x + 2, elem->size.y + 2};
     if (!(elem->flags & PGUI_FLAG_NOPADDING)) {
         bounds = pgui_add_padding(bounds, theme->padding);
     }
@@ -196,7 +196,7 @@ static pgui_resp_t pgui_event_int(
             },
             elem->children[elem->selected],
             theme,
-            flags,
+            child_flags,
             event
         );
         if (resp) {

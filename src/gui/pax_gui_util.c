@@ -209,12 +209,6 @@ void pgui_drawutil_border(pax_buf_t *gfx, pax_vec2i pos, pgui_elem_t *elem, pgui
         thickness = theme->border_thickness;
     }
 
-    if (thickness <= 1) {
-        // Simple thin lines.
-        pax_outline_round_rect(gfx, color, pos.x, pos.y, elem->size.x, elem->size.y, theme->rounding);
-        return;
-    }
-
     // Clamp rounding.
     int rounding = theme->rounding;
     if (rounding > elem->size.x / 2) {
@@ -222,6 +216,12 @@ void pgui_drawutil_border(pax_buf_t *gfx, pax_vec2i pos, pgui_elem_t *elem, pgui
     }
     if (rounding > elem->size.y / 2) {
         rounding = elem->size.y / 2;
+    }
+
+    if (thickness <= 1) {
+        // Simple thin lines.
+        pax_outline_round_rect(gfx, color, pos.x, pos.y, elem->size.x, elem->size.y, theme->rounding);
+        return;
     }
 
     // Draw the corners.

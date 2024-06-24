@@ -327,7 +327,7 @@ extern pgui_type_t pgui_type_grid_raw;
 // Create a simple button.
 #define PGUI_NEW_BUTTON(button_label)                                                                                  \
     (pgui_text_t) {                                                                                                    \
-        .base = {.type = PGUI_TYPE_BUTTON, .flags = PGUI_FLAG_FILLCELL}, .text_len = strlen(button_label),             \
+        .base = {.type = PGUI_TYPE_BUTTON, .flags = PGUI_FLAG_FILLCELL}, .text_len = __builtin_strlen(button_label),   \
         .text = (button_label), .shrink_to_fit = true, .text_halign = PAX_ALIGN_CENTER,                                \
         .text_valign = PAX_ALIGN_CENTER,                                                                               \
     }
@@ -336,8 +336,8 @@ extern pgui_type_t pgui_type_grid_raw;
 #define PGUI_NEW_LABEL(label_text)                                                                                       \
     (pgui_text_t) {                                                                                                      \
         .base     = {.type = PGUI_TYPE_TEXT, .flags = PGUI_FLAG_FILLCELL | PGUI_FLAG_NOBACKGROUND | PGUI_FLAG_NOBORDER}, \
-        .text_len = strlen(label_text), .text = (label_text), .shrink_to_fit = true, .text_halign = PAX_ALIGN_CENTER,    \
-        .text_valign = PAX_ALIGN_CENTER,                                                                                 \
+        .text_len = __builtin_strlen(label_text), .text = (label_text), .shrink_to_fit = true,                           \
+        .text_halign = PAX_ALIGN_CENTER, .text_valign = PAX_ALIGN_CENTER,                                                \
     }
 
 // Create a simple editable textbox.

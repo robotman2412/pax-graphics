@@ -529,40 +529,50 @@ void pax_buf_scroll(pax_buf_t *buf, pax_col_t placeholder, int x, int y) {
 
 // Clip the buffer to the desired rectangle.
 void pax_clip(pax_buf_t *buf, int x, int y, int width, int height) {
+    if (width == 0 || height == 0) {
+        buf->clip.w = 0;
+        buf->clip.h = 0;
+        return;
+    }
     // Apply orientation.
-    pax_recti clip = {x, y, width, height};
-    clip           = pax_orient_det_recti(buf, clip);
-    // Make width and height positive.
-    if (clip.w < 0) {
-        clip.x += clip.w;
-        clip.w  = -clip.w;
+    pax_vec2i p0 = pax_orient_det_vec2i(buf, (pax_vec2i){x, y});
+    pax_vec2i p1 = pax_orient_det_vec2i(buf, (pax_vec2i){x + width - 1, y + height - 1});
+    // Sort the points.
+    if (p0.x > p1.x) {
+        int t = p0.x;
+        p0.x  = p1.x;
+        p1.x  = t;
     }
-    if (clip.h < 0) {
-        clip.y += clip.h;
-        clip.h  = -clip.h;
+    if (p0.y > p1.y) {
+        int t = p0.y;
+        p0.y  = p1.y;
+        p1.y  = t;
     }
-    // Clip the entire rectangle to be at most the buffer's size.
-    if (clip.x < 0) {
-        clip.w += clip.x;
-        clip.x  = 0;
+    // Clip points to be within buffer.
+    if (p0.x < 0) {
+        p0.x = 0;
     }
-    if (clip.y < 0) {
-        clip.h += clip.y;
-        clip.y  = 0;
+    if (p0.y < 0) {
+        p0.y = 0;
     }
-    if (clip.x + clip.w > buf->width) {
-        clip.w = buf->width - clip.x;
+    if (p1.x >= buf->width) {
+        p1.x = buf->width - 1;
     }
-    if (clip.y + clip.h > buf->height) {
-        clip.h = buf->height - clip.y;
+    if (p1.y >= buf->height) {
+        p1.y = buf->height - 1;
     }
     // Apply the clip.
-    buf->clip = clip;
+    buf->clip = (pax_recti){
+        p0.x,
+        p0.y,
+        p1.x - p0.x + 1,
+        p1.y - p0.y + 1,
+    };
 }
 
 // Get the current clip rectangle.
 pax_recti pax_get_clip(pax_buf_t const *buf) {
-    return pax_unorient_det_recti(buf, buf->clip);
+    return pax_recti_abs(pax_unorient_det_recti(buf, buf->clip));
 }
 
 // Clip the buffer to it's full size.
