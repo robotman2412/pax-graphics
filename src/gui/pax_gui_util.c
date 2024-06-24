@@ -218,12 +218,6 @@ void pgui_drawutil_border(pax_buf_t *gfx, pax_vec2i pos, pgui_elem_t *elem, pgui
         rounding = elem->size.y / 2;
     }
 
-    if (thickness <= 1) {
-        // Simple thin lines.
-        pax_outline_round_rect(gfx, color, pos.x, pos.y, elem->size.x, elem->size.y, theme->rounding);
-        return;
-    }
-
     // Draw the corners.
     pax_vec2i max = {pos.x + elem->size.x, pos.y + elem->size.y};
     float     a0  = 0;
