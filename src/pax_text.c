@@ -97,9 +97,8 @@ size_t pax_utf8_getch_l(char const *cstr, size_t cstr_len, uint32_t *out) {
 
 // Returns how many UTF-8 characters a given c-string contains.
 size_t pax_utf8_strlen_l(char const *cstr, size_t len) {
-    char const *end      = cstr + strlen(cstr);
-    uint32_t    dummy    = 0;
-    size_t      utf8_len = 0;
+    uint32_t dummy    = 0;
+    size_t   utf8_len = 0;
     while (len) {
         utf8_len++;
         size_t used  = pax_utf8_getch_l(cstr, len, &dummy);

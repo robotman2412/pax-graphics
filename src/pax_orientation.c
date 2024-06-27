@@ -96,13 +96,13 @@ pax_vec2f pax_unorient_det_vec2f(pax_buf_t const *buf, pax_vec2f vec) {
     switch (buf->orientation) {
         default:
         case PAX_O_UPRIGHT: return vec;
-        case PAX_O_ROT_CCW: return pax_orient_ccw3_vec2f(buf_dim, vec);
+        case PAX_O_ROT_CCW: return pax_orient_ccw3_vec2f(buf_dim_r, vec);
         case PAX_O_ROT_HALF: return pax_orient_ccw2_vec2f(buf_dim, vec);
-        case PAX_O_ROT_CW: return pax_orient_ccw1_vec2f(buf_dim, vec);
+        case PAX_O_ROT_CW: return pax_orient_ccw1_vec2f(buf_dim_r, vec);
         case PAX_O_FLIP_H: return pax_orient_flip_vec2f(buf_dim, vec);
-        case PAX_O_ROT_CCW_FLIP_H: return pax_orient_ccw1_flip_vec2f(buf_dim, vec);
+        case PAX_O_ROT_CCW_FLIP_H: return pax_orient_ccw1_flip_vec2f(buf_dim_r, vec);
         case PAX_O_ROT_HALF_FLIP_H: return pax_orient_ccw2_flip_vec2f(buf_dim, vec);
-        case PAX_O_ROT_CW_FLIP_H: return pax_orient_ccw3_flip_vec2f(buf_dim, vec);
+        case PAX_O_ROT_CW_FLIP_H: return pax_orient_ccw3_flip_vec2f(buf_dim_r, vec);
     }
 #else
     return vec;
@@ -215,13 +215,13 @@ pax_rectf pax_unorient_det_rectf(pax_buf_t const *buf, pax_rectf vec) {
     switch (buf->orientation) {
         default:
         case PAX_O_UPRIGHT: return vec;
-        case PAX_O_ROT_CCW: return pax_orient_ccw3_rectf(buf_dim, vec);
+        case PAX_O_ROT_CCW: return pax_orient_ccw3_rectf(buf_dim_r, vec);
         case PAX_O_ROT_HALF: return pax_orient_ccw2_rectf(buf_dim, vec);
-        case PAX_O_ROT_CW: return pax_orient_ccw1_rectf(buf_dim, vec);
+        case PAX_O_ROT_CW: return pax_orient_ccw1_rectf(buf_dim_r, vec);
         case PAX_O_FLIP_H: return pax_orient_flip_rectf(buf_dim, vec);
-        case PAX_O_ROT_CCW_FLIP_H: return pax_orient_ccw1_flip_rectf(buf_dim, vec);
+        case PAX_O_ROT_CCW_FLIP_H: return pax_orient_ccw1_flip_rectf(buf_dim_r, vec);
         case PAX_O_ROT_HALF_FLIP_H: return pax_orient_ccw2_flip_rectf(buf_dim, vec);
-        case PAX_O_ROT_CW_FLIP_H: return pax_orient_ccw3_flip_rectf(buf_dim, vec);
+        case PAX_O_ROT_CW_FLIP_H: return pax_orient_ccw3_flip_rectf(buf_dim_r, vec);
     }
 #else
     return vec;
@@ -320,13 +320,13 @@ pax_vec2i pax_unorient_det_vec2i(pax_buf_t const *buf, pax_vec2i vec) {
     switch (buf->orientation) {
         default:
         case PAX_O_UPRIGHT: return vec;
-        case PAX_O_ROT_CCW: return pax_orient_ccw3_vec2i(buf_dim, vec);
+        case PAX_O_ROT_CCW: return pax_orient_ccw3_vec2i(buf_dim_r, vec);
         case PAX_O_ROT_HALF: return pax_orient_ccw2_vec2i(buf_dim, vec);
-        case PAX_O_ROT_CW: return pax_orient_ccw1_vec2i(buf_dim, vec);
+        case PAX_O_ROT_CW: return pax_orient_ccw1_vec2i(buf_dim_r, vec);
         case PAX_O_FLIP_H: return pax_orient_flip_vec2i(buf_dim, vec);
-        case PAX_O_ROT_CCW_FLIP_H: return pax_orient_ccw1_flip_vec2i(buf_dim, vec);
+        case PAX_O_ROT_CCW_FLIP_H: return pax_orient_ccw1_flip_vec2i(buf_dim_r, vec);
         case PAX_O_ROT_HALF_FLIP_H: return pax_orient_ccw2_flip_vec2i(buf_dim, vec);
-        case PAX_O_ROT_CW_FLIP_H: return pax_orient_ccw3_flip_vec2i(buf_dim, vec);
+        case PAX_O_ROT_CW_FLIP_H: return pax_orient_ccw3_flip_vec2i(buf_dim_r, vec);
     }
 #else
     return vec;
