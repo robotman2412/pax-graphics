@@ -476,7 +476,7 @@ static pax_2vec2f text_generic(pax_text_render_t *ctx, char const *text, size_t 
             if (pos < len) {
                 size_t peek_size = pax_utf8_getch_l(text + pos, len - pos, &glyph);
                 if (glyph == '\n') {
-                    pos += glyph_size ?: 1;
+                    pos += peek_size ?: 1;
                 }
             }
             goto newline;
