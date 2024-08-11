@@ -1499,35 +1499,7 @@ void pax_draw_rect(pax_buf_t *buf, pax_col_t color, float x, float y, float widt
         matrix_2d_transform(buf->stack_2d.value, &x, &y);
         width  *= buf->stack_2d.value.a0;
         height *= buf->stack_2d.value.b1;
-
-// Perform rotation.
-#if PAX_COMPILE_ORIENTATION
-        pax_rectf tmp = pax_orient_det_rectf(buf, (pax_rectf){x, y, width, height});
-        x             = tmp.x;
-        y             = tmp.y;
-        width         = tmp.w;
-        height        = tmp.h;
-#endif
-
-        pax_mark_dirty2(buf, x - 0.5, y - 0.5, width + 1, height + 1);
-#if PAX_COMPILE_MCR
-        if (pax_do_multicore) {
-            // Assign worker task.
-            pax_task_t task
-                = {.buffer     = buf,
-                   .type       = PAX_TASK_RECT,
-                   .color      = color,
-                   .use_shader = NULL,
-                   .shape      = {x, y, width, height},
-                   .shape_len  = 4};
-            paxmcr_add_task(&task);
-            // Draw our part.
-            paxmcr_rect_unshaded(false, buf, color, shader, x, y, width, height);
-        } else
-#endif
-        {
-            pax_rect_unshaded(buf, color, x, y, width, height);
-        }
+        pax_simple_rect(buf, color, x, y, width, height);
     } else {
         // Draw as a quad.
         matrix_2d_t mtx       = buf->stack_2d.value;
