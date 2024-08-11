@@ -288,10 +288,10 @@ void pax_range_setter_32bpp_rev(pax_buf_t *buf, pax_col_t color, int index, int 
         void pax_range_merger_##bpp##_pal(pax_buf_t *buf, pax_col_t color, int index, int count);
     #define PAX_DEF_BUF_TYPE_GREY(bpp, name)                                                                           \
         void pax_range_merger_##bpp##_grey(pax_buf_t *buf, pax_col_t color, int index, int count);
-    #define PAX_DEF_BUF_TYPE_ARGB(a, r, g, b, name)                                                                    \
-        void pax_range_merger_##a##r##g##b##_argb(pax_buf_t *buf, pax_col_t color, int index, int count);
-    #define PAX_DEF_BUF_TYPE_RGB(r, g, b, name)                                                                        \
-        void pax_range_merger_##r##g##b##_rgb(pax_buf_t *buf, pax_col_t color, int index, int count);
+    #define PAX_DEF_BUF_TYPE_ARGB(bpp, a, r, g, b, name)                                                               \
+        void pax_range_merger_##a##r##g##b##argb(pax_buf_t *buf, pax_col_t color, int index, int count);
+    #define PAX_DEF_BUF_TYPE_RGB(bpp, r, g, b, name)                                                                   \
+        void pax_range_merger_##r##g##b##rgb(pax_buf_t *buf, pax_col_t color, int index, int count);
     #include "helpers/pax_buf_type.inc"
 #else
 // Merges a single 32-bit ARGB color into a range of pixels.
@@ -350,16 +350,16 @@ pax_col_t pax_col_to_4_grey(pax_buf_t const *buf, pax_col_t color);
 pax_col_t pax_col_to_8_grey(pax_buf_t const *buf, pax_col_t color);
 
 // Converts ARGB to 3, 3, 2 bit RGB.
-pax_col_t pax_col_to_332_rgb(pax_buf_t const *buf, pax_col_t color);
+pax_col_t pax_col_to_332rgb(pax_buf_t const *buf, pax_col_t color);
 // Converts ARGB to 5, 6, 5 bit RGB.
-pax_col_t pax_col_to_565_rgb(pax_buf_t const *buf, pax_col_t color);
+pax_col_t pax_col_to_565rgb(pax_buf_t const *buf, pax_col_t color);
 
 // Converts ARGB to 1 bit per channel ARGB.
-pax_col_t pax_col_to_1111_argb(pax_buf_t const *buf, pax_col_t color);
+pax_col_t pax_col_to_1111argb(pax_buf_t const *buf, pax_col_t color);
 // Converts ARGB to 2 bit per channel ARGB.
-pax_col_t pax_col_to_2222_argb(pax_buf_t const *buf, pax_col_t color);
+pax_col_t pax_col_to_2222argb(pax_buf_t const *buf, pax_col_t color);
 // Converts ARGB to 4 bit per channel ARGB.
-pax_col_t pax_col_to_4444_argb(pax_buf_t const *buf, pax_col_t color);
+pax_col_t pax_col_to_4444argb(pax_buf_t const *buf, pax_col_t color);
 
 // Performs a palette lookup based on the input.
 pax_col_t pax_pal_lookup(pax_buf_t const *buf, pax_col_t color);
@@ -374,22 +374,22 @@ pax_col_t pax_4_grey_to_col(pax_buf_t const *buf, pax_col_t color);
 pax_col_t pax_8_grey_to_col(pax_buf_t const *buf, pax_col_t color);
 
 // Converts 3, 3, 2 bit RGB to ARGB.
-pax_col_t pax_332_rgb_to_col(pax_buf_t const *buf, pax_col_t color);
+pax_col_t pax_332rgb_to_col(pax_buf_t const *buf, pax_col_t color);
 // Converts 5, 6, 5 bit RGB to ARGB.
-pax_col_t pax_565_rgb_to_col(pax_buf_t const *buf, pax_col_t color);
+pax_col_t pax_565rgb_to_col(pax_buf_t const *buf, pax_col_t color);
 
 // Converts 1 bit per channel ARGB to ARGB.
-pax_col_t pax_1111_argb_to_col(pax_buf_t const *buf, pax_col_t color);
+pax_col_t pax_1111argb_to_col(pax_buf_t const *buf, pax_col_t color);
 // Converts 2 bit per channel ARGB to ARGB.
-pax_col_t pax_2222_argb_to_col(pax_buf_t const *buf, pax_col_t color);
+pax_col_t pax_2222argb_to_col(pax_buf_t const *buf, pax_col_t color);
 // Converts 4 bit per channel ARGB to ARGB.
-pax_col_t pax_4444_argb_to_col(pax_buf_t const *buf, pax_col_t color);
+pax_col_t pax_4444argb_to_col(pax_buf_t const *buf, pax_col_t color);
 // Converts 8 bit per channel RGB to ARGB.
-pax_col_t pax_888_rgb_to_col(pax_buf_t const *buf, pax_col_t color);
+pax_col_t pax_888rgb_to_col(pax_buf_t const *buf, pax_col_t color);
 
-#define pax_col_to_8888_argb pax_col_conv_dummy
-#define pax_8888_argb_to_col pax_col_conv_dummy
-#define pax_col_to_888_rgb   pax_col_conv_dummy
+#define pax_col_to_8888argb pax_col_conv_dummy
+#define pax_8888argb_to_col pax_col_conv_dummy
+#define pax_col_to_888rgb   pax_col_conv_dummy
 
 
 

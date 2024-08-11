@@ -182,9 +182,9 @@ static pax_trif const dummy_tri_uvs = {.x0 = 0, .y0 = 0, .x1 = 1, .y1 = 0, .x2 =
 
 // Buffer type info table.
 static pax_buf_type_info_t const info_tab[] = {
-#define PAX_DEF_BUF_TYPE_PAL(bpp, name)         [name] = {bpp, 1, 0, 0, 0, 1},
-#define PAX_DEF_BUF_TYPE_GREY(bpp, name)        [name] = {bpp, 0, 0, 0, 0, 2},
-#define PAX_DEF_BUF_TYPE_ARGB(a, r, g, b, name) [name] = {a + r + g + b, a, r, g, b, 3},
+#define PAX_DEF_BUF_TYPE_PAL(bpp, name)              [name] = {bpp, 1, 0, 0, 0, 1},
+#define PAX_DEF_BUF_TYPE_GREY(bpp, name)             [name] = {bpp, 0, 0, 0, 0, 2},
+#define PAX_DEF_BUF_TYPE_ARGB(bpp, a, r, g, b, name) [name] = {bpp, a, r, g, b, 3},
 #include "helpers/pax_buf_type.inc"
 };
 

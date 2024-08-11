@@ -52,10 +52,10 @@ void pax_get_setters(
         case name: *range_merger = pax_range_setter_##type_bpp##bpp;
     #define PAX_DEF_BUF_TYPE_GREY(type_bpp, name)                                                                      \
         case name: *range_merger = pax_range_merger_##type_bpp##_grey;
-    #define PAX_DEF_BUF_TYPE_ARGB(a, r, g, b, name)                                                                    \
-        case name: *range_merger = pax_range_merger_##a##r##g##b##_argb;
-    #define PAX_DEF_BUF_TYPE_RGB(r, g, b, name)                                                                        \
-        case name: *range_merger = pax_range_merger_##r##g##b##_rgb;
+    #define PAX_DEF_BUF_TYPE_ARGB(bpp, a, r, g, b, name)                                                               \
+        case name: *range_merger = pax_range_merger_##a##r##g##b##argb;
+    #define PAX_DEF_BUF_TYPE_RGB(bpp, r, g, b, name)                                                                   \
+        case name: *range_merger = pax_range_merger_##r##g##b##rgb;
     #include "helpers/pax_buf_type.inc"
     }
 #else
@@ -444,68 +444,41 @@ void pax_range_setter_generic(pax_buf_t *buf, pax_col_t color, int index, int co
 #if PAX_RANGE_MERGER == 1
 #elif PAX_RANGE_MERGER == 2
 
-static inline uint32_t bpp_rev_endian(int bpp, uint32_t data) __attribute__((always_inline));
-static inline uint32_t bpp_rev_endian(int bpp, uint32_t data) {
-    switch (bpp) {
-        case 16: return pax_rev_endian_16(data);
-        case 24: return pax_rev_endian_24(data);
-        case 32: return pax_rev_endian_32(data);
-        default: __builtin_unreachable();
-    }
-}
-
-static inline pax_col_t bpp_getter(int bpp, pax_buf_t *buf, int index) __attribute__((always_inline));
-static inline pax_col_t bpp_getter(int bpp, pax_buf_t *buf, int index) {
-    switch (bpp) {
-        case 1: return pax_index_getter_1bpp(buf, index);
-        case 2: return pax_index_getter_2bpp(buf, index);
-        case 4: return pax_index_getter_4bpp(buf, index);
-        case 8: return pax_index_getter_8bpp(buf, index);
-        case 16: return pax_index_getter_16bpp(buf, index);
-        case 24: return pax_index_getter_24bpp(buf, index);
-        case 32: return pax_index_getter_32bpp(buf, index);
-        default: __builtin_unreachable();
-    }
-}
-
-static inline void bpp_setter(int bpp, pax_buf_t *buf, pax_col_t color, int index) __attribute__((always_inline));
-static inline void bpp_setter(int bpp, pax_buf_t *buf, pax_col_t color, int index) {
-    switch (bpp) {
-        case 1: pax_index_setter_1bpp(buf, color, index); break;
-        case 2: pax_index_setter_2bpp(buf, color, index); break;
-        case 4: pax_index_setter_4bpp(buf, color, index); break;
-        case 8: pax_index_setter_8bpp(buf, color, index); break;
-        case 16: pax_index_setter_16bpp(buf, color, index); break;
-        case 24: pax_index_setter_24bpp(buf, color, index); break;
-        case 32: pax_index_setter_32bpp(buf, color, index); break;
-        default: __builtin_unreachable();
-    }
-}
+    #define pax_rev_endian_1(x) (x)
+    #define pax_rev_endian_2(x) (x)
+    #define pax_rev_endian_4(x) (x)
+    #define pax_rev_endian_8(x) (x)
 
     #define GENERIC_RANGE_MERGER(type, type_bpp)                                                                       \
         PAX_PERF_CRITICAL_ATTR void pax_range_merger_##type(pax_buf_t *buf, pax_col_t color, int index, int count) {   \
             int i = 0;                                                                                                 \
             if (type_bpp > 8 && buf->reverse_endianness) {                                                             \
                 while (i < count) {                                                                                    \
-                    pax_col_t base                                                                                     \
-                        = pax_##type##_to_col(buf, bpp_rev_endian(type_bpp, bpp_getter(type_bpp, buf, i + index)));    \
+                    pax_col_t base = pax_##type##_to_col(                                                              \
+                        buf,                                                                                           \
+                        pax_rev_endian_##type_bpp(pax_index_getter_##type_bpp##bpp(buf, i + index))                    \
+                    );                                                                                                 \
                     pax_col_t merged = pax_col_merge(base, color);                                                     \
-                    bpp_setter(type_bpp, buf, bpp_rev_endian(type_bpp, pax_col_to_##type(buf, merged)), i + index);    \
+                    pax_index_setter_##type_bpp##bpp(                                                                  \
+                        buf,                                                                                           \
+                        pax_rev_endian_##type_bpp(pax_col_to_##type(buf, merged)),                                     \
+                        i + index                                                                                      \
+                    );                                                                                                 \
                     i++;                                                                                               \
                 }                                                                                                      \
             } else {                                                                                                   \
                 while (i < count) {                                                                                    \
-                    pax_col_t base   = pax_##type##_to_col(buf, bpp_getter(type_bpp, buf, i + index));                 \
+                    pax_col_t base   = pax_##type##_to_col(buf, pax_index_getter_##type_bpp##bpp(buf, i + index));     \
                     pax_col_t merged = pax_col_merge(base, color);                                                     \
-                    bpp_setter(type_bpp, buf, pax_col_to_##type(buf, merged), i + index);                              \
+                    pax_index_setter_##type_bpp##bpp(buf, pax_col_to_##type(buf, merged), i + index);                  \
                     i++;                                                                                               \
                 }                                                                                                      \
             }                                                                                                          \
         }
     #define PAX_DEF_BUF_TYPE_PAL(bpp, name)
-    #define PAX_DEF_BUF_TYPE_GREY(bpp, name)        GENERIC_RANGE_MERGER(bpp##_grey, bpp)
-    #define PAX_DEF_BUF_TYPE_ARGB(a, r, g, b, name) GENERIC_RANGE_MERGER(a##r##g##b##_argb, a + r + g + b)
-    #define PAX_DEF_BUF_TYPE_RGB(r, g, b, name)     GENERIC_RANGE_MERGER(r##g##b##_rgb, r + g + b)
+    #define PAX_DEF_BUF_TYPE_GREY(bpp, name)             GENERIC_RANGE_MERGER(bpp##_grey, bpp)
+    #define PAX_DEF_BUF_TYPE_ARGB(bpp, a, r, g, b, name) GENERIC_RANGE_MERGER(a##r##g##b##argb, bpp)
+    #define PAX_DEF_BUF_TYPE_RGB(bpp, r, g, b, name)     GENERIC_RANGE_MERGER(r##g##b##rgb, bpp)
     #include "helpers/pax_buf_type.inc"
 
 #else
@@ -678,38 +651,38 @@ void pax_get_col_conv(pax_buf_t const *buf, pax_col_conv_t *col2buf, pax_col_con
             break;
 
 
-        case (PAX_BUF_8_332_RGB):
-            *col2buf = pax_col_to_332_rgb;
-            *buf2col = pax_332_rgb_to_col;
+        case (PAX_BUF_8_332RGB):
+            *col2buf = pax_col_to_332rgb;
+            *buf2col = pax_332rgb_to_col;
             break;
 
-        case (PAX_BUF_16_565_RGB):
-            *col2buf = pax_col_to_565_rgb;
-            *buf2col = pax_565_rgb_to_col;
+        case (PAX_BUF_16_565RGB):
+            *col2buf = pax_col_to_565rgb;
+            *buf2col = pax_565rgb_to_col;
             break;
 
 
-        case (PAX_BUF_4_1111_ARGB):
-            *col2buf = pax_col_to_1111_argb;
-            *buf2col = pax_1111_argb_to_col;
+        case (PAX_BUF_4_1111ARGB):
+            *col2buf = pax_col_to_1111argb;
+            *buf2col = pax_1111argb_to_col;
             break;
 
-        case (PAX_BUF_8_2222_ARGB):
-            *col2buf = pax_col_to_2222_argb;
-            *buf2col = pax_2222_argb_to_col;
+        case (PAX_BUF_8_2222ARGB):
+            *col2buf = pax_col_to_2222argb;
+            *buf2col = pax_2222argb_to_col;
             break;
 
-        case (PAX_BUF_16_4444_ARGB):
-            *col2buf = pax_col_to_4444_argb;
-            *buf2col = pax_4444_argb_to_col;
+        case (PAX_BUF_16_4444ARGB):
+            *col2buf = pax_col_to_4444argb;
+            *buf2col = pax_4444argb_to_col;
             break;
 
-        case (PAX_BUF_24_888_RGB):
+        case (PAX_BUF_24_888RGB):
             *col2buf = pax_col_conv_dummy;
-            *buf2col = pax_888_rgb_to_col;
+            *buf2col = pax_888rgb_to_col;
             break;
 
-        case (PAX_BUF_32_8888_ARGB):
+        case (PAX_BUF_32_8888ARGB):
             *col2buf = pax_col_conv_dummy;
             *buf2col = pax_col_conv_dummy;
             break;
@@ -776,7 +749,7 @@ pax_col_t pax_col_to_8_grey(pax_buf_t const *buf, pax_col_t color) {
 
 
 // Converts ARGB to 3, 3, 2 bit RGB.
-pax_col_t pax_col_to_332_rgb(pax_buf_t const *buf, pax_col_t color) {
+pax_col_t pax_col_to_332rgb(pax_buf_t const *buf, pax_col_t color) {
     // 8BPP 332-RGB
     // From: Aaaa aaaa Rrrr rrrr Gggg gggg Bbbb bbbb
     // To:                                 RrrG ggBb
@@ -785,7 +758,7 @@ pax_col_t pax_col_to_332_rgb(pax_buf_t const *buf, pax_col_t color) {
 }
 
 // Converts ARGB to 5, 6, 5 bit RGB.
-pax_col_t pax_col_to_565_rgb(pax_buf_t const *buf, pax_col_t color) {
+pax_col_t pax_col_to_565rgb(pax_buf_t const *buf, pax_col_t color) {
     // 16BPP 565-RGB
     // From: Aaaa aaaa Rrrr rrrr Gggg gggg Bbbb bbbb
     // To:                       Rrrr rGgg gggB bbbb
@@ -795,7 +768,7 @@ pax_col_t pax_col_to_565_rgb(pax_buf_t const *buf, pax_col_t color) {
 
 
 // Converts ARGB to 1 bit per channel ARGB.
-pax_col_t pax_col_to_1111_argb(pax_buf_t const *buf, pax_col_t color) {
+pax_col_t pax_col_to_1111argb(pax_buf_t const *buf, pax_col_t color) {
     // 4BPP 1111-ARGB
     // From: Aaaa aaaa Rrrr rrrr Gggg gggg Bbbb bbbb
     // To:                                      ARGB
@@ -804,7 +777,7 @@ pax_col_t pax_col_to_1111_argb(pax_buf_t const *buf, pax_col_t color) {
 }
 
 // Converts ARGB to 2 bit per channel ARGB.
-pax_col_t pax_col_to_2222_argb(pax_buf_t const *buf, pax_col_t color) {
+pax_col_t pax_col_to_2222argb(pax_buf_t const *buf, pax_col_t color) {
     // 8BPP 2222-ARGB
     // From: Aaaa aaaa Rrrr rrrr Gggg gggg Bbbb bbbb
     // To:                                 AaRr GgBb
@@ -813,7 +786,7 @@ pax_col_t pax_col_to_2222_argb(pax_buf_t const *buf, pax_col_t color) {
 }
 
 // Converts ARGB to 4 bit per channel ARGB.
-pax_col_t pax_col_to_4444_argb(pax_buf_t const *buf, pax_col_t color) {
+pax_col_t pax_col_to_4444argb(pax_buf_t const *buf, pax_col_t color) {
     // 16BPP 4444-ARGB
     // From: Aaaa aaaa Rrrr rrrr Gggg gggg Bbbb bbbb
     // To:                       Aaaa Rrrr Gggg Bbbb
@@ -857,7 +830,7 @@ pax_col_t pax_8_grey_to_col(pax_buf_t const *buf, pax_col_t color) {
 
 
 // Converts 3, 3, 2 bit RGB to ARGB.
-pax_col_t pax_332_rgb_to_col(pax_buf_t const *buf, pax_col_t value) {
+pax_col_t pax_332rgb_to_col(pax_buf_t const *buf, pax_col_t value) {
     // 8BPP 332-RGB
     // From:                               RrrG ggBb
     // To:   .... .... Rrr. .... Ggg. .... .... ....
@@ -872,7 +845,7 @@ pax_col_t pax_332_rgb_to_col(pax_buf_t const *buf, pax_col_t value) {
 }
 
 // Converts 5, 6, 5 bit RGB to ARGB.
-pax_col_t pax_565_rgb_to_col(pax_buf_t const *buf, pax_col_t value) {
+pax_col_t pax_565rgb_to_col(pax_buf_t const *buf, pax_col_t value) {
     // 16BPP 565-RGB
     // From:                     Rrrr rGgg gggB bbbb
     // To:   .... .... Rrrr r... Gggg gg.. Bbbb b...
@@ -887,7 +860,7 @@ pax_col_t pax_565_rgb_to_col(pax_buf_t const *buf, pax_col_t value) {
 
 
 // Converts 1 bit per channel ARGB to ARGB.
-pax_col_t pax_1111_argb_to_col(pax_buf_t const *buf, pax_col_t value) {
+pax_col_t pax_1111argb_to_col(pax_buf_t const *buf, pax_col_t value) {
     // 4BPP 1111-ARGB
     // From:                                    ARGB
     // To:   Aaaa aaaa Rrrr rrrr Gggg gggg Bbbb bbbb
@@ -900,7 +873,7 @@ pax_col_t pax_1111_argb_to_col(pax_buf_t const *buf, pax_col_t value) {
 }
 
 // Converts 2 bit per channel ARGB to ARGB.
-pax_col_t pax_2222_argb_to_col(pax_buf_t const *buf, pax_col_t value) {
+pax_col_t pax_2222argb_to_col(pax_buf_t const *buf, pax_col_t value) {
     // 8BPP 2222-ARGB
     // From:                               AaRr GgBb
     // To:   Aaaa aaaa Rrrr rrrr Gggg gggg Bbbb bbbb
@@ -912,7 +885,7 @@ pax_col_t pax_2222_argb_to_col(pax_buf_t const *buf, pax_col_t value) {
 }
 
 // Converts 4 bit per channel ARGB to ARGB.
-pax_col_t pax_4444_argb_to_col(pax_buf_t const *buf, pax_col_t value) {
+pax_col_t pax_4444argb_to_col(pax_buf_t const *buf, pax_col_t value) {
     // 16BPP 4444-ARGB
     // From:                     Aaaa Rrrr Gggg Bbbb
     // To:   Aaaa .... Rrrr .... Gggg .... Bbbb ....
@@ -925,6 +898,6 @@ pax_col_t pax_4444_argb_to_col(pax_buf_t const *buf, pax_col_t value) {
 }
 
 // Converts 8 bit per channel RGB to ARGB.
-pax_col_t pax_888_rgb_to_col(pax_buf_t const *buf, pax_col_t color) {
+pax_col_t pax_888rgb_to_col(pax_buf_t const *buf, pax_col_t color) {
     return color | 0xff000000;
 }
