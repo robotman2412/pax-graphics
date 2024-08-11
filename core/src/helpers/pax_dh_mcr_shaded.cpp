@@ -18,7 +18,7 @@
 #define PDHG_STATIC
 #define PDHG_IGNORE_UV
 #define PDHG_MCR
-#include "pax_dh_generic_tzoid.inc"
+#include "helpers/pax_dh_generic_tzoid.inc"
 
 // Multi-core method for shaded trapezoids.
 // Used internally for triangles and quads.
@@ -26,7 +26,7 @@
 #define PDHG_SHADED
 #define PDHG_STATIC
 #define PDHG_MCR
-#include "pax_dh_generic_tzoid.inc"
+#include "helpers/pax_dh_generic_tzoid.inc"
 
 
 
@@ -39,7 +39,7 @@
 #define PDHG_IGNORE_UV
 #define PDHG_MCR
 #define PDHG_TZOID_NAME paxmcr_tzoid_shaded_nouv
-#include "pax_dh_generic_tri.inc"
+#include "helpers/pax_dh_generic_tri.inc"
 
 // Multi-core method for shaded triangles.
 #define PDHG_NAME paxmcr_tri_shaded_uv
@@ -47,7 +47,7 @@
 #define PDHG_STATIC
 #define PDHG_MCR
 #define PDHG_TZOID_NAME paxmcr_tzoid_shaded_uv
-#include "pax_dh_generic_tri.inc"
+#include "helpers/pax_dh_generic_tri.inc"
 
 // Multi-core method for shaded triangles.
 // If odd_scanline is true, the odd (counted from 0) lines are drawn, otherwise the even lines are drawn.
@@ -83,7 +83,7 @@ void paxmcr_tri_shaded(
 #define PDHG_MCR
 #define PDHG_STATIC
 #define PDHG_TZOID_NAME paxmcr_tzoid_shaded_nouv
-#include "pax_dh_generic_quad.inc"
+#include "helpers/pax_dh_generic_quad.inc"
 
 // Multi-core methods for shaded quads.
 // If odd_scanline is true, the odd (counted from 0) lines are drawn, otherwise the even lines are drawn.
@@ -92,7 +92,7 @@ void paxmcr_tri_shaded(
 #define PDHG_MCR
 #define PDHG_STATIC
 #define PDHG_TZOID_NAME paxmcr_tzoid_shaded_uv
-#include "pax_dh_generic_quad.inc"
+#include "helpers/pax_dh_generic_quad.inc"
 
 // Multi-core method for shaded triangles.
 // If odd_scanline is true, the odd (counted from 0) lines are drawn, otherwise the even lines are drawn.
@@ -222,7 +222,7 @@ void paxmcr_overlay_buffer(
 #define PDHG_IGNORE_UV
 #define PDHG_MCR
 #define PDHG_STATIC
-#include "pax_dh_generic_rect.inc"
+#include "helpers/pax_dh_generic_rect.inc"
 
 // Multi-core optimisation which makes more assumptions about UVs.
 #define PDHG_NAME paxmcr_rect_shaded_resuv
@@ -230,14 +230,14 @@ void paxmcr_overlay_buffer(
 #define PDHG_RESTRICT_UV
 #define PDHG_MCR
 #define PDHG_STATIC
-#include "pax_dh_generic_rect.inc"
+#include "helpers/pax_dh_generic_rect.inc"
 
 // Multi-core method for shaded rects.
 #define PDHG_NAME paxmcr_rect_shaded_uv
 #define PDHG_SHADED
 #define PDHG_MCR
 #define PDHG_STATIC
-#include "pax_dh_generic_rect.inc"
+#include "helpers/pax_dh_generic_rect.inc"
 
 // Multi-core method for shaded rects.
 // Defers to optimized methods if possible.

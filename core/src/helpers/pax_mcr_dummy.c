@@ -1,7 +1,7 @@
 
 // SPDX-License-Identifier: MIT
 
-#include "../pax_internal.h"
+#include "pax_internal.h"
 
 #if !PAX_COMPILE_MCR
 

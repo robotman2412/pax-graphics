@@ -9,21 +9,21 @@
 // Used internally for triangles and quads.
 #define PDHG_NAME pax_tzoid_unshaded
 #define PDHG_STATIC
-#include "pax_dh_generic_tzoid.inc"
+#include "helpers/pax_dh_generic_tzoid.inc"
 
 // Internal method for unshaded triangles.
 #define PDHG_NAME       pax_tri_unshaded
 #define PDHG_TZOID_NAME pax_tzoid_unshaded
-#include "pax_dh_generic_tri.inc"
+#include "helpers/pax_dh_generic_tri.inc"
 
 // Internal method for rectangle drawing.
 #define PDHG_NAME pax_rect_unshaded
-#include "pax_dh_generic_rect.inc"
+#include "helpers/pax_dh_generic_rect.inc"
 
 // Internal methods for shaded quads.
 #define PDHG_NAME       pax_quad_unshaded
 #define PDHG_TZOID_NAME pax_tzoid_unshaded
-#include "pax_dh_generic_quad.inc"
+#include "helpers/pax_dh_generic_quad.inc"
 
 // Internal method for line drawing.
 void pax_line_unshaded(pax_buf_t *buf, pax_col_t color, float x0, float y0, float x1, float y1) {

@@ -17,14 +17,14 @@
 #define PDHG_SHADED
 #define PDHG_STATIC
 #define PDHG_IGNORE_UV
-#include "pax_dh_generic_tzoid.inc"
+#include "helpers/pax_dh_generic_tzoid.inc"
 
 // Multi-core method for shaded trapezoids.
 // Used internally for triangles and quads.
 #define PDHG_NAME pax_tzoid_shaded_uv
 #define PDHG_SHADED
 #define PDHG_STATIC
-#include "pax_dh_generic_tzoid.inc"
+#include "helpers/pax_dh_generic_tzoid.inc"
 
 
 
@@ -37,14 +37,14 @@
 #define PDHG_STATIC
 #define PDHG_IGNORE_UV
 #define PDHG_TZOID_NAME pax_tzoid_shaded_nouv
-#include "pax_dh_generic_tri.inc"
+#include "helpers/pax_dh_generic_tri.inc"
 
 // Internal method for shaded triangles.
 #define PDHG_NAME pax_tri_shaded_uv
 #define PDHG_SHADED
 #define PDHG_STATIC
 #define PDHG_TZOID_NAME pax_tzoid_shaded_uv
-#include "pax_dh_generic_tri.inc"
+#include "helpers/pax_dh_generic_tri.inc"
 
 // Internal method for shaded triangles.
 void pax_tri_shaded(
@@ -76,14 +76,14 @@ void pax_tri_shaded(
 #define PDHG_IGNORE_UV
 #define PDHG_STATIC
 #define PDHG_TZOID_NAME pax_tzoid_shaded_nouv
-#include "pax_dh_generic_quad.inc"
+#include "helpers/pax_dh_generic_quad.inc"
 
 // Internal method for shaded quads.
 #define PDHG_NAME pax_quad_shaded_uv
 #define PDHG_SHADED
 #define PDHG_STATIC
 #define PDHG_TZOID_NAME pax_tzoid_shaded_uv
-#include "pax_dh_generic_quad.inc"
+#include "helpers/pax_dh_generic_quad.inc"
 
 // Internal method for shaded quads.
 void pax_quad_shaded(
@@ -202,20 +202,20 @@ void pax_overlay_buffer(pax_buf_t *base, pax_buf_t *top, int x, int y, int width
 #define PDHG_IGNORE_UV
 #define PDHG_STATIC
 #define PDHG_NAME pax_rect_shaded_nouv
-#include "pax_dh_generic_rect.inc"
+#include "helpers/pax_dh_generic_rect.inc"
 
 // Optimisation which makes more assumptions about UVs.
 #define PDHG_SHADED
 #define PDHG_RESTRICT_UV
 #define PDHG_STATIC
 #define PDHG_NAME pax_rect_shaded_resuv
-#include "pax_dh_generic_rect.inc"
+#include "helpers/pax_dh_generic_rect.inc"
 
 // Internal method for shaded rects.
 #define PDHG_SHADED
 #define PDHG_STATIC
 #define PDHG_NAME pax_rect_shaded_uv
-#include "pax_dh_generic_rect.inc"
+#include "helpers/pax_dh_generic_rect.inc"
 
 // Internal method for shaded rects.
 void pax_rect_shaded(
