@@ -78,8 +78,10 @@ static size_t pgui_text_ctrl_nav(char const *cstr, size_t cstr_len, size_t curso
         return cursor;
     }
 
-    cursor = next.cursor;
-    next   = pgui_text_nav(cstr, cstr_len, cursor, go_right);
+    if (merge_space) {
+        cursor = next.cursor;
+        next   = pgui_text_nav(cstr, cstr_len, cursor, go_right);
+    }
 
     if (merge_space && is_alphanumeric(next.codepoint)) {
         // Skipping over text.
