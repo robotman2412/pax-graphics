@@ -1,6 +1,6 @@
-# PAX graphics documentation: C API
+# PAX graphics documentation: Core API
 
-The PAX graphics stack is being developed for the [MCH2022 badge](https://bodge.team/docs/badges/mch2022/).
+The PAX graphics stack is the official graphics library for [Badge.team badges since MCH2022](../supported-platforms.md).
 It's goal is to allow anyone to, in C, use a powerful list of drawing features with good optimisation.
 
 This library is the successor of the revised graphics API for [the old badge.team firmware](https://github.com/badgeteam/ESP32-platform-firmware).
@@ -36,12 +36,12 @@ In each file you'd like to use PAX graphics in, you'll need to include the `pax_
 
 The [`pax_buf_init`](#api-reference-setup) function is used to create a new graphics environment.
 
-Here, we use it with the type PAX_BUF_16_565RGB, which is appropriate for the screen used by the MCH2022 badge.
+Here, we use it with the type PAX_BUF_16_565RGB and reversed endianness, which is appropriate for the screen used by the MCH2022 badge.
 ```c
 void my_graphics_function() {
     // Setup.
-    pax_buf_t buffer;
-    pax_buf_init(&buffer, NULL, 320, 240, PAX_BUF_16_565RGB);
+    pax_buf_t *gfx = pax_buf_init(NULL, 320, 240, PAX_BUF_16_565RGB);
+    pax_buf_reversed(gfx, true);
 }
 ```
 This tells PAX to create a framebuffer for the screen, which is 320 by 240 pixels in size.
@@ -53,11 +53,11 @@ The [`pax_background`](#api-reference-basic-drawing) method fills the background
 ```c
 void my_graphics_function() {
     // Setup.
-    pax_buf_t buffer;
-    pax_buf_init(&buffer, NULL, 320, 240, PAX_BUF_16_565RGB);
+    pax_buf_t *gfx = pax_buf_init(NULL, 320, 240, PAX_BUF_16_565RGB);
+    pax_buf_reversed(gfx, true);
     
     // Green background.
-    pax_background(&buffer, pax_col_rgb(0, 255, 0));
+    pax_background(gfx, pax_col_rgb(0, 255, 0));
 }
 ```
 Here's what it looks like if you write it to the screen:
@@ -68,17 +68,17 @@ with a midpoint co-ordinates and the radius:
 ```c
 void my_graphics_function() {
     // Setup.
-    pax_buf_t buffer;
-    pax_buf_init(&buffer, NULL, 320, 240, PAX_BUF_16_565RGB);
+    pax_buf_t *gfx = pax_buf_init(NULL, 320, 240, PAX_BUF_16_565RGB);
+    pax_buf_reversed(gfx, true);
     
     // Green background.
-    pax_background(&buffer, pax_col_rgb(0, 255, 0));
+    pax_background(gfx, pax_col_rgb(0, 255, 0));
     
     // Red circle.
-    float midpoint_x = buffer.width  / 2.0; // Middle of the screen horizontally.
-    float midpoint_y = buffer.height / 2.0; // Middle of the screen vertically.
-    float radius     = 50;                  // Nice, big circle.
-    pax_simple_circle(&buffer, pax_col_rgb(255, 0, 0), midpoint_x, midpoint_y, radius);
+    float midpoint_x = pax_buf_get_width(gfx) / 2.0;  // Middle of the screen horizontally.
+    float midpoint_y = pax_buf_get_height(gfx) / 2.0; // Middle of the screen vertically.
+    float radius     = 50;                            // Nice, big circle.
+    pax_simple_circle(gfx, pax_col_rgb(255, 0, 0), midpoint_x, midpoint_y, radius);
 }
 ```
 Here's what it looks like if you write it to the screen:
@@ -92,24 +92,24 @@ It accepts a font, a point size, a top left corner position and the text to draw
 ```c
 void my_graphics_function() {
     // Setup.
-    pax_buf_t buffer;
-    pax_buf_init(&buffer, NULL, 320, 240, PAX_BUF_16_565RGB);
+    pax_buf_t *gfx = pax_buf_init(NULL, 320, 240, PAX_BUF_16_565RGB);
+    pax_buf_reversed(gfx, true);
     
     // Green background.
-    pax_background(&buffer, pax_col_rgb(0, 255, 0));
+    pax_background(gfx, pax_col_rgb(0, 255, 0));
     
     // Red circle.
-    float midpoint_x = buffer.width  / 2.0; // Middle of the screen horizontally.
-    float midpoint_y = buffer.height / 2.0; // Middle of the screen vertically.
-    float radius     = 50;                  // Nice, big circle.
-    pax_simple_circle(&buffer, pax_col_rgb(255, 0, 0), midpoint_x, midpoint_y, radius);
+    float midpoint_x = pax_buf_get_width(gfx) / 2.0;  // Middle of the screen horizontally.
+    float midpoint_y = pax_buf_get_height(gfx) / 2.0; // Middle of the screen vertically.
+    float radius     = 50;                            // Nice, big circle.
+    pax_simple_circle(gfx, pax_col_rgb(255, 0, 0), midpoint_x, midpoint_y, radius);
     
     // White text.
     float text_x     = 0;                   // Top left corner of the screen.
     float text_y     = 0;                   // Top left corner of the screen.
     char *my_text    = "Hello, World!";     // You can pick any message you'd like.
     float text_size  = 18;                  // Twice the normal size for "sky".
-    pax_draw_text(&buffer, pax_col_rgb(255, 255, 255), pax_font_sky_mono, text_size, text_x, text_y, my_text);
+    pax_draw_text(gfx, pax_col_rgb(255, 255, 255), pax_font_sky_mono, text_size, text_x, text_y, my_text);
 }
 ```
 Here's what it looks like if you write it to the screen:
@@ -121,27 +121,27 @@ This differs per screen type, but for the MCH2022 badge's screen you use the
 ```c
 void my_graphics_function() {
     // Setup.
-    pax_buf_t buffer;
-    pax_buf_init(&buffer, NULL, 320, 240, PAX_BUF_16_565RGB);
+    pax_buf_t *gfx = pax_buf_init(NULL, 320, 240, PAX_BUF_16_565RGB);
     
     // Green background.
-    pax_background(&buffer, pax_col_rgb(0, 255, 0));
+    pax_background(gfx, pax_col_rgb(0, 255, 0));
+    pax_buf_reversed(gfx, true);
     
     // Red circle.
-    float midpoint_x = buffer.width  / 2.0; // Middle of the screen horizontally.
-    float midpoint_y = buffer.height / 2.0; // Middle of the screen vertically.
-    float radius     = 50;                  // Nice, big circle.
-    pax_simple_circle(&buffer, pax_col_rgb(255, 0, 0), midpoint_x, midpoint_y, radius);
+    float midpoint_x = pax_buf_get_width(gfx) / 2.0;  // Middle of the screen horizontally.
+    float midpoint_y = pax_buf_get_height(gfx) / 2.0; // Middle of the screen vertically.
+    float radius     = 50;                            // Nice, big circle.
+    pax_simple_circle(gfx, pax_col_rgb(255, 0, 0), midpoint_x, midpoint_y, radius);
     
     // White text.
     float text_x     = 0;                   // Top left corner of the screen.
     float text_y     = 0;                   // Top left corner of the screen.
     char *my_text    = "Hello, World!";     // You can pick any message you'd like.
-    float text_size  = 18;                  // Twice the normal size for "7x9".
-    pax_draw_text(&buffer, pax_col_rgb(255, 255, 255), PAX_FONT_DEFAULT, text_size, text_x, text_y, my_text);
+    float text_size  = 18;                  // Twice the normal size for "sky".
+    pax_draw_text(gfx, pax_col_rgb(255, 255, 255), pax_font_sky_mono, text_size, text_x, text_y, my_text);
     
     // Put it on the screen.
-    if (ili9341_write(&display, buffer.buf)) {
+    if (ili9341_write(&display, pax_buf_get_pixels(gfx))) {
         ESP_LOGE("my_tag", "Display write failed.");
     } else {
         ESP_LOGI("my_tag", "Display write success.");
@@ -157,34 +157,34 @@ If you don't want to use the buffer you made during setup anymore, you can clean
 ```c
 void my_graphics_function() {
     // Setup.
-    pax_buf_t buffer;
-    pax_buf_init(&buffer, NULL, 320, 240, PAX_BUF_16_565RGB);
+    pax_buf_t *gfx = pax_buf_init(NULL, 320, 240, PAX_BUF_16_565RGB);
     
     // Green background.
-    pax_background(&buffer, pax_col_rgb(0, 255, 0));
+    pax_background(gfx, pax_col_rgb(0, 255, 0));
+    pax_buf_reversed(gfx, true);
     
     // Red circle.
-    float midpoint_x = buffer.width  / 2.0; // Middle of the screen horizontally.
-    float midpoint_y = buffer.height / 2.0; // Middle of the screen vertically.
-    float radius     = 50;                  // Nice, big circle.
-    pax_simple_circle(&buffer, pax_col_rgb(255, 0, 0), midpoint_x, midpoint_y, radius);
+    float midpoint_x = pax_buf_get_width(gfx) / 2.0;  // Middle of the screen horizontally.
+    float midpoint_y = pax_buf_get_height(gfx) / 2.0; // Middle of the screen vertically.
+    float radius     = 50;                            // Nice, big circle.
+    pax_simple_circle(gfx, pax_col_rgb(255, 0, 0), midpoint_x, midpoint_y, radius);
     
     // White text.
     float text_x     = 0;                   // Top left corner of the screen.
     float text_y     = 0;                   // Top left corner of the screen.
     char *my_text    = "Hello, World!";     // You can pick any message you'd like.
-    float text_size  = 18;                  // Twice the normal size for "7x9".
-    pax_draw_text(&buffer, pax_col_rgb(255, 255, 255), PAX_FONT_DEFAULT, text_size, text_x, text_y, my_text);
+    float text_size  = 18;                  // Twice the normal size for "sky".
+    pax_draw_text(gfx, pax_col_rgb(255, 255, 255), pax_font_sky_mono, text_size, text_x, text_y, my_text);
     
     // Put it on the screen.
-    if (ili9341_write(&display, buffer.buf)) {
+    if (ili9341_write(&display, pax_buf_get_pixels(gfx))) {
         ESP_LOGE("my_tag", "Display write failed.");
     } else {
         ESP_LOGI("my_tag", "Display write success.");
     }
     
     // Cleanup.
-    pax_buf_destroy(&buffer);
+    pax_buf_destroy(gfx);
 }
 ```
 
@@ -232,10 +232,10 @@ A reference for how to use certain features.
 ## API reference: Setup
 
 For setting up a buffer, use [`pax_buf_init`](setup.md#buffer-creation):
-For the MCH2022 badge, the size is 320x240 and the format is [`PAX_BUF_16_565RGB`](setup.md#buffer-formats).
+For the MCH2022 badge, the size is 320x240, the format is [`PAX_BUF_16_565RGB`](setup.md#buffer-formats) and the endianness is reversed.
 ```c
-pax_buf_t buffer;
-pax_buf_init(&buffer, memory, width, height, format);
+// Create a graphics context:
+pax_buf_t *gfx = pax_buf_init(memory, width, height, format);
 ```
 If you want, you can use a different type for intermediary buffers (e.g. to store image textures):
 - [`PAX_BUF_32_8888ARGB`](setup.md#buffer-formats)
@@ -246,10 +246,18 @@ If you want, you can use a different type for intermediary buffers (e.g. to stor
 
 PAX converts colors automatically for you.
 
+Since the MCH2022 badge uses a display with an endianness opposite to that of its CPU,
+you'll want to enable reversed endianness mode to get the correct colors. On other platforms, whether you need this depends on your own CPU and display.
+```c
+// Enable reversed endianness mode, which is disabled by default:
+pax_buf_reversed(gfx, true);
+```
+
 When you're done and you won't use a given buffer anymore, you can use [`pax_buf_destroy`](setup.md#buffer-creation):
 PAX will automatically free any memory it used for the buffer.
 ```c
-pax_buf_destroy(&buffer);
+// Clean up everything in and including `gfx`:
+pax_buf_destroy(gfx);
 ```
 
 ## API reference: Colors
@@ -340,7 +348,7 @@ In PAX, you can use different fonts for text (even though there's only one font 
 You draw text by using [`pax_draw_text`](text.md#drawing-text):
 ```c
 // Draw some text.
-pax_draw_text(&buffer, color, font, font_size, x, y, text);
+pax_draw_text(gfx, color, font, font_size, x, y, text);
 ```
 Font is usually [`PAX_FONT_DEFAULT`](text.md#fonts) or another [`PAX_FONT_`](text.md#fonts).<br>
 The `font_size` is the line height: 9 by default for the font "7x9".
@@ -373,13 +381,13 @@ Clipping redefines the rectangle in which you can draw.
 To apply clipping, use [`pax_clip`](drawing.md#clipping):
 ```c
 // Apply clipping. Automatically fixes negative width and/or height.
-pax_clip(&buffer, x, y, width, height);
+pax_clip(gfx, x, y, width, height);
 ```
 
 To remove clipping (AKA be able to draw on the entire buffer again), use [`pax_noclip`](drawing.md#clipping):
 ```c
 // Remove clipping.
-pax_noclip(&buffer);
+pax_noclip(gfx);
 ```
 
 ## API reference: Matrix transformations
@@ -403,7 +411,7 @@ To do this, you'll need to push the matrix stack.
 Now, to push the stack, use [`pax_push_2d`](matrices.md#matrix-stack):
 ```c
 // Push the matrix stack. Duplicates the top matrix.
-pax_push_2d(&buffer);
+pax_push_2d(gfx);
 ```
 ![After push](images/matrices_push.png "After push")
 
@@ -416,7 +424,7 @@ You use [`pax_reset_2d`](matrices.md#matrix-stack) with the argument `PAX_RESET_
 ```c
 // Reset the top matrix.
 // A matrix that represents no transformation is also called the 'identity' matrix.
-pax_push_2d(&buffer, PAX_RESET_TOP);
+pax_push_2d(gfx, PAX_RESET_TOP);
 ```
 ![After reset](images/matrices_reset.png "After reset")
 
@@ -425,7 +433,7 @@ For this, you need to pop the stack.<br>
 Use [`pax_pop_2d`](matrices.md#matrix-stack):
 ```c
 // Pop the matrix stack.
-pax_pop_2d(&buffer);
+pax_pop_2d(gfx);
 ```
 ![Back to normal](images/matrices_pop.png "Back to normal")
 
@@ -435,13 +443,13 @@ Now that you know what the stack is,
 you can use [`pax_apply_2d`](matrices.md#applying-matrices) to perform a transformation:
 ```c
 // You can do as many in a row as you'd like.
-pax_apply_2d(&buffer, my_perfect_transformation);
+pax_apply_2d(gfx, my_perfect_transformation);
 ```
 
 Let's say you'd like to change the scale of the vector graphics you made.
 For this, you use [`matrix_2d_scale`](matrices.md#types-of-matrices):
 ```c
-pax_apply_2d(&buffer, matrix_2d_scale(x_scale, y_scale));
+pax_apply_2d(gfx, matrix_2d_scale(x_scale, y_scale));
 // Draw your things that need to be scaled here.
 ```
 
@@ -449,13 +457,13 @@ But now, you decide you want it placed elsewhere.
 To move around things, use [`matrix_2d_translate`](matrices.md#types-of-matrices):
 ```c
 // By scaling, you are multiplying the size by the given factors.
-pax_apply_2d(&buffer, matrix_2d_translate(x_offset, y_offset));
+pax_apply_2d(gfx, matrix_2d_translate(x_offset, y_offset));
 ```
 
 There's also the fancy rotation matrix [`matrix_2d_rotate`](matrices.md#types-of-matrices):
 ```c
 // Angle is in radians, positive angles rotate everything counterclockwise.
-pax_apply_2d(&buffer, matrix_2d_rotate(angle));
+pax_apply_2d(gfx, matrix_2d_rotate(angle));
 ```
 
 ## API reference: Shaders
@@ -465,7 +473,7 @@ Internally, they are used for boring things like drawing text, but you can truly
 
 The way most users will see shaders is with [`PAX_SHADER_TEXTURE`](shaders.md#built-in-shaders):
 ```c
-pax_shader_t my_texture_shader = PAX_SHADER_TEXTURE(&my_texture);
+pax_shader_t my_texture_shader = PAX_SHADER_TEXTURE(my_texture);
 ```
 
 You can also make your own shaders, for example one that shows some nice rainbows:

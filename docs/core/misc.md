@@ -31,14 +31,14 @@ Creating a buffer with reversed endianness:
 /* Example code by Julian Scheffers: Public domain */
 
 // Your buffer object.
-extern pax_buf_t buf;
+extern pax_buf_t *buf;
 
 // This is analogous to the initialisation for the MCH2022 badge.
 void set_up_my_buf() {
 	// Set up a 320x240 buffer with the display's format.
-	pax_buf_init(&buf, NULL, 320, 240, PAX_BUF_565RGB);
+	buf = pax_buf_init(NULL, 320, 240, PAX_BUF_565RGB);
 	// Enable reversed endianness to comply with the display.
-	pax_buf_reversed(&buf, true);
+	pax_buf_reversed(buf, true);
 }
 ```
 
@@ -145,7 +145,7 @@ void disp_sync(pax_buf_t *buf, ILI9341 *display) {
 		// Display to update.
 		display,
 		// Source framebuffer.
-		buf->buf,
+		pax_buf_get_pixels(buf),
 		// Area to update.
 		dirty.x, dirty.y,
 		dirty.w, dirty.h
@@ -237,17 +237,17 @@ Setting up a buffer with orientation:
 /* Example code by Julian Scheffers: Public domain */
 
 // Your buffer object.
-extern pax_buf_t buf;
+extern pax_buf_t *buf;
 
 // An example of how you might initialise the buffer
 // if the screen has been rotated.
 void set_up_my_buf() {
 	// Same thing as other example, set up framebuffer.
-	pax_buf_init(&buf, NULL, 320, 240, PAX_BUF_565RGB);
-	pax_buf_reversed(&buf, true);
+	buf = pax_buf_init(NULL, 320, 240, PAX_BUF_565RGB);
+	pax_buf_reversed(buf, true);
 	
 	// Apply a quarter-turn counter-clockwise rotation.
-	pax_buf_set_orientation(&buf, PAX_O_ROT_CCW);
+	pax_buf_set_orientation(buf, PAX_O_ROT_CCW);
 }
 ```
 

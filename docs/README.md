@@ -1,6 +1,6 @@
 # PAX graphics documentation
 
-The PAX graphics stack is being developed for the [MCH2022 badge](https://bodge.team/docs/badges/mch2022/).
+The PAX graphics stack is the official graphics library for [Badge.team badges since MCH2022](../supported-platforms.md).
 It's goal is to allow anyone to, in C, use a powerful list of drawing features with good optimisation.
 
 This library is the successor of the revised graphics API for [the old badge.team firmware](https://github.com/badgeteam/ESP32-platform-firmware).
@@ -8,7 +8,7 @@ This library is the successor of the revised graphics API for [the old badge.tea
 For supported platforms, [see this link](supported-platforms.md).
 
 ## Overview
-- [For C developers](#for-c-developers)
+- [The core of PAX graphics](#for-c-developers)
 - [Build system](#build-system)
     - [For ESP32](#build-system-for-esp32)
     - [For Pi Pico](#build-system-for-pi-pico)
@@ -16,25 +16,25 @@ For supported platforms, [see this link](supported-platforms.md).
 
 
 
-# For C developers
+# The core of PAX graphics
 
-PAX is built on [a C API](c/README.md) which exposes 2D primitives and some simple compound shapes. It features matrix transformations, a clipping rectangle, highly accurate rendering and more.
+PAX exposes [a simple C API](core/README.md) which exposes 2D primitives and some simple compound shapes. It features matrix transformations, a clipping rectangle, highly accurate rendering and more.
 
 
 ## Overview
 
-From the [C API overview](c/README.md):
-- [Getting started](c/README.md#getting-started)
-- [API overview](c/README.md#api-overview)
-- [API reference](c/README.md#api-reference)
-    - [Setup](c/README.md#api-reference-setup)
-    - [Basic drawing](c/README.md#api-reference-basic-drawing)
-    - [Colors](c/README.md#api-reference-colors)
-    - [Text](c/README.md#api-reference-text)
-- [Advanced API reference](c/README.md#api-reference-advanced-features)
-    - [Clipping](c/README.md#api-reference-clipping)
-    - [Matrix transformations](c/README.md#api-reference-matrix-transformations)
-    - [Shaders](c/README.md#api-reference-shaders)
+From the [Core API overview](core/README.md):
+- [Getting started](core/README.md#getting-started)
+- [API overview](core/README.md#api-overview)
+- [API reference](core/README.md#api-reference)
+    - [Setup](core/README.md#api-reference-setup)
+    - [Basic drawing](core/README.md#api-reference-basic-drawing)
+    - [Colors](core/README.md#api-reference-colors)
+    - [Text](core/README.md#api-reference-text)
+- [Advanced API reference](core/README.md#api-reference-advanced-features)
+    - [Clipping](core/README.md#api-reference-clipping)
+    - [Matrix transformations](core/README.md#api-reference-matrix-transformations)
+    - [Shaders](core/README.md#api-reference-shaders)
 
 
 
@@ -42,11 +42,11 @@ From the [C API overview](c/README.md):
 
 In order to support multiple targets and platforms, the build system for PAX has grown somewhat complex.
 
-## Build system: for ESP32
+## Build system: for ESP-IDF
 
 Similarly, PAX can be used directly as an ESP-IDF component when placed in your components folder.
 
-ESP32 is an officially supported platform.
+ESP-IDF is an officially supported platform.
 For other supported platforms, [see this link](supported-platforms.md).
 
 ## Build system: for Pi Pico
@@ -69,11 +69,9 @@ Add to your `CMakeLists.txt`, after `target_include_directories`:
 add_subdirectory(pax-graphics)
 
 # This tells CMake we would like to use PAX as a library.
-target_link_libraries(your_project_name ${CMAKE_CURRENT_LIST_DIR}/pax-graphics/build/pax_graphics)
+target_link_libraries(your_project_name pax_gfx)
 ```
 
 ### 3. Profit!
 Raspberry Pi Pico support is currently in beta.
 For supported platforms, [see this link](supported-platforms.md).
-
-
