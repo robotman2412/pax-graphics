@@ -343,7 +343,7 @@ static
     #else
         int begin = x + 0.5;
         int end   = x + width - 0.5;
-        setter(buf, color, begin, end - begin + 1);
+        setter(buf, color, begin + delta, end - begin + 1);
     #endif
         delta += PDHG_INCREMENT * buf->width;
     }
