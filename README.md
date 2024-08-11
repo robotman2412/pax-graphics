@@ -1,17 +1,16 @@
 # PAX graphics
-An advanced 2D graphics library for games and GUIs on embedded systems.
+An advanced high-performance 2D graphics library for games and GUIs on embedded systems.
 Supports affine transformations, shaders, text scaling, and multi-CPU software rendering.
 
 Made for [Badge.team](https://badge.team/) and licensed MIT.
 
-Version: v1.1.2-snapshot
+Version: v2.0.0-snapshot
 
 # Documentation
 Documentation can be found [here](docs).
 
 # Short-term TODO list (v2.0.0)
 - Re-work CMakeLists to be cleaner
-- Create horizontal line fill method (opaque shape optimization)
 - Finish the GUI library
 
 # Long-term TODO list (v2.1.0)
