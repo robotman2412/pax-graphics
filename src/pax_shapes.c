@@ -108,9 +108,9 @@ static int bezier_point_t_comp(const void *e0, const void *e1) {
 // From and to are from 0 to 1, but any value is accepted.
 void pax_vectorise_bezier_part(pax_vec2f *ptr, size_t max_points, pax_4vec2f control_points, float t_from, float t_to) {
     if (max_points < 4)
-        PAX_ERROR("pax_vectorise_bezier", PAX_ERR_PARAM);
+        PAX_ERROR(PAX_ERR_PARAM);
     if (!ptr) {
-        PAX_ERROR("pax_vectorise_bezier_part", PAX_ERR_PARAM);
+        PAX_ERROR(PAX_ERR_PARAM);
         return;
     }
 
@@ -119,7 +119,7 @@ void pax_vectorise_bezier_part(pax_vec2f *ptr, size_t max_points, pax_4vec2f con
     // Start with just three points: start, T=0.5 and end.
     bezier_point_t *points = malloc(sizeof(bezier_point_t) * max_points);
     if (!points) {
-        PAX_ERROR("pax_vectorise_bezier_part", PAX_ERR_NOMEM);
+        PAX_ERROR(PAX_ERR_NOMEM);
         return;
     }
     points[0]       = pax_calc_bezier(t_from, control_points);
@@ -131,7 +131,7 @@ void pax_vectorise_bezier_part(pax_vec2f *ptr, size_t max_points, pax_4vec2f con
     bezier_segment_t *lines = malloc(sizeof(bezier_segment_t) * (max_points - 1));
     if (!lines) {
         free(points);
-        PAX_ERROR("pax_vectorise_bezier_part", PAX_ERR_NOMEM);
+        PAX_ERROR(PAX_ERR_NOMEM);
         return;
     }
     lines[0]       = (bezier_segment_t){.from = &points[0], .to = &points[1]};
@@ -173,8 +173,6 @@ void pax_vectorise_bezier_part(pax_vec2f *ptr, size_t max_points, pax_4vec2f con
     }
 
 #endif
-
-    PAX_SUCCESS();
 }
 
 // Convert a cubic bezier curve to line segments, with the given number of points.
@@ -212,8 +210,6 @@ void pax_draw_bezier_part(pax_buf_t *buf, pax_col_t color, pax_4vec2f control_po
         part       += delta;
     }
 #endif
-
-    PAX_SUCCESS();
 }
 
 // Draw a cubic bezier curve.
@@ -237,28 +233,28 @@ void pax_vectorise_bezier_part(
 ) {
     // Not compiled in, but keep the method for API compatibility.
     pax_bezier_warn();
-    PAX_ERROR("pax_vectorise_bezier_part", PAX_ERR_UNSUPPORTED);
+    PAX_ERROR(PAX_ERR_UNSUPPORTED);
 }
 
 // Convert a cubic bezier curve to line segments, with the given number of points.
 void pax_vectorise_bezier(pax_vec2f **output, pax_4vec2f control_points, size_t max_points) {
     // Not compiled in, but keep the method for API compatibility.
     pax_bezier_warn();
-    PAX_ERROR("pax_vectorise_bezier", PAX_ERR_UNSUPPORTED);
+    PAX_ERROR(PAX_ERR_UNSUPPORTED);
 }
 
 // Draw a cubic bezier curve.
 void pax_draw_bezier_part(pax_buf_t *buf, pax_col_t color, pax_4vec2f control_points, float from, float to) {
     // Not compiled in, but keep the method for API compatibility.
     pax_bezier_warn();
-    PAX_ERROR("pax_draw_bezier_part", PAX_ERR_UNSUPPORTED);
+    PAX_ERROR(PAX_ERR_UNSUPPORTED);
 }
 
 // Draw a cubic bezier curve.
 void pax_draw_bezier(pax_buf_t *buf, pax_col_t color, pax_4vec2f control_points) {
     // Not compiled in, but keep the method for API compatibility.
     pax_bezier_warn();
-    PAX_ERROR("pax_draw_bezier", PAX_ERR_UNSUPPORTED);
+    PAX_ERROR(PAX_ERR_UNSUPPORTED);
 }
 
 #endif // PAX_COMPILE_BEZIER
@@ -271,7 +267,7 @@ void pax_draw_bezier(pax_buf_t *buf, pax_col_t color, pax_4vec2f control_points)
 void pax_vectorise_arc(pax_vec2f *ptr, size_t n_div, float x, float y, float r, float a0, float a1) {
     // Allocate output array.
     if (!ptr) {
-        PAX_ERROR("pax_vectorise_arc", PAX_ERR_PARAM);
+        PAX_ERROR(PAX_ERR_PARAM);
     }
 
     // Simplify the angles slightly.
@@ -306,8 +302,6 @@ void pax_vectorise_arc(pax_vec2f *ptr, size_t n_div, float x, float y, float r, 
         x0       = x1;
         y0       = y1;
     }
-
-    PAX_SUCCESS();
 }
 
 // Vectorise a circle outline.
@@ -749,7 +743,7 @@ void pax_outline_tri(pax_buf_t *buf, pax_col_t color, float x0, float y0, float 
 
 // Draw an arc outline, angle in radians.
 void pax_outline_arc(pax_buf_t *buf, pax_col_t color, float x, float y, float r, float a0, float a1) {
-    PAX_BUF_CHECK("pax_outline_arc");
+    PAX_BUF_CHECK(buf);
 
     // Simplify the angles slightly.
     float a2  = fmodf(a0, M_PI * 2);
@@ -789,13 +783,11 @@ void pax_outline_arc(pax_buf_t *buf, pax_col_t color, float x, float y, float r,
         x0 = x1;
         y0 = y1;
     }
-
-    PAX_SUCCESS();
 }
 
 // Draw a circle outline.
 void pax_outline_circle(pax_buf_t *buf, pax_col_t color, float x, float y, float r) {
-    PAX_BUF_CHECK("pax_outline_circle");
+    PAX_BUF_CHECK(buf);
     if (!pax_do_draw_col(buf, color))
         return;
 
@@ -899,7 +891,7 @@ void pax_shade_outline_arc(
     float               a0,
     float               a1
 ) {
-    PAX_BUF_CHECK("pax_shade_outline_arc");
+    PAX_BUF_CHECK(buf);
     pax_linef tmp;
     if (uvs == NULL) {
         uvs = &dummy_quad_uvs;
@@ -947,8 +939,6 @@ void pax_shade_outline_arc(
         tmp.x0 = tmp.x1;
         tmp.y0 = tmp.y1;
     }
-
-    PAX_SUCCESS();
 }
 
 // Draw a circle outline with a shader.
@@ -1000,7 +990,7 @@ void pax_outline_shape_part_cl(
     float  total_dist = 0;
     float  start_dist = 0;
     if (!dist) {
-        PAX_ERROR("pax_outline_shape_part", PAX_ERR_NOMEM);
+        PAX_ERROR(PAX_ERR_NOMEM);
     }
     for (size_t i = 0; i < num_points - 1; i++) {
         float dx    = points[i + 1].x - points[i].x;
@@ -1067,7 +1057,6 @@ void pax_outline_shape_part_cl(
     }
 
     free(dist);
-    PAX_SUCCESS();
 }
 
 // Outline a shape defined by a list of points.
@@ -1101,7 +1090,7 @@ size_t pax_round_shape_uniform(pax_vec2f **output, size_t num_points, pax_vec2f 
     // Fill out an array with the same radius.
     float *radii = malloc(sizeof(float) * num_points);
     if (!radii) {
-        PAX_ERROR1("pax_round_shape_uniform", PAX_ERR_NOMEM, 0);
+        PAX_ERROR(PAX_ERR_NOMEM, 0);
     }
     for (size_t i = 0; i < num_points; i++) {
         radii[i] = radius;
@@ -1397,14 +1386,14 @@ void pax_draw_shape(pax_buf_t *buf, pax_col_t color, size_t num_points, pax_vec2
 #else
 // Stub method because the real one isn't compiled in.
 size_t pax_triang_complete(size_t **output, pax_vec2f **additional_points, size_t num_points, pax_vec2f *points) {
-    PAX_ERROR1("pax_triang_complete", PAX_ERR_UNSUPPORTED, 0);
+    PAX_ERROR(PAX_ERR_UNSUPPORTED, 0);
 }
 // Stub method because the real one isn't compiled in.
 void pax_triang_concave(size_t **output, size_t num_points, pax_vec2f *points) {
-    PAX_ERROR("pax_triang_concave", PAX_ERR_UNSUPPORTED);
+    PAX_ERROR(PAX_ERR_UNSUPPORTED);
 }
 // Stub method because the real one isn't compiled in.
 void pax_draw_shape(pax_buf_t *buf, pax_col_t color, size_t num_points, pax_vec2f *points) {
-    PAX_ERROR("pax_draw_shape", PAX_ERR_UNSUPPORTED);
+    PAX_ERROR(PAX_ERR_UNSUPPORTED);
 }
 #endif

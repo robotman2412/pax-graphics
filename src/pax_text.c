@@ -919,11 +919,7 @@ static inline bool xfread(void *restrict __ptr, size_t __size, size_t __n, FILE 
 // Loads a font using a file descriptor.
 // Allocates the entire font in one go, such that only free(pax_font_t*) is required.
 pax_font_t *pax_load_font(FILE *fd) {
-    if (!fd) {
-        PAX_LOGE(TAG, "File pointer is NULL");
-        pax_last_error = PAX_ERR_NODATA;
-        return NULL;
-    }
+    PAX_NULL_CHECK(fd, NULL);
     pax_font_t *out = NULL;
     size_t      out_addr;
     uint64_t    tmpint;
@@ -935,7 +931,7 @@ pax_font_t *pax_load_font(FILE *fd) {
     if (strcmp(magic_temp, "pax_font_t")) {
         // Invalid magic.
         PAX_LOGE(TAG, "Invalid magic in font file");
-        pax_last_error = PAX_ERR_CORRUPT;
+        pax_set_err(PAX_ERR_CORRUPT);
         return NULL;
     }
 
@@ -978,8 +974,7 @@ pax_font_t *pax_load_font(FILE *fd) {
             required_size,
             PAX_FONT_LOADER_MINUMUM_SIZE
         );
-        pax_last_error = PAX_ERR_UNSUPPORTED;
-        return NULL;
+        PAX_ERROR(PAX_ERR_UNSUPPORTED, NULL);
     }
 
     // Allocate memory.
@@ -987,8 +982,7 @@ pax_font_t *pax_load_font(FILE *fd) {
     out_addr = (size_t)out;
     if (!out) {
         PAX_LOGE(TAG, "Out of memory for loading font (%zu required)", required_size);
-        pax_last_error = PAX_ERR_NOMEM;
-        return NULL;
+        PAX_ERROR(PAX_ERR_NOMEM, NULL);
     }
 
     out->n_ranges = n_ranges;
@@ -1010,7 +1004,7 @@ pax_font_t *pax_load_font(FILE *fd) {
             required_size,
             minimum_size
         );
-        pax_last_error = PAX_ERR_CORRUPT;
+        pax_set_err(PAX_ERR_CORRUPT);
         free(out);
         return NULL;
     }
@@ -1075,7 +1069,7 @@ pax_font_t *pax_load_font(FILE *fd) {
                     required_size,
                     minimum_size
                 );
-                pax_last_error = PAX_ERR_CORRUPT;
+                pax_set_err(PAX_ERR_CORRUPT);
                 free(out);
                 return NULL;
             }
@@ -1112,7 +1106,7 @@ pax_font_t *pax_load_font(FILE *fd) {
         } else {
             // Invalid type.
             PAX_LOGE(TAG, "File corruption: Font type invalid (%u in range %zu)", range->type, i);
-            pax_last_error = PAX_ERR_CORRUPT;
+            pax_set_err(PAX_ERR_CORRUPT);
             free(out);
             return NULL;
         }
@@ -1143,8 +1137,7 @@ pax_font_t *pax_load_font(FILE *fd) {
 
 
 fd_error:
-    pax_last_error = PAX_ERR_NODATA;
-    PAX_LOGE(TAG, "Error reading from file");
+    pax_set_err(PAX_ERR_NODATA);
     if (out)
         free(out);
     return NULL;
@@ -1152,11 +1145,7 @@ fd_error:
 
 // Stores a font to a file descriptor.
 void pax_store_font(FILE *fd, pax_font_t const *font) {
-    if (!fd) {
-        PAX_LOGE(TAG, "File pointer is NULL");
-        pax_last_error = PAX_ERR_NODATA;
-        return;
-    }
+    PAX_NULL_CHECK(fd);
 
     /* ==== MAGIC BYTES ==== */
     fwrite_assert("pax_font_t", 1, 11, fd);
@@ -1270,6 +1259,5 @@ void pax_store_font(FILE *fd, pax_font_t const *font) {
 
 
 fd_error:
-    pax_last_error = PAX_ERR_UNKNOWN;
-    PAX_LOGE(TAG, "Error writing to file");
+    pax_set_err(PAX_ERR_UNKNOWN);
 }

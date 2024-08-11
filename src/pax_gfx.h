@@ -17,9 +17,8 @@ extern "C" {
 
 /* ============ DEBUG ============ */
 
-// The last error reported.
-extern pax_err_t pax_last_error;
-
+// Get the last error reported on this thread.
+pax_err_t   pax_get_err();
 // Describe error.
 char const *pax_desc_err(pax_err_t error);
 
@@ -39,32 +38,30 @@ void pax_disable_multicore();
 
 /* ============ BUFFER =========== */
 
+// Get buffer type info.
+pax_buf_type_info_t pax_buf_type_info(pax_buf_type_t type) __attribute__((const));
+
 // Get the bits per pixel for the given buffer type.
-#define PAX_GET_BPP(type)    ((type) & 0xff)
-// Reflects whether the buffer type is greyscale.
-#define PAX_IS_GREY(type)    (((type) & 0xf0000000) == 0x10000000)
+#define PAX_GET_BPP(type)    (pax_buf_type_info(type).bpp)
 // Reflects whether the buffer type is paletted.
-#define PAX_IS_PALETTE(type) (((type) & 0xf0000000) == 0x20000000)
+#define PAX_IS_PALETTE(type) (pax_buf_type_info(type).fmt_type == 1)
+// Reflects whether the buffer type is greyscale.
+#define PAX_IS_GREY(type)    (pax_buf_type_info(type).fmt_type == 2)
 // Reflects whether the buffer type is color.
-#define PAX_IS_COLOR(type)   (((type) & 0xf0000000) == 0x00000000)
+#define PAX_IS_COLOR(type)   (pax_buf_type_info(type).fmt_type == 3)
 // Whether the buffer type potentially has alpha.
-#define PAX_IS_ALPHA(type)   (((type) & 0x00f00000) || PAX_IS_PALETTE(type))
+#define PAX_IS_ALPHA(type)   (pax_buf_type_info(type).a)
 
 // Determine how much capacity a certain buffer initialisation needs.
 #define PAX_BUF_CALC_SIZE(width, height, type) ((PAX_GET_BPP(type) * (width) * (height) + 7) >> 3)
 // Create a new buffer.
 // If mem is NULL, a new area is allocated.
-void pax_buf_init(pax_buf_t *buf, void *mem, int width, int height, pax_buf_type_t type);
+pax_buf_t *pax_buf_init(void *mem, int width, int height, pax_buf_type_t type);
 // Enable/disable the reversing of endianness for `buf`.
 // Some displays might require a feature like this one.
-void pax_buf_reversed(pax_buf_t *buf, bool reversed_endianness);
+void       pax_buf_reversed(pax_buf_t *buf, bool reversed_endianness);
 // Destroy the buffer, freeing its memory.
-void pax_buf_destroy(pax_buf_t *buf);
-// WARNING: This is a beta feature and it does not work!
-//
-// Convert the buffer to the given new format.
-// If dest is NULL or equal to src, src will be converted.
-void pax_buf_convert(pax_buf_t *dst, pax_buf_t *src, pax_buf_type_t type);
+void       pax_buf_destroy(pax_buf_t *buf);
 
 // Retrieve the width of the buffer.
 int            pax_buf_get_width(pax_buf_t const *buf);

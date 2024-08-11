@@ -7,12 +7,12 @@
 
 /* ===== MULTI-CORE RENDERING ==== */
 
-#include <esp_log.h>
-#include <esp_pm.h>
-#include <esp_timer.h>
-#include <freertos/FreeRTOS.h>
-#include <freertos/queue.h>
-#include <freertos/task.h>
+    #include <esp_log.h>
+    #include <esp_pm.h>
+    #include <esp_timer.h>
+    #include <freertos/FreeRTOS.h>
+    #include <freertos/queue.h>
+    #include <freertos/task.h>
 
 
 // Whether or not the multicore task is currently busy.
@@ -63,7 +63,30 @@ static void pax_multicore_task_function(void *args) {
 
         // Now, we actually DRAW.will end itself
         if (tsk.use_shader) {
-            if (tsk.type == PAX_TASK_RECT) {
+            if (tsk.type == PAX_TASK_QUAD) {
+                paxmcr_quad_shaded(
+                    true,
+                    tsk.buffer,
+                    tsk.color,
+                    &tsk.shader,
+                    tsk.shape[0],
+                    tsk.shape[1],
+                    tsk.shape[2],
+                    tsk.shape[3],
+                    tsk.shape[4],
+                    tsk.shape[5],
+                    tsk.shape[6],
+                    tsk.shape[7],
+                    tsk.quad_uvs.x0,
+                    tsk.quad_uvs.y0,
+                    tsk.quad_uvs.x1,
+                    tsk.quad_uvs.y1,
+                    tsk.quad_uvs.x2,
+                    tsk.quad_uvs.y2,
+                    tsk.quad_uvs.x3,
+                    tsk.quad_uvs.y3
+                );
+            } else if (tsk.type == PAX_TASK_RECT) {
                 paxmcr_rect_shaded(
                     true,
                     tsk.buffer,
@@ -103,7 +126,21 @@ static void pax_multicore_task_function(void *args) {
                 );
             }
         } else {
-            if (tsk.type == PAX_TASK_RECT) {
+            if (tsk.type == PAX_TASK_QUAD) {
+                paxmcr_quad_unshaded(
+                    true,
+                    tsk.buffer,
+                    tsk.color,
+                    tsk.shape[0],
+                    tsk.shape[1],
+                    tsk.shape[2],
+                    tsk.shape[3],
+                    tsk.shape[4],
+                    tsk.shape[5],
+                    tsk.shape[6],
+                    tsk.shape[7]
+                );
+            } else if (tsk.type == PAX_TASK_RECT) {
                 paxmcr_rect_unshaded(
                     true,
                     tsk.buffer,
@@ -139,8 +176,8 @@ static void pax_multicore_task_function(void *args) {
 
 // If multi-core rendering is enabled, wait for the other core.
 PAX_PERF_CRITICAL_ATTR void pax_join() {
-    while ((multicore_handle && eTaskGetState(multicore_handle) == eRunning) ||
-           (queue_handle && uxQueueMessagesWaiting(queue_handle))) {
+    while ((multicore_handle && eTaskGetState(multicore_handle) == eRunning)
+           || (queue_handle && uxQueueMessagesWaiting(queue_handle))) {
         // Wait for the other core.
         taskYIELD();
     }
@@ -167,8 +204,15 @@ void pax_enable_multicore(int core) {
 
     // Create a task to do said rendering.
     pax_do_multicore = true;
-    int result =
-        xTaskCreatePinnedToCore(pax_multicore_task_function, "pax_mcr_worker", 4096, NULL, 2, &multicore_handle, core);
+    int result       = xTaskCreatePinnedToCore(
+        pax_multicore_task_function,
+        "pax_mcr_worker",
+        4096,
+        NULL,
+        2,
+        &multicore_handle,
+        core
+    );
     if (result != pdPASS) {
         multicore_handle = NULL;
         PAX_LOGE(TAG, "Failed to enable MCR: Task creation error %s (%x).", esp_err_to_name(result), result);

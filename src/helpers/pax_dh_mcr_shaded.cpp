@@ -1,28 +1,53 @@
 
 // SPDX-License-Identifier: MIT
 
+// clang-format off
+
 #include "pax_internal.h"
 
 #include <string.h>
 
-/* ======== SHADED DRAWING ======= */
 
-// Multi-core method for shaded triangles.
-// If odd_scanline is true, the odd (counted from 0) lines are drawn, otherwise the even lines are drawn.
-#define PDHG_NAME paxmcr_tri_shaded1
+
+/* ======== TRAPEZOIDS ======= */
+
+// Multi-core method for shaded trapezoids.
+// Used internally for triangles and quads.
+#define PDHG_NAME paxmcr_tzoid_shaded_nouv
 #define PDHG_SHADED
 #define PDHG_STATIC
 #define PDHG_IGNORE_UV
 #define PDHG_MCR
-#include "pax_dh_generic_tri.hpp"
+#include "pax_dh_generic_tzoid.inc"
 
-// Multi-core method for shaded triangles.
-// If odd_scanline is true, the odd (counted from 0) lines are drawn, otherwise the even lines are drawn.
-#define PDHG_NAME paxmcr_tri_shaded0
+// Multi-core method for shaded trapezoids.
+// Used internally for triangles and quads.
+#define PDHG_NAME paxmcr_tzoid_shaded_uv
 #define PDHG_SHADED
 #define PDHG_STATIC
 #define PDHG_MCR
-#include "pax_dh_generic_tri.hpp"
+#include "pax_dh_generic_tzoid.inc"
+
+
+
+/* ======== TRIANGLES ======== */
+
+// Multi-core method for shaded triangles.
+#define PDHG_NAME paxmcr_tri_shaded_nouv
+#define PDHG_SHADED
+#define PDHG_STATIC
+#define PDHG_IGNORE_UV
+#define PDHG_MCR
+#define PDHG_TZOID_NAME paxmcr_tzoid_shaded_nouv
+#include "pax_dh_generic_tri.inc"
+
+// Multi-core method for shaded triangles.
+#define PDHG_NAME paxmcr_tri_shaded_uv
+#define PDHG_SHADED
+#define PDHG_STATIC
+#define PDHG_MCR
+#define PDHG_TZOID_NAME paxmcr_tzoid_shaded_uv
+#include "pax_dh_generic_tri.inc"
 
 // Multi-core method for shaded triangles.
 // If odd_scanline is true, the odd (counted from 0) lines are drawn, otherwise the even lines are drawn.
@@ -31,35 +56,76 @@ void paxmcr_tri_shaded(
     pax_buf_t          *buf,
     pax_col_t           color,
     pax_shader_t const *shader,
-    float               x0,
-    float               y0,
-    float               x1,
-    float               y1,
-    float               x2,
-    float               y2,
-    float               u0,
-    float               v0,
-    float               u1,
-    float               v1,
-    float               u2,
-    float               v2
+    float x0, float y0, float x1, float y1, float x2, float y2,
+    float u0, float v0, float u1, float v1, float u2, float v2
 ) {
     if (shader->promise_callback) {
         uint32_t promises = (*(pax_promise_func_t)shader->promise_callback)(buf, color, shader->callback_args);
         if (promises & PAX_PROMISE_INVISIBLE)
             return;
         if (promises & PAX_PROMISE_IGNORE_UVS) {
-            paxmcr_tri_shaded1(odd_scanline, buf, color, shader, x0, y0, x1, y1, x2, y2);
+            paxmcr_tri_shaded_nouv(odd_scanline, buf, color, shader, x0, y0, x1, y1, x2, y2);
             return;
         }
     }
-    paxmcr_tri_shaded0(odd_scanline, buf, color, shader, x0, y0, x1, y1, x2, y2, u0, v0, u1, v1, u2, v2);
+    paxmcr_tri_shaded_uv(odd_scanline, buf, color, shader, x0, y0, x1, y1, x2, y2, u0, v0, u1, v1, u2, v2);
 }
+
+
+
+/* ========== QUADS ========== */
+
+// Multi-core methods for shaded quads.
+// If odd_scanline is true, the odd (counted from 0) lines are drawn, otherwise the even lines are drawn.
+#define PDHG_NAME paxmcr_quad_shaded_nouv
+#define PDHG_SHADED
+#define PDHG_IGNORE_UV
+#define PDHG_MCR
+#define PDHG_STATIC
+#define PDHG_TZOID_NAME paxmcr_tzoid_shaded_nouv
+#include "pax_dh_generic_quad.inc"
+
+// Multi-core methods for shaded quads.
+// If odd_scanline is true, the odd (counted from 0) lines are drawn, otherwise the even lines are drawn.
+#define PDHG_NAME paxmcr_quad_shaded_uv
+#define PDHG_SHADED
+#define PDHG_MCR
+#define PDHG_STATIC
+#define PDHG_TZOID_NAME paxmcr_tzoid_shaded_uv
+#include "pax_dh_generic_quad.inc"
+
+// Multi-core method for shaded triangles.
+// If odd_scanline is true, the odd (counted from 0) lines are drawn, otherwise the even lines are drawn.
+void paxmcr_quad_shaded(
+    bool                odd_scanline,
+    pax_buf_t          *buf,
+    pax_col_t           color,
+    pax_shader_t const *shader,
+    float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3,
+    float u0, float v0, float u1, float v1, float u2, float v2, float u3, float v3
+) {
+    if (shader->promise_callback) {
+        uint32_t promises = (*(pax_promise_func_t)shader->promise_callback)(buf, color, shader->callback_args);
+        if (promises & PAX_PROMISE_INVISIBLE)
+            return;
+        if (promises & PAX_PROMISE_IGNORE_UVS) {
+            paxmcr_quad_shaded_nouv(odd_scanline, buf, color, shader, x0, y0, x1, y1, x2, y2, x3, y3);
+            return;
+        }
+    }
+    paxmcr_quad_shaded_uv(odd_scanline, buf, color, shader, x0, y0, x1, y1, x2, y2, x3, y3, u0, v0, u1, v1, u2, v2, u3, v3);
+}
+
+
+
+/* ======= RECTANGLES ======== */
 
 // Multi-core optimisation which maps a buffer directly onto another.
 // If odd_scanline is true, the odd (counted from 0) lines are drawn, otherwise the even lines are drawn.
 void paxmcr_overlay_buffer(
-    bool odd_scanline, pax_buf_t *base, pax_buf_t *top, int x, int y, int width, int height, bool assume_opaque
+    bool odd_scanline, pax_buf_t *base, pax_buf_t *top,
+    int x, int y, int width, int height,
+    bool assume_opaque
 ) {
     int tex_x = 0, tex_y = 0;
 
@@ -82,8 +148,8 @@ void paxmcr_overlay_buffer(
     }
 
     bool equal = top->type == base->type;
-    if (equal && x == 0 && y == 0 && width == base->width && height == base->height &&
-        base->reverse_endianness == top->reverse_endianness) {
+    if (equal && x == 0 && y == 0 && width == base->width && height == base->height
+        && base->reverse_endianness == top->reverse_endianness) {
         // When copying one buffer onto another as a background,
         // and the types are the same, perform a memcpy() instead.
         // memcpy(base->buf, top->buf, (PAX_GET_BPP(base->type) * width * height + 7) >> 3);
@@ -151,50 +217,38 @@ void paxmcr_overlay_buffer(
 }
 
 // Multi-core optimisation which does not have UVs.
-// If odd_scanline is true, the odd (counted from 0) lines are drawn, otherwise the even lines are drawn.
-#define PDHG_NAME paxmcr_rect_shaded2
+#define PDHG_NAME paxmcr_rect_shaded_nouv
 #define PDHG_SHADED
 #define PDHG_IGNORE_UV
 #define PDHG_MCR
 #define PDHG_STATIC
-#include "pax_dh_generic_rect.hpp"
+#include "pax_dh_generic_rect.inc"
 
 // Multi-core optimisation which makes more assumptions about UVs.
-// If odd_scanline is true, the odd (counted from 0) lines are drawn, otherwise the even lines are drawn.
-#define PDHG_NAME paxmcr_rect_shaded1
+#define PDHG_NAME paxmcr_rect_shaded_resuv
 #define PDHG_SHADED
 #define PDHG_RESTRICT_UV
 #define PDHG_MCR
 #define PDHG_STATIC
-#include "pax_dh_generic_rect.hpp"
+#include "pax_dh_generic_rect.inc"
 
 // Multi-core method for shaded rects.
-// If odd_scanline is true, the odd (counted from 0) lines are drawn, otherwise the even lines are drawn.
-#define PDHG_NAME paxmcr_rect_shaded0
+#define PDHG_NAME paxmcr_rect_shaded_uv
 #define PDHG_SHADED
 #define PDHG_MCR
 #define PDHG_STATIC
-#include "pax_dh_generic_rect.hpp"
+#include "pax_dh_generic_rect.inc"
 
 // Multi-core method for shaded rects.
+// Defers to optimized methods if possible.
 // If odd_scanline is true, the odd (counted from 0) lines are drawn, otherwise the even lines are drawn.
 void paxmcr_rect_shaded(
     bool                odd_scanline,
     pax_buf_t          *buf,
     pax_col_t           color,
     pax_shader_t const *shader,
-    float               x,
-    float               y,
-    float               width,
-    float               height,
-    float               u0,
-    float               v0,
-    float               u1,
-    float               v1,
-    float               u2,
-    float               v2,
-    float               u3,
-    float               v3
+    float x, float y, float width, float height,
+    float u0, float v0, float u1, float v1, float u2, float v2, float u3, float v3
 ) {
 
     pax_promise_func_t fn      = (pax_promise_func_t)shader->promise_callback;
@@ -202,7 +256,7 @@ void paxmcr_rect_shaded(
 
     if (promise & PAX_PROMISE_IGNORE_UVS) {
         // Ignore UVs.
-        paxmcr_rect_shaded2(odd_scanline, buf, color, shader, x, y, width, height);
+        paxmcr_rect_shaded_nouv(odd_scanline, buf, color, shader, x, y, width, height);
         return;
     }
 
@@ -226,10 +280,10 @@ void paxmcr_rect_shaded(
         }
     } else if (is_default_uv || (v0 == v1 && v2 == v3 && u0 == u3 && u1 == u2)) {
         // Make some assumptions about UVs.
-        paxmcr_rect_shaded1(odd_scanline, buf, color, shader, x, y, width, height, u0, v0, u2, v2);
+        paxmcr_rect_shaded_resuv(odd_scanline, buf, color, shader, x, y, width, height, u0, v0, u2, v2);
         return;
     }
 
     // Use the more expensive generic implementation.
-    paxmcr_rect_shaded0(odd_scanline, buf, color, shader, x, y, width, height, u0, v0, u1, v1, u2, v2, u3, v3);
+    paxmcr_rect_shaded_uv(odd_scanline, buf, color, shader, x, y, width, height, u0, v0, u1, v1, u2, v2, u3, v3);
 }

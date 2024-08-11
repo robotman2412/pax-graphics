@@ -120,9 +120,8 @@ pax_vec2f vec1_unify(pax_vec2f vec) {
 
 // Apply the given matrix to the stack.
 void pax_apply_2d(pax_buf_t *buf, matrix_2d_t a) {
-    PAX_BUF_CHECK("pax_apply_2d");
+    PAX_BUF_CHECK(buf);
     buf->stack_2d.value = matrix_2d_multiply(buf->stack_2d.value, a);
-    PAX_SUCCESS();
 }
 
 // Push the current matrix up the stack.
@@ -130,27 +129,26 @@ void pax_push_2d(pax_buf_t *buf) {
     PAX_BUF_CHECK("pax_push_2d");
     matrix_stack_2d_t *parent = malloc(sizeof(matrix_stack_2d_t));
     if (!parent)
-        PAX_ERROR("pax_push_2d", PAX_ERR_NOMEM);
+        PAX_ERROR(PAX_ERR_NOMEM);
     *parent              = buf->stack_2d;
     buf->stack_2d.parent = parent;
-    PAX_SUCCESS();
 }
 
 // Pop the top matrix off the stack.
 void pax_pop_2d(pax_buf_t *buf) {
-    PAX_BUF_CHECK("pax_pop_2d");
+    PAX_BUF_CHECK(buf);
     matrix_stack_2d_t *parent = buf->stack_2d.parent;
     if (!parent)
-        PAX_ERROR("pax_pop_2d", PAX_ERR_UNDERFLOW);
+        PAX_ERROR(PAX_ERR_UNDERFLOW);
     buf->stack_2d = *parent;
     free(parent);
-    PAX_SUCCESS();
 }
 
 // Reset the matrix stack.
 // If full is true, the entire stack gets cleared.
 // Else, only the top element gets cleared.
 void pax_reset_2d(pax_buf_t *buf, bool full) {
+    PAX_BUF_CHECK(buf);
     if (full) {
         matrix_stack_2d_t *current = buf->stack_2d.parent;
         while (current) {

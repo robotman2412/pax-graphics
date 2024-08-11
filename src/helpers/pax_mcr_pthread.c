@@ -7,11 +7,11 @@
 
 /* ===== MULTI-CORE RENDERING ==== */
 
-#include <pthread.h>
-#include <ptq.h>
-#include <sched.h>
-#include <sys/time.h>
-#include <unistd.h>
+    #include <pthread.h>
+    #include <ptq.h>
+    #include <sched.h>
+    #include <sys/time.h>
+    #include <unistd.h>
 
 // Whether or not the multicore task is currently busy.
 extern bool            multicore_busy;
@@ -62,7 +62,30 @@ static void *pax_multicore_task_function(void *args) {
 
         // Now, we actually DRAW.will end itself
         if (tsk.use_shader) {
-            if (tsk.type == PAX_TASK_RECT) {
+            if (tsk.type == PAX_TASK_QUAD) {
+                paxmcr_quad_shaded(
+                    true,
+                    tsk.buffer,
+                    tsk.color,
+                    &tsk.shader,
+                    tsk.shape[0],
+                    tsk.shape[1],
+                    tsk.shape[2],
+                    tsk.shape[3],
+                    tsk.shape[4],
+                    tsk.shape[5],
+                    tsk.shape[6],
+                    tsk.shape[7],
+                    tsk.quad_uvs.x0,
+                    tsk.quad_uvs.y0,
+                    tsk.quad_uvs.x1,
+                    tsk.quad_uvs.y1,
+                    tsk.quad_uvs.x2,
+                    tsk.quad_uvs.y2,
+                    tsk.quad_uvs.x3,
+                    tsk.quad_uvs.y3
+                );
+            } else if (tsk.type == PAX_TASK_RECT) {
                 paxmcr_rect_shaded(
                     true,
                     tsk.buffer,
@@ -102,7 +125,21 @@ static void *pax_multicore_task_function(void *args) {
                 );
             }
         } else {
-            if (tsk.type == PAX_TASK_RECT) {
+            if (tsk.type == PAX_TASK_QUAD) {
+                paxmcr_quad_unshaded(
+                    true,
+                    tsk.buffer,
+                    tsk.color,
+                    tsk.shape[0],
+                    tsk.shape[1],
+                    tsk.shape[2],
+                    tsk.shape[3],
+                    tsk.shape[4],
+                    tsk.shape[5],
+                    tsk.shape[6],
+                    tsk.shape[7]
+                );
+            } else if (tsk.type == PAX_TASK_RECT) {
                 paxmcr_rect_unshaded(
                     true,
                     tsk.buffer,

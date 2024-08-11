@@ -11,7 +11,7 @@ static char const *TAG = "pax_gfx";
 #include <string.h>
 
 #ifdef PAX_ESP_IDF
-#include <esp_timer.h>
+    #include <esp_timer.h>
 #endif
 
 // The last error reported.
@@ -25,11 +25,11 @@ bool      pax_do_multicore = false;
 // Whether or not the multicore task is currently busy.
 bool multicore_busy = false;
 
-#ifdef PAX_ESP_IDF
+    #ifdef PAX_ESP_IDF
 
-#include <freertos/FreeRTOS.h>
-#include <freertos/queue.h>
-#include <freertos/task.h>
+        #include <freertos/FreeRTOS.h>
+        #include <freertos/queue.h>
+        #include <freertos/task.h>
 
 // The task handle for the main core.
 TaskHandle_t  main_handle      = NULL;
@@ -38,11 +38,11 @@ TaskHandle_t  multicore_handle = NULL;
 // The render queue for the other core.
 QueueHandle_t queue_handle     = NULL;
 
-#elif defined(PAX_STANDALONE)
+    #elif defined(PAX_STANDALONE)
 
-#include <pthread.h>
-#include <ptq.h>
-#include <unistd.h>
+        #include <pthread.h>
+        #include <ptq.h>
+        #include <unistd.h>
 
 // The thread for multicore helper stuff.
 pthread_t       multicore_handle;
@@ -51,7 +51,7 @@ pthread_mutex_t multicore_mutex = PTHREAD_MUTEX_INITIALIZER;
 // The render queue for the multicore helper.
 ptq_queue_t     queue_handle    = NULL;
 
-#endif
+    #endif
 #endif
 
 #if defined(PAX_STANDALONE) && PAX_COMPILE_MCR
@@ -63,51 +63,24 @@ bool            pax_log_use_mutex = false;
 
 /* ============ DEBUG ============ */
 
-// Print error to console.
-void pax_report_error(char const *where, pax_err_t errno) {
-    // Ignore the "Error: Success" cases.
-    if (errno == PAX_OK)
-        return;
+static __thread pax_err_t last_err = PAX_OK;
 
-    // // Number of silenced messages.
-    // static uint64_t silenced = 0;
-    // // Last spam message time in microseconds.
-    // static uint64_t last_spam = 0;
-    // // Spam silencing delay in microseconds.
-    // static const uint64_t spam_delay = 2 * 1000 * 1000;
+// Get the last error reported on this thread.
+pax_err_t pax_get_err() {
+    return last_err;
+}
 
-    // // Check whether the message might potentially be spam.
-    // bool spam_potential =
-    // 			errno == PAX_ERR_NOBUF
-    // 		|| !strcmp(where, "pax_get_pixel")
-    // 		|| !strcmp(where, "pax_set_pixel");
-
-    // if (spam_potential) {
-    // 	// If so, check time.
-    // 	uint64_t now = esp_timer_get_time() + spam_delay;
-
-    // 	if (now < last_spam + spam_delay) {
-    // 		// It gets blocked.
-    // 		silenced ++;
-    // 		return;
-    // 	} else if (silenced) {
-    // 		// It goes through, report silenced count.
-    // 		PAX_LOGE(TAG, "%llu silenced errors", silenced);
-    // 		silenced = 0;
-    // 	}
-
-    // 	last_spam = now;
-    // }
-
-    // Log the error.
-    PAX_LOGE(TAG, "@ %s: %s", where, pax_desc_err(errno));
+// Set error code.
+void pax_set_err(pax_err_t ec) {
+    last_err = ec;
 }
 
 // Describe error.
 char const *pax_desc_err(pax_err_t error) {
-    char const *unknown = "Unknown error";
-    char const *desc[]  = {
+    char const       *unknown = "Unknown error";
+    char const *const desc[]  = {
         "Success",
+        unknown,
         "No framebuffer",
         "No memory",
         "Invalid parameters",
@@ -207,15 +180,42 @@ static pax_trif const dummy_tri_uvs = {.x0 = 0, .y0 = 0, .x1 = 1, .y1 = 0, .x2 =
 
 /* ============ BUFFER =========== */
 
+// Buffer type info table.
+static pax_buf_type_info_t const info_tab[] = {
+#define PAX_DEF_BUF_TYPE_PAL(bpp, name)         [name] = {bpp, 1, 0, 0, 0, 1},
+#define PAX_DEF_BUF_TYPE_GREY(bpp, name)        [name] = {bpp, 0, 0, 0, 0, 2},
+#define PAX_DEF_BUF_TYPE_ARGB(a, r, g, b, name) [name] = {a + r + g + b, a, r, g, b, 3},
+#include "helpers/pax_buf_type.inc"
+};
+
+// Get buffer type info.
+pax_buf_type_info_t pax_buf_type_info(pax_buf_type_t type) {
+    if (type < 0 || type > sizeof(info_tab) / sizeof(pax_buf_type_info_t)) {
+        pax_set_err(PAX_ERR_PARAM);
+        return (pax_buf_type_info_t){0};
+    } else {
+        pax_set_ok();
+        return info_tab[type];
+    }
+}
+
 // Create a new buffer.
 // If mem is NULL, a new area is allocated.
-void pax_buf_init(pax_buf_t *buf, void *mem, int width, int height, pax_buf_type_t type) {
+pax_buf_t *pax_buf_init(void *mem, int width, int height, pax_buf_type_t type) {
+    pax_buf_t *buf = malloc(sizeof(pax_buf_t));
+    if (!buf) {
+        pax_set_err(PAX_ERR_NOMEM);
+        return NULL;
+    }
     bool use_alloc = !mem;
     if (use_alloc) {
         // Allocate the right amount of bytes.
         mem = malloc(PAX_BUF_CALC_SIZE(width, height, type));
-        if (!mem)
-            PAX_ERROR("pax_buf_init", PAX_ERR_NOMEM);
+        if (!mem) {
+            pax_set_err(PAX_ERR_NOMEM);
+            free(buf);
+            return NULL;
+        }
     }
     *buf = (pax_buf_t){
         // Buffer size information.
@@ -226,18 +226,15 @@ void pax_buf_init(pax_buf_t *buf, void *mem, int width, int height, pax_buf_type
         .bpp                = PAX_GET_BPP(type),
         // Defaults.
         .stack_2d           = {.parent = NULL, .value = matrix_2d_identity()},
+        .reverse_endianness = false,
         // Memory management information.
         .do_free            = use_alloc,
         .do_free_pal        = false,
-        .reverse_endianness = false,
         .palette            = NULL,
     };
-    // Bit of workaround because 16BPP screens almost always require this option.
-    if (PAX_GET_BPP(type) == 16)
-        buf->reverse_endianness = true;
     // Update getters and setters.
     pax_get_col_conv(buf, &buf->col2buf, &buf->buf2col);
-    pax_get_setters(buf, &buf->getter, &buf->setter);
+    pax_get_setters(buf, &buf->getter, &buf->setter, &buf->range_setter, &buf->range_merger);
     // The clip rectangle is disabled by default.
     pax_noclip(buf);
     // Easter egg.
@@ -245,26 +242,25 @@ void pax_buf_init(pax_buf_t *buf, void *mem, int width, int height, pax_buf_type
         pax_background(buf, 0);
         pax_draw_text(buf, PAX_IS_PALETTE(type) ? 1 : 0xffffffff, pax_font_sky, 9, 5, 5, "Julian Wuz Here");
     }
-    PAX_SUCCESS();
+    pax_set_ok();
+    return buf;
 }
 
 // Enable/disable the reversing of endianness for `buf`.
 // Some displays might require a feature like this one.
 void pax_buf_reversed(pax_buf_t *buf, bool reversed_endianness) {
-    PAX_BUF_CHECK("pax_buf_reversed");
+    PAX_BUF_CHECK(buf);
 
     // Update endianness flag.
     buf->reverse_endianness = reversed_endianness;
     // Update getters and setters.
     pax_get_col_conv(buf, &buf->col2buf, &buf->buf2col);
-    pax_get_setters(buf, &buf->getter, &buf->setter);
-
-    PAX_SUCCESS();
+    pax_get_setters(buf, &buf->getter, &buf->setter, &buf->range_setter, &buf->range_merger);
 }
 
 // Destroy the buffer, freeing its memory.
 void pax_buf_destroy(pax_buf_t *buf) {
-    PAX_BUF_CHECK("pax_buf_destroy");
+    PAX_BUF_CHECK(buf);
 
     // Recursively unlink the matrix stack.
     matrix_stack_2d_t *current = buf->stack_2d.parent;
@@ -282,101 +278,13 @@ void pax_buf_destroy(pax_buf_t *buf) {
         free(buf->palette);
     }
 
-    // A safety mechanism to prevent use-after-free on the user's behalf.
-    buf->buf  = NULL;
-    buf->type = 0;
-
-    PAX_SUCCESS();
-}
-
-// WARNING: This is a beta feature and it does not work!
-//
-// Convert the buffer to the given new format.
-// If dest is equal to src, src will be converted.
-void pax_buf_convert(pax_buf_t *dst, pax_buf_t *src, pax_buf_type_t type) {
-    if (!(src) || !(src)->buf)
-        PAX_ERROR("pax_buf_convert (src)", PAX_ERR_NOBUF);
-    if (!(dst) || !(dst)->buf)
-        PAX_ERROR("pax_buf_convert (dst)", PAX_ERR_NOBUF);
-
-    pax_buf_t dummy;
-    bool      use_dummy = dst == src;
-    if (use_dummy) {
-        dummy = *src;
-        dst   = &dummy;
-    }
-
-    // We can't go using realloc on an unknown buffer.
-    if (!dst->do_free)
-        PAX_ERROR("pax_buf_convert", PAX_ERR_PARAM);
-    // Src and dst must match in size.
-    if (src->width != dst->width || src->height != dst->height) {
-        PAX_LOGE(TAG, "size mismatch: %dx%d vs %dx%d", src->width, src->height, dst->width, dst->height);
-        PAX_ERROR("pax_buf_convert", PAX_ERR_BOUNDS);
-    }
-
-    // Update destination buffer type.
-    dst->bpp  = PAX_GET_BPP(type);
-    dst->type = type;
-    // Update getters and setters.
-    pax_get_col_conv(dst, &dst->col2buf, &dst->buf2col);
-    pax_get_setters(dst, &dst->getter, &dst->setter);
-    // Compute new size requirement.
-    size_t new_pixels = dst->width * dst->height;
-    size_t new_size   = (new_pixels * dst->bpp + 7) / 8;
-
-    // Row buffer to prevent corruption in <8bpp.
-    pax_col_t *tmp = malloc(sizeof(pax_col_t) * dst->width);
-    if (!tmp)
-        PAX_ERROR("pax_buf_convert", PAX_ERR_NOMEM);
-
-    if (dst->bpp > src->bpp) {
-        PAX_LOGI(TAG, "Expanding buffer.");
-
-        // Resize the memory for DST beforehand.
-        void *mem = realloc(dst->buf, new_size);
-        if (!mem) {
-            free(tmp);
-            PAX_ERROR("pax_buf_convert", PAX_ERR_NOMEM);
-        }
-        dst->buf = mem;
-        if (use_dummy)
-            src->buf = mem;
-    }
-
-    // Convert pixel data.
-    for (int y = 0; y < dst->height; y++) {
-        int offs = y * dst->width;
-
-        // Extract from SRC.
-        for (int x = 0; x < dst->width; x++) {
-            tmp[x] = pax_get_index_conv(src, offs + x);
-        }
-        // Store into DST.
-        for (int x = 0; x < dst->width; x++) {
-            pax_set_index_conv(dst, tmp[x], offs + x);
-        }
-    }
-    free(tmp);
-
-    if (dst->bpp < src->bpp) {
-        PAX_LOGI(TAG, "Shrinking buffer.");
-
-        // Resize the memory for DST afterwards.
-        void *mem = realloc(dst->buf, new_size);
-        if (!dst->buf)
-            PAX_ERROR("pax_buf_convert", PAX_ERR_NOMEM);
-        dst->buf = mem;
-    }
-
-    if (use_dummy) {
-        *src = dummy;
-    }
+    free(buf);
 }
 
 
 // Retrieve the width of the buffer.
 int pax_buf_get_width(pax_buf_t const *buf) {
+    PAX_BUF_CHECK(buf, 0);
     if (buf->orientation & 1) {
         return buf->height;
     } else {
@@ -385,6 +293,7 @@ int pax_buf_get_width(pax_buf_t const *buf) {
 }
 // Retrieve the height of the buffer.
 int pax_buf_get_height(pax_buf_t const *buf) {
+    PAX_BUF_CHECK(buf, 0);
     if (buf->orientation & 1) {
         return buf->width;
     } else {
@@ -393,6 +302,7 @@ int pax_buf_get_height(pax_buf_t const *buf) {
 }
 // Retrieve dimensions of the buffer.
 pax_vec2i pax_buf_get_dims(pax_buf_t const *buf) {
+    PAX_BUF_CHECK(buf, (pax_vec2i){0, 0});
     if (buf->orientation & 1) {
         return (pax_vec2i){buf->height, buf->width};
     } else {
@@ -401,35 +311,42 @@ pax_vec2i pax_buf_get_dims(pax_buf_t const *buf) {
 }
 // Retrieve the type of the buffer.
 pax_buf_type_t pax_buf_get_type(pax_buf_t const *buf) {
+    PAX_BUF_CHECK(buf, -1);
     return buf->type;
 }
 
 // Get a const pointer to the image data.
 void const *pax_buf_get_pixels(pax_buf_t const *buf) {
+    PAX_BUF_CHECK(buf, NULL);
     return buf->buf;
 }
 // Get a non-const pointer to the image data.
 void *pax_buf_get_pixels_rw(pax_buf_t *buf) {
+    PAX_BUF_CHECK(buf, NULL);
     return buf->buf;
 }
 // Get the byte size of the image data.
 size_t pax_buf_get_size(pax_buf_t const *buf) {
+    PAX_BUF_CHECK(buf, 0);
     return PAX_BUF_CALC_SIZE(buf->width, buf->height, buf->type);
 }
 
 // Set orientation of the buffer.
 void pax_buf_set_orientation(pax_buf_t *buf, pax_orientation_t x) {
+    PAX_BUF_CHECK(buf);
     buf->orientation = x & 7;
 }
 
 // Get orientation of the buffer.
 pax_orientation_t pax_buf_get_orientation(pax_buf_t const *buf) {
+    PAX_BUF_CHECK(buf, 0);
     return buf->orientation;
 }
 
 
 // Scroll the buffer, filling with a placeholder color.
 void pax_buf_scroll(pax_buf_t *buf, pax_col_t placeholder, int x, int y) {
+    PAX_BUF_CHECK(buf);
 #if PAX_COMPILE_MCR
     pax_join();
 #endif
@@ -529,6 +446,7 @@ void pax_buf_scroll(pax_buf_t *buf, pax_col_t placeholder, int x, int y) {
 
 // Clip the buffer to the desired rectangle.
 void pax_clip(pax_buf_t *buf, int x, int y, int width, int height) {
+    PAX_BUF_CHECK(buf);
     if (width == 0 || height == 0) {
         buf->clip.w = 0;
         buf->clip.h = 0;
@@ -572,22 +490,25 @@ void pax_clip(pax_buf_t *buf, int x, int y, int width, int height) {
 
 // Get the current clip rectangle.
 pax_recti pax_get_clip(pax_buf_t const *buf) {
+    PAX_BUF_CHECK(buf, (pax_recti){0, 0});
     return pax_recti_abs(pax_unorient_det_recti(buf, buf->clip));
 }
 
 // Clip the buffer to it's full size.
 void pax_noclip(pax_buf_t *buf) {
+    PAX_BUF_CHECK(buf);
     buf->clip = (pax_recti){.x = 0, .y = 0, .w = buf->width, .h = buf->height};
 }
 
 // Check whether the buffer is dirty.
 bool pax_is_dirty(pax_buf_t const *buf) {
-    PAX_BUF_CHECK1("pax_is_dirty", 0);
+    PAX_BUF_CHECK(buf, false);
     return buf->dirty_x0 < buf->dirty_x1;
 }
 
 // Get a copy of the dirty rectangle.
 pax_recti pax_get_dirty(pax_buf_t const *buf) {
+    PAX_BUF_CHECK(buf, (pax_recti){0, 0});
     return (pax_recti){
         buf->dirty_x0,
         buf->dirty_y0,
@@ -598,27 +519,25 @@ pax_recti pax_get_dirty(pax_buf_t const *buf) {
 
 // Mark the entire buffer as clean.
 void pax_mark_clean(pax_buf_t *buf) {
-    PAX_BUF_CHECK("pax_mark_clean");
+    PAX_BUF_CHECK(buf);
     buf->dirty_x0 = buf->width;
     buf->dirty_y0 = buf->height;
     buf->dirty_x1 = -1;
     buf->dirty_y1 = -1;
-    PAX_SUCCESS();
 }
 
 // Mark the entire buffer as dirty.
 void pax_mark_dirty0(pax_buf_t *buf) {
-    PAX_BUF_CHECK("pax_mark_dirty0");
+    PAX_BUF_CHECK(buf);
     buf->dirty_x0 = 0;
     buf->dirty_y0 = 0;
     buf->dirty_x1 = buf->width - 1;
     buf->dirty_y1 = buf->height - 1;
-    PAX_SUCCESS();
 }
 
 // Mark a single point as dirty.
 void pax_mark_dirty1(pax_buf_t *buf, int x, int y) {
-    PAX_BUF_CHECK("pax_mark_dirty1");
+    PAX_BUF_CHECK(buf);
 
     if (x < 0)
         x = 0;
@@ -637,13 +556,11 @@ void pax_mark_dirty1(pax_buf_t *buf, int x, int y) {
         buf->dirty_y0 = y;
     if (y > buf->dirty_y1)
         buf->dirty_y1 = y;
-
-    PAX_SUCCESS();
 }
 
 // Mark a rectangle as dirty.
 void pax_mark_dirty2(pax_buf_t *buf, int x, int y, int width, int height) {
-    PAX_BUF_CHECK("pax_mark_dirty2");
+    PAX_BUF_CHECK(buf);
 
     if (x < buf->dirty_x0)
         buf->dirty_x0 = x;
@@ -662,8 +579,6 @@ void pax_mark_dirty2(pax_buf_t *buf, int x, int y, int width, int height) {
         buf->dirty_x0 = buf->width - 1;
     if (buf->dirty_y0 >= buf->height)
         buf->dirty_y0 = buf->height - 1;
-
-    PAX_SUCCESS();
 }
 
 
@@ -885,8 +800,22 @@ pax_col_t pax_col_merge(pax_col_t base, pax_col_t top) {
 
     // Otherwise, do a full alpha blend.
     uint8_t part = top >> 24;
-    return (pax_lerp(part, base >> 24, 255) << 24) | (pax_lerp(part, base >> 16, top >> 16) << 16)
-           | (pax_lerp(part, base >> 8, top >> 8) << 8) | pax_lerp(part, base, top);
+    // clang-format off
+    top |= 0xff000000;
+    return pax_lerp_mask(0x00ff00ff, part, base, top)
+         | pax_lerp_mask(0xff00ff00, part, base, top);
+
+    // return pax_lerp_off(24, part, base, 255)
+    //      | pax_lerp_off(16, part, base, top)
+    //      | pax_lerp_off( 8, part, base, top)
+    //      | pax_lerp_off( 0, part, base, top);
+
+    // return (pax_lerp(part, base >> 24, 255) << 24)
+    //      | (pax_lerp(part, base >> 16, top >> 16) << 16)
+    //      | (pax_lerp(part, base >> 8, top >> 8) << 8)
+    //      |  pax_lerp(part, base, top);
+
+    // clang-format on
 }
 
 // Tints the color, commonly used for textures.
@@ -904,7 +833,7 @@ pax_col_t pax_col_tint(pax_col_t col, pax_col_t tint) {
 
 // Set a pixel, merging with alpha.
 void pax_merge_pixel(pax_buf_t *buf, pax_col_t color, int x, int y) {
-    PAX_BUF_CHECK("pax_merge_pixel");
+    PAX_BUF_CHECK(buf);
 
 #if PAX_COMPILE_ORIENTATION
     pax_vec2i tmp = pax_orient_det_vec2i(buf, (pax_vec2i){x, y});
@@ -917,8 +846,6 @@ void pax_merge_pixel(pax_buf_t *buf, pax_col_t color, int x, int y) {
         pax_last_error = PAX_ERR_BOUNDS;
         return;
     }
-
-    PAX_SUCCESS();
 
     int index = x + y * buf->width;
     if (PAX_IS_PALETTE(buf->type)) {
@@ -937,7 +864,7 @@ void pax_merge_pixel(pax_buf_t *buf, pax_col_t color, int x, int y) {
 
 // Set a pixel.
 void pax_set_pixel(pax_buf_t *buf, pax_col_t color, int x, int y) {
-    PAX_BUF_CHECK("pax_set_pixel");
+    PAX_BUF_CHECK(buf);
 
 #if PAX_COMPILE_ORIENTATION
     pax_vec2i tmp = pax_orient_det_vec2i(buf, (pax_vec2i){x, y});
@@ -950,8 +877,6 @@ void pax_set_pixel(pax_buf_t *buf, pax_col_t color, int x, int y) {
         pax_last_error = PAX_ERR_BOUNDS;
         return;
     }
-
-    PAX_SUCCESS();
 
     int index = x + y * buf->width;
     if (PAX_IS_PALETTE(buf->type)) {
@@ -965,7 +890,7 @@ void pax_set_pixel(pax_buf_t *buf, pax_col_t color, int x, int y) {
 
 // Get a pixel.
 pax_col_t pax_get_pixel(pax_buf_t const *buf, int x, int y) {
-    PAX_BUF_CHECK1("pax_get_pixel", 0);
+    PAX_BUF_CHECK(buf, 0);
 
 #if PAX_COMPILE_ORIENTATION
     pax_vec2i tmp = pax_orient_det_vec2i(buf, (pax_vec2i){x, y});
@@ -978,13 +903,12 @@ pax_col_t pax_get_pixel(pax_buf_t const *buf, int x, int y) {
         pax_last_error = PAX_ERR_BOUNDS;
         return 0;
     }
-    PAX_SUCCESS();
     return buf->buf2col(buf, buf->getter(buf, x + y * buf->width));
 }
 
 // Set a pixel without color conversion.
 void pax_set_pixel_raw(pax_buf_t *buf, pax_col_t color, int x, int y) {
-    PAX_BUF_CHECK("pax_set_pixel");
+    PAX_BUF_CHECK(buf);
 
 #if PAX_COMPILE_ORIENTATION
     pax_vec2i tmp = pax_orient_det_vec2i(buf, (pax_vec2i){x, y});
@@ -998,8 +922,6 @@ void pax_set_pixel_raw(pax_buf_t *buf, pax_col_t color, int x, int y) {
         return;
     }
 
-    PAX_SUCCESS();
-
     int index = x + y * buf->width;
     // Don't do any color conversion.
     buf->setter(buf, color, index);
@@ -1007,7 +929,7 @@ void pax_set_pixel_raw(pax_buf_t *buf, pax_col_t color, int x, int y) {
 
 // Get a pixel without color conversion.
 pax_col_t pax_get_pixel_raw(pax_buf_t const *buf, int x, int y) {
-    PAX_BUF_CHECK1("pax_get_pixel", 0);
+    PAX_BUF_CHECK(buf, 0);
 
 #if PAX_COMPILE_ORIENTATION
     pax_vec2i tmp = pax_orient_det_vec2i(buf, (pax_vec2i){x, y});
@@ -1020,7 +942,6 @@ pax_col_t pax_get_pixel_raw(pax_buf_t const *buf, int x, int y) {
         pax_last_error = PAX_ERR_BOUNDS;
         return 0;
     }
-    PAX_SUCCESS();
     return buf->getter(buf, x + y * buf->width);
 }
 
@@ -1030,15 +951,15 @@ pax_col_t pax_get_pixel_raw(pax_buf_t const *buf, int x, int y) {
 
 // Draws an image at the image's normal size.
 void pax_draw_image(pax_buf_t *buf, pax_buf_t const *image, float x, float y) {
-    if (!image || !image->buf)
-        PAX_ERROR("pax_draw_image", PAX_ERR_CORRUPT);
+    PAX_BUF_CHECK(buf);
+    PAX_BUF_CHECK(image);
     pax_draw_image_sized(buf, image, x, y, image->width, image->height);
 }
 
 // Draw an image with a prespecified size.
 void pax_draw_image_sized(pax_buf_t *buf, pax_buf_t const *image, float x, float y, float width, float height) {
-    if (!image || !image->buf)
-        PAX_ERROR("pax_draw_image", PAX_ERR_CORRUPT);
+    PAX_BUF_CHECK(buf);
+    PAX_BUF_CHECK(image);
     if (PAX_IS_ALPHA(image->type)) {
         pax_shade_rect(buf, -1, &PAX_SHADER_TEXTURE(image), NULL, x, y, width, height);
     } else {
@@ -1049,16 +970,16 @@ void pax_draw_image_sized(pax_buf_t *buf, pax_buf_t const *image, float x, float
 // Draws an image at the image's normal size.
 // Assumes the image is completely opaque, any transparent parts are drawn opaque.
 void pax_draw_image_op(pax_buf_t *buf, pax_buf_t const *image, float x, float y) {
-    if (!image || !image->buf)
-        PAX_ERROR("pax_draw_image_op", PAX_ERR_CORRUPT);
+    PAX_BUF_CHECK(buf);
+    PAX_BUF_CHECK(image);
     pax_draw_image_sized_op(buf, image, x, y, image->width, image->height);
 }
 
 // Draw an image with a prespecified size.
 // Assumes the image is completely opaque, any transparent parts are drawn opaque.
 void pax_draw_image_sized_op(pax_buf_t *buf, pax_buf_t const *image, float x, float y, float width, float height) {
-    if (!image || !image->buf)
-        PAX_ERROR("pax_draw_image", PAX_ERR_CORRUPT);
+    PAX_BUF_CHECK(buf);
+    PAX_BUF_CHECK(image);
     pax_shade_rect(buf, -1, &PAX_SHADER_TEXTURE_OP(image), NULL, x, y, width, height);
 }
 
@@ -1080,14 +1001,12 @@ void pax_shade_rect(
         return;
     }
 
+    PAX_BUF_CHECK(buf);
+
     if (!uvs) {
         // Apply default UVs.
         uvs = &dummy_quad_uvs;
     }
-
-    // Split UVs into two triangles.
-    pax_trif uv0 = {.x0 = uvs->x0, .y0 = uvs->y0, .x1 = uvs->x1, .y1 = uvs->y1, .x2 = uvs->x2, .y2 = uvs->y2};
-    pax_trif uv1 = {.x0 = uvs->x0, .y0 = uvs->y0, .x1 = uvs->x3, .y1 = uvs->y3, .x2 = uvs->x2, .y2 = uvs->y2};
 
     if (matrix_2d_is_identity2(buf->stack_2d.value)) {
         // We don't need to use triangles here.
@@ -1175,9 +1094,76 @@ void pax_shade_rect(
             );
         }
     } else {
-        // We still need triangles.
-        pax_shade_tri(buf, color, shader, &uv0, x, y, x + width, y, x + width, y + height);
-        pax_shade_tri(buf, color, shader, &uv1, x, y, x, y + height, x + width, y + height);
+        // Draw as a quad.
+        matrix_2d_t mtx       = buf->stack_2d.value;
+        pax_vec2f   vertex[4] = {
+            matrix_2d_transform_alt(mtx, (pax_vec2f){x, y}),
+            matrix_2d_transform_alt(mtx, (pax_vec2f){x + width, y}),
+            matrix_2d_transform_alt(mtx, (pax_vec2f){x + width, y + height}),
+            matrix_2d_transform_alt(mtx, (pax_vec2f){x, y + height}),
+        };
+#if PAX_COMPILE_MCR
+        if (pax_do_multicore) {
+            // Assign worker task.
+            pax_task_t task
+                = {.buffer     = buf,
+                   .type       = PAX_TASK_QUAD,
+                   .color      = color,
+                   .use_shader = shader,
+                   .quad_uvs   = *uvs,
+                   .shape_len  = 8};
+            memcpy(task.shape, &vertex, sizeof(vertex));
+            if (shader)
+                task.shader = *shader;
+            paxmcr_add_task(&task);
+            // Draw our part.
+            paxmcr_quad_shaded(
+                false,
+                buf,
+                color,
+                shader,
+                vertex[0].x,
+                vertex[0].y,
+                vertex[1].x,
+                vertex[1].y,
+                vertex[2].x,
+                vertex[2].y,
+                vertex[3].x,
+                vertex[3].y,
+                uvs->x0,
+                uvs->y0,
+                uvs->x1,
+                uvs->y1,
+                uvs->x2,
+                uvs->y2,
+                uvs->x3,
+                uvs->y3
+            );
+        } else
+#endif
+        {
+            pax_quad_shaded(
+                buf,
+                color,
+                shader,
+                vertex[0].x,
+                vertex[0].y,
+                vertex[1].x,
+                vertex[1].y,
+                vertex[2].x,
+                vertex[2].y,
+                vertex[3].x,
+                vertex[3].y,
+                uvs->x0,
+                uvs->y0,
+                uvs->x1,
+                uvs->y1,
+                uvs->x2,
+                uvs->y2,
+                uvs->x3,
+                uvs->y3
+            );
+        }
     }
 }
 
@@ -1193,12 +1179,12 @@ void pax_shade_line(
     float               x1,
     float               y1
 ) {
-    PAX_BUF_CHECK("pax_shade_line");
-
     if (!shader) {
         pax_draw_line(buf, color, x0, y0, x1, y1);
         return;
     }
+
+    PAX_BUF_CHECK(buf);
 
     float u0, v0, u1, v1;
 
@@ -1234,7 +1220,7 @@ void pax_shade_line(
 
     // If any point is outside clip now, we don't draw a line.
     if (y0 < buf->clip.y || y1 > buf->clip.y + buf->clip.h - 1)
-        goto noneed;
+        return;
 
     pax_mark_dirty1(buf, x0, y0);
     pax_mark_dirty1(buf, x1, y1);
@@ -1242,11 +1228,7 @@ void pax_shade_line(
     // Because a line isn't drawn in alternating scanlines, we need to sync up with the worker.
     pax_join();
 #endif
-    pax_line_shaded(buf, color, shader, u0, v0, u1, v1, x0, y0, x1, y1);
-
-// This label is used if there's no need to try to draw a line.
-noneed:
-    PAX_SUCCESS();
+    pax_line_shaded(buf, color, shader, x0, y0, x1, y1, u0, v0, u1, v1);
 }
 
 // Draw a triangle with a shader.
@@ -1269,7 +1251,7 @@ void pax_shade_tri(
         return;
     }
 
-    PAX_BUF_CHECK("pax_shade_tri");
+    PAX_BUF_CHECK(buf);
     matrix_2d_transform(buf->stack_2d.value, &x0, &y0);
     matrix_2d_transform(buf->stack_2d.value, &x1, &y1);
     matrix_2d_transform(buf->stack_2d.value, &x2, &y2);
@@ -1298,7 +1280,6 @@ void pax_shade_tri(
 
     if ((y2 == y0 && y1 == y0) || (x2 == x0 && x1 == x0)) {
         // We can't draw a flat triangle.
-        PAX_SUCCESS();
         return;
     }
 
@@ -1364,8 +1345,6 @@ void pax_shade_tri(
             uvs->y2
         );
     }
-
-    PAX_SUCCESS();
 }
 
 // Draw an arc with a shader, angles in radians.
@@ -1387,7 +1366,8 @@ void pax_shade_arc(
         return;
     }
 
-    PAX_BUF_CHECK("pax_draw_arc");
+    PAX_BUF_CHECK(buf);
+
     if (!uvs) {
         // Assign default UVs.
         uvs = &dummy_quad_uvs;
@@ -1440,8 +1420,6 @@ void pax_shade_arc(
         tri_uvs.x1 = tri_uvs.x2;
         tri_uvs.y1 = tri_uvs.y2;
     }
-
-    PAX_SUCCESS();
 }
 
 // Draw a circle with a shader.
@@ -1449,6 +1427,12 @@ void pax_shade_arc(
 void pax_shade_circle(
     pax_buf_t *buf, pax_col_t color, pax_shader_t const *shader, pax_quadf const *uvs, float x, float y, float r
 ) {
+    if (!shader) {
+        pax_draw_circle(buf, color, x, y, r);
+    }
+
+    PAX_BUF_CHECK(buf);
+
     // Use precalcualted circles for speed because the user can't tell anyway.
     pax_vec2f const *preset;
     pax_trif const  *uv_set;
@@ -1506,35 +1490,96 @@ void pax_shade_circle(
 
 // Draw a rectangle.
 void pax_draw_rect(pax_buf_t *buf, pax_col_t color, float x, float y, float width, float height) {
-    PAX_BUF_CHECK("pax_draw_rect");
+    PAX_BUF_CHECK(buf);
     if (!pax_do_draw_col(buf, color))
         return;
+
     if (matrix_2d_is_identity2(buf->stack_2d.value)) {
-        // This can be simplified significantly.
+        // We don't need to use triangles here.
         matrix_2d_transform(buf->stack_2d.value, &x, &y);
         width  *= buf->stack_2d.value.a0;
         height *= buf->stack_2d.value.b1;
-        pax_simple_rect(buf, color, x, y, width, height);
+
+// Perform rotation.
+#if PAX_COMPILE_ORIENTATION
+        pax_rectf tmp = pax_orient_det_rectf(buf, (pax_rectf){x, y, width, height});
+        x             = tmp.x;
+        y             = tmp.y;
+        width         = tmp.w;
+        height        = tmp.h;
+#endif
+
+        pax_mark_dirty2(buf, x - 0.5, y - 0.5, width + 1, height + 1);
+#if PAX_COMPILE_MCR
+        if (pax_do_multicore) {
+            // Assign worker task.
+            pax_task_t task
+                = {.buffer     = buf,
+                   .type       = PAX_TASK_RECT,
+                   .color      = color,
+                   .use_shader = NULL,
+                   .shape      = {x, y, width, height},
+                   .shape_len  = 4};
+            paxmcr_add_task(&task);
+            // Draw our part.
+            paxmcr_rect_unshaded(false, buf, color, shader, x, y, width, height);
+        } else
+#endif
+        {
+            pax_rect_unshaded(buf, color, x, y, width, height);
+        }
     } else {
-        // We need to go full quad.
-        float x0 = x, y0 = y;
-        float x1 = x + width, y1 = y;
-        float x2 = x + width, y2 = y + height;
-        float x3 = x, y3 = y + height;
-        // Transform all points.
-        matrix_2d_transform(buf->stack_2d.value, &x0, &y0);
-        matrix_2d_transform(buf->stack_2d.value, &x1, &y1);
-        matrix_2d_transform(buf->stack_2d.value, &x2, &y2);
-        matrix_2d_transform(buf->stack_2d.value, &x3, &y3);
-        // Draw the triangle components.
-        pax_simple_tri(buf, color, x0, y0, x1, y1, x2, y2);
-        pax_simple_tri(buf, color, x0, y0, x3, y3, x2, y2);
+        // Draw as a quad.
+        matrix_2d_t mtx       = buf->stack_2d.value;
+        pax_vec2f   vertex[4] = {
+            matrix_2d_transform_alt(mtx, (pax_vec2f){x, y}),
+            matrix_2d_transform_alt(mtx, (pax_vec2f){x + width, y}),
+            matrix_2d_transform_alt(mtx, (pax_vec2f){x + width, y + height}),
+            matrix_2d_transform_alt(mtx, (pax_vec2f){x, y + height}),
+        };
+#if PAX_COMPILE_MCR
+        if (pax_do_multicore) {
+            // Assign worker task.
+            pax_task_t task
+                = {.buffer = buf, .type = PAX_TASK_QUAD, .color = color, .use_shader = NULL, .shape_len = 8};
+            memcpy(task.shape, &vertex, sizeof(vertex));
+            paxmcr_add_task(&task);
+            // Draw our part.
+            paxmcr_quad_unshaded(
+                false,
+                buf,
+                color,
+                vertex[0].x,
+                vertex[0].y,
+                vertex[1].x,
+                vertex[1].y,
+                vertex[2].x,
+                vertex[2].y,
+                vertex[3].x,
+                vertex[3].y
+            );
+        } else
+#endif
+        {
+            pax_quad_unshaded(
+                buf,
+                color,
+                vertex[0].x,
+                vertex[0].y,
+                vertex[1].x,
+                vertex[1].y,
+                vertex[2].x,
+                vertex[2].y,
+                vertex[3].x,
+                vertex[3].y
+            );
+        }
     }
 }
 
 // Draw a line.
 void pax_draw_line(pax_buf_t *buf, pax_col_t color, float x0, float y0, float x1, float y1) {
-    PAX_BUF_CHECK("pax_draw_line");
+    PAX_BUF_CHECK(buf);
     if (!pax_do_draw_col(buf, color))
         return;
     // Apply transforms.
@@ -1546,7 +1591,7 @@ void pax_draw_line(pax_buf_t *buf, pax_col_t color, float x0, float y0, float x1
 
 // Draw a triangle.
 void pax_draw_tri(pax_buf_t *buf, pax_col_t color, float x0, float y0, float x1, float y1, float x2, float y2) {
-    PAX_BUF_CHECK("pax_draw_tri");
+    PAX_BUF_CHECK(buf);
     if (!pax_do_draw_col(buf, color))
         return;
     // Apply the transforms.
@@ -1559,7 +1604,7 @@ void pax_draw_tri(pax_buf_t *buf, pax_col_t color, float x0, float y0, float x1,
 
 // Draw na arc, angles in radians.
 void pax_draw_arc(pax_buf_t *buf, pax_col_t color, float x, float y, float r, float a0, float a1) {
-    PAX_BUF_CHECK("pax_draw_arc");
+    PAX_BUF_CHECK(buf);
     if (!pax_do_draw_col(buf, color))
         return;
 
@@ -1597,13 +1642,11 @@ void pax_draw_arc(pax_buf_t *buf, pax_col_t color, float x, float y, float r, fl
         x0 = x1;
         y0 = y1;
     }
-
-    PAX_SUCCESS();
 }
 
 // Draw a circle.
 void pax_draw_circle(pax_buf_t *buf, pax_col_t color, float x, float y, float r) {
-    PAX_BUF_CHECK("pax_draw_circle");
+    PAX_BUF_CHECK(buf);
     if (!pax_do_draw_col(buf, color))
         return;
 
@@ -1629,7 +1672,7 @@ void pax_draw_circle(pax_buf_t *buf, pax_col_t color, float x, float y, float r)
 
 // Fill the background.
 PAX_PERF_CRITICAL_ATTR void pax_background(pax_buf_t *buf, pax_col_t color) {
-    PAX_BUF_CHECK("pax_background");
+    PAX_BUF_CHECK(buf);
 
 #if PAX_COMPILE_MCR
     pax_join();
@@ -1678,12 +1721,11 @@ PAX_PERF_CRITICAL_ATTR void pax_background(pax_buf_t *buf, pax_col_t color) {
     }
 
     pax_mark_dirty0(buf);
-    PAX_SUCCESS();
 }
 
 // Draw a rectangle, ignoring matrix transform.
 void pax_simple_rect(pax_buf_t *buf, pax_col_t color, float x, float y, float width, float height) {
-    PAX_BUF_CHECK("pax_simple_rect");
+    PAX_BUF_CHECK(buf);
     if (!pax_do_draw_col(buf, color))
         return;
 
@@ -1716,13 +1758,11 @@ void pax_simple_rect(pax_buf_t *buf, pax_col_t color, float x, float y, float wi
     {
         pax_rect_unshaded(buf, color, x, y, width, height);
     }
-
-    PAX_SUCCESS();
 }
 
 // Draw a line, ignoring matrix transform.
 void pax_simple_line(pax_buf_t *buf, pax_col_t color, float x0, float y0, float x1, float y1) {
-    PAX_BUF_CHECK("pax_simple_line");
+    PAX_BUF_CHECK(buf);
     if (!pax_do_draw_col(buf, color))
         return;
 
@@ -1749,13 +1789,11 @@ void pax_simple_line(pax_buf_t *buf, pax_col_t color, float x0, float y0, float 
     pax_join();
 #endif
     pax_line_unshaded(buf, color, x0, y0, x1, y1);
-
-    PAX_SUCCESS();
 }
 
 // Draw a triangle, ignoring matrix transform.
 void pax_simple_tri(pax_buf_t *buf, pax_col_t color, float x0, float y0, float x1, float y1, float x2, float y2) {
-    PAX_BUF_CHECK("pax_simple_tri");
+    PAX_BUF_CHECK(buf);
     if (!pax_do_draw_col(buf, color))
         return;
 
@@ -1767,7 +1805,6 @@ void pax_simple_tri(pax_buf_t *buf, pax_col_t color, float x0, float y0, float x
 
     if ((y2 == y0 && y1 == y0) || (x2 == x0 && x1 == x0)) {
         // We can't draw a flat triangle.
-        PAX_SUCCESS();
         return;
     }
 
@@ -1810,14 +1847,12 @@ void pax_simple_tri(pax_buf_t *buf, pax_col_t color, float x0, float y0, float x
     {
         pax_tri_unshaded(buf, color, x0, y0, x1, y1, x2, y2);
     }
-
-    PAX_SUCCESS();
 }
 
 // Draw a arc, ignoring matrix transform.
 // Angles in radians.
 void pax_simple_arc(pax_buf_t *buf, pax_col_t color, float x, float y, float r, float a0, float a1) {
-    PAX_BUF_CHECK("pax_simple_arc");
+    PAX_BUF_CHECK(buf);
     if (!pax_do_draw_col(buf, color))
         return;
 
@@ -1861,8 +1896,6 @@ void pax_simple_arc(pax_buf_t *buf, pax_col_t color, float x, float y, float r, 
         x0 = x1;
         y0 = y1;
     }
-
-    PAX_SUCCESS();
 }
 
 // Draw a circle, ignoring matrix transform.

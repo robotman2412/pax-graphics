@@ -55,6 +55,6 @@ if(ESP_PLATFORM)
 else()
     # Just a CMake library.
     add_library(pax_graphics STATIC ${PAX_SRCS})
-    target_compile_definitions(pax_graphics PUBLIC -DPAX_COMPILE_MCR=0)
+    target_compile_definitions(pax_graphics PUBLIC)
     target_include_directories(pax_graphics PUBLIC ${PAX_INCLUDE})
 endif()

@@ -14,7 +14,7 @@ MaxEmptyLinesToKeep: 3
 IndentCaseLabels: true
 IndentCaseBlocks: false
 IndentGotoLabels: true
-IndentPPDirectives: None
+IndentPPDirectives: BeforeHash
 IndentExternBlock: AfterExternBlock
 IndentWrappedFunctionNames: true
 

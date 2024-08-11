@@ -3,6 +3,8 @@
 
 #include "pax_orientation.h"
 
+#include "pax_internal.h"
+
 
 
 // Transforms the co-ordinates as 1x counter-clockwise rotation.

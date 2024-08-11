@@ -1,55 +1,113 @@
 
 // SPDX-License-Identifier: MIT
 
+// clang-format off
+
 #include "pax_internal.h"
 
 #include <string.h>
 
-/* ======== SHADED DRAWING ======= */
 
-// Internal method for shaded triangles.
-// Has no UV co-ordinates.
+
+/* ======== TRAPEZOIDS ======= */
+
+// Multi-core method for shaded trapezoids.
+// Used internally for triangles and quads.
+#define PDHG_NAME pax_tzoid_shaded_nouv
 #define PDHG_SHADED
 #define PDHG_STATIC
 #define PDHG_IGNORE_UV
-#define PDHG_NAME pax_tri_shaded1
-#include "pax_dh_generic_tri.hpp"
+#include "pax_dh_generic_tzoid.inc"
 
-// Internal method for shaded triangles.
+// Multi-core method for shaded trapezoids.
+// Used internally for triangles and quads.
+#define PDHG_NAME pax_tzoid_shaded_uv
 #define PDHG_SHADED
 #define PDHG_STATIC
-#define PDHG_NAME pax_tri_shaded0
-#include "pax_dh_generic_tri.hpp"
+#include "pax_dh_generic_tzoid.inc"
+
+
+
+/* ======== TRIANGLES ======== */
+
+// Internal method for shaded triangles.
+// Has no UV co-ordinates.
+#define PDHG_NAME pax_tri_shaded_nouv
+#define PDHG_SHADED
+#define PDHG_STATIC
+#define PDHG_IGNORE_UV
+#define PDHG_TZOID_NAME pax_tzoid_shaded_nouv
+#include "pax_dh_generic_tri.inc"
+
+// Internal method for shaded triangles.
+#define PDHG_NAME pax_tri_shaded_uv
+#define PDHG_SHADED
+#define PDHG_STATIC
+#define PDHG_TZOID_NAME pax_tzoid_shaded_uv
+#include "pax_dh_generic_tri.inc"
 
 // Internal method for shaded triangles.
 void pax_tri_shaded(
     pax_buf_t          *buf,
     pax_col_t           color,
     pax_shader_t const *shader,
-    float               x0,
-    float               y0,
-    float               x1,
-    float               y1,
-    float               x2,
-    float               y2,
-    float               u0,
-    float               v0,
-    float               u1,
-    float               v1,
-    float               u2,
-    float               v2
+    float x0, float y0, float x1, float y1, float x2, float y2,
+    float u0, float v0, float u1, float v1, float u2, float v2
 ) {
     if (shader->promise_callback) {
         uint32_t promises = (*(pax_promise_func_t)shader->promise_callback)(buf, color, shader->callback_args);
         if (promises & PAX_PROMISE_INVISIBLE)
             return;
         if (promises & PAX_PROMISE_IGNORE_UVS) {
-            pax_tri_shaded1(buf, color, shader, x0, y0, x1, y1, x2, y2);
+            pax_tri_shaded_nouv(buf, color, shader, x0, y0, x1, y1, x2, y2);
             return;
         }
     }
-    pax_tri_shaded0(buf, color, shader, x0, y0, x1, y1, x2, y2, u0, v0, u1, v1, u2, v2);
+    pax_tri_shaded_uv(buf, color, shader, x0, y0, x1, y1, x2, y2, u0, v0, u1, v1, u2, v2);
 }
+
+
+
+/* ========== QUADS ========== */
+
+// Internal method for shaded quads.
+#define PDHG_NAME pax_quad_shaded_nouv
+#define PDHG_SHADED
+#define PDHG_IGNORE_UV
+#define PDHG_STATIC
+#define PDHG_TZOID_NAME pax_tzoid_shaded_nouv
+#include "pax_dh_generic_quad.inc"
+
+// Internal method for shaded quads.
+#define PDHG_NAME pax_quad_shaded_uv
+#define PDHG_SHADED
+#define PDHG_STATIC
+#define PDHG_TZOID_NAME pax_tzoid_shaded_uv
+#include "pax_dh_generic_quad.inc"
+
+// Internal method for shaded quads.
+void pax_quad_shaded(
+    pax_buf_t          *buf,
+    pax_col_t           color,
+    pax_shader_t const *shader,
+    float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3,
+    float u0, float v0, float u1, float v1, float u2, float v2, float u3, float v3
+) {
+    if (shader->promise_callback) {
+        uint32_t promises = (*(pax_promise_func_t)shader->promise_callback)(buf, color, shader->callback_args);
+        if (promises & PAX_PROMISE_INVISIBLE)
+            return;
+        if (promises & PAX_PROMISE_IGNORE_UVS) {
+            pax_quad_shaded_nouv(buf, color, shader, x0, y0, x1, y1, x2, y2, x3, y3);
+            return;
+        }
+    }
+    pax_quad_shaded_uv(buf, color, shader, x0, y0, x1, y1, x2, y2, x3, y3, u0, v0, u1, v1, u2, v2, u3, v3);
+}
+
+
+
+/* ======= RECTANGLES ======== */
 
 // Optimisation which maps a buffer directly onto another.
 // If assume_opaque is true, the overlay is done without transparency.
@@ -143,39 +201,29 @@ void pax_overlay_buffer(pax_buf_t *base, pax_buf_t *top, int x, int y, int width
 #define PDHG_SHADED
 #define PDHG_IGNORE_UV
 #define PDHG_STATIC
-#define PDHG_NAME pax_rect_shaded2
-#include "pax_dh_generic_rect.hpp"
+#define PDHG_NAME pax_rect_shaded_nouv
+#include "pax_dh_generic_rect.inc"
 
 // Optimisation which makes more assumptions about UVs.
 #define PDHG_SHADED
 #define PDHG_RESTRICT_UV
 #define PDHG_STATIC
-#define PDHG_NAME pax_rect_shaded1
-#include "pax_dh_generic_rect.hpp"
+#define PDHG_NAME pax_rect_shaded_resuv
+#include "pax_dh_generic_rect.inc"
 
 // Internal method for shaded rects.
 #define PDHG_SHADED
 #define PDHG_STATIC
-#define PDHG_NAME pax_rect_shaded0
-#include "pax_dh_generic_rect.hpp"
+#define PDHG_NAME pax_rect_shaded_uv
+#include "pax_dh_generic_rect.inc"
 
 // Internal method for shaded rects.
 void pax_rect_shaded(
     pax_buf_t          *buf,
     pax_col_t           color,
     pax_shader_t const *shader,
-    float               x,
-    float               y,
-    float               width,
-    float               height,
-    float               u0,
-    float               v0,
-    float               u1,
-    float               v1,
-    float               u2,
-    float               v2,
-    float               u3,
-    float               v3
+    float x, float y, float width, float height,
+    float u0, float v0, float u1, float v1, float u2, float v2, float u3, float v3
 ) {
 
     pax_promise_func_t fn      = (pax_promise_func_t)shader->promise_callback;
@@ -183,7 +231,7 @@ void pax_rect_shaded(
 
     if (promise & PAX_PROMISE_IGNORE_UVS) {
         // Ignore UVs.
-        pax_rect_shaded2(buf, color, shader, x, y, width, height);
+        pax_rect_shaded_nouv(buf, color, shader, x, y, width, height);
         return;
     }
 
@@ -198,27 +246,25 @@ void pax_rect_shaded(
         }
     } else if (is_default_uv || (v0 == v1 && v2 == v3 && u0 == u3 && u1 == u2)) {
         // Make some assumptions about UVs.
-        pax_rect_shaded1(buf, color, shader, x, y, width, height, u0, v0, u2, v2);
+        pax_rect_shaded_resuv(buf, color, shader, x, y, width, height, u0, v0, u2, v2);
         return;
     }
 
     // Use the more expensive generic implementation.
-    pax_rect_shaded0(buf, color, shader, x, y, width, height, u0, v0, u1, v1, u2, v2, u3, v3);
+    pax_rect_shaded_uv(buf, color, shader, x, y, width, height, u0, v0, u1, v1, u2, v2, u3, v3);
 }
+
+
+
+/* ========== LINES ========== */
 
 // Internal method for line drawing.
 void pax_line_shaded(
     pax_buf_t          *buf,
     pax_col_t           color,
     pax_shader_t const *shader,
-    float               u0,
-    float               v0,
-    float               u1,
-    float               v1,
-    float               x0,
-    float               y0,
-    float               x1,
-    float               y1
+    float x0, float y0, float x1, float y1,
+    float u0, float v0, float u1, float v1
 ) {
 
     pax_shader_ctx_t shader_ctx = pax_get_shader_ctx(buf, color, shader);

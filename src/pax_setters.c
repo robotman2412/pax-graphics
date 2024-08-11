@@ -4,10 +4,95 @@
 #include "pax_internal.h"
 #include "pax_shaders.h"
 
+#include <endian.h>
+
+
+
 /* ===== GETTERS AND SETTERS ===== */
 
 // Gets the index getters and setters for the given buffer.
-void pax_get_setters(pax_buf_t const *buf, pax_index_getter_t *getter, pax_index_setter_t *setter) {
+void pax_get_setters(
+    pax_buf_t const    *buf,
+    pax_index_getter_t *getter,
+    pax_index_setter_t *setter,
+    pax_range_setter_t *range_setter,
+    pax_range_setter_t *range_merger
+) {
+#if PAX_RANGE_MERGER == 1
+    switch (buf->bpp) {
+        case (1): *range_merger = pax_range_merger_1bpp; break;
+        case (2): *range_merger = pax_range_merger_2bpp; break;
+        case (4): *range_merger = pax_range_merger_4bpp; break;
+        case (8): *range_merger = pax_range_merger_8bpp; break;
+        case (16):
+            if (buf->reverse_endianness) {
+                *range_merger = pax_range_merger_16bpp_rev;
+            } else {
+                *range_merger = pax_range_merger_16bpp;
+            }
+            break;
+        case (24):
+            if (buf->reverse_endianness) {
+                *range_merger = pax_range_merger_24bpp_rev;
+            } else {
+                *range_merger = pax_range_merger_24bpp;
+            }
+            break;
+        case (32):
+            if (buf->reverse_endianness) {
+                *range_merger = pax_range_merger_32bpp_rev;
+            } else {
+                *range_merger = pax_range_merger_32bpp;
+            }
+            break;
+    }
+#elif PAX_RANGE_MERGER == 2
+    switch (buf->type) {
+    #define PAX_DEF_BUF_TYPE_PAL(type_bpp, name)                                                                       \
+        case name: *range_merger = pax_range_setter_##type_bpp##bpp;
+    #define PAX_DEF_BUF_TYPE_GREY(type_bpp, name)                                                                      \
+        case name: *range_merger = pax_range_merger_##type_bpp##_grey;
+    #define PAX_DEF_BUF_TYPE_ARGB(a, r, g, b, name)                                                                    \
+        case name: *range_merger = pax_range_merger_##a##r##g##b##_argb;
+    #define PAX_DEF_BUF_TYPE_RGB(r, g, b, name)                                                                        \
+        case name: *range_merger = pax_range_merger_##r##g##b##_rgb;
+    #include "helpers/pax_buf_type.inc"
+    }
+#else
+    *range_merger = pax_range_merger_generic;
+#endif
+#if PAX_RANGE_SETTER
+    switch (buf->bpp) {
+        case (1): *range_setter = pax_range_setter_1bpp; break;
+        case (2): *range_setter = pax_range_setter_2bpp; break;
+        case (4): *range_setter = pax_range_setter_4bpp; break;
+        case (8): *range_setter = pax_range_setter_8bpp; break;
+        case (16):
+            if (buf->reverse_endianness) {
+                *range_setter = pax_range_setter_16bpp_rev;
+            } else {
+                *range_setter = pax_range_setter_16bpp;
+            }
+            break;
+        case (24):
+            if (buf->reverse_endianness) {
+                *range_setter = pax_range_setter_24bpp_rev;
+            } else {
+                *range_setter = pax_range_setter_24bpp;
+            }
+            break;
+        case (32):
+            if (buf->reverse_endianness) {
+                *range_setter = pax_range_setter_32bpp_rev;
+            } else {
+                *range_setter = pax_range_setter_32bpp;
+            }
+            break;
+    }
+#else
+    *range_setter = pax_range_setter_generic;
+#endif
+
     switch (buf->bpp) {
         case (1):
             *getter = pax_index_getter_1bpp;
@@ -61,6 +146,8 @@ void pax_get_setters(pax_buf_t const *buf, pax_index_getter_t *getter, pax_index
     }
 }
 
+
+#pragma region index_getter
 // Gets a raw value from a 1BPP buffer.
 pax_col_t pax_index_getter_1bpp(pax_buf_t const *buf, int index) {
     return (buf->buf_8bpp[index >> 3] >> (index & 7)) & 1;
@@ -112,8 +199,10 @@ pax_col_t pax_index_getter_24bpp_rev(pax_buf_t const *buf, int index) {
 pax_col_t pax_index_getter_32bpp_rev(pax_buf_t const *buf, int index) {
     return pax_rev_endian_32(buf->buf_32bpp[index]);
 }
+#pragma endregion index_getter
 
 
+#pragma region index_setter
 // Sets a raw value from a 1BPP buffer.
 void pax_index_setter_1bpp(pax_buf_t *buf, pax_col_t color, int index) {
     uint8_t *ptr = &buf->buf_8bpp[index >> 3];
@@ -163,10 +252,16 @@ void pax_index_setter_16bpp(pax_buf_t *buf, pax_col_t color, int index) {
 
 // Sets a raw value from a 24BPP buffer.
 void pax_index_setter_24bpp(pax_buf_t *buf, pax_col_t color, int index) {
-    index                    += 2 * index;
-    buf->buf_8bpp[index + 0]  = color >> 0;
-    buf->buf_8bpp[index + 1]  = color >> 8;
-    buf->buf_8bpp[index + 2]  = color >> 16;
+    index += 2 * index;
+#if BYTE_ORDER == LITTLE_ENDIAN
+    buf->buf_8bpp[index + 0] = color >> 0;
+    buf->buf_8bpp[index + 1] = color >> 8;
+    buf->buf_8bpp[index + 2] = color >> 16;
+#else
+    buf->buf_8bpp[index + 0] = color >> 16;
+    buf->buf_8bpp[index + 1] = color >> 8;
+    buf->buf_8bpp[index + 2] = color >> 0;
+#endif
 }
 
 // Sets a raw value from a 32BPP buffer.
@@ -181,16 +276,248 @@ void pax_index_setter_16bpp_rev(pax_buf_t *buf, pax_col_t color, int index) {
 
 // Sets a raw value from a 24BPP buffer, reversed endianness.
 void pax_index_setter_24bpp_rev(pax_buf_t *buf, pax_col_t color, int index) {
-    index                    += 2 * index;
-    buf->buf_8bpp[index + 0]  = color >> 16;
-    buf->buf_8bpp[index + 1]  = color >> 8;
-    buf->buf_8bpp[index + 2]  = color >> 0;
+    index += 2 * index;
+#if BYTE_ORDER == LITTLE_ENDIAN
+    buf->buf_8bpp[index + 0] = color >> 16;
+    buf->buf_8bpp[index + 1] = color >> 8;
+    buf->buf_8bpp[index + 2] = color >> 0;
+#else
+    buf->buf_8bpp[index + 0] = color >> 0;
+    buf->buf_8bpp[index + 1] = color >> 8;
+    buf->buf_8bpp[index + 2] = color >> 16;
+#endif
 }
 
 // Sets a raw value from a 32BPP buffer, reversed endianness.
 void pax_index_setter_32bpp_rev(pax_buf_t *buf, pax_col_t color, int index) {
     buf->buf_32bpp[index] = pax_rev_endian_32(color);
 }
+#pragma endregion index_setter
+
+
+#pragma region range_setter
+#if PAX_RANGE_SETTER
+// Sets a raw value range from a 1BPP buffer.
+void pax_range_setter_1bpp(pax_buf_t *buf, pax_col_t color, int index, int count) {
+    if (!count) {
+        return;
+    }
+    color &= 0x1;
+    int i  = index;
+    while (i & 7) {
+        pax_index_setter_1bpp(buf, color, i);
+        i++;
+    }
+    memset(buf->buf_8bpp + i / 8, color * 0x55, (index + count - i) / 8);
+    i += (index + count - i) / 8 * 8;
+    while (i < index + count) {
+        pax_index_setter_1bpp(buf, color, i);
+        i++;
+    }
+}
+
+// Sets a raw value range from a 2BPP buffer.
+void pax_range_setter_2bpp(pax_buf_t *buf, pax_col_t color, int index, int count) {
+    if (!count) {
+        return;
+    }
+    color &= 0x3;
+    int i  = index;
+    while (i & 3) {
+        pax_index_setter_2bpp(buf, color, i);
+        i++;
+    }
+    memset(buf->buf_8bpp + i / 4, color * 0x55, (index + count - i) / 4);
+    i += (index + count - i) / 4 * 4;
+    while (i < index + count) {
+        pax_index_setter_2bpp(buf, color, i);
+        i++;
+    }
+}
+
+// Sets a raw value range from a 4BPP buffer.
+void pax_range_setter_4bpp(pax_buf_t *buf, pax_col_t color, int index, int count) {
+    if (!count) {
+        return;
+    }
+    color &= 0xf;
+    int i  = index;
+    if (i & 1) {
+        pax_index_setter_4bpp(buf, color, i);
+        i++;
+    }
+    memset(buf->buf_8bpp + i / 2, color * 0x55, (index + count - i) / 2);
+    i += (index + count - i) / 2 * 2;
+    if (i < index + count) {
+        pax_index_setter_4bpp(buf, color, i);
+    }
+}
+
+// Sets a raw value range from a 8BPP buffer.
+void pax_range_setter_8bpp(pax_buf_t *buf, pax_col_t color, int index, int count) {
+    memset(buf->buf_8bpp + index, color, count);
+}
+
+// Sets a raw value range from a 16BPP buffer.
+void pax_range_setter_16bpp(pax_buf_t *buf, pax_col_t color, int index, int count) {
+    if (!count) {
+        return;
+    }
+    color &= 0xffff;
+    int i  = index;
+    if (i & 1) {
+        pax_index_setter_16bpp(buf, color, i);
+        i++;
+    }
+    uint32_t *ptr = (uint32_t *)(buf->buf_16bpp + i);
+    for (; i + 1 < index + count; i += 2) {
+        *ptr = color | (color << 16);
+    }
+    if (i < index + count) {
+        pax_index_setter_16bpp(buf, color, i);
+    }
+}
+
+// Sets a raw value range from a 24BPP buffer.
+void pax_range_setter_24bpp(pax_buf_t *buf, pax_col_t color, int index, int count) {
+    if (!count) {
+        return;
+    }
+    color &= 0xffffff;
+    int i  = 0;
+    if (index & 1) {
+        pax_index_setter_24bpp(buf, color, i);
+        i++;
+    }
+    uint16_t *ptr = (uint16_t *)(buf->buf_8bpp + (index + i) * 3);
+    for (; i < count - 1; i += 2) {
+    #if BYTE_ORDER == LITTLE_ENDIAN
+        ptr[0] = color;
+        ptr[1] = (color >> 16) | ((color & 255) << 8);
+        ptr[2] = color >> 8;
+    #else
+        ptr[0] = color >> 8;
+        ptr[1] = (color >> 16) | ((color & 255) << 8);
+        ptr[2] = color;
+    #endif
+        ptr += 3;
+    }
+    if (i < count) {
+        pax_index_setter_24bpp(buf, color, i);
+    }
+}
+
+// Sets a raw value range from a 32BPP buffer.
+void pax_range_setter_32bpp(pax_buf_t *buf, pax_col_t color, int index, int count) {
+    for (int i = index; i < index + count; i++) {
+        buf->buf_32bpp[i] = color;
+    }
+}
+
+// Sets a raw value range from a 16BPP buffer, reversed endianness.
+void pax_range_setter_16bpp_rev(pax_buf_t *buf, pax_col_t color, int index, int count) {
+    pax_range_setter_16bpp(buf, pax_rev_endian_16(color), index, count);
+}
+
+// Sets a raw value range from a 24BPP buffer, reversed endianness.
+void pax_range_setter_24bpp_rev(pax_buf_t *buf, pax_col_t color, int index, int count) {
+    pax_range_setter_24bpp(buf, pax_rev_endian_24(color), index, count);
+}
+
+// Sets a raw value range from a 32BPP buffer, reversed endianness.
+void pax_range_setter_32bpp_rev(pax_buf_t *buf, pax_col_t color, int index, int count) {
+    pax_range_setter_32bpp(buf, pax_rev_endian_32(color), index, count);
+}
+#else
+// Sets a raw value range from any buffer.
+void pax_range_setter_generic(pax_buf_t *buf, pax_col_t color, int index, int count) {
+    for (int i = 0; i < count; i++) {
+        pax_col_t base = buf->buf2col(buf, buf->getter(buf, i + index));
+        buf->setter(buf, color, i + index);
+    }
+}
+#endif
+#pragma endregion range_setter
+
+
+#pragma region range_merger
+#if PAX_RANGE_MERGER == 1
+#elif PAX_RANGE_MERGER == 2
+
+static inline uint32_t bpp_rev_endian(int bpp, uint32_t data) __attribute__((always_inline));
+static inline uint32_t bpp_rev_endian(int bpp, uint32_t data) {
+    switch (bpp) {
+        case 16: return pax_rev_endian_16(data);
+        case 24: return pax_rev_endian_24(data);
+        case 32: return pax_rev_endian_32(data);
+        default: __builtin_unreachable();
+    }
+}
+
+static inline pax_col_t bpp_getter(int bpp, pax_buf_t *buf, int index) __attribute__((always_inline));
+static inline pax_col_t bpp_getter(int bpp, pax_buf_t *buf, int index) {
+    switch (bpp) {
+        case 1: return pax_index_getter_1bpp(buf, index);
+        case 2: return pax_index_getter_2bpp(buf, index);
+        case 4: return pax_index_getter_4bpp(buf, index);
+        case 8: return pax_index_getter_8bpp(buf, index);
+        case 16: return pax_index_getter_16bpp(buf, index);
+        case 24: return pax_index_getter_24bpp(buf, index);
+        case 32: return pax_index_getter_32bpp(buf, index);
+        default: __builtin_unreachable();
+    }
+}
+
+static inline void bpp_setter(int bpp, pax_buf_t *buf, pax_col_t color, int index) __attribute__((always_inline));
+static inline void bpp_setter(int bpp, pax_buf_t *buf, pax_col_t color, int index) {
+    switch (bpp) {
+        case 1: pax_index_setter_1bpp(buf, color, index); break;
+        case 2: pax_index_setter_2bpp(buf, color, index); break;
+        case 4: pax_index_setter_4bpp(buf, color, index); break;
+        case 8: pax_index_setter_8bpp(buf, color, index); break;
+        case 16: pax_index_setter_16bpp(buf, color, index); break;
+        case 24: pax_index_setter_24bpp(buf, color, index); break;
+        case 32: pax_index_setter_32bpp(buf, color, index); break;
+        default: __builtin_unreachable();
+    }
+}
+
+    #define GENERIC_RANGE_MERGER(type, type_bpp)                                                                       \
+        PAX_PERF_CRITICAL_ATTR void pax_range_merger_##type(pax_buf_t *buf, pax_col_t color, int index, int count) {   \
+            int i = 0;                                                                                                 \
+            if (type_bpp > 8 && buf->reverse_endianness) {                                                             \
+                while (i < count) {                                                                                    \
+                    pax_col_t base                                                                                     \
+                        = pax_##type##_to_col(buf, bpp_rev_endian(type_bpp, bpp_getter(type_bpp, buf, i + index)));    \
+                    pax_col_t merged = pax_col_merge(base, color);                                                     \
+                    bpp_setter(type_bpp, buf, bpp_rev_endian(type_bpp, pax_col_to_##type(buf, merged)), i + index);    \
+                    i++;                                                                                               \
+                }                                                                                                      \
+            } else {                                                                                                   \
+                while (i < count) {                                                                                    \
+                    pax_col_t base   = pax_##type##_to_col(buf, bpp_getter(type_bpp, buf, i + index));                 \
+                    pax_col_t merged = pax_col_merge(base, color);                                                     \
+                    bpp_setter(type_bpp, buf, pax_col_to_##type(buf, merged), i + index);                              \
+                    i++;                                                                                               \
+                }                                                                                                      \
+            }                                                                                                          \
+        }
+    #define PAX_DEF_BUF_TYPE_PAL(bpp, name)
+    #define PAX_DEF_BUF_TYPE_GREY(bpp, name)        GENERIC_RANGE_MERGER(bpp##_grey, bpp)
+    #define PAX_DEF_BUF_TYPE_ARGB(a, r, g, b, name) GENERIC_RANGE_MERGER(a##r##g##b##_argb, a + r + g + b)
+    #define PAX_DEF_BUF_TYPE_RGB(r, g, b, name)     GENERIC_RANGE_MERGER(r##g##b##_rgb, r + g + b)
+    #include "helpers/pax_buf_type.inc"
+
+#else
+// Merges a single 32-bit ARGB color into a range of pixels.
+void pax_range_merger_generic(pax_buf_t *buf, pax_col_t color, int index, int count) {
+    for (int i = 0; i < count; i++) {
+        pax_col_t base = buf->buf2col(buf, buf->getter(buf, i + index));
+        buf->setter(buf, buf->col2buf(buf, pax_col_merge(base, color)), i + index);
+    }
+}
+#endif
+#pragma endregion range_merger
 
 
 // Gets the most efficient index setter for the occasion.
@@ -200,7 +527,7 @@ pax_index_setter_t pax_get_setter(pax_buf_t const *buf, pax_col_t *col_ptr, pax_
     pax_col_t col = *col_ptr;
 
     if (PAX_IS_PALETTE(buf->type)) {
-        return pax_do_draw_col(buf, col) ? pax_set_index : NULL;
+        return pax_do_draw_col(buf, col) ? buf->setter : NULL;
     }
 
     if (shader && (shader->callback == pax_shader_texture || shader->callback == pax_shader_texture_aa)) {
@@ -238,6 +565,31 @@ pax_index_setter_t pax_get_setter(pax_buf_t const *buf, pax_col_t *col_ptr, pax_
     } else {
         // If no shader and partial alpha, return merging setter.
         return pax_merge_index;
+    }
+}
+
+// Gets the most efficient range setter/merger for the occasion.
+// Also converts the color, if applicable.
+// Returns NULL when setting is not required.
+pax_range_setter_t pax_get_range_setter(pax_buf_t const *buf, pax_col_t *col_ptr) {
+    pax_col_t col = *col_ptr;
+
+    if (PAX_IS_PALETTE(buf->type)) {
+        return pax_do_draw_col(buf, col) ? buf->range_setter : NULL;
+    }
+
+    if (!(col & 0xff000000)) {
+        // If no shader and alpha is 0, don't set.
+        return NULL;
+
+    } else if ((col & 0xff000000) == 0xff000000) {
+        // If no shader and 255 alpha, convert color and return raw setter.
+        *col_ptr = buf->col2buf(buf, col);
+        return buf->range_setter;
+
+    } else {
+        // If no shader and partial alpha, return merging setter.
+        return buf->range_merger;
     }
 }
 
@@ -326,38 +678,38 @@ void pax_get_col_conv(pax_buf_t const *buf, pax_col_conv_t *col2buf, pax_col_con
             break;
 
 
-        case (PAX_BUF_8_332RGB):
+        case (PAX_BUF_8_332_RGB):
             *col2buf = pax_col_to_332_rgb;
             *buf2col = pax_332_rgb_to_col;
             break;
 
-        case (PAX_BUF_16_565RGB):
+        case (PAX_BUF_16_565_RGB):
             *col2buf = pax_col_to_565_rgb;
             *buf2col = pax_565_rgb_to_col;
             break;
 
 
-        case (PAX_BUF_4_1111ARGB):
+        case (PAX_BUF_4_1111_ARGB):
             *col2buf = pax_col_to_1111_argb;
             *buf2col = pax_1111_argb_to_col;
             break;
 
-        case (PAX_BUF_8_2222ARGB):
+        case (PAX_BUF_8_2222_ARGB):
             *col2buf = pax_col_to_2222_argb;
             *buf2col = pax_2222_argb_to_col;
             break;
 
-        case (PAX_BUF_16_4444ARGB):
+        case (PAX_BUF_16_4444_ARGB):
             *col2buf = pax_col_to_4444_argb;
             *buf2col = pax_4444_argb_to_col;
             break;
 
-        case (PAX_BUF_24_888RGB):
+        case (PAX_BUF_24_888_RGB):
             *col2buf = pax_col_conv_dummy;
             *buf2col = pax_888_rgb_to_col;
             break;
 
-        case (PAX_BUF_32_8888ARGB):
+        case (PAX_BUF_32_8888_ARGB):
             *col2buf = pax_col_conv_dummy;
             *buf2col = pax_col_conv_dummy;
             break;
@@ -539,8 +891,8 @@ pax_col_t pax_1111_argb_to_col(pax_buf_t const *buf, pax_col_t value) {
     // 4BPP 1111-ARGB
     // From:                                    ARGB
     // To:   Aaaa aaaa Rrrr rrrr Gggg gggg Bbbb bbbb
-    pax_col_t color = ((value << 28) & 0x80000000) | ((value << 21) & 0x00800000) | ((value << 14) & 0x00008000) |
-                      ((value << 7) & 0x00000080);
+    pax_col_t color = ((value << 28) & 0x80000000) | ((value << 21) & 0x00800000) | ((value << 14) & 0x00008000)
+                      | ((value << 7) & 0x00000080);
     color |= color >> 1;
     color |= color >> 2;
     color |= color >> 4;
@@ -552,8 +904,8 @@ pax_col_t pax_2222_argb_to_col(pax_buf_t const *buf, pax_col_t value) {
     // 8BPP 2222-ARGB
     // From:                               AaRr GgBb
     // To:   Aaaa aaaa Rrrr rrrr Gggg gggg Bbbb bbbb
-    pax_col_t color = ((value << 24) & 0xc0000000) | ((value << 18) & 0x00c00000) | ((value << 12) & 0x0000c000) |
-                      ((value << 6) & 0x000000c0);
+    pax_col_t color = ((value << 24) & 0xc0000000) | ((value << 18) & 0x00c00000) | ((value << 12) & 0x0000c000)
+                      | ((value << 6) & 0x000000c0);
     color |= color >> 2;
     color |= color >> 4;
     return color;
@@ -565,8 +917,8 @@ pax_col_t pax_4444_argb_to_col(pax_buf_t const *buf, pax_col_t value) {
     // From:                     Aaaa Rrrr Gggg Bbbb
     // To:   Aaaa .... Rrrr .... Gggg .... Bbbb ....
     // Add:  .... Aaaa .... Rrrr .... Gggg .... Bbbb
-    pax_col_t color = ((value << 16) & 0xf0000000) | ((value << 12) & 0x00f00000) | ((value << 8) & 0x0000f000) |
-                      ((value << 4) & 0x000000f0);
+    pax_col_t color = ((value << 16) & 0xf0000000) | ((value << 12) & 0x00f00000) | ((value << 8) & 0x0000f000)
+                      | ((value << 4) & 0x000000f0);
     // Now fill in some missing bits.
     color |= color >> 4;
     return color;

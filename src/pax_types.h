@@ -14,7 +14,7 @@ extern "C" {
 #endif //__cplusplus
 
 #ifndef M_PI
-#define M_PI 3.141592653589793
+    #define M_PI 3.141592653589793
 #endif
 
 /* ===== VERSION INFORMATION =====*/
@@ -29,47 +29,44 @@ extern "C" {
 // IDs at and above 0x80 are distributed to third party renderers.
 #define PAX_RENDERER_ID_SWR     0x00
 
-// A human-readable representation of the current version number.
-#define PAX_VERSION_STR         "1.2.0"
-// A numeric representation of the version, one decimal digit per version part (MAJOR.MINOR.PATCH).
-#define PAX_VERSION_NUMBER      120
 // Whether this is a prerelease version of PAX.
 #define PAX_VERSION_IS_SNAPSHOT true
 // The MAJOR part of the version (MAJOR.MINOR.PATCH).
-#define PAX_VERSION_MAJOR       1
+#define PAX_VERSION_MAJOR       2
 // The MINOR part of the version (MAJOR.MINOR.PATCH).
-#define PAX_VERSION_MINOR       2
+#define PAX_VERSION_MINOR       0
 // The PATCH part of the version (MAJOR.MINOR.PATCH).
 #define PAX_VERSION_PATCH       0
 
 /* ========= ERROR DEFS ========== */
 
-// Unknown error.
-#define PAX_ERR_UNKNOWN     1
+typedef int pax_err_t;
 // All is good.
 #define PAX_OK              0
+// Unknown error.
+#define PAX_ERR_UNKNOWN     -1
 // Buffer pointer is null.
-#define PAX_ERR_NOBUF       -1
+#define PAX_ERR_NOBUF       -2
 // Out of memory.
-#define PAX_ERR_NOMEM       -2
+#define PAX_ERR_NOMEM       -3
 // Invalid parameters.
-#define PAX_ERR_PARAM       -3
+#define PAX_ERR_PARAM       -4
 // Infinite parameters.
-#define PAX_ERR_INF         -4
+#define PAX_ERR_INF         -5
 // Out of bounds parameters.
-#define PAX_ERR_BOUNDS      -5
+#define PAX_ERR_BOUNDS      -6
 // Matrix stack underflow.
-#define PAX_ERR_UNDERFLOW   -6
+#define PAX_ERR_UNDERFLOW   -7
 // Out of data.
-#define PAX_ERR_NODATA      -7
+#define PAX_ERR_NODATA      -8
 // Image decoding error.
-#define PAX_ERR_DECODE      -8
+#define PAX_ERR_DECODE      -9
 // Unsupported operation (or not compiled in).
-#define PAX_ERR_UNSUPPORTED -9
-// Corruption in buffer.
-#define PAX_ERR_CORRUPT     -10
+#define PAX_ERR_UNSUPPORTED -10
+// Corruption in file.
+#define PAX_ERR_CORRUPT     -11
 // Image encoding error.
-#define PAX_ERR_ENCODE      -11
+#define PAX_ERR_ENCODE      -12
 
 /* ============ TYPES ============ */
 
@@ -80,25 +77,8 @@ extern "C" {
 
 // The way pixel data is to be stored in a buffer.
 enum pax_buf_type {
-    PAX_BUF_1_PAL  = 0x20000001,
-    PAX_BUF_2_PAL  = 0x20000002,
-    PAX_BUF_4_PAL  = 0x20000004,
-    PAX_BUF_8_PAL  = 0x20000008,
-    PAX_BUF_16_PAL = 0x20000010,
-
-    PAX_BUF_1_GREY = 0x10000001,
-    PAX_BUF_2_GREY = 0x10000002,
-    PAX_BUF_4_GREY = 0x10000004,
-    PAX_BUF_8_GREY = 0x10000008,
-
-    PAX_BUF_8_332RGB  = 0x00033208,
-    PAX_BUF_16_565RGB = 0x00056510,
-
-    PAX_BUF_4_1111ARGB  = 0x00111104,
-    PAX_BUF_8_2222ARGB  = 0x00444408,
-    PAX_BUF_16_4444ARGB = 0x00444410,
-    PAX_BUF_24_888RGB   = 0x00088818,
-    PAX_BUF_32_8888ARGB = 0x00888820
+#define PAX_DEF_BUF_TYPE(bpp, name) name,
+#include "helpers/pax_buf_type.inc"
 };
 
 // Buffer orientation settings.
@@ -170,6 +150,8 @@ enum pax_text_align {
 // Type of task to do.
 // Things like text and arcs will decompose to rects and triangles.
 enum pax_task_type {
+    // Quad draw.
+    PAX_TASK_QUAD,
     // Rectangle draw.
     PAX_TASK_RECT,
     // Triangle draw.
@@ -217,13 +199,14 @@ struct pax_task;
 
 union pax_col_union;
 
-typedef struct pax_buf        pax_buf_t;
-typedef struct pax_shader     pax_shader_t;
-typedef struct pax_task       pax_task_t;
-typedef struct pax_shader_ctx pax_shader_ctx_t;
-typedef struct pax_bmpv       pax_bmpv_t;
-typedef struct pax_font       pax_font_t;
-typedef struct pax_font_range pax_font_range_t;
+typedef struct pax_buf           pax_buf_t;
+typedef struct pax_shader        pax_shader_t;
+typedef struct pax_task          pax_task_t;
+typedef struct pax_shader_ctx    pax_shader_ctx_t;
+typedef struct pax_bmpv          pax_bmpv_t;
+typedef struct pax_font          pax_font_t;
+typedef struct pax_font_range    pax_font_range_t;
+typedef struct pax_buf_type_info pax_buf_type_info_t;
 
 typedef int32_t             pax_err_t;
 typedef uint32_t            pax_col_t;
@@ -247,15 +230,15 @@ union pax_col_union {
 // Used for both buffer type to ARGB and vice versa.
 // Buffer argument is mostly used for images with palette.
 typedef pax_col_t (*pax_col_conv_t)(pax_buf_t const *buf, pax_col_t color);
-// Helper for setting pixels in drawing routines.
-// Used to allow optimising away alpha in colors.
-typedef void (*pax_setter_t)(pax_buf_t *buf, pax_col_t color, int x, int y);
 // Helper for getting pixels in drawing routines.
 // Used to allow optimising away inline branching.
 typedef pax_col_t (*pax_index_getter_t)(pax_buf_t const *buf, int index);
 // Helper for setting pixels in drawing routines.
 // Used to allow optimising away color conversion.
 typedef void (*pax_index_setter_t)(pax_buf_t *buf, pax_col_t color, int index);
+// Helper for setting a range of pixels to a certain color.
+// Used to reduce the number of function calls.
+typedef void (*pax_range_setter_t)(pax_buf_t *buf, pax_col_t color, int index, int count);
 
 // Function pointer for shader promises.
 // The promise function will provide a bitfield answer to contextual questions where false is the safe option.
@@ -274,81 +257,6 @@ typedef pax_col_t (*pax_shader_func_v1_t)(
 struct matrix_stack_2d {
     matrix_stack_2d_t *parent;
     matrix_2d_t        value;
-};
-
-// The main data structure in PAX.
-// Stores pixel data and matrix information among other things.
-struct pax_buf {
-    // Buffer type, color modes, etc.
-    pax_buf_type_t type;
-    // Whether to perform free on the buffer on deinit.
-    bool           do_free;
-    // Whether to perform free on the palette on deinit.
-    bool           do_free_pal;
-    // Whether to reverse the endianness of the buffer.
-    bool           reverse_endianness;
-    union {
-        // Shorthand for 8bpp buffer.
-        uint8_t  *buf_8bpp;
-        // Shorthand for 16bpp buffer.
-        uint16_t *buf_16bpp;
-        // Shorthand for 32bpp buffer.
-        uint32_t *buf_32bpp;
-        // Buffer pointer.
-        void     *buf;
-    };
-    // Bits per pixel.
-    int bpp;
-
-    union {
-        // DEPRECATION NOTICE: Misspelled, use `palette` instead.
-        // Palette for buffers with a pallete type.
-        __attribute__((deprecated)) pax_col_t *pallette;
-        // Palette for buffers with a pallete type.
-        pax_col_t                             *palette;
-    };
-    union {
-        // DEPRECATION NOTICE: Misspelled, use `palette_size` instead.
-        // The number of colors in the palette.
-        __attribute__((deprecated)) size_t pallette_size;
-        // The number of colors in the palette.
-        size_t                             palette_size;
-    };
-
-    // Width in pixels.
-    int width;
-    // Height    in pixels.
-    int height;
-
-    // Dirty x (top left).
-    int dirty_x0;
-    // Dirty y (top left).
-    int dirty_y0;
-    // Dirty x (bottom right).
-    int dirty_x1;
-    // Dirty y (bottom right).
-    int dirty_y1;
-
-    // Color to buffer function to use.
-    pax_col_conv_t col2buf;
-    // Buffer to color function to use.
-    pax_col_conv_t buf2col;
-
-    // Setter to use to write a pixel index.
-    pax_index_setter_t setter;
-    // Getter to use to read a pixel index.
-    pax_index_getter_t getter;
-
-    // Clip rectangle.
-    // Shapes are only drawn inside the clip rectangle.
-    // This excludes PNG decoding functions.
-    pax_recti         clip;
-    // Matrix stack.
-    // The top most entry is used to transform shapes.
-    matrix_stack_2d_t stack_2d;
-
-    // Orientation setting.
-    pax_orientation_t orientation;
 };
 
 // A shader definition, used by pax_shade_ methods.
@@ -432,6 +340,19 @@ struct pax_font_range {
     };
 };
 
+// Info about a buffer type.
+struct pax_buf_type_info {
+    // Bits per pixel.
+    uint8_t bpp;
+    // Bits per channel for ARGB.
+    uint8_t a, r, g, b;
+    // Color format type.
+    uint8_t fmt_type;
+    // Padding
+    uint8_t : 8;
+    uint8_t : 8;
+};
+
 // A task to perform, used by multicore rendering.
 // Every task has pre-transformed co-ordinates.
 // If you change the shader object's content (AKA the value that args points to),
@@ -481,3 +402,77 @@ struct pax_shader_ctx {
 #endif //__cplusplus
 
 #endif // PAX_TYPES_H
+
+#ifdef PAX_REVEAL_OPAQUE
+#ifndef PAX_TYPES_H_PAX_BUF_T
+    #define PAX_TYPES_H_PAX_BUF_T
+// The main data structure in PAX.
+// Stores pixel data and matrix information among other things.
+struct pax_buf {
+    // Buffer type, color modes, etc.
+    pax_buf_type_t type;
+    // Whether to perform free on the buffer on deinit.
+    bool           do_free;
+    // Whether to perform free on the palette on deinit.
+    bool           do_free_pal;
+    // Whether to reverse the endianness of the buffer.
+    bool           reverse_endianness;
+    union {
+        // Shorthand for 8bpp buffer.
+        uint8_t  *buf_8bpp;
+        // Shorthand for 16bpp buffer.
+        uint16_t *buf_16bpp;
+        // Shorthand for 32bpp buffer.
+        uint32_t *buf_32bpp;
+        // Buffer pointer.
+        void     *buf;
+    };
+    // Bits per pixel.
+    int bpp;
+
+    // Palette for buffers with a pallete type.
+    pax_col_t *palette;
+    // The number of colors in the palette.
+    size_t     palette_size;
+
+    // Width in pixels.
+    int width;
+    // Height    in pixels.
+    int height;
+
+    // Dirty x (top left).
+    int dirty_x0;
+    // Dirty y (top left).
+    int dirty_y0;
+    // Dirty x (bottom right).
+    int dirty_x1;
+    // Dirty y (bottom right).
+    int dirty_y1;
+
+    // Color to buffer function to use.
+    pax_col_conv_t col2buf;
+    // Buffer to color function to use.
+    pax_col_conv_t buf2col;
+
+    // Setter to use to write a pixel index.
+    pax_index_setter_t setter;
+    // Getter to use to read a pixel index.
+    pax_index_getter_t getter;
+    // Range setter to use for setting opaque colors.
+    pax_range_setter_t range_setter;
+    // Range setter to use for merging transparent colors.
+    pax_range_setter_t range_merger;
+
+    // Clip rectangle.
+    // Shapes are only drawn inside the clip rectangle.
+    // This excludes PNG decoding functions.
+    pax_recti         clip;
+    // Matrix stack.
+    // The top most entry is used to transform shapes.
+    matrix_stack_2d_t stack_2d;
+
+    // Orientation setting.
+    pax_orientation_t orientation;
+};
+#endif
+#endif
