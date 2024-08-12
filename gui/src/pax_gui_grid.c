@@ -323,7 +323,7 @@ pgui_resp_t pgui_event_grid(
 }
 
 // Box element type.
-pgui_type_t pgui_type_grid_raw = {
+pgui_type_t const pgui_type_grid_raw = {
     .attr  = PGUI_ATTR_SELECTABLE,
     .draw  = pgui_draw_grid,
     .calc  = pgui_calc_grid,

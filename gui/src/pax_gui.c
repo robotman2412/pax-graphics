@@ -21,6 +21,10 @@ pgui_theme_t const pgui_theme_default = {
     .pressed_col            = 0xff909090,
     .border_col             = 0xff000000,
     .highlight_col          = 0xff00e0e0,
+    // Size parameters.
+    .min_size               = {100, 30},
+    .min_input_size         = {100, 30},
+    .min_label_size         = {92, 22},
     .border_thickness       = 1,
     .highlight_thickness    = 2,
     .rounding               = 7,
@@ -31,7 +35,7 @@ pgui_theme_t const pgui_theme_default = {
     // Dropdown style.
     .dropdown_segmented     = false,
     .dropdown_solid_arrow   = false,
-    .dropdown_covering_menu = false,
+    .dropdown_covering_menu = true,
     // Scrollbar style.
     .scroll_bg_col          = 0x3f000000,
     .scroll_fg_col          = 0x7fffffff,
@@ -53,14 +57,18 @@ static void pgui_calc_layout_int(
     }
 
     // Calculate layout of children.
-    uint32_t child_flags = flags & PGUI_FLAGS_INHERITABLE;
+    uint32_t  child_flags  = flags & PGUI_FLAGS_INHERITABLE;
+    pax_vec2i child_offset = pos;
+    if (elem->type->attr & PGUI_ATTR_ABSPOS) {
+        child_offset = (pax_vec2i){0, 0};
+    }
     for (size_t i = 0; i < elem->children_len; i++) {
         if (elem->children[i]) {
             pgui_calc_layout_int(
                 gfx_size,
                 (pax_vec2i){
-                    pos.x + elem->children[i]->pos.x - elem->scroll.x,
-                    pos.y + elem->children[i]->pos.y - elem->scroll.y,
+                    child_offset.x + elem->children[i]->pos.x - elem->scroll.x,
+                    child_offset.y + elem->children[i]->pos.y - elem->scroll.y,
                 },
                 elem->children[i],
                 theme,
@@ -70,11 +78,21 @@ static void pgui_calc_layout_int(
     }
 
     // Clamp minimum size.
-    if (elem->size.x < elem->type->min_size.x) {
-        elem->size.x = elem->type->min_size.x;
-    }
-    if (elem->size.y < elem->type->min_size.y) {
-        elem->size.y = elem->type->min_size.y;
+    if (!(elem->flags & PGUI_FLAG_ANYSIZE)) {
+        pax_vec2i min_size;
+        if (elem->type->attr & (PGUI_ATTR_INPUT | PGUI_ATTR_BUTTON | PGUI_ATTR_DROPDOWN)) {
+            min_size = theme->min_input_size;
+        } else if (elem->type->attr & PGUI_ATTR_TEXT) {
+            min_size = theme->min_label_size;
+        } else {
+            min_size = theme->min_size;
+        }
+        if (elem->size.x < min_size.x) {
+            elem->size.x = min_size.x;
+        }
+        if (elem->size.y < min_size.y) {
+            elem->size.y = min_size.y;
+        }
     }
 
     // Calculate layout of this element.
@@ -102,30 +120,41 @@ static void pgui_draw_int(pax_buf_t *gfx, pax_vec2i pos, pgui_elem_t *elem, pgui
     }
 
     // Draw the base of the element.
+    pax_recti clip = pax_get_clip(gfx);
     if (flags & PGUI_FLAG_DIRTY) {
-        pgui_drawutil_base(gfx, pos, elem, theme, flags);
+        pgui_drawutil_base(gfx, pos, elem->size, elem, theme, flags);
         if (elem->type->draw) {
             elem->type->draw(gfx, pos, elem, theme, flags);
         }
+        pgui_drawutil_border(gfx, pos, elem->size, elem, theme, flags);
     }
 
     // Apply clip rectangle to children.
-    pax_recti clip   = pax_get_clip(gfx);
-    pax_recti bounds = {pos.x - 1, pos.y - 1, elem->size.x + 2, elem->size.y + 2};
-    if (!(elem->flags & PGUI_FLAG_NOPADDING)) {
-        bounds = pgui_add_padding(bounds, theme->padding);
+    if (elem->type->clip) {
+        // Element has a custom clip rectangle function.
+        elem->type->clip(gfx, pos, elem, theme, flags);
+    } else {
+        // Apply default child clip rectangle.
+        pax_recti bounds = {pos.x - 1, pos.y - 1, elem->size.x + 2, elem->size.y + 2};
+        if (!(elem->flags & PGUI_FLAG_NOPADDING)) {
+            bounds = pgui_add_padding(bounds, theme->padding);
+        }
+        pax_set_clip(gfx, pax_recti_intersect(clip, bounds));
     }
-    pax_set_clip(gfx, pax_recti_intersect(clip, bounds));
 
     // Draw children.
-    uint32_t child_flags = flags & PGUI_FLAGS_INHERITABLE;
+    uint32_t  child_flags  = flags & PGUI_FLAGS_INHERITABLE;
+    pax_vec2i child_offset = pos;
+    if (elem->type->attr & PGUI_ATTR_ABSPOS) {
+        child_offset = (pax_vec2i){0, 0};
+    }
     for (size_t i = 0; i < elem->children_len; i++) {
         if (i != elem->selected && elem->children[i]) {
             pgui_draw_int(
                 gfx,
                 (pax_vec2i){
-                    pos.x + elem->children[i]->pos.x - elem->scroll.x,
-                    pos.y + elem->children[i]->pos.y - elem->scroll.y,
+                    child_offset.x + elem->children[i]->pos.x - elem->scroll.x,
+                    child_offset.y + elem->children[i]->pos.y - elem->scroll.y,
                 },
                 elem->children[i],
                 theme,
@@ -138,8 +167,8 @@ static void pgui_draw_int(pax_buf_t *gfx, pax_vec2i pos, pgui_elem_t *elem, pgui
         pgui_draw_int(
             gfx,
             (pax_vec2i){
-                pos.x + elem->children[elem->selected]->pos.x - elem->scroll.x,
-                pos.y + elem->children[elem->selected]->pos.y - elem->scroll.y,
+                child_offset.x + elem->children[elem->selected]->pos.x - elem->scroll.x,
+                child_offset.y + elem->children[elem->selected]->pos.y - elem->scroll.y,
             },
             elem->children[elem->selected],
             theme,
@@ -147,11 +176,6 @@ static void pgui_draw_int(pax_buf_t *gfx, pax_vec2i pos, pgui_elem_t *elem, pgui
         );
     }
     pax_set_clip(gfx, clip);
-
-    // Draw the border.
-    if (flags & PGUI_FLAG_DIRTY) {
-        pgui_drawutil_border(gfx, pos, elem, theme, flags);
-    }
 
     // Clear dirty flag.
     elem->flags &= ~PGUI_FLAG_DIRTY;
@@ -190,13 +214,17 @@ static pgui_resp_t pgui_event_int(
     flags |= elem->flags;
 
     // Send event to selected child first.
-    uint32_t child_flags = flags & PGUI_FLAGS_INHERITABLE;
+    uint32_t  child_flags  = flags & PGUI_FLAGS_INHERITABLE;
+    pax_vec2i child_offset = pos;
+    if (elem->type->attr & PGUI_ATTR_ABSPOS) {
+        child_offset = (pax_vec2i){0, 0};
+    }
     if (elem->selected >= 0 && elem->selected < elem->children_len && elem->children[elem->selected]) {
         pgui_resp_t resp = pgui_event_int(
             gfx_size,
             (pax_vec2i){
-                pos.x + elem->children[elem->selected]->pos.x + elem->scroll.x,
-                pos.y + elem->children[elem->selected]->pos.y + elem->scroll.y,
+                child_offset.x + elem->children[elem->selected]->pos.x + elem->scroll.x,
+                child_offset.y + elem->children[elem->selected]->pos.y + elem->scroll.y,
             },
             elem->children[elem->selected],
             theme,

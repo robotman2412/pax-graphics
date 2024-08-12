@@ -171,31 +171,36 @@ void pgui_drawutil_textbox(
 
 
 // Draw the base of a box or input element.
-void pgui_drawutil_base(pax_buf_t *gfx, pax_vec2i pos, pgui_elem_t *elem, pgui_theme_t const *theme, uint32_t flags) {
+void pgui_drawutil_base(
+    pax_buf_t *gfx, pax_vec2i pos, pax_vec2i size, pgui_elem_t *elem, pgui_theme_t const *theme, uint32_t flags
+) {
     if (flags & PGUI_FLAG_NOBACKGROUND) {
         return;
     }
 
     // Select background color.
     pax_col_t bg;
-    if (!(elem->type->attr & (PGUI_ATTR_INPUT | PGUI_ATTR_BUTTON)) || (flags & PGUI_FLAG_INACTIVE)) {
+    if (!(elem->type->attr & (PGUI_ATTR_INPUT | PGUI_ATTR_BUTTON | PGUI_ATTR_DROPDOWN))
+        || (flags & PGUI_FLAG_INACTIVE)) {
         bg = theme->bg_col;
     } else if ((elem->flags & PGUI_FLAG_ACTIVE) && (elem->type->attr & PGUI_ATTR_BUTTON)) {
         bg = theme->pressed_col;
-    } else if (elem->flags & PGUI_FLAG_ACTIVE) {
+    } else if ((elem->flags & PGUI_FLAG_ACTIVE) && (elem->type->attr & PGUI_ATTR_INPUT)) {
         bg = theme->active_col;
-    } else if (elem->type->attr & PGUI_ATTR_BUTTON) {
+    } else if (elem->type->attr & (PGUI_ATTR_BUTTON | PGUI_ATTR_DROPDOWN)) {
         bg = theme->button_col;
     } else {
         bg = theme->input_col;
     }
 
     // Draw the backdrop.
-    pax_draw_round_rect(gfx, bg, pos.x, pos.y, elem->size.x, elem->size.y, theme->rounding);
+    pax_draw_round_rect(gfx, bg, pos.x, pos.y, size.x, size.y, theme->rounding);
 }
 
 // Draw the outline of a box or input element.
-void pgui_drawutil_border(pax_buf_t *gfx, pax_vec2i pos, pgui_elem_t *elem, pgui_theme_t const *theme, uint32_t flags) {
+void pgui_drawutil_border(
+    pax_buf_t *gfx, pax_vec2i pos, pax_vec2i size, pgui_elem_t *elem, pgui_theme_t const *theme, uint32_t flags
+) {
     if (flags & PGUI_FLAG_NOBORDER) {
         return;
     }
@@ -213,15 +218,15 @@ void pgui_drawutil_border(pax_buf_t *gfx, pax_vec2i pos, pgui_elem_t *elem, pgui
 
     // Clamp rounding.
     int rounding = theme->rounding;
-    if (rounding > elem->size.x / 2) {
-        rounding = elem->size.x / 2;
+    if (rounding > size.x / 2) {
+        rounding = size.x / 2;
     }
-    if (rounding > elem->size.y / 2) {
-        rounding = elem->size.y / 2;
+    if (rounding > size.y / 2) {
+        rounding = size.y / 2;
     }
 
     // Draw the corners.
-    pax_vec2i max = {pos.x + elem->size.x, pos.y + elem->size.y};
+    pax_vec2i max = {pos.x + size.x, pos.y + size.y};
     float     a0  = 0;
     float     a1  = M_PI / 2;
     float     a2  = 2 * a1;
@@ -233,13 +238,13 @@ void pgui_drawutil_border(pax_buf_t *gfx, pax_vec2i pos, pgui_elem_t *elem, pgui
     pax_draw_hollow_arc(gfx, color, max.x - rounding, max.y - rounding, rounding - thickness, rounding, a3, a4);
 
     // Draw the edges.
-    if (elem->size.x > 2 * rounding) {
-        pax_draw_rect(gfx, color, pos.x + rounding, pos.y, elem->size.x - 2 * rounding, thickness);
-        pax_draw_rect(gfx, color, pos.x + rounding, max.y, elem->size.x - 2 * rounding, -thickness);
+    if (size.x > 2 * rounding) {
+        pax_draw_rect(gfx, color, pos.x + rounding, pos.y, size.x - 2 * rounding, thickness);
+        pax_draw_rect(gfx, color, pos.x + rounding, max.y, size.x - 2 * rounding, -thickness);
     }
-    if (elem->size.y > 2 * rounding) {
-        pax_draw_rect(gfx, color, pos.x, pos.y + rounding, thickness, elem->size.y - 2 * rounding);
-        pax_draw_rect(gfx, color, max.x, pos.y + rounding, -thickness, elem->size.y - 2 * rounding);
+    if (size.y > 2 * rounding) {
+        pax_draw_rect(gfx, color, pos.x, pos.y + rounding, thickness, size.y - 2 * rounding);
+        pax_draw_rect(gfx, color, max.x, pos.y + rounding, -thickness, size.y - 2 * rounding);
     }
 }
 

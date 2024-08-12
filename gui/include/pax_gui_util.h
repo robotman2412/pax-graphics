@@ -25,10 +25,14 @@ void pgui_drawutil_textbox(
 
 
 // Draw the base of a box or input element.
-void pgui_drawutil_base(pax_buf_t *gfx, pax_vec2i pos, pgui_elem_t *elem, pgui_theme_t const *theme, uint32_t flags);
+void pgui_drawutil_base(
+    pax_buf_t *gfx, pax_vec2i pos, pax_vec2i size, pgui_elem_t *elem, pgui_theme_t const *theme, uint32_t flags
+);
 
 // Draw the border of a box or input element.
-void pgui_drawutil_border(pax_buf_t *gfx, pax_vec2i pos, pgui_elem_t *elem, pgui_theme_t const *theme, uint32_t flags);
+void pgui_drawutil_border(
+    pax_buf_t *gfx, pax_vec2i pos, pax_vec2i size, pgui_elem_t *elem, pgui_theme_t const *theme, uint32_t flags
+);
 
 // PAX GUI text measuring helper.
 // Returns the bounds of the cursor.

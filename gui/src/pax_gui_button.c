@@ -34,9 +34,8 @@ pgui_resp_t pgui_event_button(
 }
 
 // Button element type.
-pgui_type_t pgui_type_button_raw = {
-    .attr     = PGUI_ATTR_SELECTABLE | PGUI_ATTR_BUTTON,
-    .min_size = {100, 30},
-    .draw     = pgui_draw_text,
-    .event    = pgui_event_button,
+pgui_type_t const pgui_type_button_raw = {
+    .attr  = PGUI_ATTR_SELECTABLE | PGUI_ATTR_BUTTON,
+    .draw  = pgui_draw_text,
+    .event = pgui_event_button,
 };

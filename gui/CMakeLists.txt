@@ -5,6 +5,7 @@ cmake_minimum_required(VERSION 3.13)
 
 add_library(pax_gui ${_PAX_STATIC_OR_SHARED}
     src/pax_gui_button.c
+    src/pax_gui_dropdown.c
     src/pax_gui_grid.c
     src/pax_gui_text.c
     src/pax_gui_textbox.c
