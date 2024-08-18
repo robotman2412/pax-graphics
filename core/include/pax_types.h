@@ -37,6 +37,10 @@ extern "C" {
 #define PAX_VERSION_MINOR       0
 // The PATCH part of the version (MAJOR.MINOR.PATCH).
 #define PAX_VERSION_PATCH       0
+// A human-readable representation of the current version number.
+#define PAX_VERSION_STR         "2.0.0-snapshot"
+// A numeric representation of the version, one decimal digit per version part (MAJOR.MINOR.PATCH).
+#define PAX_VERSION_NUMBER      200
 
 /* ========= ERROR DEFS ========== */
 
