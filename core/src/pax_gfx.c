@@ -246,6 +246,49 @@ pax_buf_t *pax_buf_init(void *mem, int width, int height, pax_buf_type_t type) {
     return buf;
 }
 
+// Set the palette for buffers with palette types.
+// Creates an internal copy of the palette.
+void pax_buf_set_palette(pax_buf_t *buf, pax_col_t const *palette, size_t palette_len) {
+    PAX_BUF_CHECK(buf);
+    if (!PAX_IS_PALETTE(buf->type)) {
+        PAX_ERROR(PAX_ERR_UNSUPPORTED);
+    }
+    void *mem = malloc(sizeof(pax_col_t) * palette_len);
+    if (!mem) {
+        PAX_ERROR(PAX_ERR_NOMEM);
+    }
+    if (buf->do_free_pal) {
+        free((pax_col_t *)buf->palette);
+    }
+    buf->palette      = mem;
+    buf->palette_size = palette_len;
+    memcpy(mem, palette, sizeof(pax_col_t) * palette_len);
+}
+
+// Set the palette for buffers with palette types.
+// Does not create internal copy of the palette.
+void pax_buf_set_palette_rom(pax_buf_t *buf, pax_col_t const *palette, size_t palette_len) {
+    PAX_BUF_CHECK(buf);
+    if (!PAX_IS_PALETTE(buf->type)) {
+        PAX_ERROR(PAX_ERR_UNSUPPORTED);
+    }
+    if (buf->do_free_pal) {
+        free((pax_col_t *)buf->palette);
+        buf->do_free_pal = false;
+    }
+    buf->palette = palette;
+}
+
+// Get the palette for buffers with palette types.
+pax_col_t const *pax_buf_get_palette(pax_buf_t *buf, size_t *palette_len) {
+    PAX_BUF_CHECK(buf, NULL);
+    if (!PAX_IS_PALETTE(buf->type)) {
+        PAX_ERROR(PAX_ERR_UNSUPPORTED, NULL);
+    }
+    *palette_len = buf->palette_size;
+    return buf->palette;
+}
+
 // Enable/disable the reversing of endianness for `buf`.
 // Some displays might require a feature like this one.
 void pax_buf_reversed(pax_buf_t *buf, bool reversed_endianness) {
@@ -275,7 +318,7 @@ void pax_buf_destroy(pax_buf_t *buf) {
         free(buf->buf);
     }
     if (buf->palette && buf->do_free_pal) {
-        free(buf->palette);
+        free((pax_col_t *)buf->palette);
     }
 
     free(buf);

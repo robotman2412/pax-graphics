@@ -67,5 +67,27 @@ If you don't need the buffer anymore, use `pax_buf_destroy`:
 pax_buf_destroy(gfx);
 ```
 
-## With a palette
-TODO.
+# Using palettes
+
+To set the palette used by a palette-type buffer, use `pax_buf_set_palette`:
+```c
+void my_cool_function(pax_buf_t *gfx) {
+    // This is a cool palette.
+    pax_col_t const my_palette[]   = {0xffff0000, 0xff0000ff, 0xff000000};
+    size_t const    my_palette_len = sizeof(my_palette) / sizeof(pax_col_t);
+    // Set the palette to a ROM; PAX will assume the palette is valid as long as it is the setting for this buffer.
+    pax_buf_set_palette_rom(gfx, my_palette, my_palette_len);
+}
+```
+
+If your palette is valid for at least as long as it is the current palette for the buffer, you can alternatively use `pax_buf_set_palette_rom` to set without making PAX create a copy:
+```c
+// This is a cool palette.
+pax_col_t const my_palette[]   = {0xffff0000, 0xff0000ff, 0xff000000};
+size_t const    my_palette_len = sizeof(my_palette) / sizeof(pax_col_t);
+
+void my_cool_function(pax_buf_t *gfx) {
+    // Set the palette to a ROM; PAX will assume the palette is valid as long as it is the setting for this buffer.
+    pax_buf_set_palette_rom(gfx, my_palette, my_palette_len);
+}
+```

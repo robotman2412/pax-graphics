@@ -56,12 +56,20 @@ pax_buf_type_info_t pax_buf_type_info(pax_buf_type_t type) __attribute__((const)
 #define PAX_BUF_CALC_SIZE(width, height, type) ((PAX_GET_BPP(type) * (width) * (height) + 7) >> 3)
 // Create a new buffer.
 // If mem is NULL, a new area is allocated.
-pax_buf_t *pax_buf_init(void *mem, int width, int height, pax_buf_type_t type);
+pax_buf_t       *pax_buf_init(void *mem, int width, int height, pax_buf_type_t type);
+// Set the palette for buffers with palette types.
+// Creates an internal copy of the palette.
+void             pax_buf_set_palette(pax_buf_t *buf, pax_col_t const *palette, size_t palette_len);
+// Set the palette for buffers with palette types.
+// Does not create internal copy of the palette.
+void             pax_buf_set_palette_rom(pax_buf_t *buf, pax_col_t const *palette, size_t palette_len);
+// Get the palette for buffers with palette types.
+pax_col_t const *pax_buf_get_palette(pax_buf_t *buf, size_t *palette_len);
 // Enable/disable the reversing of endianness for `buf`.
 // Some displays might require a feature like this one.
-void       pax_buf_reversed(pax_buf_t *buf, bool reversed_endianness);
+void             pax_buf_reversed(pax_buf_t *buf, bool reversed_endianness);
 // Destroy the buffer, freeing its memory.
-void       pax_buf_destroy(pax_buf_t *buf);
+void             pax_buf_destroy(pax_buf_t *buf);
 
 // Retrieve the width of the buffer.
 int            pax_buf_get_width(pax_buf_t const *buf);

@@ -431,9 +431,9 @@ struct pax_buf {
     int bpp;
 
     // Palette for buffers with a pallete type.
-    pax_col_t *palette;
+    pax_col_t const *palette;
     // The number of colors in the palette.
-    size_t     palette_size;
+    size_t           palette_size;
 
     // Width in pixels.
     int width;
