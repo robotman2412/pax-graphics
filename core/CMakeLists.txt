@@ -33,3 +33,12 @@ target_include_directories(pax_gfx PUBLIC include)
 target_compile_options(pax_gfx PRIVATE -O2 -Wno-unused-const-variable)
 target_link_options(pax_gfx PRIVATE -Wl,-Bsymbolic)
 target_link_libraries(pax_gfx PUBLIC m)
+
+target_compile_options(pax_gfx PUBLIC
+    -D__PAX_VERSION_IS_SNAPSHOT=${PAX_VERSION_IS_SNAPSHOT}
+    -D__PAX_VERSION_MAJOR=${PAX_VERSION_MAJOR}
+    -D__PAX_VERSION_MINOR=${PAX_VERSION_MINOR}
+    -D__PAX_VERSION_PATCH=${PAX_VERSION_PATCH}
+    -D__PAX_VERSION_NUMBER=${PAX_VERSION_MAJOR}${PAX_VERSION_MINOR}${PAX_VERSION_PATCH}
+    -D__PAX_VERSION_STR="${PAX_VERSION}"
+)

@@ -30,17 +30,17 @@ extern "C" {
 #define PAX_RENDERER_ID_SWR     0x00
 
 // Whether this is a prerelease version of PAX.
-#define PAX_VERSION_IS_SNAPSHOT true
+#define PAX_VERSION_IS_SNAPSHOT __PAX_VERSION_IS_SNAPSHOT
 // The MAJOR part of the version (MAJOR.MINOR.PATCH).
-#define PAX_VERSION_MAJOR       2
+#define PAX_VERSION_MAJOR       __PAX_VERSION_MAJOR
 // The MINOR part of the version (MAJOR.MINOR.PATCH).
-#define PAX_VERSION_MINOR       0
+#define PAX_VERSION_MINOR       __PAX_VERSION_MINOR
 // The PATCH part of the version (MAJOR.MINOR.PATCH).
-#define PAX_VERSION_PATCH       0
+#define PAX_VERSION_PATCH       __PAX_VERSION_PATCH
 // A human-readable representation of the current version number.
-#define PAX_VERSION_STR         "2.0.0-snapshot"
+#define PAX_VERSION_STR         __PAX_VERSION_STR
 // A numeric representation of the version, one decimal digit per version part (MAJOR.MINOR.PATCH).
-#define PAX_VERSION_NUMBER      200
+#define PAX_VERSION_NUMBER      __PAX_VERSION_NUMBER
 
 /* ========= ERROR DEFS ========== */
 
