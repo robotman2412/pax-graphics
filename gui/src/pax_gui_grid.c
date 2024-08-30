@@ -143,7 +143,6 @@ void pgui_draw_grid(pax_buf_t *gfx, pax_vec2i pos, pgui_elem_t *elem, pgui_theme
 
 // Next/previous for grid elements.
 static pgui_resp_t pgui_grid_next(pgui_elem_t *elem, pgui_theme_t const *theme, uint32_t flags, bool next) {
-    pgui_grid_t *grid    = (pgui_grid_t *)elem;
     int          padding = flags & PGUI_FLAG_NOPADDING ? 0 : theme->padding;
 
     // Original index.

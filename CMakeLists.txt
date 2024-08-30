@@ -32,11 +32,16 @@ else()
     set(_PAX_STATIC_OR_SHARED SHARED)
 endif()
 
-add_subdirectory(core)
-add_subdirectory(gui)
+include(${CMAKE_CURRENT_LIST_DIR}/core/CMakeLists.txt)
+include(${CMAKE_CURRENT_LIST_DIR}/gui/CMakeLists.txt)
 
 if(ESP_PLATFORM)
     # ESP-IDF integration.
-    target_link_libraries(pax_gfx PRIVATE esp_system esp_timer esp_pm)
-    target_compile_definitions(pax_gfx PUBLIC -DPAX_COMPILE_MCR=1)
+    idf_component_register(
+        SRCS ${pax_gfx_srcs} ${pax_gui_srcs}
+        INCLUDE_DIRS ${pax_gfx_include} ${pax_gui_include}
+        REQUIRES esp_timer esp_system esp_pm
+    )
+    target_compile_options(${COMPONENT_LIB} PUBLIC ${pax_gfx_options} ${pax_gui_options})
+    target_compile_options(${COMPONENT_LIB} PRIVATE -Wno-unused-const-variable)
 endif()

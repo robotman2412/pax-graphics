@@ -209,7 +209,7 @@ static
             v += dv;
         #endif
             // And simply merge colors accordingly.
-            setter(buf, color, x + delta);
+            setter(buf, result, x + delta);
         }
     #else
         // Horizontal drawing loop.

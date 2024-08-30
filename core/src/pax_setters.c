@@ -49,13 +49,13 @@ void pax_get_setters(
 #elif PAX_RANGE_MERGER == 2
     switch (buf->type) {
     #define PAX_DEF_BUF_TYPE_PAL(type_bpp, name)                                                                       \
-        case name: *range_merger = pax_range_setter_##type_bpp##bpp;
+        case name: *range_merger = pax_range_setter_##type_bpp##bpp; break;
     #define PAX_DEF_BUF_TYPE_GREY(type_bpp, name)                                                                      \
-        case name: *range_merger = pax_range_merger_##type_bpp##_grey;
+        case name: *range_merger = pax_range_merger_##type_bpp##_grey; break;
     #define PAX_DEF_BUF_TYPE_ARGB(bpp, a, r, g, b, name)                                                               \
-        case name: *range_merger = pax_range_merger_##a##r##g##b##argb;
+        case name: *range_merger = pax_range_merger_##a##r##g##b##argb; break;
     #define PAX_DEF_BUF_TYPE_RGB(bpp, r, g, b, name)                                                                   \
-        case name: *range_merger = pax_range_merger_##r##g##b##rgb;
+        case name: *range_merger = pax_range_merger_##r##g##b##rgb; break;
     #include "helpers/pax_buf_type.inc"
     }
 #else

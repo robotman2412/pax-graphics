@@ -1,8 +1,6 @@
 
 // SPDX-License-Identifier: MIT
 
-static char const *TAG = "pax_gfx";
-
 #include "pax_internal.h"
 #include "pax_shaders.h"
 
@@ -533,7 +531,7 @@ void pax_clip(pax_buf_t *buf, int x, int y, int width, int height) {
 
 // Get the current clip rectangle.
 pax_recti pax_get_clip(pax_buf_t const *buf) {
-    PAX_BUF_CHECK(buf, (pax_recti){0, 0});
+    PAX_BUF_CHECK(buf, (pax_recti){0, 0, 0, 0});
     return pax_recti_abs(pax_unorient_det_recti(buf, buf->clip));
 }
 
@@ -551,7 +549,7 @@ bool pax_is_dirty(pax_buf_t const *buf) {
 
 // Get a copy of the dirty rectangle.
 pax_recti pax_get_dirty(pax_buf_t const *buf) {
-    PAX_BUF_CHECK(buf, (pax_recti){0, 0});
+    PAX_BUF_CHECK(buf, (pax_recti){0, 0, 0, 0});
     return (pax_recti){
         buf->dirty_x0,
         buf->dirty_y0,

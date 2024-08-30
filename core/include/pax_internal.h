@@ -412,7 +412,7 @@ static inline uint8_t pax_lerp(uint8_t part, uint8_t from, uint8_t to) {
     // This funny line converts part from 0-255 to 0-256.
     // Then, it applies an integer multiplication and the result is shifted right by 8.
     uint16_t part2 = (part + (part >> 7));
-    return from + (((to - from) * part) >> 8);
+    return from + (((to - from) * part2) >> 8);
 }
 
 // A linear interpolation based only on ints.
@@ -424,7 +424,7 @@ static inline uint32_t pax_lerp_mask(uint32_t mask, uint8_t part, uint32_t from,
     uint64_t part2  = (part + (part >> 7));
     from           &= mask;
     to             &= mask;
-    return mask & (from + (((to - from) * part) >> 8));
+    return mask & (from + (((to - from) * part2) >> 8));
 }
 
 // UV interpolation helper for the circle methods.

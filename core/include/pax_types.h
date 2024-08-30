@@ -212,7 +212,6 @@ typedef struct pax_font          pax_font_t;
 typedef struct pax_font_range    pax_font_range_t;
 typedef struct pax_buf_type_info pax_buf_type_info_t;
 
-typedef int32_t             pax_err_t;
 typedef uint32_t            pax_col_t;
 typedef union pax_col_union pax_col_union_t;
 
