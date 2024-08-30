@@ -350,6 +350,21 @@ pax_vec2i pax_buf_get_dims(pax_buf_t const *buf) {
         return (pax_vec2i){buf->width, buf->height};
     }
 }
+// Retrieve the width of the buffer without applying orientation.
+int pax_buf_get_width_raw(pax_buf_t const *buf) {
+    PAX_BUF_CHECK(buf, 0);
+    return buf->width;
+}
+// Retrieve the height of the buffer without applying orientation.
+int pax_buf_get_height_raw(pax_buf_t const *buf) {
+    PAX_BUF_CHECK(buf, 0);
+    return buf->height;
+}
+// Retrieve dimensions of the buffer without applying orientation.
+pax_vec2i pax_buf_get_dims_raw(pax_buf_t const *buf) {
+    PAX_BUF_CHECK(buf, (pax_vec2i){0, 0});
+    return (pax_vec2i){buf->width, buf->height};
+}
 // Retrieve the type of the buffer.
 pax_buf_type_t pax_buf_get_type(pax_buf_t const *buf) {
     PAX_BUF_CHECK(buf, -1);
