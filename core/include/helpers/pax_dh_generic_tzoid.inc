@@ -81,7 +81,7 @@ static
         return;
     // Get pixel setter.
     pax_col_conv_t     buf2col = PAX_IS_PALETTE(buf->type) ? pax_col_conv_dummy : buf->buf2col;
-    pax_index_setter_t setter  = pax_get_setter(buf, &color, NULL);
+    pax_index_setter_t setter  = pax_get_setter(buf, &color, shader);
     if (!setter)
         return;
     #else  // PDHG_SHADED
