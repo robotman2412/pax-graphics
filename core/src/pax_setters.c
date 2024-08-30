@@ -372,6 +372,7 @@ void pax_range_setter_16bpp(pax_buf_t *buf, pax_col_t color, int index, int coun
     uint32_t *ptr = (uint32_t *)(buf->buf_16bpp + i);
     for (; i + 1 < index + count; i += 2) {
         *ptr = color | (color << 16);
+        ptr++;
     }
     if (i < index + count) {
         pax_index_setter_16bpp(buf, color, i);
