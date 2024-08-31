@@ -1,6 +1,7 @@
 
 // SPDX-License-Identifier: MIT
 
+#include "pax_gui_internal.h"
 #include "pax_gui_util.h"
 
 #include <malloc.h>
@@ -8,8 +9,21 @@
 
 
 
+// Create a new editable textbox.
+pgui_elem_t *pgui_new_textbox(pgui_callback_t cb) {
+    pgui_text_t *elem = malloc(sizeof(pgui_text_t));
+    if (!elem)
+        return NULL;
+    memset(elem, 0, sizeof(pgui_text_t));
+    elem->base.type     = &pgui_type_textbox;
+    elem->base.callback = cb;
+    elem->base.selected = -1;
+    elem->allow_realloc = true;
+    return (pgui_elem_t *)elem;
+}
+
 // Calculate the layout of editable text-based elements.
-void pgui_calc_textbox(
+void pgui_calc2_textbox(
     pax_vec2i gfx_size, pax_vec2i pos, pgui_elem_t *elem, pgui_theme_t const *theme, uint32_t flags
 ) {
     pgui_text_t *text    = (pgui_text_t *)elem;
@@ -126,7 +140,7 @@ static pgui_resp_t
         text->cursor = new_cursor;
     }
     elem->flags |= PGUI_FLAG_DIRTY;
-    pgui_calc_textbox((pax_vec2i){0}, (pax_vec2i){0}, elem, theme, flags);
+    pgui_calc2_textbox((pax_vec2i){0}, (pax_vec2i){0}, elem, theme, flags);
     return PGUI_RESP_CAPTURED;
 }
 
@@ -150,7 +164,7 @@ pgui_resp_t pgui_event_textbox(
             }
             text->cursor  = 0;
             elem->flags  |= PGUI_FLAG_DIRTY;
-            pgui_calc_textbox(gfx_size, pos, elem, theme, flags);
+            pgui_calc2_textbox(gfx_size, pos, elem, theme, flags);
             return PGUI_RESP_CAPTURED;
 
         } else if (event.input == PGUI_INPUT_END) {
@@ -162,7 +176,7 @@ pgui_resp_t pgui_event_textbox(
             }
             text->cursor  = text->text_len;
             elem->flags  |= PGUI_FLAG_DIRTY;
-            pgui_calc_textbox(gfx_size, pos, elem, theme, flags);
+            pgui_calc2_textbox(gfx_size, pos, elem, theme, flags);
             return PGUI_RESP_CAPTURED;
 
         } else if (event.input == PGUI_INPUT_LEFT || event.input == PGUI_INPUT_PREV) {
@@ -227,7 +241,7 @@ pgui_resp_t pgui_event_textbox(
 
             // Mark as dirty.
             elem->flags |= PGUI_FLAG_DIRTY;
-            pgui_calc_textbox(gfx_size, pos, elem, theme, flags);
+            pgui_calc2_textbox(gfx_size, pos, elem, theme, flags);
             return PGUI_RESP_CAPTURED;
 
         } else if (event.input == PGUI_INPUT_ACCEPT || event.input == PGUI_INPUT_BACK) {
@@ -266,9 +280,11 @@ pgui_resp_t pgui_event_textbox(
 
 
 // Textbox element type.
-pgui_type_t const pgui_type_textbox_raw = {
-    .attr  = PGUI_ATTR_SELECTABLE | PGUI_ATTR_INPUT,
-    .calc  = pgui_calc_textbox,
+pgui_type_t const pgui_type_textbox = {
+    .name  = "textbox",
+    .attr  = PGUI_ATTR_SELECTABLE | PGUI_ATTR_INPUT | PGUI_ATTR_TEXTSTRUCT,
+    .calc2 = pgui_calc2_textbox,
     .draw  = pgui_draw_textbox,
     .event = pgui_event_textbox,
+    .del   = pgui_del_text,
 };

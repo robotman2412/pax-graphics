@@ -1,17 +1,30 @@
 
 // SPDX-License-Identifier: MIT
 
+#include "pax_gui_internal.h"
 #include "pax_gui_util.h"
 
 static char const TAG[] = "pax-gui";
 
 
 
+// Create a new dropdown.
+pgui_elem_t *pgui_new_dropdown(pgui_callback_t cb) {
+    pgui_dropdown_t *elem = malloc(sizeof(pgui_text_t));
+    if (!elem)
+        return NULL;
+    memset(elem, 0, sizeof(pgui_dropdown_t));
+    elem->base.type     = &pgui_type_dropdown;
+    elem->base.callback = cb;
+    elem->base.selected = -1;
+    return (pgui_elem_t *)elem;
+}
+
 // Child clipping rectangle for dropdowns.
 void pgui_clip_dropdown(pax_buf_t *gfx, pax_vec2i pos, pgui_elem_t *elem, pgui_theme_t const *theme, uint32_t flags) {
     pgui_dropdown_t *dropdown = (pgui_dropdown_t *)elem;
     if (pos.x != dropdown->last_pos.x || pos.y != dropdown->last_pos.y) {
-        pgui_calc_dropdown(pax_buf_get_dims(gfx), pos, elem, theme, flags);
+        pgui_calc2_dropdown(pax_buf_get_dims(gfx), pos, elem, theme, flags);
     }
     if (flags & PGUI_FLAG_ACTIVE) {
         pax_set_clip(gfx, dropdown->child_pos);
@@ -23,7 +36,7 @@ void pgui_draw_dropdown(pax_buf_t *gfx, pax_vec2i pos, pgui_elem_t *elem, pgui_t
     pgui_dropdown_t *dropdown = (pgui_dropdown_t *)elem;
     pax_recti        clip     = pax_get_clip(gfx);
     if (pos.x != dropdown->last_pos.x || pos.y != dropdown->last_pos.y) {
-        pgui_calc_dropdown(pax_buf_get_dims(gfx), pos, elem, theme, flags);
+        pgui_calc2_dropdown(pax_buf_get_dims(gfx), pos, elem, theme, flags);
     }
 
     // Draw box around the location of the children.
@@ -113,8 +126,41 @@ void pgui_draw_dropdown(pax_buf_t *gfx, pax_vec2i pos, pgui_elem_t *elem, pgui_t
     pax_set_clip(gfx, clip);
 }
 
-// GUI element layout calculation call.
-void pgui_calc_dropdown(
+// Calculate the minimum size of a dropdown.
+void pgui_calc1_dropdown(
+    pax_vec2i gfx_size, pax_vec2i pos, pgui_elem_t *elem, pgui_theme_t const *theme, uint32_t flags
+) {
+    if ((flags & PGUI_FLAG_ANYSIZE)) {
+        return;
+    }
+
+    int padding = flags & PGUI_FLAG_NOPADDING ? 0 : 2 * theme->padding;
+
+    // Calculate minimum width.
+    if (!(flags & PGUI_FLAG_FIX_WIDTH)) {
+        int min_w = 0;
+        for (size_t i = 0; i < elem->children_len; i++) {
+            if (elem->children[i] && min_w < elem->children[i]->size.x) {
+                min_w = elem->children[i]->size.x;
+            }
+        }
+        elem->size.x = min_w + padding;
+    }
+
+    // Calculate minimum height.
+    if (!(flags & PGUI_FLAG_FIX_WIDTH)) {
+        int min_h = 0;
+        for (size_t i = 0; i < elem->children_len; i++) {
+            if (elem->children[i] && min_h < elem->children[i]->size.y) {
+                min_h = elem->children[i]->size.y;
+            }
+        }
+        elem->size.y = min_h + padding;
+    }
+}
+
+// Calculate the internal layout of a dropdown.
+void pgui_calc2_dropdown(
     pax_vec2i gfx_size, pax_vec2i pos, pgui_elem_t *elem, pgui_theme_t const *theme, uint32_t flags
 ) {
     pgui_dropdown_t *dropdown = (pgui_dropdown_t *)elem;
@@ -133,16 +179,9 @@ void pgui_calc_dropdown(
     }
 
     // Calculate element size.
-    elem->size           = theme->min_input_size;
     elem->content_size.y = 0;
     for (size_t i = 0; i < elem->children_len; i++) {
         elem->content_size.y += 2 * theme->padding + elem->children[i]->size.y;
-        if (elem->size.x < elem->children[i]->size.x + 2 * theme->padding) {
-            elem->size.x = elem->children[i]->size.x + 2 * theme->padding;
-        }
-        if (elem->size.y < elem->children[i]->size.y + 2 * theme->padding) {
-            elem->size.y = elem->children[i]->size.y + 2 * theme->padding;
-        }
     }
     elem->content_size.x = elem->size.x;
 
@@ -178,14 +217,17 @@ void pgui_calc_dropdown(
         if (!child) {
             continue;
         }
-        if (child->flags & PGUI_FLAG_FILLCELL) {
-            child->pos.x  = x_offset + theme->padding;
-            child->pos.y  = y_offset + theme->padding;
-            child->size.x = elem->size.x - 2 * theme->padding;
-            child->size.y = elem->size.y - 2 * theme->padding;
-        } else {
+        if (child->flags & PGUI_FLAG_FIX_WIDTH) {
             child->pos.x = x_offset + (elem->size.x - child->size.x) / 2;
+        } else {
+            child->pos.x  = x_offset + theme->padding;
+            child->size.x = elem->size.x - 2 * theme->padding;
+        }
+        if (child->flags & PGUI_FLAG_FIX_HEIGHT) {
             child->pos.y = y_offset + (elem->size.y - child->size.y) / 2;
+        } else {
+            child->pos.y  = y_offset + theme->padding;
+            child->size.y = elem->size.y - 2 * theme->padding;
         }
         y_offset += elem->size.y;
     }
@@ -292,12 +334,26 @@ pgui_resp_t pgui_event_dropdown(
     }
 }
 
+// Child list changed callback for dropdowns.
+void pgui_child_dropdown(pgui_elem_t *elem) {
+    // Disable padding on all labels.
+    for (size_t i = 0; i < elem->children_len; i++) {
+        if (!elem->children[i] || !(elem->children[i]->flags & PGUI_FLAG_NOBACKGROUND)
+            || !(elem->children[i]->flags & PGUI_FLAG_NOBORDER))
+            continue;
+        elem->children[i]->flags |= PGUI_FLAG_NOPADDING;
+    }
+}
 
 
-pgui_type_t const pgui_type_dropdown_raw = {
-    .attr  = PGUI_ATTR_DROPDOWN | PGUI_ATTR_SELECTABLE | PGUI_ATTR_ABSPOS,
+
+pgui_type_t const pgui_type_dropdown = {
+    .name  = "dropdown",
+    .attr  = PGUI_ATTR_DROPDOWN | PGUI_ATTR_SELECTABLE | PGUI_ATTR_ABSPOS | PGUI_ATTR_CONTAINER,
     .clip  = pgui_clip_dropdown,
     .draw  = pgui_draw_dropdown,
+    .calc1 = pgui_calc1_dropdown,
+    .calc2 = pgui_calc2_dropdown,
     .event = pgui_event_dropdown,
-    .calc  = pgui_calc_dropdown,
+    .child = pgui_child_dropdown,
 };

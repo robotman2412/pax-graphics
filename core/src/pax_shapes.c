@@ -114,7 +114,7 @@ void pax_vectorise_bezier_part(pax_vec2f *ptr, size_t max_points, pax_4vec2f con
         return;
     }
 
-#if PAX_USE_EXPENSIVE_BEZIER
+    #if PAX_USE_EXPENSIVE_BEZIER
 
     // Start with just three points: start, T=0.5 and end.
     bezier_point_t *points = malloc(sizeof(bezier_point_t) * max_points);
@@ -162,7 +162,7 @@ void pax_vectorise_bezier_part(pax_vec2f *ptr, size_t max_points, pax_4vec2f con
     free(points);
     free(lines);
 
-#else
+    #else
 
     float delta = (t_to - t_from) / (max_points - 1);
     float part  = t_from;
@@ -172,7 +172,7 @@ void pax_vectorise_bezier_part(pax_vec2f *ptr, size_t max_points, pax_4vec2f con
         part                 += delta;
     }
 
-#endif
+    #endif
 }
 
 // Convert a cubic bezier curve to line segments, with the given number of points.
@@ -186,7 +186,7 @@ void pax_draw_bezier_part(pax_buf_t *buf, pax_col_t color, pax_4vec2f control_po
     if (to < from) {
         PAX_SWAP(float, to, from);
     }
-#if PAX_USE_EXPENSIVE_BEZIER
+    #if PAX_USE_EXPENSIVE_BEZIER
     // Vectorise the bezier curve first.
     pax_vec2f *points;
     pax_vectorise_bezier(&points, n_points, control_points);
@@ -198,7 +198,7 @@ void pax_draw_bezier_part(pax_buf_t *buf, pax_col_t color, pax_4vec2f control_po
         pax_draw_line(buf, color, points[i].x, points[i].y, points[i + 1].x, points[i + 1].y);
     }
     free(points);
-#else
+    #else
     // Draw the curve in a more simple manner.
     bezier_point_t last_point = pax_calc_bezier(from, control_points);
     float          delta      = (to - from) / (n_points - 2);
@@ -209,7 +209,7 @@ void pax_draw_bezier_part(pax_buf_t *buf, pax_col_t color, pax_4vec2f control_po
         last_point  = point;
         part       += delta;
     }
-#endif
+    #endif
 }
 
 // Draw a cubic bezier curve.

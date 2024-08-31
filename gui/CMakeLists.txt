@@ -9,11 +9,12 @@ set(include ${CMAKE_CURRENT_LIST_DIR}/include)
 
 
 set(pax_gui_srcs
-    ${src}/pax_gui_button.c
-    ${src}/pax_gui_dropdown.c
-    ${src}/pax_gui_grid.c
-    ${src}/pax_gui_text.c
-    ${src}/pax_gui_textbox.c
+    ${src}/elem/pax_gui_button.c
+    ${src}/elem/pax_gui_dropdown.c
+    ${src}/elem/pax_gui_grid.c
+    ${src}/elem/pax_gui_image.c
+    ${src}/elem/pax_gui_text.c
+    ${src}/elem/pax_gui_textbox.c
     ${src}/pax_gui_util.c
     ${src}/pax_gui.c
 )

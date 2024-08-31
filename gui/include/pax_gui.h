@@ -106,6 +106,24 @@ typedef struct {
     uint32_t          modkeys;
 } pgui_event_t;
 
+// Element type IDs.
+typedef enum {
+    // Custom type.
+    /* PGUI_TYPE_ID_CUSTOM = -1, */
+    // Built-in: Button.
+    PGUI_TYPE_ID_BUTTON,
+    // Built-in: Text.
+    PGUI_TYPE_ID_TEXT,
+    // Built-in: Textbox.
+    PGUI_TYPE_ID_TEXTBOX,
+    // Built-in: Grid.
+    PGUI_TYPE_ID_GRID,
+    // Built-in: Dropdown
+    PGUI_TYPE_ID_DROPDOWN,
+    // Built-in: Image.
+    PGUI_TYPE_ID_IMAGE,
+} pgui_type_id_t;
+
 
 // GUI theme properties.
 typedef struct {
@@ -181,14 +199,16 @@ extern pgui_theme_t const pgui_theme_default;
 
 
 // GUI element inheritable flag: Hidden.
-#define PGUI_FLAG_HIDDEN       0x00000001
+#define PGUI_FLAG_HIDDEN   0x00000001
 // GUI element inheritable flag: Inactive.
 // Buttons can't be pressed, inputs can't be edited.
-#define PGUI_FLAG_INACTIVE     0x00000002
+#define PGUI_FLAG_INACTIVE 0x00000002
 // GUI element inheritable flag: Needs re-draw.
-#define PGUI_FLAG_DIRTY        0x00000004
+#define PGUI_FLAG_DIRTY    0x00000004
+
 // Bitmask of inheritable flags.
 #define PGUI_FLAGS_INHERITABLE 0x000000ff
+
 // GUI element flag: Do not draw background.
 #define PGUI_FLAG_NOBACKGROUND 0x00000100
 // GUI element flag: Do not draw border.
@@ -199,12 +219,14 @@ extern pgui_theme_t const pgui_theme_default;
 #define PGUI_FLAG_ACTIVE       0x00000800
 // GUI element flag: Draw as highlighted.
 #define PGUI_FLAG_HIGHLIGHT    0x00001000
-// GUI element flag: Fill the cell width of the parent.
-#define PGUI_FLAG_FILLCELL     0x00002000
 // GUI element flag: Do not add padding.
-#define PGUI_FLAG_NOPADDING    0x00004000
+#define PGUI_FLAG_NOPADDING    0x00002000
 // GUI element flag: Ignore minimum size specification.
-#define PGUI_FLAG_ANYSIZE      0x00008000
+#define PGUI_FLAG_ANYSIZE      0x00004000
+// GUI element flag: Fixed width.
+#define PGUI_FLAG_FIX_WIDTH    0x00008000
+// GUI element flag: Fixed height.
+#define PGUI_FLAG_FIX_HEIGHT   0x00010000
 
 // GUI attribute: Type is selectable.
 #define PGUI_ATTR_SELECTABLE 0x00000001
@@ -214,7 +236,13 @@ extern pgui_theme_t const pgui_theme_default;
 // GUI attribute: Absolute child position.
 // Elements with this type use absolute coordinates for their immediate children.
 #define PGUI_ATTR_ABSPOS     0x00000004
-// GUI attribute: Type describes a button.
+// GUI attribute: Element can have children.
+// Elements with this type are allowed to contain child elements.
+#define PGUI_ATTR_CONTAINER  0x00000008
+// GUI attribute: Type uses `pgui_text_t` struct or a superset.
+// Enables text element API functions.
+#define PGUI_ATTR_TEXTSTRUCT 0x00000010
+// GUI attribute: Type describes a label.
 // Default colors, label minimum size.
 #define PGUI_ATTR_TEXT       0x00000100
 // GUI attribute: Type describes a button.
@@ -227,16 +255,8 @@ extern pgui_theme_t const pgui_theme_default;
 // Dropdown colors, input minimum size.
 #define PGUI_ATTR_DROPDOWN   0x00000800
 
-// GUI element type.
-typedef struct pgui_type     pgui_type_t;
 // Base GUI element.
-typedef struct pgui_elem     pgui_elem_t;
-// Data for grid elements.
-typedef struct pgui_grid     pgui_grid_t;
-// Data for dropdown elements.
-typedef struct pgui_dropdown pgui_dropdown_t;
-// Data for text-based elements.
-typedef struct pgui_text     pgui_text_t;
+typedef struct pgui_elem pgui_elem_t;
 
 // GUI element draw call.
 typedef void (*pgui_draw_fn_t)(
@@ -250,210 +270,14 @@ typedef void (*pgui_calc_fn_t)(
 typedef pgui_resp_t (*pgui_event_fn_t)(
     pax_vec2i gfx_size, pax_vec2i pos, pgui_elem_t *elem, pgui_theme_t const *theme, uint32_t flags, pgui_event_t event
 );
+// Additional delete callback.
+typedef void (*pgui_del_fn_t)(pgui_elem_t *elem);
 // GUI button press / input changed callback.
 typedef void (*pgui_callback_t)(pgui_elem_t *elem);
 
-// GUI element type.
-struct pgui_type {
-    // Static element attributes.
-    uint32_t        attr;
-    // Set clip rectangle for children.
-    pgui_draw_fn_t  clip;
-    // Draw call (mandatory).
-    pgui_draw_fn_t  draw;
-    // Layout calculation call.
-    pgui_calc_fn_t  calc;
-    // Event call.
-    pgui_event_fn_t event;
-};
-
-struct pgui_elem {
-    // Element type.
-    pgui_type_t const *type;
-    // Element flags.
-    // Effects of inheritable flags are applied to child elements.
-    uint32_t           flags;
-    // Parent element, set automatically.
-    pgui_elem_t       *parent;
-
-    // Relative element position.
-    pax_vec2i pos;
-    // Element size.
-    pax_vec2i size;
-    // Content size.
-    pax_vec2i content_size;
-    // Scroll offset.
-    pax_vec2i scroll;
-
-    // Number of child elements.
-    size_t        children_len;
-    // Child elements.
-    pgui_elem_t **children;
-    // Selected child, if any.
-    ptrdiff_t     selected;
-
-    // Button pressed / input changed callback.
-    pgui_callback_t callback;
-    // User-specified data pointer.
-    void           *userdata;
-};
-
-struct pgui_grid {
-    // Common element data.
-    pgui_elem_t base;
-    // Size in grid cells.
-    pax_vec2i   cells;
-    // Per-row size.
-    int        *row_height;
-    // Per-column size.
-    int        *col_width;
-};
-
-struct pgui_dropdown {
-    // Common element data.
-    pgui_elem_t base;
-    // Last on-screen position.
-    pax_vec2i   last_pos;
-    // Selected child index.
-    size_t      selected;
-    // On-screen position of child elements.
-    pax_recti   child_pos;
-};
-
-struct pgui_text {
-    // Common element data.
-    pgui_elem_t base;
-    // Text buffer capacity.
-    size_t      text_cap;
-    // Text buffer length.
-    size_t      text_len;
-    // Text to display.
-    char       *text;
-    // Horizontal alignment of the text.
-    pax_align_t text_halign;
-    // Vertical alignment of the text.
-    pax_align_t text_valign;
-    // Cursor position.
-    size_t      cursor;
-    // Shrink text to fit, instead of adding a scrollbar.
-    bool        shrink_to_fit;
-    // Text buffer can be realloc()'d.
-    bool        allow_realloc;
-    // Users are allowed to enter newlines.
-    bool        allow_newline;
-};
 
 
-
-extern pgui_type_t const pgui_type_button_raw;
-extern pgui_type_t const pgui_type_text_raw;
-extern pgui_type_t const pgui_type_textbox_raw;
-extern pgui_type_t const pgui_type_grid_raw;
-extern pgui_type_t const pgui_type_dropdown_raw;
-#define PGUI_TYPE_BUTTON   &pgui_type_button_raw
-#define PGUI_TYPE_TEXT     &pgui_type_text_raw
-#define PGUI_TYPE_TEXTBOX  &pgui_type_textbox_raw
-#define PGUI_TYPE_GRID     &pgui_type_grid_raw
-#define PGUI_TYPE_DROPDOWN &pgui_type_dropdown_raw
-
-
-
-// clang-format off
-
-// Create a simple button.
-#define PGUI_NEW_BUTTON(button_label)                                                                                  \
-    (pgui_text_t) {                                                                                                    \
-        .base = {.type = PGUI_TYPE_BUTTON, .flags = PGUI_FLAG_FILLCELL}, .text_len = __builtin_strlen(button_label),   \
-        .text = (button_label), .shrink_to_fit = true, .text_halign = PAX_ALIGN_CENTER,                                \
-        .text_valign = PAX_ALIGN_CENTER,                                                                               \
-    }
-
-// Create a simple text label.
-#define PGUI_NEW_LABEL(label_text)                                                                                       \
-    (pgui_text_t) {                                                                                                      \
-        .base     = {.type = PGUI_TYPE_TEXT, .flags = PGUI_FLAG_FILLCELL | PGUI_FLAG_NOBACKGROUND | PGUI_FLAG_NOBORDER}, \
-        .text_len = __builtin_strlen(label_text), .text = (label_text), .shrink_to_fit = true,                           \
-        .text_halign = PAX_ALIGN_CENTER, .text_valign = PAX_ALIGN_CENTER,                                                \
-    }
-
-// Create a simple editable textbox.
-#define PGUI_NEW_TEXTBOX()                                                                                             \
-    (pgui_text_t) {                                                                                                    \
-        .base = {.type = PGUI_TYPE_TEXTBOX, .flags = PGUI_FLAG_FILLCELL}, .allow_realloc = true,                       \
-        .text_halign = PAX_ALIGN_BEGIN, .text_valign = PAX_ALIGN_CENTER,                                               \
-    }
-
-// Create a new scrollable grid.
-#define PGUI_NEW_GRID(pos_x, pos_y, size_x, size_y, cells_x, cells_y, ...)                                             \
-    (pgui_grid_t) {                                                                                                    \
-        .base = {                                                                                                      \
-            .type         = PGUI_TYPE_GRID,                                                                            \
-            .pos          = {(pos_x), (pos_y)},                                                                        \
-            .size         = {(size_x), (size_y)},                                                                      \
-            .children_len = (cells_x) * (cells_y),                                                                     \
-            .children     = (void*)(void *[]){__VA_ARGS__},                                                            \
-            .selected     = -1,                                                                                        \
-            .flags        = PGUI_FLAG_FILLCELL,                                                                        \
-        },                                                                                                             \
-        .cells = {(cells_x), (cells_y)}, .col_width = (int[(cells_x)]){0}, .row_height = (int[(cells_y)]){0},          \
-    }
-
-// Create a new dropdown.
-#define PGUI_NEW_DROPDOWN(options_len, ...)                                                                            \
-    (pgui_dropdown_t) {                                                                                                \
-        .base = {                                                                                                      \
-            .type         = PGUI_TYPE_DROPDOWN,                                                                        \
-            .children_len = options_len,                                                                               \
-            .children     = (void*)(void *[]){__VA_ARGS__},                                                            \
-            .selected     = 0,                                                                                         \
-            .flags        = PGUI_FLAG_FILLCELL,                                                                        \
-        },                                                                                                             \
-        .selected   = 0,                                                                                               \
-    }
-
-// clang-format on
-
-
-
-// Child clipping rectangle for dropdowns.
-void pgui_clip_dropdown(pax_buf_t *gfx, pax_vec2i pos, pgui_elem_t *elem, pgui_theme_t const *theme, uint32_t flags);
-
-// Visuals for text-based elements.
-void pgui_draw_text(pax_buf_t *gfx, pax_vec2i pos, pgui_elem_t *elem, pgui_theme_t const *theme, uint32_t flags);
-// Visuals for editable text-based elements.
-void pgui_draw_textbox(pax_buf_t *gfx, pax_vec2i pos, pgui_elem_t *elem, pgui_theme_t const *theme, uint32_t flags);
-// Visuals for grid-based elements.
-void pgui_draw_grid(pax_buf_t *gfx, pax_vec2i pos, pgui_elem_t *elem, pgui_theme_t const *theme, uint32_t flags);
-// Visuals for dropdowns.
-void pgui_draw_dropdown(pax_buf_t *gfx, pax_vec2i pos, pgui_elem_t *elem, pgui_theme_t const *theme, uint32_t flags);
-
-// Calculate the layout of a grid.
-void pgui_calc_grid(pax_vec2i gfx_size, pax_vec2i pos, pgui_elem_t *elem, pgui_theme_t const *theme, uint32_t flags);
-// Calculate the layout of editable text-based elements.
-void pgui_calc_textbox(pax_vec2i gfx_size, pax_vec2i pos, pgui_elem_t *elem, pgui_theme_t const *theme, uint32_t flags);
-// Calculate the layout of a dropdown.
-void pgui_calc_dropdown(
-    pax_vec2i gfx_size, pax_vec2i pos, pgui_elem_t *elem, pgui_theme_t const *theme, uint32_t flags
-);
-
-// Behaviour for button elements.
-pgui_resp_t pgui_event_button(
-    pax_vec2i gfx_size, pax_vec2i pos, pgui_elem_t *elem, pgui_theme_t const *theme, uint32_t flags, pgui_event_t event
-);
-// Behaviour for editable text-based elements.
-pgui_resp_t pgui_event_textbox(
-    pax_vec2i gfx_size, pax_vec2i pos, pgui_elem_t *elem, pgui_theme_t const *theme, uint32_t flags, pgui_event_t event
-);
-// Navigation behaviour for grid-based elements.
-pgui_resp_t pgui_event_grid(
-    pax_vec2i gfx_size, pax_vec2i pos, pgui_elem_t *elem, pgui_theme_t const *theme, uint32_t flags, pgui_event_t event
-);
-// Behaviour for dropdown elements.
-pgui_resp_t pgui_event_dropdown(
-    pax_vec2i gfx_size, pax_vec2i pos, pgui_elem_t *elem, pgui_theme_t const *theme, uint32_t flags, pgui_event_t event
-);
-
-
+/* ==== GUI rendering functions ==== */
 
 // Recalculate the position of a GUI element and its children.
 void        pgui_calc_layout(pax_vec2i gfx_size, pgui_elem_t *elem, pgui_theme_t const *theme);
@@ -464,6 +288,105 @@ void        pgui_redraw(pax_buf_t *gfx, pgui_elem_t *elem, pgui_theme_t const *t
 // Handle a button event.
 // Returns if and how the event was handled.
 pgui_resp_t pgui_event(pax_vec2i gfx_size, pgui_elem_t *elem, pgui_theme_t const *theme, pgui_event_t event);
+
+
+
+/* ==== Element management functions ==== */
+
+// Create a new button.
+pgui_elem_t *pgui_new_button(char const *text, pgui_callback_t cb);
+// Create a new label.
+pgui_elem_t *pgui_new_text(char const *text);
+// Create a new editable textbox.
+pgui_elem_t *pgui_new_textbox(pgui_callback_t cb);
+// Create a new grid / table.
+pgui_elem_t *pgui_new_grid(pax_vec2i num_cells);
+// Create a new dropdown.
+pgui_elem_t *pgui_new_dropdown(pgui_callback_t cb);
+// Create a new image.
+pgui_elem_t *pgui_new_image(pax_buf_t *image, bool do_free_image);
+// Delete an element.
+void         pgui_delete(pgui_elem_t *elem);
+// Delete an element and all its children recursively.
+void         pgui_delete_recursive(pgui_elem_t *elem);
+
+// Create a new grid / table.
+static inline pgui_elem_t *pgui_new_grid2(int num_cells_x, int num_cells_y) {
+    return pgui_new_grid((pax_vec2i){num_cells_x, num_cells_y});
+}
+
+// Set element custom user data.
+void            pgui_set_userdata(pgui_elem_t *elem, void *userdata);
+// Get element custom user data.
+void           *pgui_get_userdata(pgui_elem_t *elem);
+// Set element on change / on press callback.
+void            pgui_set_callback(pgui_elem_t *elem, pgui_callback_t cb);
+// Get element on change / on press callback.
+pgui_callback_t pgui_get_callback(pgui_elem_t *elem);
+
+// Change the text of a button, label or textbox.
+void        pgui_set_text(pgui_elem_t *elem, char const *new_label);
+// Get the txt of a button, label or textbox.
+// Take care not to edit in the textbox while still using this value.
+char const *pgui_get_text(pgui_elem_t *elem);
+// Set the horizontal alignment of a button, label or textbox.
+void        pgui_set_halign(pgui_elem_t *elem, pax_align_t align);
+// Get the horizontal alignment of a button, label or textbox.
+pax_align_t pgui_get_halign(pgui_elem_t *elem);
+// Set the vertical alignment of a button, label or textbox.
+void        pgui_set_valign(pgui_elem_t *elem, pax_align_t align);
+// Get the vertical alignment of a button, label or textbox.
+pax_align_t pgui_get_valign(pgui_elem_t *elem);
+// Change the selection index of a grid or dropdown.
+// Negative values indicate no selection and aren't applicable to dropdowns.
+void        pgui_set_selection(pgui_elem_t *elem, ptrdiff_t selection);
+// Get the selection index of a grid or dropdown.
+// Negative values indicate no selection and aren't applicable to dropdowns.
+ptrdiff_t   pgui_get_selection(pgui_elem_t *elem);
+
+// Print GUI debug information.
+void pgui_print_debug_info(pgui_elem_t *elem);
+// Print GUI debug information for element and all children.
+void pgui_print_debug_info_recursive(pgui_elem_t *elem);
+
+
+
+/* ==== GUI composition functions ==== */
+
+// Append a child to a container element.
+bool         pgui_child_append(pgui_elem_t *parent, pgui_elem_t *child);
+// Insert a child element at a specific index, shifting siblings after it.
+bool         pgui_child_insert(pgui_elem_t *parent, ptrdiff_t index, pgui_elem_t *child);
+// Insert a child element at a specific index, replacing the element in that place.
+pgui_elem_t *pgui_child_replace(pgui_elem_t *parent, ptrdiff_t index, pgui_elem_t *child);
+// Remove a child element by reference.
+bool         pgui_child_remove_p(pgui_elem_t *parent, pgui_elem_t *child);
+// Remove a child element by index.
+pgui_elem_t *pgui_child_remove_i(pgui_elem_t *parent, ptrdiff_t index);
+// Get a child element by index.
+pgui_elem_t *pgui_child_get(pgui_elem_t *parent, ptrdiff_t index);
+
+// Override element flags.
+void      pgui_elem_set_flags(pgui_elem_t *elem, uint32_t flags);
+// Get element flags.
+uint32_t  pgui_elem_get_flags(pgui_elem_t *elem);
+// Override element size.
+void      pgui_elem_set_size(pgui_elem_t *elem, pax_vec2i size);
+// Get element size.
+pax_vec2i pgui_elem_get_size(pgui_elem_t *elem);
+// Override element position.
+void      pgui_elem_set_pos(pgui_elem_t *elem, pax_vec2i position);
+// Get element position.
+pax_vec2i pgui_elem_get_pos(pgui_elem_t *elem);
+
+// Override element size.
+static inline void pgui_elem_set_size2(pgui_elem_t *elem, int size_x, int size_y) {
+    pgui_elem_set_size(elem, (pax_vec2i){size_x, size_y});
+}
+// Override element position.
+static inline void pgui_elem_set_pos2(pgui_elem_t *elem, int position_x, int position_y) {
+    pgui_elem_set_pos(elem, (pax_vec2i){position_x, position_y});
+}
 
 #ifdef __cplusplus
 } // extern "C"

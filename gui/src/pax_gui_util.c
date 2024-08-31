@@ -3,6 +3,8 @@
 
 #include "pax_gui_util.h"
 
+#include "pax_gui_internal.h"
+
 static char const TAG[] = "pax-gui";
 
 
@@ -119,9 +121,7 @@ void pgui_drawutil_textbox(
 ) {
     pgui_text_t *text    = (pgui_text_t *)elem;
     int          padding = 0;
-    if (!(elem->type->attr & PGUI_ATTR_INPUT)) {
-        padding = theme->padding;
-    } else if (!(elem->flags & PGUI_FLAG_NOPADDING)) {
+    if (!(flags & PGUI_FLAG_NOPADDING)) {
         padding = theme->padding;
     }
 
@@ -142,10 +142,10 @@ void pgui_drawutil_textbox(
     // Draw text.
     pax_recti old_clip = pax_get_clip(gfx);
     pax_recti new_clip = {
-        pos.x + padding,
-        pos.y + padding,
-        elem->size.x - 2 * padding + 1,
-        elem->size.y - 2 * padding + 1,
+        pos.x + padding - 1,
+        pos.y + padding - 1,
+        elem->size.x - 2 * padding + 2,
+        elem->size.y - 2 * padding + 2,
     };
     pax_set_clip(gfx, pax_recti_intersect(old_clip, new_clip));
     ptrdiff_t cursorpos = -1;

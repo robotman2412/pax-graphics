@@ -1,11 +1,28 @@
 
 // SPDX-License-Identifier: MIT
 
+#include "pax_gui_internal.h"
 #include "pax_gui_util.h"
 
 static char const TAG[] = "pax-gui";
 
 
+
+// Create a new button.
+pgui_elem_t *pgui_new_button(char const *text, pgui_callback_t cb) {
+    pgui_text_t *elem = malloc(sizeof(pgui_text_t));
+    if (!elem)
+        return NULL;
+    memset(elem, 0, sizeof(pgui_text_t));
+    elem->base.type     = &pgui_type_button;
+    elem->base.callback = cb;
+    elem->base.selected = -1;
+    elem->text          = (char *)text;
+    elem->text_len      = strlen(text);
+    elem->text_halign   = PAX_ALIGN_CENTER;
+    elem->text_valign   = PAX_ALIGN_CENTER;
+    return (pgui_elem_t *)elem;
+}
 
 // Behaviour for button elements.
 pgui_resp_t pgui_event_button(
@@ -34,8 +51,11 @@ pgui_resp_t pgui_event_button(
 }
 
 // Button element type.
-pgui_type_t const pgui_type_button_raw = {
-    .attr  = PGUI_ATTR_SELECTABLE | PGUI_ATTR_BUTTON,
+pgui_type_t const pgui_type_button = {
+    .name  = "button",
+    .attr  = PGUI_ATTR_SELECTABLE | PGUI_ATTR_BUTTON | PGUI_ATTR_TEXTSTRUCT,
     .draw  = pgui_draw_text,
+    .calc1 = pgui_calc1_text,
     .event = pgui_event_button,
+    .del   = pgui_del_text,
 };

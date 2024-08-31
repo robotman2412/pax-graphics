@@ -197,6 +197,10 @@ static
         height = buf->clip.y + buf->clip.h - y;
     }
 
+    if (width <= 0 || height <= 0) {
+        return;
+    }
+
     #if defined(PDHG_NORMAL_UV) || defined(PDHG_RESTRICT_UV)
     // Adjust UVs to match pixel co-ordinates.
     fixpt_t min_x = floorf(x + 0.5) + 0.5;
