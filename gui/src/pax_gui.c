@@ -205,7 +205,7 @@ static void pgui_draw_int(pax_buf_t *gfx, pax_vec2i pos, pgui_elem_t *elem, pgui
             },
             elem->children[elem->selected],
             theme,
-            flags
+            child_flags
         );
     }
     pax_set_clip(gfx, clip);
@@ -581,42 +581,56 @@ pgui_elem_t *pgui_child_get(pgui_elem_t *parent, ptrdiff_t index) {
 
 
 // Override element flags.
-void pgui_elem_set_flags(pgui_elem_t *elem, uint32_t flags) {
+void pgui_set_flags(pgui_elem_t *elem, uint32_t flags) {
     if (!elem)
         return;
     elem->flags = flags;
 }
 
+// Add element flags.
+void pgui_enable_flags(pgui_elem_t *elem, uint32_t flags) {
+    if (!elem)
+        return;
+    elem->flags |= flags;
+}
+
+// Remove element flags
+void pgui_disable_flags(pgui_elem_t *elem, uint32_t flags) {
+    if (!elem)
+        return;
+    elem->flags &= ~flags;
+}
+
 // Get element flags.
-uint32_t pgui_elem_get_flags(pgui_elem_t *elem) {
+uint32_t pgui_get_flags(pgui_elem_t *elem) {
     if (!elem)
         return 0;
     return elem->flags;
 }
 
 // Override element size.
-void pgui_elem_set_size(pgui_elem_t *elem, pax_vec2i size) {
+void pgui_set_size(pgui_elem_t *elem, pax_vec2i size) {
     if (!elem)
         return;
     elem->size = size;
 }
 
 // Get element size.
-pax_vec2i pgui_elem_get_size(pgui_elem_t *elem) {
+pax_vec2i pgui_get_size(pgui_elem_t *elem) {
     if (!elem)
         return (pax_vec2i){0, 0};
     return elem->size;
 }
 
 // Override element position.
-void pgui_elem_set_pos(pgui_elem_t *elem, pax_vec2i position) {
+void pgui_set_pos(pgui_elem_t *elem, pax_vec2i position) {
     if (!elem)
         return;
     elem->pos = position;
 }
 
 // Get element position.
-pax_vec2i pgui_elem_get_pos(pgui_elem_t *elem) {
+pax_vec2i pgui_get_pos(pgui_elem_t *elem) {
     if (!elem)
         return (pax_vec2i){0, 0};
     return elem->pos;

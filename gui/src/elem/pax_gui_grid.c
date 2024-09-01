@@ -41,6 +41,19 @@ void pgui_calc1_grid(pax_vec2i gfx_size, pax_vec2i pos, pgui_elem_t *elem, pgui_
     pgui_grid_t *grid    = (pgui_grid_t *)elem;
     int          padding = flags & PGUI_FLAG_NOPADDING ? 0 : theme->padding;
 
+    if (!elem->parent && elem->selected < 0) {
+        // Select lowest-indexed selectable child.
+        for (size_t i = 0; i < elem->children_len; i++) {
+            if (elem->children[i] && (elem->children[i]->type->attr & PGUI_ATTR_SELECTABLE)) {
+                elem->selected            = i;
+                elem->children[i]->flags |= PGUI_FLAG_HIGHLIGHT | PGUI_FLAG_DIRTY;
+                elem->flags              |= PGUI_FLAG_DIRTY;
+                elem->flags              &= ~PGUI_FLAG_HIGHLIGHT;
+                break;
+            }
+        }
+    }
+
     // Compute column sizes.
     elem->content_size.x = 0;
     for (int x = 0; x < grid->cells.x; x++) {
@@ -314,12 +327,16 @@ pgui_resp_t pgui_event_grid(
             return PGUI_RESP_CAPTURED;
 
         } else if (event.input == PGUI_INPUT_BACK && event.type == PGUI_EVENT_TYPE_PRESS) {
-            // Un-select child; re-select self.
-            elem->children[elem->selected]->flags &= ~PGUI_FLAG_HIGHLIGHT;
-            elem->children[elem->selected]->flags |= PGUI_FLAG_DIRTY;
-            elem->selected                         = -1;
-            elem->flags                           |= PGUI_FLAG_HIGHLIGHT | PGUI_FLAG_DIRTY;
-            return PGUI_RESP_CAPTURED;
+            if (elem->parent) {
+                // Un-select child; re-select self.
+                elem->children[elem->selected]->flags &= ~PGUI_FLAG_HIGHLIGHT;
+                elem->children[elem->selected]->flags |= PGUI_FLAG_DIRTY;
+                elem->selected                         = -1;
+                elem->flags                           |= PGUI_FLAG_HIGHLIGHT | PGUI_FLAG_DIRTY;
+                return PGUI_RESP_CAPTURED;
+            } else {
+                return PGUI_RESP_IGNORED;
+            }
 
         } else if (event.input == PGUI_INPUT_NEXT) {
             // Navigate next.

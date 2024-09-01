@@ -366,26 +366,30 @@ pgui_elem_t *pgui_child_remove_i(pgui_elem_t *parent, ptrdiff_t index);
 // Get a child element by index.
 pgui_elem_t *pgui_child_get(pgui_elem_t *parent, ptrdiff_t index);
 
-// Override element flags.
-void      pgui_elem_set_flags(pgui_elem_t *elem, uint32_t flags);
+// Add element flags.
+void      pgui_set_flags(pgui_elem_t *elem, uint32_t flags);
+// Add element flags.
+void      pgui_enable_flags(pgui_elem_t *elem, uint32_t flags);
+// Remove element flags
+void      pgui_disable_flags(pgui_elem_t *elem, uint32_t flags);
 // Get element flags.
-uint32_t  pgui_elem_get_flags(pgui_elem_t *elem);
+uint32_t  pgui_get_flags(pgui_elem_t *elem);
 // Override element size.
-void      pgui_elem_set_size(pgui_elem_t *elem, pax_vec2i size);
+void      pgui_set_size(pgui_elem_t *elem, pax_vec2i size);
 // Get element size.
-pax_vec2i pgui_elem_get_size(pgui_elem_t *elem);
+pax_vec2i pgui_get_size(pgui_elem_t *elem);
 // Override element position.
-void      pgui_elem_set_pos(pgui_elem_t *elem, pax_vec2i position);
+void      pgui_set_pos(pgui_elem_t *elem, pax_vec2i position);
 // Get element position.
-pax_vec2i pgui_elem_get_pos(pgui_elem_t *elem);
+pax_vec2i pgui_get_pos(pgui_elem_t *elem);
 
 // Override element size.
 static inline void pgui_elem_set_size2(pgui_elem_t *elem, int size_x, int size_y) {
-    pgui_elem_set_size(elem, (pax_vec2i){size_x, size_y});
+    pgui_set_size(elem, (pax_vec2i){size_x, size_y});
 }
 // Override element position.
 static inline void pgui_elem_set_pos2(pgui_elem_t *elem, int position_x, int position_y) {
-    pgui_elem_set_pos(elem, (pax_vec2i){position_x, position_y});
+    pgui_set_pos(elem, (pax_vec2i){position_x, position_y});
 }
 
 #ifdef __cplusplus

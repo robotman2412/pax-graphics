@@ -318,6 +318,9 @@ void pax_draw_round_rect(pax_buf_t *buf, pax_col_t color, float x, float y, floa
     if (radius <= 0) {
         pax_draw_rect(buf, color, x, y, width, height);
         return;
+    } else if (width == height && radius >= width) {
+        pax_draw_circle(buf, color, x + width * 0.5, y + width * 0.5, width * 0.5);
+        return;
     }
 
     // Clamp size.
@@ -523,6 +526,9 @@ void pax_outline_round_rect(
 ) {
     if (radius <= 0) {
         pax_outline_rect(buf, color, x, y, width, height);
+        return;
+    } else if (width == height && radius >= width) {
+        pax_outline_circle(buf, color, x + width * 0.5, y + width * 0.5, width * 0.5);
         return;
     }
 
