@@ -44,7 +44,7 @@ void pgui_draw_dropdown(pax_buf_t *gfx, pax_vec2i pos, pgui_elem_t *elem, pgui_t
         pax_noclip(gfx);
         pax_draw_round_rect(
             gfx,
-            theme->button_col,
+            theme->palette[elem->variant].button_col,
             dropdown->child_pos.x,
             dropdown->child_pos.y,
             dropdown->child_pos.w,
@@ -60,7 +60,7 @@ void pgui_draw_dropdown(pax_buf_t *gfx, pax_vec2i pos, pgui_elem_t *elem, pgui_t
         );
         pax_draw_round_rect(
             gfx,
-            theme->pressed_col,
+            theme->palette[elem->variant].pressed_col,
             dropdown->child_pos.x,
             dropdown->child_pos.y,
             dropdown->child_pos.w,
@@ -98,7 +98,7 @@ void pgui_draw_dropdown(pax_buf_t *gfx, pax_vec2i pos, pgui_elem_t *elem, pgui_t
     if (theme->dropdown_segmented) {
         pax_draw_line(
             gfx,
-            theme->border_col,
+            theme->palette[elem->variant].border_col,
             pos.x + elem->size.x - elem->size.y,
             pos.y + 1,
             pos.x + elem->size.x - elem->size.y,
@@ -115,10 +115,10 @@ void pgui_draw_dropdown(pax_buf_t *gfx, pax_vec2i pos, pgui_elem_t *elem, pgui_t
         pax_apply_2d(gfx, matrix_2d_scale(1, -1));
     }
     if (theme->dropdown_solid_arrow) {
-        pax_draw_tri(gfx, theme->fg_col, -0.129903811f, -0.075, 0.129903811f, -0.075, 0, 0.15f);
+        pax_draw_tri(gfx, theme->palette[elem->variant].fg_col, -0.129903811f, -0.075, 0.129903811f, -0.075, 0, 0.15f);
     } else {
-        pax_draw_line(gfx, theme->fg_col, -0.2f, -0.1f, 0, 0.1f);
-        pax_draw_line(gfx, theme->fg_col, +0.2f, -0.1f, 0, 0.1f);
+        pax_draw_line(gfx, theme->palette[elem->variant].fg_col, -0.2f, -0.1f, 0, 0.1f);
+        pax_draw_line(gfx, theme->palette[elem->variant].fg_col, +0.2f, -0.1f, 0, 0.1f);
     }
     pax_pop_2d(gfx);
 

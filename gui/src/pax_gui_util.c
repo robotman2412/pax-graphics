@@ -154,7 +154,7 @@ void pgui_drawutil_textbox(
     }
     pgui_drawutil_text(
         gfx,
-        theme->fg_col,
+        theme->palette[elem->variant].fg_col,
         theme->font,
         theme->font_size,
         text->shrink_to_fit,
@@ -182,15 +182,15 @@ void pgui_drawutil_base(
     pax_col_t bg;
     if (!(elem->type->attr & (PGUI_ATTR_INPUT | PGUI_ATTR_BUTTON | PGUI_ATTR_DROPDOWN))
         || (flags & PGUI_FLAG_INACTIVE)) {
-        bg = theme->bg_col;
+        bg = theme->palette[elem->variant].bg_col;
     } else if ((elem->flags & PGUI_FLAG_ACTIVE) && (elem->type->attr & PGUI_ATTR_BUTTON)) {
-        bg = theme->pressed_col;
+        bg = theme->palette[elem->variant].pressed_col;
     } else if ((elem->flags & PGUI_FLAG_ACTIVE) && (elem->type->attr & PGUI_ATTR_INPUT)) {
-        bg = theme->active_col;
+        bg = theme->palette[elem->variant].active_col;
     } else if (elem->type->attr & (PGUI_ATTR_BUTTON | PGUI_ATTR_DROPDOWN)) {
-        bg = theme->button_col;
+        bg = theme->palette[elem->variant].button_col;
     } else {
-        bg = theme->input_col;
+        bg = theme->palette[elem->variant].input_col;
     }
 
     // Draw the backdrop.
@@ -209,10 +209,10 @@ void pgui_drawutil_border(
     pax_col_t color;
     int       thickness;
     if (flags & PGUI_FLAG_HIGHLIGHT) {
-        color     = theme->highlight_col;
+        color     = theme->palette[elem->variant].highlight_col;
         thickness = theme->highlight_thickness;
     } else {
-        color     = theme->border_col;
+        color     = theme->palette[elem->variant].border_col;
         thickness = theme->border_thickness;
     }
 

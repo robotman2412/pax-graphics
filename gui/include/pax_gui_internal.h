@@ -54,6 +54,8 @@ struct pgui_elem {
     // Element flags.
     // Effects of inheritable flags are applied to child elements.
     uint32_t           flags;
+    // Element palette variation.
+    pgui_variant_t     variant;
     // Parent element, set automatically.
     pgui_elem_t       *parent;
 

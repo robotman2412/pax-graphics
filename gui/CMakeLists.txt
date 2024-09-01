@@ -16,6 +16,7 @@ set(pax_gui_srcs
     ${src}/elem/pax_gui_overlay.c
     ${src}/elem/pax_gui_text.c
     ${src}/elem/pax_gui_textbox.c
+    ${src}/pax_gui_themes.c
     ${src}/pax_gui_util.c
     ${src}/pax_gui.c
 )

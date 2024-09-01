@@ -11,41 +11,6 @@
 
 static char const TAG[] = "pax-gui";
 
-// Default theme.
-pgui_theme_t const pgui_theme_default = {
-    // Element styles.
-    .bg_col                 = 0xffffffff,
-    .fg_col                 = 0xff000000,
-    .input_col              = 0xffffffff,
-    .active_col             = 0xffe0e0e0,
-    .button_col             = 0xffd0d0d0,
-    .pressed_col            = 0xff909090,
-    .border_col             = 0xff000000,
-    .highlight_col          = 0xff00e0e0,
-    // Size parameters.
-    .min_size               = {100, 30},
-    .min_input_size         = {100, 30},
-    .min_label_size         = {22, 22},
-    .border_thickness       = 1,
-    .highlight_thickness    = 2,
-    .rounding               = 7,
-    .padding                = 4,
-    // Text style.
-    .font                   = pax_font_saira_regular,
-    .font_size              = 18,
-    // Dropdown style.
-    .dropdown_segmented     = false,
-    .dropdown_solid_arrow   = false,
-    .dropdown_covering_menu = true,
-    // Scrollbar style.
-    .scroll_bg_col          = 0x3f000000,
-    .scroll_fg_col          = 0x7fffffff,
-    .scroll_width           = 6,
-    .scroll_min_size        = 12,
-    .scroll_offset          = 4,
-    .scroll_rounding        = 3,
-};
-
 
 
 /* ==== GUI rendering functions ==== */
@@ -137,7 +102,7 @@ static void
 // Recalculate the position of a GUI element and its children.
 void pgui_calc_layout(pax_vec2i gfx_size, pgui_elem_t *elem, pgui_theme_t const *theme) {
     if (!theme) {
-        theme = &pgui_theme_default;
+        theme = pgui_get_default_theme();
     }
     pgui_calc1_int(gfx_size, (pax_vec2i){0, 0}, elem, theme, 0);
     pgui_calc2_int(gfx_size, (pax_vec2i){0, 0}, elem, theme, 0);
@@ -217,7 +182,7 @@ static void pgui_draw_int(pax_buf_t *gfx, pax_vec2i pos, pgui_elem_t *elem, pgui
 // Draw a GUI element and its children.
 void pgui_draw(pax_buf_t *gfx, pgui_elem_t *elem, pgui_theme_t const *theme) {
     if (!theme) {
-        theme = &pgui_theme_default;
+        theme = pgui_get_default_theme();
     }
     pax_push_2d(gfx);
     pax_reset_2d(gfx, PAX_RESET_TOP);
@@ -229,7 +194,7 @@ void pgui_draw(pax_buf_t *gfx, pgui_elem_t *elem, pgui_theme_t const *theme) {
 // Re-draw dirty parts of the GUI and mark the elements clean.
 void pgui_redraw(pax_buf_t *gfx, pgui_elem_t *elem, pgui_theme_t const *theme) {
     if (!theme) {
-        theme = &pgui_theme_default;
+        theme = pgui_get_default_theme();
     }
     pax_push_2d(gfx);
     pax_reset_2d(gfx, PAX_RESET_TOP);
@@ -279,7 +244,7 @@ static pgui_resp_t pgui_event_int(
 // Returns whether any element was marked dirty in response.
 pgui_resp_t pgui_event(pax_vec2i gfx_size, pgui_elem_t *elem, pgui_theme_t const *theme, pgui_event_t event) {
     if (!theme) {
-        theme = &pgui_theme_default;
+        theme = pgui_get_default_theme();
     }
     pgui_resp_t resp = pgui_event_int(gfx_size, elem->pos, elem, theme, 0, event);
     if (resp == PGUI_RESP_CAPTURED_DIRTY) {
@@ -579,6 +544,20 @@ pgui_elem_t *pgui_child_get(pgui_elem_t *parent, ptrdiff_t index) {
     return parent->children[index];
 }
 
+
+// Set palette variation.
+void pgui_set_palette(pgui_elem_t *elem, pgui_variant_t variant) {
+    if (!elem)
+        return;
+    elem->variant = variant;
+}
+
+// Get palette variation.
+pgui_variant_t pgui_get_palette(pgui_elem_t *elem) {
+    if (!elem)
+        return PGUI_VARIANT_DEFAULT;
+    return elem->variant;
+}
 
 // Override element flags.
 void pgui_set_flags(pgui_elem_t *elem, uint32_t flags) {

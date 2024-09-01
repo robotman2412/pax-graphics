@@ -183,11 +183,25 @@ void pgui_draw_grid(pax_buf_t *gfx, pax_vec2i pos, pgui_elem_t *elem, pgui_theme
     bounds             = pgui_add_padding(bounds, padding);
     pax_set_clip(gfx, pax_recti_intersect(clip, bounds));
     for (int y = 1; y < grid->cells.y; y++) {
-        pax_draw_line(gfx, theme->border_col, pos.x + 1, pos.y + y_offset, pos.x + elem->size.x - 1, pos.y + y_offset);
+        pax_draw_line(
+            gfx,
+            theme->palette[elem->variant].border_col,
+            pos.x + 1,
+            pos.y + y_offset,
+            pos.x + elem->size.x - 1,
+            pos.y + y_offset
+        );
         y_offset += grid->row_height[y] + 2 * padding;
     }
     for (int x = 1; x < grid->cells.x; x++) {
-        pax_draw_line(gfx, theme->border_col, pos.x + x_offset, pos.y + 1, pos.x + x_offset, pos.y + elem->size.y - 1);
+        pax_draw_line(
+            gfx,
+            theme->palette[elem->variant].border_col,
+            pos.x + x_offset,
+            pos.y + 1,
+            pos.x + x_offset,
+            pos.y + elem->size.y - 1
+        );
         x_offset += grid->col_width[x] + 2 * padding;
     }
     pax_set_clip(gfx, clip);

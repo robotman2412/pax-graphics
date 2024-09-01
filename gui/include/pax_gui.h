@@ -126,10 +126,22 @@ typedef enum {
     PGUI_TYPE_ID_OVERLAY,
 } pgui_type_id_t;
 
+// GUI color variations.
+typedef enum {
+    // Default color palette.
+    PGUI_VARIANT_DEFAULT,
+    // Color palette for accept buttons, typically green.
+    PGUI_VARIANT_ACCEPT,
+    // Color palette for cancel buttons, typically red.
+    PGUI_VARIANT_CANCEL,
+    // Color palette for list buttons, typically blue background.
+    PGUI_VARIANT_LIST,
+    // Number of variants.
+    PGUI_NUM_VARIANTS,
+} pgui_variant_t;
 
-// GUI theme properties.
+// GUI color palette.
 typedef struct {
-    /* ==== Element styles ==== */
     // Background color.
     pax_col_t bg_col;
     // Foreground color.
@@ -146,7 +158,10 @@ typedef struct {
     pax_col_t border_col;
     // Highlighted border color.
     pax_col_t highlight_col;
+} pgui_palette_t;
 
+// GUI theme properties.
+typedef struct {
     /* ==== Element sizes ==== */
     // Minimum element size.
     pax_vec2i min_size;
@@ -194,10 +209,12 @@ typedef struct {
     int       scroll_offset;
     // Scrollbar rounding.
     int       scroll_rounding;
+
+    /* ==== Element styles ==== */
+    // Color palettes; default is palette 0.
+    pgui_palette_t palette[PGUI_NUM_VARIANTS];
 } pgui_theme_t;
 
-// Default theme.
-extern pgui_theme_t const pgui_theme_default;
 
 
 // GUI element inheritable flag: Hidden.
@@ -281,15 +298,20 @@ typedef void (*pgui_callback_t)(pgui_elem_t *elem);
 
 /* ==== GUI rendering functions ==== */
 
+// Built-in theme: Light.
+extern pgui_theme_t const pgui_theme_light;
+
+// Get default theme.
+pgui_theme_t const *pgui_get_default_theme();
 // Recalculate the position of a GUI element and its children.
-void        pgui_calc_layout(pax_vec2i gfx_size, pgui_elem_t *elem, pgui_theme_t const *theme);
+void                pgui_calc_layout(pax_vec2i gfx_size, pgui_elem_t *elem, pgui_theme_t const *theme);
 // Draw a GUI element and its children.
-void        pgui_draw(pax_buf_t *gfx, pgui_elem_t *elem, pgui_theme_t const *theme);
+void                pgui_draw(pax_buf_t *gfx, pgui_elem_t *elem, pgui_theme_t const *theme);
 // Re-draw dirty parts of the GUI and mark the elements clean.
-void        pgui_redraw(pax_buf_t *gfx, pgui_elem_t *elem, pgui_theme_t const *theme);
+void                pgui_redraw(pax_buf_t *gfx, pgui_elem_t *elem, pgui_theme_t const *theme);
 // Handle a button event.
 // Returns if and how the event was handled.
-pgui_resp_t pgui_event(pax_vec2i gfx_size, pgui_elem_t *elem, pgui_theme_t const *theme, pgui_event_t event);
+pgui_resp_t         pgui_event(pax_vec2i gfx_size, pgui_elem_t *elem, pgui_theme_t const *theme, pgui_event_t event);
 
 
 
@@ -370,22 +392,26 @@ pgui_elem_t *pgui_child_remove_i(pgui_elem_t *parent, ptrdiff_t index);
 // Get a child element by index.
 pgui_elem_t *pgui_child_get(pgui_elem_t *parent, ptrdiff_t index);
 
+// Set palette variation.
+void           pgui_set_palette(pgui_elem_t *elem, pgui_variant_t variant);
+// Get palette variation.
+pgui_variant_t pgui_get_palette(pgui_elem_t *elem);
 // Add element flags.
-void      pgui_set_flags(pgui_elem_t *elem, uint32_t flags);
+void           pgui_set_flags(pgui_elem_t *elem, uint32_t flags);
 // Add element flags.
-void      pgui_enable_flags(pgui_elem_t *elem, uint32_t flags);
+void           pgui_enable_flags(pgui_elem_t *elem, uint32_t flags);
 // Remove element flags
-void      pgui_disable_flags(pgui_elem_t *elem, uint32_t flags);
+void           pgui_disable_flags(pgui_elem_t *elem, uint32_t flags);
 // Get element flags.
-uint32_t  pgui_get_flags(pgui_elem_t *elem);
+uint32_t       pgui_get_flags(pgui_elem_t *elem);
 // Override element size.
-void      pgui_set_size(pgui_elem_t *elem, pax_vec2i size);
+void           pgui_set_size(pgui_elem_t *elem, pax_vec2i size);
 // Get element size.
-pax_vec2i pgui_get_size(pgui_elem_t *elem);
+pax_vec2i      pgui_get_size(pgui_elem_t *elem);
 // Override element position.
-void      pgui_set_pos(pgui_elem_t *elem, pax_vec2i position);
+void           pgui_set_pos(pgui_elem_t *elem, pax_vec2i position);
 // Get element position.
-pax_vec2i pgui_get_pos(pgui_elem_t *elem);
+pax_vec2i      pgui_get_pos(pgui_elem_t *elem);
 
 // Override element size.
 static inline void pgui_elem_set_size2(pgui_elem_t *elem, int size_x, int size_y) {
@@ -395,6 +421,8 @@ static inline void pgui_elem_set_size2(pgui_elem_t *elem, int size_x, int size_y
 static inline void pgui_elem_set_pos2(pgui_elem_t *elem, int position_x, int position_y) {
     pgui_set_pos(elem, (pax_vec2i){position_x, position_y});
 }
+
+
 
 #ifdef __cplusplus
 } // extern "C"
