@@ -67,6 +67,7 @@ void pgui_del_text(pgui_elem_t *elem) {
 
 // Text element type.
 pgui_type_t const pgui_type_text = {
+    .id    = PGUI_TYPE_ID_TEXT,
     .name  = "text",
     .attr  = PGUI_ATTR_TEXT | PGUI_ATTR_TEXTSTRUCT,
     .draw  = pgui_draw_text,

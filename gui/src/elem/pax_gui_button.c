@@ -24,6 +24,33 @@ pgui_elem_t *pgui_new_button(char const *text, pgui_callback_t cb) {
     return (pgui_elem_t *)elem;
 }
 
+// Calculate the minimum size of button elements.
+void pgui_calc1_button(
+    pax_vec2i gfx_size, pax_vec2i pos, pgui_elem_t *elem, pgui_theme_t const *theme, uint32_t flags
+) {
+    // Inherit calculation from text element.
+    pgui_calc1_text(gfx_size, pos, elem, theme, flags);
+
+    int padding = flags & PGUI_FLAG_NOPADDING ? 0 : 2 * theme->padding;
+
+    if (!(flags & PGUI_FLAG_FIX_WIDTH)) {
+        // Clamp minimum width.
+        for (size_t i = 0; i < elem->children_len; i++) {
+            if (elem->children[i] && elem->size.x < elem->children[i]->size.x + padding) {
+                elem->size.x = elem->children[i]->size.x + padding;
+            }
+        }
+    }
+    if (!(flags & PGUI_FLAG_FIX_HEIGHT)) {
+        // Clamp minimum height.
+        for (size_t i = 0; i < elem->children_len; i++) {
+            if (elem->children[i] && elem->size.y < elem->children[i]->size.y + padding) {
+                elem->size.y = elem->children[i]->size.y + padding;
+            }
+        }
+    }
+}
+
 // Behaviour for button elements.
 pgui_resp_t pgui_event_button(
     pax_vec2i gfx_size, pax_vec2i pos, pgui_elem_t *elem, pgui_theme_t const *theme, uint32_t flags, pgui_event_t event
@@ -52,10 +79,12 @@ pgui_resp_t pgui_event_button(
 
 // Button element type.
 pgui_type_t const pgui_type_button = {
+    .id    = PGUI_TYPE_ID_BUTTON,
     .name  = "button",
-    .attr  = PGUI_ATTR_SELECTABLE | PGUI_ATTR_BUTTON | PGUI_ATTR_TEXTSTRUCT,
+    .attr  = PGUI_ATTR_SELECTABLE | PGUI_ATTR_BUTTON | PGUI_ATTR_TEXTSTRUCT | PGUI_ATTR_CONTAINER,
     .draw  = pgui_draw_text,
-    .calc1 = pgui_calc1_text,
+    .calc1 = pgui_calc1_button,
+    .calc2 = pgui_calc2_overlay,
     .event = pgui_event_button,
     .del   = pgui_del_text,
 };

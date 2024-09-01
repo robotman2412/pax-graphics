@@ -388,6 +388,7 @@ void pgui_del_grid(pgui_elem_t *elem) {
 
 // Box element type.
 pgui_type_t const pgui_type_grid = {
+    .id    = PGUI_TYPE_ID_GRID,
     .name  = "grid",
     .attr  = PGUI_ATTR_SELECTABLE | PGUI_ATTR_CONTAINER,
     .draw  = pgui_draw_grid,

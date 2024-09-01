@@ -122,6 +122,8 @@ typedef enum {
     PGUI_TYPE_ID_DROPDOWN,
     // Built-in: Image.
     PGUI_TYPE_ID_IMAGE,
+    // Built-in: Overlay.
+    PGUI_TYPE_ID_OVERLAY,
 } pgui_type_id_t;
 
 
@@ -305,6 +307,8 @@ pgui_elem_t *pgui_new_grid(pax_vec2i num_cells);
 pgui_elem_t *pgui_new_dropdown(pgui_callback_t cb);
 // Create a new image.
 pgui_elem_t *pgui_new_image(pax_buf_t *image, bool do_free_image);
+// Create a new overlay.
+pgui_elem_t *pgui_new_overlay();
 // Delete an element.
 void         pgui_delete(pgui_elem_t *elem);
 // Delete an element and all its children recursively.

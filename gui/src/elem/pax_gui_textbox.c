@@ -281,6 +281,7 @@ pgui_resp_t pgui_event_textbox(
 
 // Textbox element type.
 pgui_type_t const pgui_type_textbox = {
+    .id    = PGUI_TYPE_ID_TEXTBOX,
     .name  = "textbox",
     .attr  = PGUI_ATTR_SELECTABLE | PGUI_ATTR_INPUT | PGUI_ATTR_TEXTSTRUCT,
     .calc2 = pgui_calc2_textbox,

@@ -13,6 +13,7 @@ set(pax_gui_srcs
     ${src}/elem/pax_gui_dropdown.c
     ${src}/elem/pax_gui_grid.c
     ${src}/elem/pax_gui_image.c
+    ${src}/elem/pax_gui_overlay.c
     ${src}/elem/pax_gui_text.c
     ${src}/elem/pax_gui_textbox.c
     ${src}/pax_gui_util.c
