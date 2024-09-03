@@ -58,6 +58,8 @@ struct pgui_elem {
     pgui_variant_t     variant;
     // Parent element, set automatically.
     pgui_elem_t       *parent;
+    // Theme and property overrides.
+    pgui_override_t   *overrides;
 
     // Relative element position.
     pax_vec2i pos;
@@ -219,6 +221,7 @@ extern pgui_type_t const pgui_type_grid;
 extern pgui_type_t const pgui_type_dropdown;
 extern pgui_type_t const pgui_type_image;
 extern pgui_type_t const pgui_type_overlay;
+extern pgui_type_t const pgui_type_box;
 
 
 

@@ -26,13 +26,8 @@ pgui_elem_t *pgui_new_textbox(pgui_callback_t cb) {
 void pgui_calc2_textbox(
     pax_vec2i gfx_size, pax_vec2i pos, pgui_elem_t *elem, pgui_theme_t const *theme, uint32_t flags
 ) {
-    pgui_text_t *text    = (pgui_text_t *)elem;
-    int          padding = 0;
-    if (!(elem->type->attr & PGUI_ATTR_INPUT)) {
-        padding = theme->padding;
-    } else if (!(elem->flags & PGUI_FLAG_NOPADDING)) {
-        padding = theme->padding;
-    }
+    pgui_text_t   *text    = (pgui_text_t *)elem;
+    pgui_padding_t padding = *pgui_effective_padding(elem, theme);
 
     // Compute content size.
     if (text->shrink_to_fit) {
@@ -77,8 +72,8 @@ void pgui_calc2_textbox(
         cursor,
         theme->font_size,
         (pax_vec2i){
-            elem->size.x - 2 * padding,
-            elem->size.y - 2 * padding,
+            elem->size.x - padding.left - padding.right,
+            elem->size.y - padding.top - padding.bottom,
         },
         elem->scroll,
         elem->content_size

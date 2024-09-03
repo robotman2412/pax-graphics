@@ -119,33 +119,30 @@ size_t pgui_text_ctrl_left(char const *cstr, size_t cstr_len, size_t cursor, boo
 void pgui_drawutil_textbox(
     pax_buf_t *gfx, pax_vec2i pos, pgui_elem_t *elem, pgui_theme_t const *theme, uint32_t flags, bool editable
 ) {
-    pgui_text_t *text    = (pgui_text_t *)elem;
-    int          padding = 0;
-    if (!(flags & PGUI_FLAG_NOPADDING)) {
-        padding = theme->padding;
-    }
+    pgui_text_t   *text    = (pgui_text_t *)elem;
+    pgui_padding_t padding = *pgui_effective_padding(elem, theme);
 
     // Compute bounds.
     pax_recti bounds = {
-        pos.x + padding - elem->scroll.x,
-        pos.y + padding - elem->scroll.y,
+        pos.x + padding.left - elem->scroll.x,
+        pos.y + padding.top - elem->scroll.y,
         elem->content_size.x,
         elem->content_size.y,
     };
-    if (bounds.w < elem->size.x - 2 * padding) {
-        bounds.w = elem->size.x - 2 * padding;
+    if (bounds.w < elem->size.x - padding.left - padding.right) {
+        bounds.w = elem->size.x - padding.left - padding.right;
     }
-    if (bounds.h < elem->size.y - 2 * padding) {
-        bounds.h = elem->size.y - 2 * padding;
+    if (bounds.h < elem->size.y - padding.top - padding.bottom) {
+        bounds.h = elem->size.y - padding.top - padding.bottom;
     }
 
     // Draw text.
     pax_recti old_clip = pax_get_clip(gfx);
     pax_recti new_clip = {
-        pos.x + padding - 1,
-        pos.y + padding - 1,
-        elem->size.x - 2 * padding + 2,
-        elem->size.y - 2 * padding + 2,
+        pos.x + padding.left - 1,
+        pos.y + padding.top - 1,
+        elem->size.x - padding.left - padding.right + 2,
+        elem->size.y - padding.top - padding.bottom + 2,
     };
     pax_set_clip(gfx, pax_recti_intersect(old_clip, new_clip));
     ptrdiff_t cursorpos = -1;
@@ -154,7 +151,7 @@ void pgui_drawutil_textbox(
     }
     pgui_drawutil_text(
         gfx,
-        theme->palette[elem->variant].fg_col,
+        pgui_effective_palette(elem, theme)->fg_col,
         theme->font,
         theme->font_size,
         text->shrink_to_fit,
@@ -182,19 +179,19 @@ void pgui_drawutil_base(
     pax_col_t bg;
     if (!(elem->type->attr & (PGUI_ATTR_INPUT | PGUI_ATTR_BUTTON | PGUI_ATTR_DROPDOWN))
         || (flags & PGUI_FLAG_INACTIVE)) {
-        bg = theme->palette[elem->variant].bg_col;
+        bg = pgui_effective_palette(elem, theme)->bg_col;
     } else if ((elem->flags & PGUI_FLAG_ACTIVE) && (elem->type->attr & PGUI_ATTR_BUTTON)) {
-        bg = theme->palette[elem->variant].pressed_col;
+        bg = pgui_effective_palette(elem, theme)->pressed_col;
     } else if ((elem->flags & PGUI_FLAG_ACTIVE) && (elem->type->attr & PGUI_ATTR_INPUT)) {
-        bg = theme->palette[elem->variant].active_col;
+        bg = pgui_effective_palette(elem, theme)->active_col;
     } else if (elem->type->attr & (PGUI_ATTR_BUTTON | PGUI_ATTR_DROPDOWN)) {
-        bg = theme->palette[elem->variant].button_col;
+        bg = pgui_effective_palette(elem, theme)->button_col;
     } else {
-        bg = theme->palette[elem->variant].input_col;
+        bg = pgui_effective_palette(elem, theme)->input_col;
     }
 
     // Draw the backdrop.
-    pax_draw_round_rect(gfx, bg, pos.x, pos.y, size.x, size.y, theme->rounding);
+    pax_draw_round_rect(gfx, bg, pos.x, pos.y, size.x, size.y, pgui_effective_dims(elem, theme)->rounding);
 }
 
 // Draw the outline of a box or input element.
@@ -204,20 +201,22 @@ void pgui_drawutil_border(
     if (flags & PGUI_FLAG_NOBORDER) {
         return;
     }
+    pgui_size_prop_t const *dims    = pgui_effective_dims(elem, theme);
+    pgui_palette_t const   *palette = pgui_effective_palette(elem, theme);
 
     // Select border.
     pax_col_t color;
     int       thickness;
     if (flags & PGUI_FLAG_HIGHLIGHT) {
-        color     = theme->palette[elem->variant].highlight_col;
-        thickness = theme->highlight_thickness;
+        color     = palette->highlight_col;
+        thickness = dims->highlight_thickness;
     } else {
-        color     = theme->palette[elem->variant].border_col;
-        thickness = theme->border_thickness;
+        color     = palette->border_col;
+        thickness = dims->border_thickness;
     }
 
     // Clamp rounding.
-    int rounding = theme->rounding;
+    int rounding = dims->rounding;
     if (rounding > size.x / 2) {
         rounding = size.x / 2;
     }
@@ -379,10 +378,12 @@ void pgui_drawutil_scrollbar(
     int                 total,
     bool                horizontal
 ) {
+    pgui_scroll_prop_t const *prop = &theme->scroll;
+
     // Calculate scroller size.
-    int total_height    = size.y - 2 * theme->scroll_offset;
+    int total_height    = size.y - 2 * prop->offset;
     int scroller_height = window / total * total_height;
-    scroller_height     = scroller_height < theme->scroll_min_size ? theme->scroll_min_size : scroller_height;
+    scroller_height     = scroller_height < prop->min_size ? prop->min_size : scroller_height;
     // Scroller offset multiplier.
     int off_mul         = total_height - scroller_height;
     int off_div         = total - window;
@@ -391,43 +392,43 @@ void pgui_drawutil_scrollbar(
         // Scrollbar background.
         pax_draw_round_rect(
             gfx,
-            theme->scroll_bg_col,
-            pos.x + theme->scroll_offset,
-            pos.y + size.y - theme->scroll_offset,
-            size.x - 2 * theme->scroll_offset,
-            -theme->scroll_width,
-            theme->scroll_rounding
+            prop->bg_col,
+            pos.x + prop->offset,
+            pos.y + size.y - prop->offset,
+            size.x - 2 * prop->offset,
+            -prop->width,
+            prop->rounding
         );
         // Scrollbar foreground.
         pax_draw_round_rect(
             gfx,
-            theme->scroll_fg_col,
-            pos.x + theme->scroll_offset + value * off_mul / off_div,
-            pos.y + size.y - theme->scroll_offset,
+            prop->fg_col,
+            pos.x + prop->offset + value * off_mul / off_div,
+            pos.y + size.y - prop->offset,
             scroller_height,
-            -theme->scroll_width,
-            theme->scroll_rounding
+            -prop->width,
+            prop->rounding
         );
     } else {
         // Scrollbar background.
         pax_draw_round_rect(
             gfx,
-            theme->scroll_bg_col,
-            pos.x + size.x - theme->scroll_offset,
-            pos.y + theme->scroll_offset,
-            -theme->scroll_width,
-            size.y - 2 * theme->scroll_offset,
-            theme->scroll_rounding
+            prop->bg_col,
+            pos.x + size.x - prop->offset,
+            pos.y + prop->offset,
+            -prop->width,
+            size.y - 2 * prop->offset,
+            prop->rounding
         );
         // Scrollbar foreground.
         pax_draw_round_rect(
             gfx,
-            theme->scroll_fg_col,
-            pos.x + size.x - theme->scroll_offset,
-            pos.y + theme->scroll_offset + value * off_mul / off_div,
-            -theme->scroll_width,
+            prop->fg_col,
+            pos.x + size.x - prop->offset,
+            pos.y + prop->offset + value * off_mul / off_div,
+            -prop->width,
             scroller_height,
-            theme->scroll_rounding
+            prop->rounding
         );
     }
 }

@@ -97,6 +97,16 @@ static inline pax_recti pgui_add_padding(pax_recti orig, int amount) {
     };
 }
 
+// Add internal padding to a rectangle.
+static inline pax_recti pgui_add_padding4(pax_recti orig, pgui_padding_t amount) {
+    return (pax_recti){
+        orig.x + amount.left,
+        orig.y + amount.top,
+        orig.w - amount.left - amount.right,
+        orig.h - amount.top - amount.bottom,
+    };
+}
+
 #ifdef __cplusplus
 } // extern "C"
 #endif //__cplusplus

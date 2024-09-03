@@ -8,6 +8,8 @@
 
 // Create a new label.
 pgui_elem_t *pgui_new_text(char const *text) {
+    if (!text)
+        return NULL;
     pgui_text_t *elem = malloc(sizeof(pgui_text_t));
     if (!elem)
         return NULL;
@@ -30,7 +32,7 @@ void pgui_draw_text(pax_buf_t *gfx, pax_vec2i pos, pgui_elem_t *elem, pgui_theme
 // Calculate the minimum size of text-based elements.
 void pgui_calc1_text(pax_vec2i gfx_size, pax_vec2i pos, pgui_elem_t *elem, pgui_theme_t const *theme, uint32_t flags) {
     pgui_text_t *text = (pgui_text_t *)elem;
-    if (text->shrink_to_fit)
+    if (text->shrink_to_fit || !text->text_len)
         return;
 
     pax_2vec2f text_size = pax_text_size_adv(
@@ -46,8 +48,9 @@ void pgui_calc1_text(pax_vec2i gfx_size, pax_vec2i pos, pgui_elem_t *elem, pgui_
     int min_h = ceilf(text_size.y0);
 
     if (!(flags & PGUI_FLAG_NOPADDING)) {
-        min_w += 2 * theme->padding;
-        min_h += 2 * theme->padding;
+        pgui_padding_t padding  = *pgui_effective_padding(elem, theme);
+        min_w                  += padding.left + padding.right;
+        min_h                  += padding.top + padding.bottom;
     }
     if (!(flags & PGUI_FLAG_FIX_WIDTH)) {
         elem->size.x = min_w;

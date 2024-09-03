@@ -18,7 +18,7 @@ pgui_elem_t *pgui_new_button(char const *text, pgui_callback_t cb) {
     elem->base.callback = cb;
     elem->base.selected = -1;
     elem->text          = (char *)text;
-    elem->text_len      = strlen(text);
+    elem->text_len      = text ? strlen(text) : 0;
     elem->text_halign   = PAX_ALIGN_CENTER;
     elem->text_valign   = PAX_ALIGN_CENTER;
     return (pgui_elem_t *)elem;
@@ -31,21 +31,21 @@ void pgui_calc1_button(
     // Inherit calculation from text element.
     pgui_calc1_text(gfx_size, pos, elem, theme, flags);
 
-    int padding = flags & PGUI_FLAG_NOPADDING ? 0 : 2 * theme->padding;
+    pgui_padding_t padding = *pgui_effective_padding(elem, theme);
 
     if (!(flags & PGUI_FLAG_FIX_WIDTH)) {
         // Clamp minimum width.
         for (size_t i = 0; i < elem->children_len; i++) {
-            if (elem->children[i] && elem->size.x < elem->children[i]->size.x + padding) {
-                elem->size.x = elem->children[i]->size.x + padding;
+            if (elem->children[i] && elem->size.x < elem->children[i]->size.x + padding.left + padding.right) {
+                elem->size.x = elem->children[i]->size.x + padding.left + padding.right;
             }
         }
     }
     if (!(flags & PGUI_FLAG_FIX_HEIGHT)) {
         // Clamp minimum height.
         for (size_t i = 0; i < elem->children_len; i++) {
-            if (elem->children[i] && elem->size.y < elem->children[i]->size.y + padding) {
-                elem->size.y = elem->children[i]->size.y + padding;
+            if (elem->children[i] && elem->size.y < elem->children[i]->size.y + padding.top + padding.bottom) {
+                elem->size.y = elem->children[i]->size.y + padding.top + padding.bottom;
             }
         }
     }

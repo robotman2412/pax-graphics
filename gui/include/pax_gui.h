@@ -124,6 +124,8 @@ typedef enum {
     PGUI_TYPE_ID_IMAGE,
     // Built-in: Overlay.
     PGUI_TYPE_ID_OVERLAY,
+    // Built-in: Simple container.
+    PGUI_TYPE_ID_BOX,
 } pgui_type_id_t;
 
 // GUI color variations.
@@ -140,6 +142,58 @@ typedef enum {
     PGUI_NUM_VARIANTS,
 } pgui_variant_t;
 
+// Per-side padding properties.
+typedef struct {
+    // Padding in pixels.
+    int left, right, top, bottom;
+} pgui_padding_t;
+
+// GUI element size properties.
+typedef struct {
+    // Minimum element size.
+    pax_vec2i      min_size;
+    // Minimum element size for inputs.
+    pax_vec2i      min_input_size;
+    // Minimum element size for labels.
+    pax_vec2i      min_label_size;
+    // Normal element border thickness
+    int            border_thickness;
+    // Highlighted element border thickness.
+    int            highlight_thickness;
+    // Element corner rounding.
+    int            rounding;
+    // Internal padding elements.
+    pgui_padding_t padding;
+} pgui_size_prop_t;
+
+// GUI dropdown properties.
+typedef struct {
+    // Use the segmented drop-down style with the thinner menu.
+    uint32_t segmented     : 1;
+    // Use the solid arrow for the drop-down.
+    uint32_t solid_arrow   : 1;
+    // Cover the dropdown its menu, instead of avoiding covering it.
+    uint32_t covering_menu : 1;
+    // Padding.
+    uint32_t               : 29;
+} pgui_dd_prop_t;
+
+// GUI element scrollbar properties.
+typedef struct {
+    // Scrollbar background color.
+    pax_col_t bg_col;
+    // Scrollbar foreground color.
+    pax_col_t fg_col;
+    // Scrollbar width.
+    int       width;
+    // Scroller minimum size.
+    int       min_size;
+    // Scrollbar offset.
+    int       offset;
+    // Scrollbar rounding.
+    int       rounding;
+} pgui_scroll_prop_t;
+
 // GUI color palette.
 typedef struct {
     // Background color.
@@ -152,6 +206,8 @@ typedef struct {
     pax_col_t active_col;
     // Button/dropdown background color.
     pax_col_t button_col;
+    // Highlighted button/dropdown background color.
+    pax_col_t button_active_col;
     // Pressed button color.
     pax_col_t pressed_col;
     // Border color.
@@ -162,58 +218,37 @@ typedef struct {
 
 // GUI theme properties.
 typedef struct {
-    /* ==== Element sizes ==== */
-    // Minimum element size.
-    pax_vec2i min_size;
-    // Minimum element size for inputs.
-    pax_vec2i min_input_size;
-    // Minimum element size for labels.
-    pax_vec2i min_label_size;
-    // Normal element border thickness
-    int       border_thickness;
-    // Highlighted element border thickness.
-    int       highlight_thickness;
-    // Element corner rounding.
-    int       rounding;
-    // Internal padding elements.
-    int       padding;
-
-    /* ==== Text style ==== */
+    // Element size constraints.
+    pgui_size_prop_t   dims;
     // GUI font.
-    pax_font_t const *font;
+    pax_font_t const  *font;
     // GUI font scale.
-    float             font_size;
-
-    /* ==== Dropdown style ==== */
-    struct {
-        // Use the segmented drop-down style with the thinner menu.
-        uint32_t dropdown_segmented     : 1;
-        // Use the solid arrow for the drop-down.
-        uint32_t dropdown_solid_arrow   : 1;
-        // Cover the dropdown its menu, instead of avoiding covering it.
-        uint32_t dropdown_covering_menu : 1;
-        // Padding.
-        uint32_t                        : 29;
-    };
-
-    /* ==== Scrollbar style ==== */
-    // Scrollbar background color.
-    pax_col_t scroll_bg_col;
-    // Scrollbar foreground color.
-    pax_col_t scroll_fg_col;
-    // Scrollbar width.
-    int       scroll_width;
-    // Scroller minimum size.
-    int       scroll_min_size;
-    // Scrollbar offset.
-    int       scroll_offset;
-    // Scrollbar rounding.
-    int       scroll_rounding;
-
-    /* ==== Element styles ==== */
+    float              font_size;
+    // Dropdown style.
+    pgui_dd_prop_t     dropdown;
+    // Scrollbar properties.
+    pgui_scroll_prop_t scroll;
     // Color palettes; default is palette 0.
-    pgui_palette_t palette[PGUI_NUM_VARIANTS];
+    pgui_palette_t     palette[PGUI_NUM_VARIANTS];
 } pgui_theme_t;
+
+// GUI element overrides.
+typedef struct {
+    // Padding override.
+    pgui_padding_t     *padding;
+    // Element size constraints override.
+    pgui_size_prop_t   *theme_dims;
+    // GUI font override.
+    pax_font_t const   *theme_font;
+    // GUI font scale override.
+    float               theme_font_size;
+    // Dropdown style override.
+    pgui_dd_prop_t     *theme_dropdown;
+    // Scrollbar properties override.
+    pgui_scroll_prop_t *theme_scroll;
+    // Color palette override.
+    pgui_palette_t     *palette;
+} pgui_override_t;
 
 
 
@@ -240,12 +275,13 @@ typedef struct {
 #define PGUI_FLAG_HIGHLIGHT    0x00001000
 // GUI element flag: Do not add padding.
 #define PGUI_FLAG_NOPADDING    0x00002000
-// GUI element flag: Ignore minimum size specification.
-#define PGUI_FLAG_ANYSIZE      0x00004000
 // GUI element flag: Fixed width.
-#define PGUI_FLAG_FIX_WIDTH    0x00008000
+#define PGUI_FLAG_FIX_WIDTH    0x00004000
 // GUI element flag: Fixed height.
-#define PGUI_FLAG_FIX_HEIGHT   0x00010000
+#define PGUI_FLAG_FIX_HEIGHT   0x00008000
+// GUI element flag: Always selected; use for top-level interactive element.
+// Also use this flag if your element is in a container but should always be selected by it.
+#define PGUI_FLAG_TOPLEVEL     0x00010000
 
 // GUI attribute: Type is selectable.
 #define PGUI_ATTR_SELECTABLE 0x00000001
@@ -315,6 +351,50 @@ pgui_resp_t         pgui_event(pax_vec2i gfx_size, pgui_elem_t *elem, pgui_theme
 
 
 
+/* ==== Theme and style overrides ==== */
+
+// Override padding.
+void pgui_override_padding1(pgui_elem_t *elem, int padding);
+// Override padding.
+void pgui_override_padding4(pgui_elem_t *elem, pgui_padding_t padding);
+// Override theme; adds all attributes in the theme to the overrides.
+void pgui_override_theme(pgui_elem_t *elem, pgui_theme_t const *theme);
+// Override element size constraints.
+void pgui_override_dims(pgui_elem_t *elem, pgui_size_prop_t dims);
+// Override element font.
+void pgui_override_font(pgui_elem_t *elem, pax_font_t const *font);
+// Override element font size.
+void pgui_override_font_size(pgui_elem_t *elem, float font_size);
+// Override dropdown style properties.
+void pgui_override_dd_prop(pgui_elem_t *elem, pgui_dd_prop_t dd_prop);
+// Override element scrollbar properties.
+void pgui_override_scroll(pgui_elem_t *elem, pgui_scroll_prop_t scroll);
+// Override element palette.
+void pgui_override_palette(pgui_elem_t *elem, pgui_palette_t palette);
+// Delete all theme and style overrides.
+void pgui_del_overrides(pgui_elem_t *elem);
+
+// Override element font and font size.
+static inline void pgui_override_font2(pgui_elem_t *elem, pax_font_t const *font, float font_size) {
+    pgui_override_font(elem, font);
+    pgui_override_font_size(elem, font_size);
+}
+
+// Get effective padding.
+pgui_padding_t const     *pgui_effective_padding(pgui_elem_t *elem, pgui_theme_t const *theme);
+// Get effective element size constraints.
+pgui_size_prop_t const   *pgui_effective_dims(pgui_elem_t *elem, pgui_theme_t const *theme);
+// Get effective element font.
+pax_font_t const         *pgui_effective_font(pgui_elem_t *elem, pgui_theme_t const *theme);
+// Get effective element font size.
+float                     pgui_effective_font_size(pgui_elem_t *elem, pgui_theme_t const *theme);
+// Get effective dropdown style properties.
+pgui_dd_prop_t const     *pgui_effective_dd_prop(pgui_elem_t *elem, pgui_theme_t const *theme);
+// Get effective element scrollbar properties.
+pgui_scroll_prop_t const *pgui_effective_scroll(pgui_elem_t *elem, pgui_theme_t const *theme);
+// Get effective element palette.
+pgui_palette_t const     *pgui_effective_palette(pgui_elem_t *elem, pgui_theme_t const *theme);
+
 /* ==== Element management functions ==== */
 
 // Create a new button.
@@ -331,6 +411,8 @@ pgui_elem_t *pgui_new_dropdown(pgui_callback_t cb);
 pgui_elem_t *pgui_new_image(pax_buf_t *image, bool do_free_image);
 // Create a new overlay.
 pgui_elem_t *pgui_new_overlay();
+// Create a new simple container.
+pgui_elem_t *pgui_new_box();
 // Delete an element.
 void         pgui_delete(pgui_elem_t *elem);
 // Delete an element and all its children recursively.
@@ -414,11 +496,11 @@ void           pgui_set_pos(pgui_elem_t *elem, pax_vec2i position);
 pax_vec2i      pgui_get_pos(pgui_elem_t *elem);
 
 // Override element size.
-static inline void pgui_elem_set_size2(pgui_elem_t *elem, int size_x, int size_y) {
+static inline void pgui_set_size2(pgui_elem_t *elem, int size_x, int size_y) {
     pgui_set_size(elem, (pax_vec2i){size_x, size_y});
 }
 // Override element position.
-static inline void pgui_elem_set_pos2(pgui_elem_t *elem, int position_x, int position_y) {
+static inline void pgui_set_pos2(pgui_elem_t *elem, int position_x, int position_y) {
     pgui_set_pos(elem, (pax_vec2i){position_x, position_y});
 }
 

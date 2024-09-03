@@ -21,23 +21,23 @@ pgui_elem_t *pgui_new_overlay() {
 void pgui_calc1_overlay(
     pax_vec2i gfx_size, pax_vec2i pos, pgui_elem_t *elem, pgui_theme_t const *theme, uint32_t flags
 ) {
-    int padding = flags & PGUI_FLAG_NOPADDING ? 0 : 2 * theme->padding;
+    pgui_padding_t padding = *pgui_effective_padding(elem, theme);
 
     if (!(flags & PGUI_FLAG_FIX_WIDTH)) {
-        elem->size.x = 0;
         // Clamp minimum width.
+        elem->size.x = 0;
         for (size_t i = 0; i < elem->children_len; i++) {
-            if (elem->children[i] && elem->size.x < elem->children[i]->size.x + padding) {
-                elem->size.x = elem->children[i]->size.x + padding;
+            if (elem->children[i] && elem->size.x < elem->children[i]->size.x + padding.left + padding.right) {
+                elem->size.x = elem->children[i]->size.x + padding.left + padding.right;
             }
         }
     }
     if (!(flags & PGUI_FLAG_FIX_HEIGHT)) {
-        elem->size.y = 0;
         // Clamp minimum height.
+        elem->size.y = 0;
         for (size_t i = 0; i < elem->children_len; i++) {
-            if (elem->children[i] && elem->size.y < elem->children[i]->size.y + padding) {
-                elem->size.y = elem->children[i]->size.y + padding;
+            if (elem->children[i] && elem->size.y < elem->children[i]->size.y + padding.top + padding.bottom) {
+                elem->size.y = elem->children[i]->size.y + padding.top + padding.bottom;
             }
         }
     }
@@ -47,7 +47,7 @@ void pgui_calc1_overlay(
 void pgui_calc2_overlay(
     pax_vec2i gfx_size, pax_vec2i pos, pgui_elem_t *elem, pgui_theme_t const *theme, uint32_t flags
 ) {
-    int padding = flags & PGUI_FLAG_NOPADDING ? 0 : theme->padding;
+    pgui_padding_t padding = *pgui_effective_padding(elem, theme);
 
     for (size_t i = 0; i < elem->children_len; i++) {
         if (!elem->children[i])
@@ -57,14 +57,14 @@ void pgui_calc2_overlay(
         if (child->flags & PGUI_FLAG_FIX_WIDTH) {
             child->pos.x = (elem->size.x - child->size.x) / 2;
         } else {
-            child->pos.x  = padding;
-            child->size.x = elem->size.x - 2 * padding;
+            child->pos.x  = padding.left;
+            child->size.x = elem->size.x - padding.left - padding.right;
         }
         if (child->flags & PGUI_FLAG_FIX_HEIGHT) {
             child->pos.y = (elem->size.y - child->size.y) / 2;
         } else {
-            child->pos.y  = padding;
-            child->size.y = elem->size.y - 2 * padding;
+            child->pos.y  = padding.left;
+            child->size.y = elem->size.y - padding.top + padding.bottom;
         }
     }
 }

@@ -13,6 +13,155 @@ static char const TAG[] = "pax-gui";
 
 
 
+/* ==== Theme and style overrides ==== */
+
+// Allocate overrides struct if possible.
+#define PGUI_OVERRIDE_ALLOC(elem)                                                                                      \
+    do {                                                                                                               \
+        if (!elem->overrides) {                                                                                        \
+            elem->overrides = calloc(1, sizeof(pgui_override_t));                                                      \
+            if (!elem->overrides) {                                                                                    \
+                return;                                                                                                \
+            }                                                                                                          \
+            elem->overrides->theme_font_size = NAN;                                                                    \
+        }                                                                                                              \
+    } while (0)
+
+// Create a heap-allocated copy.
+#define PGUI_OVERRIDE_DUP(thing)                                                                                       \
+    ({                                                                                                                 \
+        __auto_type tmp      = (thing);                                                                                \
+        __typeof__(tmp) *mem = malloc(sizeof(tmp));                                                                    \
+        if (mem) {                                                                                                     \
+            *mem = tmp;                                                                                                \
+        }                                                                                                              \
+        mem;                                                                                                           \
+    })
+
+// Override padding.
+void pgui_override_padding1(pgui_elem_t *elem, int padding) {
+    pgui_override_padding4(elem, (pgui_padding_t){padding, padding, padding, padding});
+}
+
+// Override padding.
+void pgui_override_padding4(pgui_elem_t *elem, pgui_padding_t padding) {
+    PGUI_OVERRIDE_ALLOC(elem);
+}
+
+// Override theme; adds all attributes in the theme to the overrides.
+void pgui_override_theme(pgui_elem_t *elem, pgui_theme_t const *theme) {
+    pgui_override_dims(elem, theme->dims);
+    pgui_override_font(elem, theme->font);
+    pgui_override_font_size(elem, theme->font_size);
+    pgui_override_dd_prop(elem, theme->dropdown);
+    pgui_override_scroll(elem, theme->scroll);
+}
+
+// Override element size constraints.
+void pgui_override_dims(pgui_elem_t *elem, pgui_size_prop_t dims) {
+    PGUI_OVERRIDE_ALLOC(elem);
+    elem->overrides->theme_dims = PGUI_OVERRIDE_DUP(dims);
+}
+
+// Override element font.
+void pgui_override_font(pgui_elem_t *elem, pax_font_t const *font) {
+    PGUI_OVERRIDE_ALLOC(elem);
+    elem->overrides->theme_font = font;
+}
+
+// Override element font size.
+void pgui_override_font_size(pgui_elem_t *elem, float font_size) {
+    if (font_size <= 0 || !isfinite(font_size))
+        return;
+    PGUI_OVERRIDE_ALLOC(elem);
+    elem->overrides->theme_font_size = font_size;
+}
+
+// Override dropdown style properties.
+void pgui_override_dd_prop(pgui_elem_t *elem, pgui_dd_prop_t dd_prop) {
+    PGUI_OVERRIDE_ALLOC(elem);
+    elem->overrides->theme_dropdown = PGUI_OVERRIDE_DUP(dd_prop);
+}
+
+// Override element scrollbar properties.
+void pgui_override_scroll(pgui_elem_t *elem, pgui_scroll_prop_t scroll) {
+    PGUI_OVERRIDE_ALLOC(elem);
+    elem->overrides->theme_scroll = PGUI_OVERRIDE_DUP(scroll);
+}
+
+// Override element palette.
+void pgui_override_palette(pgui_elem_t *elem, pgui_palette_t palette) {
+    PGUI_OVERRIDE_ALLOC(elem);
+    elem->overrides->palette = PGUI_OVERRIDE_DUP(palette);
+}
+
+// Delete all theme and style overrides.
+void pgui_del_overrides(pgui_elem_t *elem) {
+    if (elem->overrides) {
+        free(elem->overrides->padding);
+        free(elem->overrides->theme_dims);
+        free(elem->overrides->theme_scroll);
+        free(elem->overrides->palette);
+        free(elem->overrides);
+        elem->overrides = NULL;
+    }
+}
+
+static pgui_padding_t const null_padding = {0};
+
+// Get effective padding.
+pgui_padding_t const *pgui_effective_padding(pgui_elem_t *elem, pgui_theme_t const *theme) {
+    if (elem->flags & PGUI_FLAG_NOPADDING)
+        return &null_padding;
+    if (!elem->overrides)
+        return &theme->dims.padding;
+    return elem->overrides->padding ?: &theme->dims.padding;
+}
+
+// Get effective element size constraints.
+pgui_size_prop_t const *pgui_effective_dims(pgui_elem_t *elem, pgui_theme_t const *theme) {
+    if (!elem->overrides)
+        return &theme->dims;
+    return elem->overrides->theme_dims ?: &theme->dims;
+}
+
+// Get effective element font.
+pax_font_t const *pgui_effective_font(pgui_elem_t *elem, pgui_theme_t const *theme) {
+    if (!elem->overrides)
+        return theme->font;
+    return elem->overrides->theme_font ?: theme->font;
+}
+
+// Get effective element font size.
+float pgui_effective_font_size(pgui_elem_t *elem, pgui_theme_t const *theme) {
+    if (!elem->overrides)
+        return theme->font_size;
+    return isfinite(elem->overrides->theme_font_size) ? elem->overrides->theme_font_size : theme->font_size;
+}
+
+// Get effective dropdown style properties.
+pgui_dd_prop_t const *pgui_effective_dd_prop(pgui_elem_t *elem, pgui_theme_t const *theme) {
+    if (!elem->overrides)
+        return &theme->dropdown;
+    return elem->overrides->theme_dropdown ?: &theme->dropdown;
+}
+
+// Get effective element scrollbar properties.
+pgui_scroll_prop_t const *pgui_effective_scroll(pgui_elem_t *elem, pgui_theme_t const *theme) {
+    if (!elem->overrides)
+        return &theme->scroll;
+    return elem->overrides->theme_scroll ?: &theme->scroll;
+}
+
+// Get effective element palette.
+pgui_palette_t const *pgui_effective_palette(pgui_elem_t *elem, pgui_theme_t const *theme) {
+    if (!elem->overrides)
+        return &theme->palette[elem->variant];
+    return elem->overrides->palette ?: &theme->palette[elem->variant];
+}
+
+
+
 /* ==== GUI rendering functions ==== */
 
 // Recalculate the position of a GUI element and its children 1/2.
@@ -48,21 +197,19 @@ static void
     }
 
     // Clamp minimum size.
-    if (!(elem->flags & PGUI_FLAG_ANYSIZE)) {
-        pax_vec2i min_size;
-        if (elem->type->attr & (PGUI_ATTR_INPUT | PGUI_ATTR_BUTTON | PGUI_ATTR_DROPDOWN)) {
-            min_size = theme->min_input_size;
-        } else if (elem->type->attr & PGUI_ATTR_TEXT) {
-            min_size = theme->min_label_size;
-        } else {
-            min_size = theme->min_size;
-        }
-        if (elem->size.x < min_size.x && !(flags & PGUI_FLAG_FIX_WIDTH)) {
-            elem->size.x = min_size.x;
-        }
-        if (elem->size.y < min_size.y && !(flags & PGUI_FLAG_FIX_HEIGHT)) {
-            elem->size.y = min_size.y;
-        }
+    pax_vec2i min_size;
+    if (elem->type->attr & (PGUI_ATTR_INPUT | PGUI_ATTR_BUTTON | PGUI_ATTR_DROPDOWN)) {
+        min_size = pgui_effective_dims(elem, theme)->min_input_size;
+    } else if (elem->type->attr & PGUI_ATTR_TEXT) {
+        min_size = pgui_effective_dims(elem, theme)->min_label_size;
+    } else {
+        min_size = pgui_effective_dims(elem, theme)->min_size;
+    }
+    if (elem->size.x < min_size.x && !(flags & PGUI_FLAG_FIX_WIDTH)) {
+        elem->size.x = min_size.x;
+    }
+    if (elem->size.y < min_size.y && !(flags & PGUI_FLAG_FIX_HEIGHT)) {
+        elem->size.y = min_size.y;
     }
 }
 
@@ -104,6 +251,7 @@ void pgui_calc_layout(pax_vec2i gfx_size, pgui_elem_t *elem, pgui_theme_t const 
     if (!theme) {
         theme = pgui_get_default_theme();
     }
+    elem->flags |= PGUI_FLAG_TOPLEVEL;
     pgui_calc1_int(gfx_size, (pax_vec2i){0, 0}, elem, theme, 0);
     pgui_calc2_int(gfx_size, (pax_vec2i){0, 0}, elem, theme, 0);
 }
@@ -135,7 +283,7 @@ static void pgui_draw_int(pax_buf_t *gfx, pax_vec2i pos, pgui_elem_t *elem, pgui
         // Apply default child clip rectangle.
         pax_recti bounds = {pos.x - 1, pos.y - 1, elem->size.x + 2, elem->size.y + 2};
         if (!(elem->flags & PGUI_FLAG_NOPADDING)) {
-            bounds = pgui_add_padding(bounds, theme->padding);
+            bounds = pgui_add_padding4(bounds, *pgui_effective_padding(elem, theme));
         }
         pax_set_clip(gfx, pax_recti_intersect(clip, bounds));
     }
@@ -363,15 +511,33 @@ pax_align_t pgui_get_valign(pgui_elem_t *elem) {
     return text->text_valign;
 }
 
+// Clear element selection
+static void pgui_clear_selection(pgui_elem_t *elem) {
+    while (1) {
+        elem->flags &= ~PGUI_FLAG_ACTIVE & ~PGUI_FLAG_HIGHLIGHT;
+        if (elem->selected >= 0 && elem->selected < elem->children_len && elem->children[elem->selected]) {
+            elem = elem->children[elem->selected];
+        } else {
+            return;
+        }
+    }
+}
+
 // Change the selection index of a grid or dropdown.
 // Negative values indicate no selection and aren't applicable to dropdowns.
 void pgui_set_selection(pgui_elem_t *elem, ptrdiff_t selection) {
     if (!elem)
         return;
-    if (selection < 0)
-        elem->selected = -1;
-    else if (selection >= elem->children_len)
-        elem->selected = elem->children_len - 1;
+    if (selection < 0) {
+        selection = -1;
+    } else if (selection >= elem->children_len) {
+        selection = elem->children_len - 1;
+    }
+    if (elem->selected == selection)
+        return;
+    if (elem->selected >= 0 && elem->selected < elem->children_len && elem->children[elem->selected]) {
+        pgui_clear_selection(elem->children[elem->selected]);
+    }
     elem->selected = selection;
 }
 
