@@ -130,7 +130,7 @@ typedef enum {
 
 // GUI color variations.
 typedef enum {
-    // Default color palette.
+    // Default color palette applicable to everything.
     PGUI_VARIANT_DEFAULT,
     // Color palette for accept buttons, typically green.
     PGUI_VARIANT_ACCEPT,
@@ -138,6 +138,8 @@ typedef enum {
     PGUI_VARIANT_CANCEL,
     // Color palette for list buttons, typically blue background.
     PGUI_VARIANT_LIST,
+    // Color palette for panels like docks toolbars.
+    PGUI_VARIANT_PANEL,
     // Number of variants.
     PGUI_NUM_VARIANTS,
 } pgui_variant_t;
@@ -282,6 +284,8 @@ typedef struct {
 // GUI element flag: Always selected; use for top-level interactive element.
 // Also use this flag if your element is in a container but should always be selected by it.
 #define PGUI_FLAG_TOPLEVEL     0x00010000
+// GUI element flag: Disable rounding.
+#define PGUI_FLAG_NOROUNDING   0x00020000
 
 // GUI attribute: Type is selectable.
 #define PGUI_ATTR_SELECTABLE 0x00000001
@@ -297,6 +301,9 @@ typedef struct {
 // GUI attribute: Type uses `pgui_text_t` struct or a superset.
 // Enables text element API functions.
 #define PGUI_ATTR_TEXTSTRUCT 0x00000010
+// GUI attribute: Type uses `pgui_grid_t` struct or a superset.
+// Enables grid element API functions.
+#define PGUI_ATTR_GRIDSTRUCT 0x00000020
 // GUI attribute: Type describes a label.
 // Default colors, label minimum size.
 #define PGUI_ATTR_TEXT       0x00000100
@@ -445,12 +452,22 @@ pax_align_t pgui_get_halign(pgui_elem_t *elem);
 void        pgui_set_valign(pgui_elem_t *elem, pax_align_t align);
 // Get the vertical alignment of a button, label or textbox.
 pax_align_t pgui_get_valign(pgui_elem_t *elem);
+
+// Enable / disable a grid row growing to fit.
+void pgui_set_row_growable(pgui_elem_t *elem, int row, bool growable);
+// Enable / disable a grid column growing to fit.
+void pgui_set_col_growable(pgui_elem_t *elem, int col, bool growable);
+// Get whether a grid row will grow to fit.
+bool pgui_get_row_growable(pgui_elem_t *elem, int row);
+// Get whether a grid column will grow to fit.
+bool pgui_get_col_growable(pgui_elem_t *elem, int col);
+
 // Change the selection index of a grid or dropdown.
 // Negative values indicate no selection and aren't applicable to dropdowns.
-void        pgui_set_selection(pgui_elem_t *elem, ptrdiff_t selection);
+void      pgui_set_selection(pgui_elem_t *elem, ptrdiff_t selection);
 // Get the selection index of a grid or dropdown.
 // Negative values indicate no selection and aren't applicable to dropdowns.
-ptrdiff_t   pgui_get_selection(pgui_elem_t *elem);
+ptrdiff_t pgui_get_selection(pgui_elem_t *elem);
 
 // Print GUI debug information.
 void pgui_print_debug_info(pgui_elem_t *elem);
@@ -475,9 +492,9 @@ pgui_elem_t *pgui_child_remove_i(pgui_elem_t *parent, ptrdiff_t index);
 pgui_elem_t *pgui_child_get(pgui_elem_t *parent, ptrdiff_t index);
 
 // Set palette variation.
-void           pgui_set_palette(pgui_elem_t *elem, pgui_variant_t variant);
+void           pgui_set_variant(pgui_elem_t *elem, pgui_variant_t variant);
 // Get palette variation.
-pgui_variant_t pgui_get_palette(pgui_elem_t *elem);
+pgui_variant_t pgui_get_variant(pgui_elem_t *elem);
 // Add element flags.
 void           pgui_set_flags(pgui_elem_t *elem, uint32_t flags);
 // Add element flags.

@@ -23,16 +23,19 @@ pgui_elem_t *pgui_new_grid(pax_vec2i num_cells) {
     elem->base.selected = -1;
     elem->cells         = num_cells;
     elem->row_height    = calloc(num_cells.y, sizeof(int));
-    if (!elem->row_height) {
-        free(elem);
-        return NULL;
-    }
-    elem->col_width = calloc(num_cells.x, sizeof(int));
-    if (!elem->col_width) {
+    elem->col_width     = calloc(num_cells.x, sizeof(int));
+    elem->row_resizable = calloc(num_cells.y, sizeof(bool));
+    elem->col_resizable = calloc(num_cells.x, sizeof(bool));
+    if (!elem->row_height || !elem->col_width || !elem->row_resizable || !elem->col_resizable) {
         free(elem->row_height);
+        free(elem->col_width);
+        free(elem->row_resizable);
+        free(elem->col_resizable);
         free(elem);
         return NULL;
     }
+    memset(elem->row_resizable, 1, num_cells.y);
+    memset(elem->col_resizable, 1, num_cells.x);
     return (pgui_elem_t *)elem;
 }
 
@@ -44,7 +47,8 @@ void pgui_calc1_grid(pax_vec2i gfx_size, pax_vec2i pos, pgui_elem_t *elem, pgui_
     if ((flags & PGUI_FLAG_TOPLEVEL) && elem->selected < 0) {
         // Select lowest-indexed selectable child.
         for (size_t i = 0; i < elem->children_len; i++) {
-            if (elem->children[i] && (elem->children[i]->type->attr & PGUI_ATTR_SELECTABLE)) {
+            if (elem->children[i] && (elem->children[i]->type->attr & PGUI_ATTR_SELECTABLE)
+                && !(elem->children[i]->flags & PGUI_FLAG_HIDDEN)) {
                 elem->selected            = i;
                 elem->children[i]->flags |= PGUI_FLAG_HIGHLIGHT | PGUI_FLAG_DIRTY;
                 elem->flags              |= PGUI_FLAG_DIRTY;
@@ -62,7 +66,7 @@ void pgui_calc1_grid(pax_vec2i gfx_size, pax_vec2i pos, pgui_elem_t *elem, pgui_
             if (x + y * grid->cells.x >= elem->children_len)
                 continue;
             pgui_elem_t *child = elem->children[y * grid->cells.x + x];
-            if (child && child->size.x > width) {
+            if (child && child->size.x > width && !(child->flags & PGUI_FLAG_HIDDEN)) {
                 width = child->size.x;
             }
         }
@@ -78,7 +82,7 @@ void pgui_calc1_grid(pax_vec2i gfx_size, pax_vec2i pos, pgui_elem_t *elem, pgui_
             if (x + y * grid->cells.x >= elem->children_len)
                 continue;
             pgui_elem_t *child = elem->children[y * grid->cells.x + x];
-            if (child && child->size.y > height) {
+            if (child && child->size.y > height && !(child->flags & PGUI_FLAG_HIDDEN)) {
                 height = child->size.y;
             }
         }
@@ -95,32 +99,39 @@ void pgui_calc1_grid(pax_vec2i gfx_size, pax_vec2i pos, pgui_elem_t *elem, pgui_
     }
 }
 
+// Update row / column sizes.
+static void fix_sizes(int distrib, int count, bool *resizable, int *sizes) {
+    int resizable_count = 0;
+    for (int i = 0; i < count; i++) {
+        resizable_count += resizable[i];
+    }
+    if (resizable_count == 0) {
+        return;
+    }
+    int div = distrib / resizable_count;
+    int rem = distrib % resizable_count;
+    for (int i = 0; i < count; i++) {
+        if (!resizable[i])
+            continue;
+        sizes[i] += div;
+        if (rem) {
+            sizes[i] += rem--;
+        }
+    }
+}
+
 // Calculate the internal layout of a grid.
 void pgui_calc2_grid(pax_vec2i gfx_size, pax_vec2i pos, pgui_elem_t *elem, pgui_theme_t const *theme, uint32_t flags) {
     pgui_grid_t   *grid    = (pgui_grid_t *)elem;
     pgui_padding_t padding = *pgui_effective_padding(elem, theme);
 
-    // // Update column sizes.
-    // if (elem->size.x > elem->content_size.x) {
-    //     int extra = elem->size.x - elem->content_size.x;
-    //     for (int i = 0; i < grid->cells.x; i++) {
-    //         grid->col_width += extra / grid->cells.x;
-    //         grid->col_width += extra % grid->cells.x >= i;
-    //     }
-    //     elem->content_size.x = elem->size.x;
-    //     elem->scroll.x       = 0;
-    // }
-
-    // // Update row sizes.
-    // if (elem->size.y > elem->content_size.y) {
-    //     int extra = elem->size.y - elem->content_size.y;
-    //     for (int i = 0; i < grid->cells.y; i++) {
-    //         grid->row_height += extra / grid->cells.y;
-    //         grid->row_height += extra % grid->cells.y >= i;
-    //     }
-    //     elem->content_size.y = elem->size.y;
-    //     elem->scroll.y       = 0;
-    // }
+    // Update row / column sizes.
+    if (elem->size.x > elem->content_size.x) {
+        fix_sizes(elem->size.x - elem->content_size.x, grid->cells.x, grid->col_resizable, grid->col_width);
+    }
+    if (elem->size.y > elem->content_size.y) {
+        fix_sizes(elem->size.y - elem->content_size.y, grid->cells.y, grid->row_resizable, grid->row_height);
+    }
 
     // Compute child element positions.
     int y_offset = padding.top;
@@ -130,7 +141,7 @@ void pgui_calc2_grid(pax_vec2i gfx_size, pax_vec2i pos, pgui_elem_t *elem, pgui_
             if (x + y * grid->cells.x >= elem->children_len)
                 continue;
             pgui_elem_t *child = elem->children[y * grid->cells.x + x];
-            if (!child)
+            if (!child || (child->flags & PGUI_FLAG_HIDDEN))
                 continue;
 
             if (child->flags & PGUI_FLAG_FIX_WIDTH) {
@@ -150,7 +161,7 @@ void pgui_calc2_grid(pax_vec2i gfx_size, pax_vec2i pos, pgui_elem_t *elem, pgui_
         y_offset += grid->row_height[y] + padding.top + padding.bottom;
     }
 
-    if (elem->selected >= 0 && elem->selected < elem->children_len) {
+    if (elem->selected >= 0 && elem->selected < elem->children_len && elem->children[elem->selected]) {
         // Update scroll position.
         elem->scroll = pgui_adjust_scroll_2d(
             (pax_recti){
@@ -399,10 +410,13 @@ pgui_resp_t pgui_event_grid(
 
 // Child list changed callback for grid-based elements.
 void pgui_child_grid(pgui_elem_t *elem) {
-    // Disable padding on all labels.
+    if (elem->flags & PGUI_FLAG_NOPADDING)
+        return;
+    // Disable padding on all labels to collapse it with the grid's padding.
     for (size_t i = 0; i < elem->children_len; i++) {
-        if (!elem->children[i] || !(elem->children[i]->flags & PGUI_FLAG_NOBACKGROUND)
-            || !(elem->children[i]->flags & PGUI_FLAG_NOBORDER))
+        if (!elem->children[i])
+            continue;
+        if (!(elem->children[i]->flags & (PGUI_FLAG_NOBACKGROUND | PGUI_FLAG_NOBORDER)))
             continue;
         elem->children[i]->flags |= PGUI_FLAG_NOPADDING;
     }
@@ -413,13 +427,15 @@ void pgui_del_grid(pgui_elem_t *elem) {
     pgui_grid_t *grid = (pgui_grid_t *)elem;
     free(grid->col_width);
     free(grid->row_height);
+    free(grid->row_resizable);
+    free(grid->col_resizable);
 }
 
 // Box element type.
 pgui_type_t const pgui_type_grid = {
     .id    = PGUI_TYPE_ID_GRID,
     .name  = "grid",
-    .attr  = PGUI_ATTR_SELECTABLE | PGUI_ATTR_CONTAINER,
+    .attr  = PGUI_ATTR_SELECTABLE | PGUI_ATTR_CONTAINER | PGUI_ATTR_GRIDSTRUCT,
     .draw  = pgui_draw_grid,
     .calc1 = pgui_calc1_grid,
     .calc2 = pgui_calc2_grid,

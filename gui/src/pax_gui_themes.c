@@ -38,7 +38,7 @@ pgui_theme_t const pgui_theme_light = {
     
     // Element styles.
     .palette = {
-        // Default color palette.
+        // Default color palette applicable to everything.
         [PGUI_VARIANT_DEFAULT] = {
             .bg_col             = 0xffffffff,
             .fg_col             = 0xff000000,
@@ -84,6 +84,18 @@ pgui_theme_t const pgui_theme_light = {
             .button_active_col  = 0xffd0d0d0,
             .pressed_col        = 0xff909090,
             .border_col         = 0xff000000,
+            .highlight_col      = 0xff00e0e0,
+        },
+        // Color palette for panels like docks toolbars and the text on them.
+        [PGUI_VARIANT_PANEL] = {
+            .bg_col             = 0xff000000,
+            .fg_col             = 0xffffffff,
+            .input_col          = 0xffffffff,
+            .active_col         = 0xffe0e0e0,
+            .button_col         = 0xffd0d0d0,
+            .button_active_col  = 0xffd0d0d0,
+            .pressed_col        = 0xff909090,
+            .border_col         = 0xffffffff,
             .highlight_col      = 0xff00e0e0,
         },
     },

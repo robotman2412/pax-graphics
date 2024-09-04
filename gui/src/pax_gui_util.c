@@ -190,8 +190,20 @@ void pgui_drawutil_base(
         bg = pgui_effective_palette(elem, theme)->input_col;
     }
 
+    // Clamp rounding.
+    int rounding = 0;
+    if (!(flags & PGUI_FLAG_NOROUNDING)) {
+        rounding = pgui_effective_dims(elem, theme)->rounding;
+        if (rounding > size.x / 2) {
+            rounding = size.x / 2;
+        }
+        if (rounding > size.y / 2) {
+            rounding = size.y / 2;
+        }
+    }
+
     // Draw the backdrop.
-    pax_draw_round_rect(gfx, bg, pos.x, pos.y, size.x, size.y, pgui_effective_dims(elem, theme)->rounding);
+    pax_draw_round_rect(gfx, bg, pos.x, pos.y, size.x, size.y, rounding);
 }
 
 // Draw the outline of a box or input element.
@@ -216,12 +228,15 @@ void pgui_drawutil_border(
     }
 
     // Clamp rounding.
-    int rounding = dims->rounding;
-    if (rounding > size.x / 2) {
-        rounding = size.x / 2;
-    }
-    if (rounding > size.y / 2) {
-        rounding = size.y / 2;
+    int rounding = 0;
+    if (!(flags & PGUI_FLAG_NOROUNDING)) {
+        rounding = dims->rounding;
+        if (rounding > size.x / 2) {
+            rounding = size.x / 2;
+        }
+        if (rounding > size.y / 2) {
+            rounding = size.y / 2;
+        }
     }
 
     // Draw the corners.

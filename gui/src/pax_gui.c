@@ -511,6 +511,48 @@ pax_align_t pgui_get_valign(pgui_elem_t *elem) {
     return text->text_valign;
 }
 
+
+// Enable / disable a grid row growing to fit.
+void pgui_set_row_growable(pgui_elem_t *elem, int row, bool growable) {
+    if (!elem || !(elem->type->attr & PGUI_ATTR_GRIDSTRUCT))
+        return;
+    pgui_grid_t *grid = (pgui_grid_t *)elem;
+    if (row < 0 || row >= grid->cells.y)
+        return;
+    grid->row_resizable[row] = growable;
+}
+
+// Enable / disable a grid column growing to fit.
+void pgui_set_col_growable(pgui_elem_t *elem, int col, bool growable) {
+    if (!elem || !(elem->type->attr & PGUI_ATTR_GRIDSTRUCT))
+        return;
+    pgui_grid_t *grid = (pgui_grid_t *)elem;
+    if (col < 0 || col >= grid->cells.x)
+        return;
+    grid->col_resizable[col] = growable;
+}
+
+// Get whether a grid row will grow to fit.
+bool pgui_get_row_growable(pgui_elem_t *elem, int row) {
+    if (!elem || !(elem->type->attr & PGUI_ATTR_GRIDSTRUCT))
+        return false;
+    pgui_grid_t *grid = (pgui_grid_t *)elem;
+    if (row < 0 || row >= grid->cells.y)
+        return false;
+    return grid->row_resizable[row];
+}
+
+// Get whether a grid column will grow to fit.
+bool pgui_get_col_growable(pgui_elem_t *elem, int col) {
+    if (!elem || !(elem->type->attr & PGUI_ATTR_GRIDSTRUCT))
+        return false;
+    pgui_grid_t *grid = (pgui_grid_t *)elem;
+    if (col < 0 || col >= grid->cells.x)
+        return false;
+    return grid->col_resizable[col];
+}
+
+
 // Clear element selection
 static void pgui_clear_selection(pgui_elem_t *elem) {
     while (1) {
@@ -609,7 +651,7 @@ static void debug_info_impl(pgui_elem_t *elem, int depth, bool selected) {
 // Print GUI debug information for element and all children.
 static void debug_recurse_impl(pgui_elem_t *elem, int depth, bool selected) {
     debug_info_impl(elem, depth++, selected);
-    if (elem->children_len) {
+    if (elem && elem->children_len) {
         pgui_di_printf("%zu children:\n", elem->children_len);
         for (size_t i = 0; i < elem->children_len; i++) {
             debug_recurse_impl(elem->children[i], depth, elem->selected == i);
@@ -661,8 +703,18 @@ bool pgui_child_insert(pgui_elem_t *parent, ptrdiff_t index, pgui_elem_t *child)
 pgui_elem_t *pgui_child_replace(pgui_elem_t *parent, ptrdiff_t index, pgui_elem_t *child) {
     if (!parent)
         return NULL;
-    if (index < 0 || index >= parent->children_len)
+    if (!(parent->type->attr & PGUI_ATTR_CONTAINER))
         return NULL;
+    if (index < 0)
+        return NULL;
+    if (index >= parent->children_len) {
+        void *mem = realloc(parent->children, sizeof(void *) * (index + 1));
+        if (!mem)
+            return NULL;
+        parent->children = mem;
+        memset(parent->children + parent->children_len, 0, (index + 1 - parent->children_len) * sizeof(void *));
+        parent->children_len = index + 1;
+    }
     pgui_elem_t *prev       = parent->children[index];
     parent->children[index] = child;
     if (parent->type->child) {
@@ -712,14 +764,14 @@ pgui_elem_t *pgui_child_get(pgui_elem_t *parent, ptrdiff_t index) {
 
 
 // Set palette variation.
-void pgui_set_palette(pgui_elem_t *elem, pgui_variant_t variant) {
+void pgui_set_variant(pgui_elem_t *elem, pgui_variant_t variant) {
     if (!elem)
         return;
     elem->variant = variant;
 }
 
 // Get palette variation.
-pgui_variant_t pgui_get_palette(pgui_elem_t *elem) {
+pgui_variant_t pgui_get_variant(pgui_elem_t *elem) {
     if (!elem)
         return PGUI_VARIANT_DEFAULT;
     return elem->variant;

@@ -30,24 +30,13 @@ void pgui_calc1_button(
 ) {
     // Inherit calculation from text element.
     pgui_calc1_text(gfx_size, pos, elem, theme, flags);
-
-    pgui_padding_t padding = *pgui_effective_padding(elem, theme);
-
-    if (!(flags & PGUI_FLAG_FIX_WIDTH)) {
-        // Clamp minimum width.
-        for (size_t i = 0; i < elem->children_len; i++) {
-            if (elem->children[i] && elem->size.x < elem->children[i]->size.x + padding.left + padding.right) {
-                elem->size.x = elem->children[i]->size.x + padding.left + padding.right;
-            }
-        }
+    pax_vec2i tmp = elem->size;
+    pgui_calc1_dropdown(gfx_size, pos, elem, theme, flags);
+    if (elem->size.x < tmp.x) {
+        elem->size.x = tmp.x;
     }
-    if (!(flags & PGUI_FLAG_FIX_HEIGHT)) {
-        // Clamp minimum height.
-        for (size_t i = 0; i < elem->children_len; i++) {
-            if (elem->children[i] && elem->size.y < elem->children[i]->size.y + padding.top + padding.bottom) {
-                elem->size.y = elem->children[i]->size.y + padding.top + padding.bottom;
-            }
-        }
+    if (elem->size.y < tmp.y) {
+        elem->size.y = tmp.y;
     }
 }
 

@@ -139,7 +139,9 @@ void pgui_calc1_dropdown(
         // Clamp minimum width.
         elem->size.x = 0;
         for (size_t i = 0; i < elem->children_len; i++) {
-            if (elem->children[i] && elem->size.x < elem->children[i]->size.x + padding.left + padding.right) {
+            if (!elem->children[i])
+                continue;
+            if (elem->size.x < elem->children[i]->size.x + padding.left + padding.right) {
                 elem->size.x = elem->children[i]->size.x + padding.left + padding.right;
             }
         }
@@ -148,7 +150,9 @@ void pgui_calc1_dropdown(
         // Clamp minimum height.
         elem->size.y = 0;
         for (size_t i = 0; i < elem->children_len; i++) {
-            if (elem->children[i] && elem->size.y < elem->children[i]->size.y + padding.top + padding.bottom) {
+            if (!elem->children[i])
+                continue;
+            if (elem->size.y < elem->children[i]->size.y + padding.top + padding.bottom) {
                 elem->size.y = elem->children[i]->size.y + padding.top + padding.bottom;
             }
         }

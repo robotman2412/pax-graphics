@@ -115,6 +115,10 @@ struct pgui_grid {
     int        *row_height;
     // Per-column size.
     int        *col_width;
+    // Which rows are allowed to resize.
+    bool       *row_resizable;
+    // Which columns are allowed to resize.
+    bool       *col_resizable;
 };
 
 struct pgui_dropdown {
@@ -165,10 +169,6 @@ void pgui_calc1_dropdown(
 );
 // Calculate the minimum size of image elements.
 void pgui_calc1_image(pax_vec2i gfx_size, pax_vec2i pos, pgui_elem_t *elem, pgui_theme_t const *theme, uint32_t flags);
-// Calculate the minimum size of overlay elements.
-void pgui_calc1_overlay(
-    pax_vec2i gfx_size, pax_vec2i pos, pgui_elem_t *elem, pgui_theme_t const *theme, uint32_t flags
-);
 
 // Calculate the internal layout of editable text-based elements.
 void pgui_calc2_textbox(

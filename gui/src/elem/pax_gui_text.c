@@ -8,8 +8,6 @@
 
 // Create a new label.
 pgui_elem_t *pgui_new_text(char const *text) {
-    if (!text)
-        return NULL;
     pgui_text_t *elem = malloc(sizeof(pgui_text_t));
     if (!elem)
         return NULL;
@@ -18,7 +16,7 @@ pgui_elem_t *pgui_new_text(char const *text) {
     elem->base.flags    = PGUI_FLAG_NOBACKGROUND | PGUI_FLAG_NOBORDER;
     elem->base.selected = -1;
     elem->text          = (char *)text;
-    elem->text_len      = strlen(text);
+    elem->text_len      = text ? strlen(text) : 0;
     elem->text_halign   = PAX_ALIGN_CENTER;
     elem->text_valign   = PAX_ALIGN_CENTER;
     return (pgui_elem_t *)elem;

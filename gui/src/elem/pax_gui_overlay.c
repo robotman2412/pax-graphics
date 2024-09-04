@@ -17,32 +17,6 @@ pgui_elem_t *pgui_new_overlay() {
     return elem;
 }
 
-// Calculate the minimum size of overlay elements.
-void pgui_calc1_overlay(
-    pax_vec2i gfx_size, pax_vec2i pos, pgui_elem_t *elem, pgui_theme_t const *theme, uint32_t flags
-) {
-    pgui_padding_t padding = *pgui_effective_padding(elem, theme);
-
-    if (!(flags & PGUI_FLAG_FIX_WIDTH)) {
-        // Clamp minimum width.
-        elem->size.x = 0;
-        for (size_t i = 0; i < elem->children_len; i++) {
-            if (elem->children[i] && elem->size.x < elem->children[i]->size.x + padding.left + padding.right) {
-                elem->size.x = elem->children[i]->size.x + padding.left + padding.right;
-            }
-        }
-    }
-    if (!(flags & PGUI_FLAG_FIX_HEIGHT)) {
-        // Clamp minimum height.
-        elem->size.y = 0;
-        for (size_t i = 0; i < elem->children_len; i++) {
-            if (elem->children[i] && elem->size.y < elem->children[i]->size.y + padding.top + padding.bottom) {
-                elem->size.y = elem->children[i]->size.y + padding.top + padding.bottom;
-            }
-        }
-    }
-}
-
 // Calculate the internal layout of overlay elements.
 void pgui_calc2_overlay(
     pax_vec2i gfx_size, pax_vec2i pos, pgui_elem_t *elem, pgui_theme_t const *theme, uint32_t flags
@@ -73,7 +47,7 @@ void pgui_calc2_overlay(
 pgui_type_t const pgui_type_overlay = {
     .id    = PGUI_TYPE_ID_OVERLAY,
     .name  = "overlay",
-    .attr  = 0,
-    .calc1 = pgui_calc1_overlay,
+    .attr  = PGUI_ATTR_CONTAINER,
+    .calc1 = pgui_calc1_dropdown,
     .calc2 = pgui_calc2_overlay,
 };
