@@ -68,12 +68,13 @@ pgui_resp_t pgui_event_button(
 
 // Button element type.
 pgui_type_t const pgui_type_button = {
-    .id    = PGUI_TYPE_ID_BUTTON,
-    .name  = "button",
-    .attr  = PGUI_ATTR_SELECTABLE | PGUI_ATTR_BUTTON | PGUI_ATTR_TEXTSTRUCT | PGUI_ATTR_CONTAINER,
-    .draw  = pgui_draw_text,
-    .calc1 = pgui_calc1_button,
-    .calc2 = pgui_calc2_overlay,
-    .event = pgui_event_button,
-    .del   = pgui_del_text,
+    .id          = PGUI_TYPE_ID_BUTTON,
+    .base_struct = PGUI_STRUCT_TEXT,
+    .name        = "button",
+    .attr        = PGUI_ATTR_SELECTABLE | PGUI_ATTR_BUTTON | PGUI_ATTR_CONTAINER,
+    .draw        = pgui_draw_text,
+    .calc1       = pgui_calc1_button,
+    .calc2       = pgui_calc2_overlay,
+    .event       = pgui_event_button,
+    .del         = pgui_del_text,
 };

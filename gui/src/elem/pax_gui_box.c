@@ -19,7 +19,8 @@ pgui_elem_t *pgui_new_box() {
 
 // Overlay element type.
 pgui_type_t const pgui_type_box = {
-    .id   = PGUI_TYPE_ID_BOX,
-    .name = "box",
-    .attr = 0,
+    .id          = PGUI_TYPE_ID_BOX,
+    .base_struct = PGUI_STRUCT_BASE,
+    .name        = "box",
+    .attr        = 0,
 };

@@ -10,17 +10,8 @@ static char const TAG[] = "pax-gui";
 
 
 
-// Create a new grid / table.
-pgui_elem_t *pgui_new_grid(pax_vec2i num_cells) {
-    if (num_cells.x < 1 || num_cells.y < 1) {
-        return NULL;
-    }
-    pgui_grid_t *elem = malloc(sizeof(pgui_text_t));
-    if (!elem)
-        return NULL;
-    memset(elem, 0, sizeof(pgui_grid_t));
-    elem->base.type     = &pgui_type_grid;
-    elem->base.selected = -1;
+// Initialize grid struct.
+static bool grid_init_impl(pgui_grid_t *elem, pax_vec2i num_cells) {
     elem->cells         = num_cells;
     elem->row_height    = calloc(num_cells.y, sizeof(int));
     elem->col_width     = calloc(num_cells.x, sizeof(int));
@@ -31,11 +22,32 @@ pgui_elem_t *pgui_new_grid(pax_vec2i num_cells) {
         free(elem->col_width);
         free(elem->row_resizable);
         free(elem->col_resizable);
-        free(elem);
-        return NULL;
+        return false;
     }
     memset(elem->row_resizable, 1, num_cells.y);
     memset(elem->col_resizable, 1, num_cells.x);
+    return true;
+}
+
+// Extra init function for grid struct based custom types.
+bool pgui_grid_custominit(pgui_grid_t *elem) {
+    return grid_init_impl(elem, (pax_vec2i){1, 1});
+}
+
+// Create a new grid / table.
+pgui_elem_t *pgui_new_grid(pax_vec2i num_cells) {
+    if (num_cells.x < 1 || num_cells.y < 1) {
+        return NULL;
+    }
+    pgui_grid_t *elem = calloc(1, sizeof(pgui_text_t));
+    if (!elem)
+        return NULL;
+    if (!grid_init_impl(elem, num_cells)) {
+        free(elem);
+        return NULL;
+    }
+    elem->base.type     = &pgui_type_grid;
+    elem->base.selected = -1;
     return (pgui_elem_t *)elem;
 }
 
@@ -433,13 +445,14 @@ void pgui_del_grid(pgui_elem_t *elem) {
 
 // Box element type.
 pgui_type_t const pgui_type_grid = {
-    .id    = PGUI_TYPE_ID_GRID,
-    .name  = "grid",
-    .attr  = PGUI_ATTR_SELECTABLE | PGUI_ATTR_CONTAINER | PGUI_ATTR_GRIDSTRUCT,
-    .draw  = pgui_draw_grid,
-    .calc1 = pgui_calc1_grid,
-    .calc2 = pgui_calc2_grid,
-    .event = pgui_event_grid,
-    .child = pgui_child_grid,
-    .del   = pgui_del_grid,
+    .id          = PGUI_TYPE_ID_GRID,
+    .base_struct = PGUI_STRUCT_GRID,
+    .name        = "grid",
+    .attr        = PGUI_ATTR_SELECTABLE | PGUI_ATTR_CONTAINER,
+    .draw        = pgui_draw_grid,
+    .calc1       = pgui_calc1_grid,
+    .calc2       = pgui_calc2_grid,
+    .event       = pgui_event_grid,
+    .child       = pgui_child_grid,
+    .del         = pgui_del_grid,
 };

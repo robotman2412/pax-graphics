@@ -112,7 +112,7 @@ typedef struct {
 // Element type IDs.
 typedef enum {
     // Custom type.
-    /* PGUI_TYPE_ID_CUSTOM = -1, */
+    PGUI_TYPE_ID_CUSTOM = -1,
     // Built-in: Button.
     PGUI_TYPE_ID_BUTTON,
     // Built-in: Text.
@@ -301,12 +301,6 @@ typedef struct {
 // GUI attribute: Element can have children.
 // Elements with this type are allowed to contain child elements.
 #define PGUI_ATTR_CONTAINER  0x00000008
-// GUI attribute: Type uses `pgui_text_t` struct or a superset.
-// Enables text element API functions.
-#define PGUI_ATTR_TEXTSTRUCT 0x00000010
-// GUI attribute: Type uses `pgui_grid_t` struct or a superset.
-// Enables grid element API functions.
-#define PGUI_ATTR_GRIDSTRUCT 0x00000020
 // GUI attribute: Type describes a label.
 // Default colors, label minimum size.
 #define PGUI_ATTR_TEXT       0x00000100
@@ -407,6 +401,8 @@ pgui_palette_t const     *pgui_effective_palette(pgui_elem_t *elem, pgui_theme_t
 
 /* ==== Element management functions ==== */
 
+// Create an element from a custom type.
+pgui_elem_t *pgui_new_custom(pgui_type_t *custom_type);
 // Create a new button.
 pgui_elem_t *pgui_new_button(char const *text, pgui_callback_t cb);
 // Create a new label.
@@ -441,6 +437,8 @@ void           *pgui_get_userdata(pgui_elem_t *elem);
 void            pgui_set_callback(pgui_elem_t *elem, pgui_callback_t cb);
 // Get element on change / on press callback.
 pgui_callback_t pgui_get_callback(pgui_elem_t *elem);
+// Run the element on change / on press callback, if there is one.
+void            pgui_run_callback(pgui_elem_t *elem);
 
 // Change the text of a button, label or textbox.
 void        pgui_set_text(pgui_elem_t *elem, char const *new_label);
@@ -530,9 +528,49 @@ static inline void pgui_set_pos2(pgui_elem_t *elem, int position_x, int position
 
 // Get a base type by ID.
 pgui_type_t const *pgui_type_get(pgui_type_id_t base_type);
-// Create a custom element type. Inherits the struct and base behaviours from `base_type`.
+// Create a custom element type. Inherits the struct from `base_type`.
+// You can optionally set `extra_size` to reserve size for an additional custom struct.
 // If `base_type` is PGUI_TYPE_ID_CUSTOM, only common attributes are inherited.
-pgui_type_t       *pgui_type_create(char const *name, pgui_type_id_t base_type);
+pgui_type_t       *pgui_type_create(char const *name, pgui_type_id_t base_type, size_t extra_size);
+
+// Set the attributes for a custom type.
+void pgui_type_set_attr(pgui_type_t *type, uint32_t attr);
+// Set the custom clip rectangle function for a custom type.
+// Most elements won't need this function.
+void pgui_type_set_clip(pgui_type_t *type, pgui_draw_fn_t clip);
+// Set the drawing function for a custom type.
+// Most elements will need this function.
+void pgui_type_set_draw(pgui_type_t *type, pgui_draw_fn_t draw);
+// Set the minimum size calculation function for a custom type.
+// Elements are expected only to change their current size to the minimum size.
+void pgui_type_set_calc1(pgui_type_t *type, pgui_calc_fn_t calc1);
+// Set the internal layout calculation function for a custom type.
+// Elements are allowed to grow children and move them around in addition to any other layout calculations.
+void pgui_type_set_calc2(pgui_type_t *type, pgui_calc_fn_t calc2);
+// Set the event handling function for a custom type.
+void pgui_type_set_event(pgui_type_t *type, pgui_event_fn_t event);
+// Set the child list changed callback for a custom type.
+void pgui_type_set_child(pgui_type_t *type, pgui_callback_t child);
+// Set the additional delete function for a custom type.
+void pgui_type_set_del(pgui_type_t *type, pgui_del_fn_t del);
+
+// Get the attributes for a custom/built-in type.
+uint32_t        pgui_type_get_attr(pgui_type_t *type);
+// Get the custom clip rectangle function for a custom/built-in type.
+pgui_draw_fn_t  pgui_type_get_clip(pgui_type_t *type);
+// Get the drawing function for a custom/built-in type.
+pgui_draw_fn_t  pgui_type_get_draw(pgui_type_t *type);
+// Get the minimum size calculation function for a custom/built-in type.
+pgui_calc_fn_t  pgui_type_get_calc1(pgui_type_t *type);
+// Get the internal layout calculation function for a custom/built-in type.
+pgui_calc_fn_t  pgui_type_get_calc2(pgui_type_t *type);
+// Get the event handling function for a custom/built-in type.
+pgui_event_fn_t pgui_type_get_event(pgui_type_t *type);
+// Get the child list changed callback for a custom/built-in type.
+pgui_callback_t pgui_type_get_child(pgui_type_t *type);
+// Get the additional delete function for a custom type.
+// Does not work on built-in types to protect them from accidental double free.
+pgui_del_fn_t   pgui_type_get_del(pgui_type_t *type);
 
 
 

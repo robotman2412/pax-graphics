@@ -353,13 +353,14 @@ void pgui_child_dropdown(pgui_elem_t *elem) {
 
 
 pgui_type_t const pgui_type_dropdown = {
-    .id    = PGUI_TYPE_ID_DROPDOWN,
-    .name  = "dropdown",
-    .attr  = PGUI_ATTR_DROPDOWN | PGUI_ATTR_SELECTABLE | PGUI_ATTR_ABSPOS | PGUI_ATTR_CONTAINER,
-    .clip  = pgui_clip_dropdown,
-    .draw  = pgui_draw_dropdown,
-    .calc1 = pgui_calc1_dropdown,
-    .calc2 = pgui_calc2_dropdown,
-    .event = pgui_event_dropdown,
-    .child = pgui_child_dropdown,
+    .id          = PGUI_TYPE_ID_DROPDOWN,
+    .base_struct = PGUI_STRUCT_DROPDOWN,
+    .name        = "dropdown",
+    .attr        = PGUI_ATTR_DROPDOWN | PGUI_ATTR_SELECTABLE | PGUI_ATTR_ABSPOS | PGUI_ATTR_CONTAINER,
+    .clip        = pgui_clip_dropdown,
+    .draw        = pgui_draw_dropdown,
+    .calc1       = pgui_calc1_dropdown,
+    .calc2       = pgui_calc2_dropdown,
+    .event       = pgui_event_dropdown,
+    .child       = pgui_child_dropdown,
 };

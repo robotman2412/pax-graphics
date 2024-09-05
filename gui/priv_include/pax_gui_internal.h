@@ -21,29 +21,49 @@ typedef struct pgui_text     pgui_text_t;
 // Data for image elements.
 typedef struct pgui_image    pgui_image_t;
 
+// Type base struct ID.
+typedef enum {
+    // Uses `pgui_elem_t` directly.
+    PGUI_STRUCT_BASE,
+    // Uses `pgui_grid_t`.
+    PGUI_STRUCT_GRID,
+    // Uses `pgui_dropdown_t`.
+    PGUI_STRUCT_DROPDOWN,
+    // Uses `pgui_text_t`.
+    PGUI_STRUCT_TEXT,
+    // Uses `pgui_image_t`.
+    PGUI_STRUCT_IMAGE,
+} pgui_struct_id_t;
+
 
 
 struct pgui_type {
     // Type ID.
-    pgui_type_id_t  id;
+    pgui_type_id_t   id;
+    // Type base struct.
+    pgui_struct_id_t base_struct;
+    // Extra size allocated to custom types.
+    size_t           custom_struct_size;
     // Type name for debug purposes.
-    char const     *name;
+    char const      *name;
     // Static element attributes.
-    uint32_t        attr;
+    uint32_t         attr;
     // Set clip rectangle for children.
-    pgui_draw_fn_t  clip;
+    pgui_draw_fn_t   clip;
     // Draw call (mandatory).
-    pgui_draw_fn_t  draw;
+    pgui_draw_fn_t   draw;
     // Minimum element size calculation call.
-    pgui_calc_fn_t  calc1;
+    pgui_calc_fn_t   calc1;
     // Internal layout calculation call.
-    pgui_calc_fn_t  calc2;
+    pgui_calc_fn_t   calc2;
     // Event call.
-    pgui_event_fn_t event;
+    pgui_event_fn_t  event;
     // Child list changed callback.
-    pgui_callback_t child;
+    pgui_callback_t  child;
     // Additional delete callback.
-    pgui_del_fn_t   del;
+    pgui_del_fn_t    del;
+    // Additional delete callback for custom types.
+    pgui_del_fn_t    del2;
 };
 
 struct pgui_elem {
@@ -140,6 +160,9 @@ struct pgui_image {
 };
 
 
+
+// Extra init function for grid struct based custom types.
+bool pgui_grid_custominit(pgui_grid_t *grid);
 
 // Child clipping rectangle for dropdowns.
 void pgui_clip_dropdown(pax_buf_t *gfx, pax_vec2i pos, pgui_elem_t *elem, pgui_theme_t const *theme, uint32_t flags);

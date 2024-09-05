@@ -405,10 +405,35 @@ pgui_resp_t pgui_event(pax_vec2i gfx_size, pgui_elem_t *elem, pgui_theme_t const
 
 /* ==== Element management functions ==== */
 
+// Create an element from a custom type.
+pgui_elem_t *pgui_new_custom(pgui_type_t *custom_type) {
+    pgui_elem_t *elem;
+    switch (custom_type->base_struct) {
+        default: return NULL;
+        case PGUI_STRUCT_BASE: elem = calloc(1, sizeof(pgui_elem_t)); break;
+        case PGUI_STRUCT_GRID:
+            elem = calloc(1, sizeof(pgui_grid_t));
+            if (!pgui_grid_custominit((pgui_grid_t *)elem)) {
+                free(elem);
+                return NULL;
+            }
+            break;
+        case PGUI_STRUCT_DROPDOWN: elem = calloc(1, sizeof(pgui_dropdown_t)); break;
+        case PGUI_STRUCT_TEXT: elem = calloc(1, sizeof(pgui_text_t)); break;
+        case PGUI_STRUCT_IMAGE: elem = calloc(1, sizeof(pgui_image_t)); break;
+    }
+    if (elem) {
+        elem->selected = -1;
+    }
+    return elem;
+}
+
 // Delete an element.
 void pgui_delete(pgui_elem_t *elem) {
     if (!elem)
         return;
+    if (elem->type->del2)
+        elem->type->del2(elem);
     if (elem->type->del)
         elem->type->del(elem);
     free(elem);
@@ -453,10 +478,17 @@ pgui_callback_t pgui_get_callback(pgui_elem_t *elem) {
     return elem->callback;
 }
 
+// Run the element on change / on press callback, if there is one.
+void pgui_run_callback(pgui_elem_t *elem) {
+    if (elem && elem->callback) {
+        elem->callback(elem);
+    }
+}
+
 
 // Change the text of a button, label or textbox.
 void pgui_set_text(pgui_elem_t *elem, char const *new_label) {
-    if (!elem || !(elem->type->attr & PGUI_ATTR_TEXTSTRUCT))
+    if (!elem || elem->type->base_struct != PGUI_STRUCT_TEXT)
         return;
     pgui_text_t *text = (pgui_text_t *)elem;
     if (text->allow_realloc) {
@@ -473,7 +505,7 @@ void pgui_set_text(pgui_elem_t *elem, char const *new_label) {
 // Get the txt of a button, label or textbox.
 // Take care not to edit in the textbox while still using this value.
 char const *pgui_get_text(pgui_elem_t *elem) {
-    if (!elem || !(elem->type->attr & PGUI_ATTR_TEXTSTRUCT))
+    if (!elem || elem->type->base_struct != PGUI_STRUCT_TEXT)
         return NULL;
     pgui_text_t *text = (pgui_text_t *)elem;
     return text->text;
@@ -481,7 +513,7 @@ char const *pgui_get_text(pgui_elem_t *elem) {
 
 // Set the horizontal alignment of a button, label or textbox.
 void pgui_set_halign(pgui_elem_t *elem, pax_align_t align) {
-    if (!elem || !(elem->type->attr & PGUI_ATTR_TEXTSTRUCT))
+    if (!elem || elem->type->base_struct != PGUI_STRUCT_TEXT)
         return;
     pgui_text_t *text = (pgui_text_t *)elem;
     text->text_halign = align;
@@ -489,7 +521,7 @@ void pgui_set_halign(pgui_elem_t *elem, pax_align_t align) {
 
 // Get the horizontal alignment of a button, label or textbox.
 pax_align_t pgui_get_halign(pgui_elem_t *elem) {
-    if (!elem || !(elem->type->attr & PGUI_ATTR_TEXTSTRUCT))
+    if (!elem || elem->type->base_struct != PGUI_STRUCT_TEXT)
         return -1;
     pgui_text_t *text = (pgui_text_t *)elem;
     return text->text_halign;
@@ -497,7 +529,7 @@ pax_align_t pgui_get_halign(pgui_elem_t *elem) {
 
 // Set the vertical alignment of a button, label or textbox.
 void pgui_set_valign(pgui_elem_t *elem, pax_align_t align) {
-    if (!elem || !(elem->type->attr & PGUI_ATTR_TEXTSTRUCT))
+    if (!elem || elem->type->base_struct != PGUI_STRUCT_TEXT)
         return;
     pgui_text_t *text = (pgui_text_t *)elem;
     text->text_valign = align;
@@ -505,7 +537,7 @@ void pgui_set_valign(pgui_elem_t *elem, pax_align_t align) {
 
 // Get the vertical alignment of a button, label or textbox.
 pax_align_t pgui_get_valign(pgui_elem_t *elem) {
-    if (!elem || !(elem->type->attr & PGUI_ATTR_TEXTSTRUCT))
+    if (!elem || elem->type->base_struct != PGUI_STRUCT_TEXT)
         return -1;
     pgui_text_t *text = (pgui_text_t *)elem;
     return text->text_valign;
@@ -514,7 +546,7 @@ pax_align_t pgui_get_valign(pgui_elem_t *elem) {
 
 // Enable / disable a grid row growing to fit.
 void pgui_set_row_growable(pgui_elem_t *elem, int row, bool growable) {
-    if (!elem || !(elem->type->attr & PGUI_ATTR_GRIDSTRUCT))
+    if (!elem || elem->type->base_struct != PGUI_STRUCT_GRID)
         return;
     pgui_grid_t *grid = (pgui_grid_t *)elem;
     if (row < 0 || row >= grid->cells.y)
@@ -524,7 +556,7 @@ void pgui_set_row_growable(pgui_elem_t *elem, int row, bool growable) {
 
 // Enable / disable a grid column growing to fit.
 void pgui_set_col_growable(pgui_elem_t *elem, int col, bool growable) {
-    if (!elem || !(elem->type->attr & PGUI_ATTR_GRIDSTRUCT))
+    if (!elem || elem->type->base_struct != PGUI_STRUCT_GRID)
         return;
     pgui_grid_t *grid = (pgui_grid_t *)elem;
     if (col < 0 || col >= grid->cells.x)
@@ -534,7 +566,7 @@ void pgui_set_col_growable(pgui_elem_t *elem, int col, bool growable) {
 
 // Get whether a grid row will grow to fit.
 bool pgui_get_row_growable(pgui_elem_t *elem, int row) {
-    if (!elem || !(elem->type->attr & PGUI_ATTR_GRIDSTRUCT))
+    if (!elem || elem->type->base_struct != PGUI_STRUCT_GRID)
         return false;
     pgui_grid_t *grid = (pgui_grid_t *)elem;
     if (row < 0 || row >= grid->cells.y)
@@ -544,7 +576,7 @@ bool pgui_get_row_growable(pgui_elem_t *elem, int row) {
 
 // Get whether a grid column will grow to fit.
 bool pgui_get_col_growable(pgui_elem_t *elem, int col) {
-    if (!elem || !(elem->type->attr & PGUI_ATTR_GRIDSTRUCT))
+    if (!elem || elem->type->base_struct != PGUI_STRUCT_GRID)
         return false;
     pgui_grid_t *grid = (pgui_grid_t *)elem;
     if (col < 0 || col >= grid->cells.x)
@@ -623,7 +655,7 @@ static void debug_info_impl(pgui_elem_t *elem, int depth, bool selected) {
     pgui_di_printf("Content size: {%d, %d}\n", elem->content_size.x, elem->content_size.y);
     pgui_di_printf("Scroll:       {%d, %d}\n", elem->scroll.x, elem->scroll.y);
 
-    if (elem->type->attr & PGUI_ATTR_TEXTSTRUCT) {
+    if (elem->type->base_struct == PGUI_STRUCT_TEXT) {
         pgui_text_t *text = (pgui_text_t *)elem;
         pgui_di_printf("Text:         ");
         if (!text->text) {
@@ -633,7 +665,7 @@ static void debug_info_impl(pgui_elem_t *elem, int depth, bool selected) {
         } else {
             printf("'%s'\n", text->text);
         }
-    } else if (elem->type == &pgui_type_grid) {
+    } else if (elem->type->base_struct == PGUI_STRUCT_GRID) {
         pgui_grid_t *grid = (pgui_grid_t *)elem;
         pgui_di_printf("Col widths:  ");
         for (int i = 0; i < grid->cells.x; i++) {
@@ -831,4 +863,131 @@ pax_vec2i pgui_get_pos(pgui_elem_t *elem) {
     if (!elem)
         return (pax_vec2i){0, 0};
     return elem->pos;
+}
+
+
+
+/* ==== Type management functions ==== */
+
+// Get a base type by ID.
+pgui_type_t const *pgui_type_get(pgui_type_id_t base_type) {
+    switch (base_type) {
+        default: return NULL;
+        case PGUI_TYPE_ID_BUTTON: return &pgui_type_button;
+        case PGUI_TYPE_ID_TEXT: return &pgui_type_text;
+        case PGUI_TYPE_ID_TEXTBOX: return &pgui_type_textbox;
+        case PGUI_TYPE_ID_GRID: return &pgui_type_grid;
+        case PGUI_TYPE_ID_DROPDOWN: return &pgui_type_dropdown;
+        case PGUI_TYPE_ID_IMAGE: return &pgui_type_image;
+        case PGUI_TYPE_ID_OVERLAY: return &pgui_type_overlay;
+        case PGUI_TYPE_ID_BOX: return &pgui_type_box;
+    }
+}
+
+// Create a custom element type. Inherits the struct from `base_type`.
+// You can optionally set `extra_size` to reserve size for an additional custom struct.
+// If `base_type` is PGUI_TYPE_ID_CUSTOM, only common attributes are inherited.
+pgui_type_t *pgui_type_create(char const *name, pgui_type_id_t base_type, size_t extra_size) {
+    pgui_type_t *custom = calloc(1, sizeof(pgui_type_t));
+    if (base_type == PGUI_TYPE_ID_CUSTOM) {
+        custom->base_struct = PGUI_STRUCT_BASE;
+        custom->attr        = 0;
+    } else {
+        pgui_type_t const *base = pgui_type_get(base_type);
+        if (!base) {
+            free(custom);
+            return NULL;
+        }
+        *custom = *base;
+    }
+    custom->id                 = PGUI_TYPE_ID_CUSTOM;
+    custom->name               = name;
+    custom->custom_struct_size = extra_size;
+    return custom;
+}
+
+
+// Set the attributes for a custom type.
+void pgui_type_set_attr(pgui_type_t *type, uint32_t attr) {
+    type->attr = attr;
+}
+
+// Set the custom clip rectangle function for a custom type.
+// Most elements won't need this function.
+void pgui_type_set_clip(pgui_type_t *type, pgui_draw_fn_t clip) {
+    type->clip = clip;
+}
+
+// Set the drawing function for a custom type.
+// Most elements will need this function.
+void pgui_type_set_draw(pgui_type_t *type, pgui_draw_fn_t draw) {
+    type->draw = draw;
+}
+
+// Set the minimum size calculation function for a custom type.
+// Elements are expected only to change their current size to the minimum size.
+void pgui_type_set_calc1(pgui_type_t *type, pgui_calc_fn_t calc1) {
+    type->calc1 = calc1;
+}
+
+// Set the internal layout calculation function for a custom type.
+// Elements are allowed to grow children and move them around in addition to any other layout calculations.
+void pgui_type_set_calc2(pgui_type_t *type, pgui_calc_fn_t calc2) {
+    type->calc2 = calc2;
+}
+
+// Set the event handling function for a custom type.
+void pgui_type_set_event(pgui_type_t *type, pgui_event_fn_t event) {
+    type->event = event;
+}
+
+// Set the child list changed callback for a custom type.
+void pgui_type_set_child(pgui_type_t *type, pgui_callback_t child) {
+    type->child = child;
+}
+
+// Set the additional delete function for a custom type.
+void pgui_type_set_del(pgui_type_t *type, pgui_del_fn_t del) {
+    type->del2 = del;
+}
+
+
+// Get the attributes for a custom/built-in type.
+uint32_t pgui_type_get_attr(pgui_type_t *type) {
+    return type->attr;
+}
+
+// Get the custom clip rectangle function for a custom/built-in type.
+pgui_draw_fn_t pgui_type_get_clip(pgui_type_t *type) {
+    return type->clip;
+}
+
+// Get the drawing function for a custom/built-in type.
+pgui_draw_fn_t pgui_type_get_draw(pgui_type_t *type) {
+    return type->draw;
+}
+
+// Get the minimum size calculation function for a custom/built-in type.
+pgui_calc_fn_t pgui_type_get_calc1(pgui_type_t *type) {
+    return type->calc1;
+}
+
+// Get the internal layout calculation function for a custom/built-in type.
+pgui_calc_fn_t pgui_type_get_calc2(pgui_type_t *type) {
+    return type->calc2;
+}
+
+// Get the event handling function for a custom/built-in type.
+pgui_event_fn_t pgui_type_get_event(pgui_type_t *type) {
+    return type->event;
+}
+
+// Get the child list changed callback for a custom/built-in type.
+pgui_callback_t pgui_type_get_child(pgui_type_t *type) {
+    return type->child;
+}
+
+// Get the additional delete function for a custom type.
+pgui_del_fn_t pgui_type_get_del(pgui_type_t *type) {
+    return type->id == PGUI_TYPE_ID_CUSTOM ? type->del2 : NULL;
 }

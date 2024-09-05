@@ -66,10 +66,11 @@ void pgui_del_image(pgui_elem_t *elem) {
 
 // Text element type.
 pgui_type_t const pgui_type_image = {
-    .id    = PGUI_TYPE_ID_IMAGE,
-    .name  = "image",
-    .attr  = 0,
-    .draw  = pgui_draw_image,
-    .calc1 = pgui_calc1_image,
-    .del   = pgui_del_image,
+    .id          = PGUI_TYPE_ID_IMAGE,
+    .base_struct = PGUI_STRUCT_IMAGE,
+    .name        = "image",
+    .attr        = 0,
+    .draw        = pgui_draw_image,
+    .calc1       = pgui_calc1_image,
+    .del         = pgui_del_image,
 };

@@ -39,7 +39,7 @@ if(ESP_PLATFORM)
     # ESP-IDF integration.
     idf_component_register(
         SRCS ${pax_gfx_srcs} ${pax_gui_srcs}
-        INCLUDE_DIRS ${pax_gfx_include} ${pax_gui_include}
+        INCLUDE_DIRS ${pax_gfx_include} ${pax_gui_include} ${pax_gui_priv_include}
         REQUIRES esp_timer esp_system esp_pm
     )
     target_compile_options(${COMPONENT_LIB} PUBLIC ${pax_gfx_options} ${pax_gui_options})

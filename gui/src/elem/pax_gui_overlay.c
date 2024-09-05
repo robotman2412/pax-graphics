@@ -45,9 +45,10 @@ void pgui_calc2_overlay(
 
 // Overlay element type.
 pgui_type_t const pgui_type_overlay = {
-    .id    = PGUI_TYPE_ID_OVERLAY,
-    .name  = "overlay",
-    .attr  = PGUI_ATTR_CONTAINER,
-    .calc1 = pgui_calc1_dropdown,
-    .calc2 = pgui_calc2_overlay,
+    .id          = PGUI_TYPE_ID_OVERLAY,
+    .base_struct = PGUI_STRUCT_BASE,
+    .name        = "overlay",
+    .attr        = PGUI_ATTR_CONTAINER,
+    .calc1       = pgui_calc1_dropdown,
+    .calc2       = pgui_calc2_overlay,
 };
