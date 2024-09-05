@@ -38,6 +38,9 @@ extern "C" {
 // Any alt kay pressed.
 #define PGUI_MODKEY_ALT     (PGUI_MODKEY_L_ALT | PGUI_MODKEY_R_ALT)
 
+// GUI element type.
+typedef struct pgui_type pgui_type_t;
+
 // GUI input button type.
 typedef enum {
     // No equivalent input.
@@ -520,6 +523,16 @@ static inline void pgui_set_size2(pgui_elem_t *elem, int size_x, int size_y) {
 static inline void pgui_set_pos2(pgui_elem_t *elem, int position_x, int position_y) {
     pgui_set_pos(elem, (pax_vec2i){position_x, position_y});
 }
+
+
+
+/* ==== Type management functions ==== */
+
+// Get a base type by ID.
+pgui_type_t const *pgui_type_get(pgui_type_id_t base_type);
+// Create a custom element type. Inherits the struct and base behaviours from `base_type`.
+// If `base_type` is PGUI_TYPE_ID_CUSTOM, only common attributes are inherited.
+pgui_type_t       *pgui_type_create(char const *name, pgui_type_id_t base_type);
 
 
 

@@ -12,8 +12,6 @@ extern "C" {
 
 
 
-// GUI element type.
-typedef struct pgui_type     pgui_type_t;
 // Data for grid elements.
 typedef struct pgui_grid     pgui_grid_t;
 // Data for dropdown elements.
