@@ -37,10 +37,15 @@ include(${CMAKE_CURRENT_LIST_DIR}/gui/CMakeLists.txt)
 
 if(ESP_PLATFORM)
     # ESP-IDF integration.
+    set(pax_esp_requires esp_timer esp_system esp_pm)
+    # idf_build_get_property(idf_target IDF_TARGET)
+    # if("${idf_target}" MATCHES "esp32p4")
+    #     list(APPEND pax_esp_requires esp_driver_ppa)
+    # endif()
     idf_component_register(
         SRCS ${pax_gfx_srcs} ${pax_gui_srcs}
         INCLUDE_DIRS ${pax_gfx_include} ${pax_gui_include} ${pax_gui_priv_include}
-        REQUIRES esp_timer esp_system esp_pm
+        REQUIRES ${pax_esp_requires}
     )
     target_compile_options(${COMPONENT_LIB} PUBLIC ${pax_gfx_options} ${pax_gui_options})
     target_compile_options(${COMPONENT_LIB} PRIVATE -Wno-unused-const-variable)
