@@ -152,8 +152,8 @@ void pgui_drawutil_textbox(
     pgui_drawutil_text(
         gfx,
         pgui_effective_palette(elem, theme)->fg_col,
-        theme->font,
-        theme->font_size,
+        pgui_effective_font(elem, theme),
+        pgui_effective_font_size(elem, theme),
         text->shrink_to_fit,
         text->text,
         text->text_len,

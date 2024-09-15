@@ -34,8 +34,8 @@ void pgui_calc1_text(pax_vec2i gfx_size, pax_vec2i pos, pgui_elem_t *elem, pgui_
         return;
 
     pax_2vec2f text_size = pax_text_size_adv(
-        theme->font,
-        theme->font_size,
+        pgui_effective_font(elem, theme),
+        pgui_effective_font_size(elem, theme),
         text->text,
         text->text_len,
         PAX_ALIGN_BEGIN,

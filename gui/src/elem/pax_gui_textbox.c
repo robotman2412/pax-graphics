@@ -34,8 +34,8 @@ void pgui_calc2_textbox(
         elem->content_size = elem->size;
     } else {
         pax_2vec2f s = pax_text_size_adv(
-            theme->font,
-            theme->font_size,
+            pgui_effective_font(elem, theme),
+            pgui_effective_font_size(elem, theme),
             text->text,
             text->text_len,
             PAX_ALIGN_BEGIN,
@@ -56,8 +56,8 @@ void pgui_calc2_textbox(
 
     // Compute cursor position.
     pax_recti cursor = pgui_drawutil_getcursor(
-        theme->font,
-        theme->font_size,
+        pgui_effective_font(elem, theme),
+        pgui_effective_font_size(elem, theme),
         text->shrink_to_fit,
         text->text,
         text->text_len,
@@ -70,7 +70,7 @@ void pgui_calc2_textbox(
     // Update scroll position to match cursor.
     elem->scroll = pgui_adjust_scroll_2d(
         cursor,
-        theme->font_size,
+        pgui_effective_font_size(elem, theme),
         (pax_vec2i){
             elem->size.x - padding.left - padding.right,
             elem->size.y - padding.top - padding.bottom,

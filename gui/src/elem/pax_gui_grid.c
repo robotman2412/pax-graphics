@@ -208,7 +208,7 @@ void pgui_draw_grid(pax_buf_t *gfx, pax_vec2i pos, pgui_elem_t *elem, pgui_theme
     for (int y = 1; y < grid->cells.y; y++) {
         pax_draw_line(
             gfx,
-            theme->palette[elem->variant].border_col,
+            pgui_effective_palette(elem, theme)->border_col,
             pos.x + 1,
             pos.y + y_offset,
             pos.x + elem->size.x - 1,
@@ -219,7 +219,7 @@ void pgui_draw_grid(pax_buf_t *gfx, pax_vec2i pos, pgui_elem_t *elem, pgui_theme
     for (int x = 1; x < grid->cells.x; x++) {
         pax_draw_line(
             gfx,
-            theme->palette[elem->variant].border_col,
+            pgui_effective_palette(elem, theme)->border_col,
             pos.x + x_offset,
             pos.y + 1,
             pos.x + x_offset,
