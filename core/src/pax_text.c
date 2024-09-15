@@ -726,23 +726,16 @@ static pax_2vec2f aligned_text(
 // Count the number of newlines in a string.
 static size_t count_newlines(char const *str, size_t len) {
     size_t found = 0;
+    char   prev  = 0;
     while (len) {
-        char const *cr = memchr(str, '\r', len);
-        char const *lf = memchr(str, '\n', len);
-        if (cr < lf) {
+        if (*str == '\r') {
             found++;
-            if (lf == cr + 1) {
-                len -= lf - str;
-                str  = lf;
-            } else {
-                len -= cr - str;
-                str  = cr;
-            }
-        } else {
-            found++;
-            len -= lf - str;
-            str  = lf;
+        } else if (*str == '\n') {
+            found += prev != '\r';
         }
+        prev = *str;
+        str++;
+        len--;
     }
     return found;
 }
@@ -887,33 +880,33 @@ static inline bool xfread(void *restrict __ptr, size_t __size, size_t __n, FILE 
     return fread(__ptr, __size, __n, __s) == __n;
 }
 
-// Args: size_t *number, size_t bytes, FILE *fd
-#define xreadnum_assert(...)                                                                                           \
-    do {                                                                                                               \
-        if (!xreadnum(__VA_ARGS__))                                                                                    \
-            goto fd_error;                                                                                             \
-    } while (0)
+    // Args: size_t *number, size_t bytes, FILE *fd
+    #define xreadnum_assert(...)                                                                                       \
+        do {                                                                                                           \
+            if (!xreadnum(__VA_ARGS__))                                                                                \
+                goto fd_error;                                                                                         \
+        } while (0)
 
-// Args: size_t number, size_t bytes, FILE *fd
-#define xwritenum_assert(...)                                                                                          \
-    do {                                                                                                               \
-        if (!xwritenum(__VA_ARGS__))                                                                                   \
-            goto fd_error;                                                                                             \
-    } while (0)
+    // Args: size_t number, size_t bytes, FILE *fd
+    #define xwritenum_assert(...)                                                                                      \
+        do {                                                                                                           \
+            if (!xwritenum(__VA_ARGS__))                                                                               \
+                goto fd_error;                                                                                         \
+        } while (0)
 
-// Args: void *ptr, size_t size, size_t n, FILE *fd
-#define fread_assert(...)                                                                                              \
-    do {                                                                                                               \
-        if (!xfread(__VA_ARGS__))                                                                                      \
-            goto fd_error;                                                                                             \
-    } while (0)
+    // Args: void *ptr, size_t size, size_t n, FILE *fd
+    #define fread_assert(...)                                                                                          \
+        do {                                                                                                           \
+            if (!xfread(__VA_ARGS__))                                                                                  \
+                goto fd_error;                                                                                         \
+        } while (0)
 
-// Args: void *ptr, size_t size, size_t n, FILE *fd
-#define fwrite_assert(...)                                                                                             \
-    do {                                                                                                               \
-        if (!xfwrite(__VA_ARGS__))                                                                                     \
-            goto fd_error;                                                                                             \
-    } while (0)
+    // Args: void *ptr, size_t size, size_t n, FILE *fd
+    #define fwrite_assert(...)                                                                                         \
+        do {                                                                                                           \
+            if (!xfwrite(__VA_ARGS__))                                                                                 \
+                goto fd_error;                                                                                         \
+        } while (0)
 #endif
 
 // Loads a font using a file descriptor.
