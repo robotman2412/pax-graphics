@@ -186,7 +186,6 @@ void pax_outline_arc(pax_buf_t *buf, pax_col_t color, float x, float y, float r,
 
     // Pick an appropriate number of divisions.
     int n_div  = pax_pick_arc_divs(&buf->stack_2d.value, r, a0, a1);
-    n_div     /= 2;
     if (!n_div) {
         n_div = 1;
     }
