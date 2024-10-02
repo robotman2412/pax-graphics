@@ -124,7 +124,7 @@ void *pax_sasr_worker(void *_args) {
 
 // Draw a solid-colored line.
 void pax_mcrw0_unshaded_line(pax_buf_t *buf, pax_col_t color, pax_linef shape) {
-    // paxmcr_line_unshaded(0, buf, color, shape.x0, shape.y0, shape.x1, shape.y1);
+    paxmcr_line_unshaded(0, buf, color, shape.x0, shape.y0, shape.x1, shape.y1);
 }
 
 // Draw a solid-colored rectangle.
@@ -145,7 +145,7 @@ void pax_mcrw0_unshaded_tri(pax_buf_t *buf, pax_col_t color, pax_trif shape) {
 
 // Draw a line with a shader.
 void pax_mcrw0_shaded_line(pax_buf_t *buf, pax_col_t color, pax_linef shape, pax_shader_t const *shader, pax_linef uv) {
-    // paxmcr_line_shaded(0, buf, color, shader, shape.x0, shape.y0, shape.x1, shape.y1, uv.x0, uv.y0, uv.x1, uv.y1);
+    paxmcr_line_shaded(0, buf, color, shader, shape.x0, shape.y0, shape.x1, shape.y1, uv.x0, uv.y0, uv.x1, uv.y1);
 }
 
 // Draw a rectangle with a shader.
@@ -184,7 +184,7 @@ void pax_mcrw0_shaded_tri(pax_buf_t *buf, pax_col_t color, pax_trif shape, pax_s
 
 // Draw a solid-colored line.
 void pax_mcrw1_unshaded_line(pax_buf_t *buf, pax_col_t color, pax_linef shape) {
-    // paxmcr_line_unshaded(1, buf, color, shape.x0, shape.y0, shape.x1, shape.y1);
+    paxmcr_line_unshaded(1, buf, color, shape.x0, shape.y0, shape.x1, shape.y1);
 }
 
 // Draw a solid-colored rectangle.
@@ -205,7 +205,7 @@ void pax_mcrw1_unshaded_tri(pax_buf_t *buf, pax_col_t color, pax_trif shape) {
 
 // Draw a line with a shader.
 void pax_mcrw1_shaded_line(pax_buf_t *buf, pax_col_t color, pax_linef shape, pax_shader_t const *shader, pax_linef uv) {
-    // paxmcr_line_shaded(1, buf, color, shader, shape.x0, shape.y0, shape.x1, shape.y1, uv.x0, uv.y0, uv.x1, uv.y1);
+    paxmcr_line_shaded(1, buf, color, shader, shape.x0, shape.y0, shape.x1, shape.y1, uv.x0, uv.y0, uv.x1, uv.y1);
 }
 
 // Draw a rectangle with a shader.

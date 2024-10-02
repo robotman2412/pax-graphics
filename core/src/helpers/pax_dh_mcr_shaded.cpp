@@ -288,3 +288,14 @@ void paxmcr_rect_shaded(
     // Use the more expensive generic implementation.
     paxmcr_rect_shaded_uv(odd_scanline, buf, color, shader, x, y, width, height, u0, v0, u1, v1, u2, v2, u3, v3);
 }
+
+
+
+/* ========== LINES ========== */
+
+// Multi-core method for shaded lines.
+// If odd_scanline is true, the odd (counted from 0) lines are drawn, otherwise the even lines are drawn.
+#define PDHG_NAME paxmcr_line_shaded
+#define PDHG_SHADED
+#define PDHG_MCR
+#include "helpers/pax_dh_generic_line.inc"

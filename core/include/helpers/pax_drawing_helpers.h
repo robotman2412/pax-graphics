@@ -13,6 +13,17 @@ extern "C" {
 
 // clang-format off
 
+// Multi-core method for unshaded lines.
+// If odd_scanline is true, the odd (counted from 0) lines are drawn, otherwise the even lines are drawn.
+void paxmcr_line_shaded(
+    bool                odd_scanline,
+    pax_buf_t          *buf,
+    pax_col_t           color,
+    pax_shader_t const *shader,
+    float x0, float y0, float x1, float y1,
+    float u0, float v0, float u1, float v1
+);
+
 // Multi-core method for shaded triangles.
 // If odd_scanline is true, the odd (counted from 0) lines are drawn, otherwise the even lines are drawn.
 void paxmcr_tri_shaded(
@@ -56,6 +67,13 @@ void paxmcr_rect_shaded(
 
 
 
+// Multi-core method for unshaded lines.
+// If odd_scanline is true, the odd (counted from 0) lines are drawn, otherwise the even lines are drawn.
+void paxmcr_line_unshaded(
+    bool odd_scanline, pax_buf_t *buf, pax_col_t color,
+    float x0, float y0, float x1, float y1
+);
+
 // Multi-core method for unshaded triangles.
 // Assumes points are sorted by Y.
 // If odd_scanline is true, the odd (counted from 0) lines are drawn, otherwise the even lines are drawn.
@@ -73,7 +91,7 @@ void paxmcr_quad_unshaded(
     float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3
 );
 
-// Multi-core method for rectangle drawing.
+// Multi-core method for unshaded rects.
 // If odd_scanline is true, the odd (counted from 0) lines are drawn, otherwise the even lines are drawn.
 void paxmcr_rect_unshaded(
     bool odd_scanline, pax_buf_t *buf, pax_col_t color,

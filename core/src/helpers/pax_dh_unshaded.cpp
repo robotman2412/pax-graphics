@@ -17,17 +17,21 @@
 #define PDHG_TZOID_NAME pax_tzoid_unshaded
 #include "helpers/pax_dh_generic_tri.inc"
 
-// Internal method for rectangle drawing.
+// Internal method for unshaded rects.
 #define PDHG_NAME pax_rect_unshaded
 #include "helpers/pax_dh_generic_rect.inc"
 
-// Internal methods for shaded quads.
+// Internal methods for unshaded quads.
 #define PDHG_NAME       pax_quad_unshaded
 #define PDHG_TZOID_NAME pax_tzoid_unshaded
 #include "helpers/pax_dh_generic_quad.inc"
 
+// Internal method for unshaded lines.
+#define PDHG_NAME pax_line_unshaded
+#include "helpers/pax_dh_generic_line.inc"
+
 // Internal method for line drawing.
-void pax_line_unshaded(pax_buf_t *buf, pax_col_t color, float x0, float y0, float x1, float y1) {
+void pax_line_unshaded_old(pax_buf_t *buf, pax_col_t color, float x0, float y0, float x1, float y1) {
     pax_index_setter_t setter = pax_get_setter(buf, &color, NULL);
     if (!setter)
         return;

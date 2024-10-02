@@ -259,8 +259,13 @@ void pax_rect_shaded(
 
 /* ========== LINES ========== */
 
+// Internal method for shaded lines.
+#define PDHG_NAME pax_line_shaded
+#define PDHG_SHADED
+#include "helpers/pax_dh_generic_line.inc"
+
 // Internal method for line drawing.
-void pax_line_shaded(
+void pax_line_shaded_old(
     pax_buf_t          *buf,
     pax_col_t           color,
     pax_shader_t const *shader,
