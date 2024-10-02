@@ -50,7 +50,7 @@ void pax_line_unshaded(pax_buf_t *buf, pax_col_t color, float x0, float y0, floa
         // Adjust X0 against left clip.
         y0 = y0 + (y1 - y0) * (buf->clip.x - x0) / (x1 - x0);
         x0 = buf->clip.x;
-    } else if (x1 < x0 && x1 < buf->clip.x) {
+    } else if (x1 < buf->clip.x) {
         if (x0 < buf->clip.x)
             return;
         // Adjust X1 against left clip.
@@ -60,13 +60,13 @@ void pax_line_unshaded(pax_buf_t *buf, pax_col_t color, float x0, float y0, floa
 
     // Clip: right.
     if (x1 >= x0 && x1 > buf->clip.x + buf->clip.w - 1) {
-        if (x0 > buf->clip.x + buf->clip.w)
+        if (x0 > buf->clip.x + buf->clip.w - 1)
             return;
         // Adjust X1 against right of clip.
         y1 = y0 + (y1 - y0) * (buf->clip.x + buf->clip.w - 1 - x0) / (x1 - x0);
         x1 = buf->clip.x + buf->clip.w - 1;
-    } else if (x0 > x1 && x0 > buf->clip.x + buf->clip.w - 1) {
-        if (x1 > buf->clip.x + buf->clip.w)
+    } else if (x0 > buf->clip.x + buf->clip.w - 1) {
+        if (x1 > buf->clip.x + buf->clip.w - 1)
             return;
         // Adjust X0 against right of clip.
         y0 = y1 + (y0 - y1) * (buf->clip.x + buf->clip.w - 1 - x1) / (x0 - x1);
