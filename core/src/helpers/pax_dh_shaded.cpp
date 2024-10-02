@@ -3,6 +3,7 @@
 
 // clang-format off
 
+#include "helpers/pax_drawing_helpers.h"
 #include "pax_internal.h"
 
 #include <string.h>

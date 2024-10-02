@@ -3,9 +3,8 @@
 
 static char const *TAG = "pax_text";
 
-#include "pax_gfx.h"
 #include "pax_internal.h"
-#include "pax_shaders.h"
+#include "pax_renderer.h"
 #include "string.h"
 
 
@@ -182,30 +181,18 @@ static void pixel_aligned_render(
     }
 #endif
 
-// TODO: Re-work as integer UV rendererererrererer device.
-#if PAX_COMPILE_MCR
-    if (pax_do_multicore) {
-        // Assign worker task.
-        pax_task_t task
-            = {.buffer     = buf,
-               .type       = PAX_TASK_RECT,
-               .color      = color,
-               .shader     = *shader,
-               .use_shader = true,
-               .quad_uvs   = *uvs,
-               .shape      = {x, y, width, height},
-               .shape_len  = 4};
-        paxmcr_add_task(&task);
-        // Draw our part.
-        paxmcr_rect_shaded(
-            false,
-            buf,
-            color,
-            shader,
+    // Single core option.
+    pax_dispatch_shaded_rect(
+        buf,
+        color,
+        (pax_rectf){
             x,
             y,
             width,
             height,
+        },
+        shader,
+        (pax_quadf){
             uvs->x0,
             uvs->y0,
             uvs->x1,
@@ -213,30 +200,9 @@ static void pixel_aligned_render(
             uvs->x2,
             uvs->y2,
             uvs->x3,
-            uvs->y3
-        );
-    } else
-#endif
-    {
-        // Single core option.
-        pax_rect_shaded(
-            buf,
-            color,
-            shader,
-            x,
-            y,
-            width,
-            height,
-            uvs->x0,
-            uvs->y0,
-            uvs->x1,
-            uvs->y1,
-            uvs->x2,
-            uvs->y2,
-            uvs->x3,
-            uvs->y3
-        );
-    }
+            uvs->y3,
+        }
+    );
 }
 
 // Internal method for monospace bitmapped characters.

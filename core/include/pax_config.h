@@ -13,11 +13,6 @@
     #define PAX_DO_BICUBIC false
 #endif
 
-#ifndef PAX_AUTOREPORT
-    // Log errors instead of just setting pax_last_error.
-    #define PAX_AUTOREPORT true
-#endif
-
 #ifndef PAX_COMPILE_BEZIER
     // Compile in bezier curves.
     #define PAX_COMPILE_BEZIER true
@@ -38,9 +33,20 @@
     #define PAX_COMPILE_FONT_INDEX false
 #endif
 
-#ifndef PAX_COMPILE_MCR
-    // Compile in multi-core rendering.
-    #define PAX_COMPILE_MCR false
+#ifndef PAX_COMPILE_ESP32P4_PPA_RENDERER
+    #ifdef ESP_PLATFORM
+        // Compile in the ESP32-P4 hybrid renderer.
+        #define PAX_COMPILE_ESP32P4_PPA_RENDERER true
+    #else
+        // Compile in the ESP32-P4 hybrid renderer.
+        #define PAX_COMPILE_ESP32P4_PPA_RENDERER false
+    #endif
+#endif
+
+#ifndef PAX_COMPILE_ASYNC_RENDERER
+    // Compile in async renderer.
+    // Set to 0 to disable, 1 for async single-threaded, 2 for async multi-threaded.
+    #define PAX_COMPILE_ASYNC_RENDERER 2
 #endif
 
 #ifndef PAX_RANGE_SETTER

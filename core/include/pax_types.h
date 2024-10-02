@@ -160,7 +160,9 @@ enum pax_task_type {
     PAX_TASK_RECT,
     // Triangle draw.
     PAX_TASK_TRI,
-    // Stop MCR workder.
+    // Line draw.
+    PAX_TASK_LINE,
+    // Stop MCR worker.
     PAX_TASK_STOP,
 };
 
@@ -211,6 +213,7 @@ typedef struct pax_bmpv          pax_bmpv_t;
 typedef struct pax_font          pax_font_t;
 typedef struct pax_font_range    pax_font_range_t;
 typedef struct pax_buf_type_info pax_buf_type_info_t;
+typedef struct pax_blit_spec     pax_blit_spec_t;
 
 typedef uint32_t            pax_col_t;
 typedef union pax_col_union pax_col_union_t;
@@ -373,16 +376,24 @@ struct pax_task {
     bool            use_shader;
     // UVs to use.
     union {
-        // UVs to use for rects and arcs.
+        // UVs to use for rects and quads.
         pax_quadf quad_uvs;
-        // UVs to use for triangle.
+        // UVs to use for triangles.
         pax_trif  tri_uvs;
+        // UVs to use for lines.
+        pax_linef line_uvs;
     };
-    // Additional parameters.
-    // This is an array of floats for X, Y, and dimensions of shapes.
-    float  shape[8];
-    // Number of floats in the shape array.
-    size_t shape_len;
+    // Shape parameters.
+    union {
+        // Shape parameters for quads.
+        pax_quadf quad_shape;
+        // Shape parameters for rects.
+        pax_rectf rect_shape;
+        // Shape parameters for triangles.
+        pax_trif  tri_shape;
+        // Shape parameters for lines.
+        pax_linef line_shape;
+    };
 };
 
 // Context used at drawing time for shaders.

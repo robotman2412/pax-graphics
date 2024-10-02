@@ -10,6 +10,7 @@
 extern "C" {
 #endif //__cplusplus
 
+
 /* ============ CURVES =========== */
 
 // Convert a cubic bezier curve to line segments, with the given number of points.
@@ -23,106 +24,6 @@ void pax_draw_bezier_part(pax_buf_t *buf, pax_col_t color, pax_4vec2f control_po
 // Draw a cubic bezier curve.
 void pax_draw_bezier(pax_buf_t *buf, pax_col_t color, pax_4vec2f control_points);
 
-/* ============= ARCS ============ */
-
-// Vectorise an arc outline, angle in radians.
-void pax_vectorise_arc(pax_vec2f *output, size_t num_points, float x, float y, float r, float a0, float a1);
-// Vectorise a circle outline.
-void pax_vectorise_circle(pax_vec2f *output, size_t num_points, float x, float y, float r);
-
-/* ======= SPECIAL EDITIONS ====== */
-
-// Draw a rounded rectangle.
-void pax_draw_round_rect(pax_buf_t *buf, pax_col_t color, float x, float y, float width, float height, float radius);
-// Draw a rounded rectangle with different radii per corner.
-// The radii start top-left and go clockwise.
-void pax_draw_round_rect4(
-    pax_buf_t *buf, pax_col_t color, float x, float y, float width, float height, float r0, float r1, float r2, float r3
-);
-// Draw a hollow circle.
-void pax_draw_hollow_circle(pax_buf_t *buf, pax_col_t color, float x, float y, float radius0, float radius1);
-// Draw a hollow arc.
-void pax_draw_hollow_arc(
-    pax_buf_t *buf, pax_col_t color, float x, float y, float radius0, float radius1, float a0, float a1
-);
-// Draw a hollow arc.
-void pax_draw_round_hollow_arc(
-    pax_buf_t *buf, pax_col_t color, float x, float y, float radius0, float radius1, float a0, float a1
-);
-
-// Outline a rounded rectangle.
-void pax_outline_round_rect(pax_buf_t *buf, pax_col_t color, float x, float y, float width, float height, float radius);
-// Outline a rounded rectangle with different radii per corner.
-// The radii start top-left and go clockwise.
-void pax_outline_round_rect4(
-    pax_buf_t *buf, pax_col_t color, float x, float y, float width, float height, float r0, float r1, float r2, float r3
-);
-// Draw a hollow circle.
-void pax_outline_hollow_circle(pax_buf_t *buf, pax_col_t color, float x, float y, float radius0, float radius1);
-// Draw a hollow arc.
-void pax_outline_hollow_arc(
-    pax_buf_t *buf, pax_col_t color, float x, float y, float radius0, float radius1, float a0, float a1
-);
-// Outline a hollow arc.
-void pax_outline_round_hollow_arc(
-    pax_buf_t *buf, pax_col_t color, float x, float y, float radius0, float radius1, float a0, float a1
-);
-
-/* ======= OUTLINE EDITIONS ====== */
-
-// Draw a rectangle outline.
-void pax_outline_rect(pax_buf_t *buf, pax_col_t color, float x, float y, float width, float height);
-// Draw a triangle.
-void pax_outline_tri(pax_buf_t *buf, pax_col_t color, float x0, float y0, float x1, float y1, float x2, float y2);
-// Draw an arc outline, angle in radians.
-void pax_outline_arc(pax_buf_t *buf, pax_col_t color, float x, float y, float r, float a0, float a1);
-// Draw a circle outline.
-void pax_outline_circle(pax_buf_t *buf, pax_col_t color, float x, float y, float r);
-
-// Draw a rectangle outline with a shader.
-// If uvs is NULL, a default will be used (0,0; 1,0; 1,1; 0,1).
-void pax_shade_outline_rect(
-    pax_buf_t          *buf,
-    pax_col_t           color,
-    pax_shader_t const *shader,
-    pax_quadf const    *uvs,
-    float               x,
-    float               y,
-    float               width,
-    float               height
-);
-// Draw a triangle with a shader.
-// If uvs is NULL, a default will be used (0,0; 1,0; 1,1; 0,1).
-void pax_shade_outline_tri(
-    pax_buf_t          *buf,
-    pax_col_t           color,
-    pax_shader_t const *shader,
-    pax_trif const     *uvs,
-    float               x0,
-    float               y0,
-    float               x1,
-    float               y1,
-    float               x2,
-    float               y2
-);
-// Draw an arc outline with a shader, angle in radians.
-// If uvs is NULL, a default will be used (0,0; 1,0; 1,1; 0,1).
-void pax_shade_outline_arc(
-    pax_buf_t          *buf,
-    pax_col_t           color,
-    pax_shader_t const *shader,
-    pax_quadf const    *uvs,
-    float               x,
-    float               y,
-    float               r,
-    float               a0,
-    float               a1
-);
-// Draw a circle outline with a shader.
-// If uvs is NULL, a default will be used (0,0; 1,0; 1,1; 0,1).
-void pax_shade_outline_circle(
-    pax_buf_t *buf, pax_col_t color, pax_shader_t const *shader, pax_quadf const *uvs, float x, float y, float r
-);
 
 /* =========== OUTLINES ========== */
 
@@ -145,6 +46,7 @@ void pax_outline_shape_part_cl(
 // When close is true, closes the shape; there is a line from the first to last point.
 void pax_outline_shape_cl(pax_buf_t *buf, pax_col_t color, size_t num_points, pax_vec2f const *points, bool close);
 
+
 /* ===== POLYGON MANIPULATION ==== */
 
 // Transforms a list of points using a given 2D matrix.
@@ -164,6 +66,7 @@ size_t pax_round_shape_uniform(pax_vec2f **output, size_t num_points, pax_vec2f 
 // Capable of dealing with self-intersecting shapes.
 // Returns the amount of points created.
 size_t pax_round_shape(pax_vec2f **output, size_t num_points, pax_vec2f *points, float *radii);
+
 
 /* ======== TRIANGULATION ======== */
 
@@ -202,6 +105,7 @@ void   pax_draw_shape(pax_buf_t *buf, pax_col_t color, size_t num_points, pax_ve
 void pax_draw_shape_triang(
     pax_buf_t *buf, pax_col_t color, size_t num_points, pax_vec2f const *points, size_t num_tris, size_t const *indices
 );
+
 
 #ifdef __cplusplus
 }

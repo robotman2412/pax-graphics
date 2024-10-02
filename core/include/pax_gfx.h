@@ -10,6 +10,12 @@
 #include "pax_shapes.h"
 #include "pax_text.h"
 #include "pax_types.h"
+#include "shapes/pax_arcs.h"
+#include "shapes/pax_circles.h"
+#include "shapes/pax_lines.h"
+#include "shapes/pax_misc.h"
+#include "shapes/pax_rects.h"
+#include "shapes/pax_tris.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -26,13 +32,8 @@ char const *pax_desc_err(pax_err_t error);
 
 /* ===== MULTI-CORE RENDERING ==== */
 
-// If multi-core rendering is enabled, wait for the other core.
+// Wait for all pending drawing operations to finish.
 void pax_join();
-// Enable multi-core rendering.
-// You can specify the core number to use, though this may be irrelevant on some platforms.
-void pax_enable_multicore(int core);
-// Disable multi-core rendering.
-void pax_disable_multicore();
 
 
 
@@ -99,8 +100,6 @@ size_t      pax_buf_get_size(pax_buf_t const *buf);
 void              pax_buf_set_orientation(pax_buf_t *buf, pax_orientation_t x);
 // Get orientation of the buffer.
 pax_orientation_t pax_buf_get_orientation(pax_buf_t const *buf);
-// Scroll the buffer, filling with a placeholder color.
-void              pax_buf_scroll(pax_buf_t *buf, pax_col_t placeholder, int x, int y);
 
 // Clip the buffer to the desired rectangle.
 void               pax_clip(pax_buf_t *buf, int x, int y, int width, int height);
@@ -168,6 +167,9 @@ pax_col_t pax_col_merge(pax_col_t base, pax_col_t top);
 // Tints the color, commonly used for textures.
 pax_col_t pax_col_tint(pax_col_t col, pax_col_t tint);
 
+// Finds the closes color in a palette.
+size_t pax_closest_in_palette(pax_col_t const *palette, size_t palette_size, pax_col_t color);
+
 
 
 /* ============ MATRIX =========== */
@@ -181,125 +183,6 @@ void pax_pop_2d(pax_buf_t *buf);
 // Reset the matrix stack.
 // If full is true, the entire stack gets cleared instead of just the top.
 void pax_reset_2d(pax_buf_t *buf, bool full);
-
-
-
-/* ======== DRAWING: PIXEL ======= */
-
-// Set a pixel, merging with alpha.
-void      pax_merge_pixel(pax_buf_t *buf, pax_col_t color, int x, int y);
-// Set a pixel.
-void      pax_set_pixel(pax_buf_t *buf, pax_col_t color, int x, int y);
-// Get a pixel (does palette lookup if applicable).
-pax_col_t pax_get_pixel(pax_buf_t const *buf, int x, int y);
-// Set a pixel without color conversion.
-void      pax_set_pixel_raw(pax_buf_t *buf, pax_col_t color, int x, int y);
-// Get a pixel without color conversion.
-pax_col_t pax_get_pixel_raw(pax_buf_t const *buf, int x, int y);
-
-
-
-/* ========= DRAWING: 2D ========= */
-
-// Draw a rectangle with a shader.
-// If uvs is NULL, a default will be used (0,0; 1,0; 1,1; 0,1).
-void pax_shade_rect(
-    pax_buf_t          *buf,
-    pax_col_t           color,
-    pax_shader_t const *shader,
-    pax_quadf const    *uvs,
-    float               x,
-    float               y,
-    float               width,
-    float               height
-);
-// Draw a line with a shader.
-// If uvs is NULL, a default will be used (0,0; 1,0).
-void pax_shade_line(
-    pax_buf_t          *buf,
-    pax_col_t           color,
-    pax_shader_t const *shader,
-    pax_linef const    *uvs,
-    float               x0,
-    float               y0,
-    float               x1,
-    float               y1
-);
-// Draw a triangle with a shader.
-// If uvs is NULL, a default will be used (0,0; 1,0; 0,1).
-void pax_shade_tri(
-    pax_buf_t          *buf,
-    pax_col_t           color,
-    pax_shader_t const *shader,
-    pax_trif const     *uvs,
-    float               x0,
-    float               y0,
-    float               x1,
-    float               y1,
-    float               x2,
-    float               y2
-);
-// Draw an arc with a shader, angles in radians.
-// If uvs is NULL, a default will be used (0,0; 1,0; 1,1; 0,1).
-void pax_shade_arc(
-    pax_buf_t          *buf,
-    pax_col_t           color,
-    pax_shader_t const *shader,
-    pax_quadf const    *uvs,
-    float               x,
-    float               y,
-    float               r,
-    float               a0,
-    float               a1
-);
-// Draw a circle with a shader.
-// If uvs is NULL, a default will be used (0,0; 1,0; 1,1; 0,1).
-void pax_shade_circle(
-    pax_buf_t *buf, pax_col_t color, pax_shader_t const *shader, pax_quadf const *uvs, float x, float y, float r
-);
-
-// Draws an image at the image's normal size.
-void pax_draw_image(pax_buf_t *buf, pax_buf_t const *image, float x, float y);
-// Draw an image with a prespecified size.
-void pax_draw_image_sized(pax_buf_t *buf, pax_buf_t const *image, float x, float y, float width, float height);
-// Draws an image at the image's normal size.
-// Assumes the image is completely opaque, any transparent parts are drawn opaque.
-void pax_draw_image_op(pax_buf_t *buf, pax_buf_t const *image, float x, float y);
-// Draw an image with a prespecified size.
-// Assumes the image is completely opaque, any transparent parts are drawn opaque.
-void pax_draw_image_sized_op(pax_buf_t *buf, pax_buf_t const *image, float x, float y, float width, float height);
-// Draw a rectangle.
-void pax_draw_rect(pax_buf_t *buf, pax_col_t color, float x, float y, float width, float height);
-// Draw a line.
-void pax_draw_line(pax_buf_t *buf, pax_col_t color, float x0, float y0, float x1, float y1);
-// Draw a triangle.
-void pax_draw_tri(pax_buf_t *buf, pax_col_t color, float x0, float y0, float x1, float y1, float x2, float y2);
-// Draw an arc, angles in radians.
-void pax_draw_arc(pax_buf_t *buf, pax_col_t color, float x, float y, float r, float a0, float a1);
-// Draw a circle.
-void pax_draw_circle(pax_buf_t *buf, pax_col_t color, float x, float y, float r);
-
-
-
-/* ======= DRAWING: SIMPLE ======= */
-
-// Fill the background.
-void pax_background(pax_buf_t *buf, pax_col_t color);
-
-// Draw a rectangle, ignoring matrix transform.
-void pax_simple_rect(pax_buf_t *buf, pax_col_t color, float x, float y, float width, float height);
-
-// Draw a line, ignoring matrix transform.
-void pax_simple_line(pax_buf_t *buf, pax_col_t color, float x0, float y0, float x1, float y1);
-
-// Draw a triangle, ignoring matrix transform.
-void pax_simple_tri(pax_buf_t *buf, pax_col_t color, float x0, float y0, float x1, float y1, float x2, float y2);
-
-// Draw na arc, ignoring matrix transform.
-// Angles in radians.
-void pax_simple_arc(pax_buf_t *buf, pax_col_t color, float x, float y, float r, float a0, float a1);
-// Draw a circle, ignoring matrix transform.
-void pax_simple_circle(pax_buf_t *buf, pax_col_t color, float x, float y, float r);
 
 
 
