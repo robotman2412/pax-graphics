@@ -227,7 +227,7 @@ static
     #endif
         int i = y0;
     #ifdef PDHG_MCR
-        if ((int)y0 & 1 == odd_scanline) {
+        if ((i & 1) != odd_scanline) {
         #ifdef PDHG_NORMAL_UV
             u += du;
             v += dv;
@@ -236,7 +236,7 @@ static
             index += buf->width;
         }
     #endif
-        for (; i <= y1; i += PDHG_INCREMENT, index += buf->width) {
+        for (; i <= y1; i += PDHG_INCREMENT, index += buf->width * PDHG_INCREMENT) {
     #ifdef PDHG_NORMAL_UV
             pax_col_t result = (shader_ctx.callback)(
                 color,
@@ -248,8 +248,8 @@ static
                 shader_ctx.callback_args
             );
             setter(buf, result, index);
-            u += du;
-            v += dv;
+            u += du * PDHG_INCREMENT;
+            v += dv * PDHG_INCREMENT;
     #else
             setter(buf, color, index);
     #endif
