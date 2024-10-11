@@ -72,9 +72,9 @@ void pax_swr_shaded_tri(pax_buf_t *buf, pax_col_t color, pax_trif shape, pax_sha
 // Read a single pixel from a raw buffer type by index.
 __attribute__((always_inline)) static inline pax_col_t
     raw_get_pixel(void const *buf, uint8_t bpp, pax_vec2i dims, int index) {
-    uint8_t const *buf_8bpp  = buf;
-    uint8_t const *buf_16bpp = buf;
-    uint8_t const *buf_32bpp = buf;
+    uint8_t const  *buf_8bpp  = buf;
+    uint16_t const *buf_16bpp = buf;
+    uint32_t const *buf_32bpp = buf;
     switch (bpp) {
         case 1: return (buf_8bpp[index / 8] >> ((index % 8) * 1)) & 0x01;
         case 2: return (buf_8bpp[index / 4] >> ((index % 4) * 2)) & 0x03;
@@ -99,6 +99,7 @@ __attribute__((always_inline)) static inline void swr_blit_impl(
     pax_recti         base_pos,
     pax_orientation_t top_orientation,
     pax_vec2i         top_pos,
+    bool              is_merge,
     bool              is_raw_buf,
     bool              is_pal_buf
 ) {
@@ -107,7 +108,18 @@ __attribute__((always_inline)) static inline void swr_blit_impl(
     // clang-format off
     int dx, dy; bool swap;
     int top_dx, top_dy, top_index;
-    switch (top_orientation) {
+    pax_vec2i top_pos0 = top_pos;
+    switch (top_orientation & 7) {
+        case PAX_O_UPRIGHT:         top_pos.x =              top_pos0.x; top_pos.y =              top_pos0.y; break;
+        case PAX_O_ROT_CCW:         top_pos.y =              top_pos0.y; top_pos.x = top_dims.x-1-top_pos0.x; break;
+        case PAX_O_ROT_HALF:        top_pos.x = top_dims.x-1-top_pos0.x; top_pos.y = top_dims.y-1-top_pos0.y; break;
+        case PAX_O_ROT_CW:          top_pos.y = top_dims.y-1-top_pos0.y; top_pos.x =              top_pos0.x; break;
+        case PAX_O_FLIP_H:          top_pos.x = top_dims.x-1-top_pos0.x; top_pos.y =              top_pos0.y; break;
+        case PAX_O_ROT_CCW_FLIP_H:  top_pos.y = top_dims.y-1-top_pos0.y; top_pos.x = top_dims.x-1-top_pos0.x; break;
+        case PAX_O_ROT_HALF_FLIP_H: top_pos.x =              top_pos0.x; top_pos.y = top_dims.y-1-top_pos0.y; break;
+        case PAX_O_ROT_CW_FLIP_H:   top_pos.y =              top_pos0.y; top_pos.x =              top_pos0.x; break;
+    }
+    switch (top_orientation & 7) {
         case PAX_O_UPRIGHT:         dx =  1; dy =  1; swap = false; break;
         case PAX_O_ROT_CCW:         dx =  1; dy = -1; swap = true;  break;
         case PAX_O_ROT_HALF:        dx = -1; dy = -1; swap = false; break;
@@ -116,18 +128,17 @@ __attribute__((always_inline)) static inline void swr_blit_impl(
         case PAX_O_ROT_CCW_FLIP_H:  dx = -1; dy = -1; swap = true;  break;
         case PAX_O_ROT_HALF_FLIP_H: dx =  1; dy = -1; swap = false; break;
         case PAX_O_ROT_CW_FLIP_H:   dx =  1; dy =  1; swap = true;  break;
-        default: __builtin_unreachable();
     }
     // clang-format on
     if (swap) {
-        top_dy    = dx;
-        top_dx    = top_dims.x * dy - base_pos.w * dx;
-        top_index = dx * top_pos.y + dy * top_pos.x * top_dims.x;
+        top_dx = top_dims.x * dx;
+        top_dy = dy;
     } else {
-        top_dx    = dx;
-        top_dy    = top_dims.x * dy - base_pos.w * dx;
-        top_index = dx * top_pos.x + dy * top_pos.y * top_dims.x;
+        top_dx = dx;
+        top_dy = top_dims.x * dy;
     }
+    top_dy    -= base_pos.w * top_dx;
+    top_index  = top_pos.x + top_pos.y * top_dims.x;
 #else
     int top_dx    = 1;
     int top_dy    = top_dims.x - base_pos.w;
@@ -140,7 +151,12 @@ __attribute__((always_inline)) static inline void swr_blit_impl(
 
     for (int y = base_pos.y; y < base_pos.y + base_pos.h; y++) {
         for (int x = base_pos.x; x < base_pos.x + base_pos.w; x++) {
-            if (is_raw_buf) {
+            if (is_merge) {
+                pax_buf_t const *_top     = top;
+                pax_col_t        base_col = base->buf2col(base, base->getter(base, base_index));
+                pax_col_t        top_col  = _top->buf2col(_top, _top->getter(_top, top_index));
+                base->setter(base, base->col2buf(base, pax_col_merge(base_col, top_col)), base_index);
+            } else if (is_raw_buf) {
                 pax_col_t col = raw_get_pixel(top, base->bpp, top_dims, top_index);
                 base->setter(base, col, base_index);
             } else if (is_pal_buf) {
@@ -160,20 +176,26 @@ __attribute__((always_inline)) static inline void swr_blit_impl(
     }
 }
 
+// Draw a sprite; like a blit, but use color blending if applicable.
+void pax_swr_sprite(
+    pax_buf_t *base, pax_buf_t const *top, pax_recti base_pos, pax_orientation_t top_orientation, pax_vec2i top_pos
+) {
+    swr_blit_impl(base, top, (pax_vec2i){top->width, top->height}, base_pos, top_orientation, top_pos, 1, 0, 0);
+}
 
 // Perform a buffer copying operation with a PAX buffer.
 void pax_swr_blit(
-    pax_buf_t *base, pax_buf_t *top, pax_recti base_pos, pax_orientation_t top_orientation, pax_vec2i top_pos
+    pax_buf_t *base, pax_buf_t const *top, pax_recti base_pos, pax_orientation_t top_orientation, pax_vec2i top_pos
 ) {
-    if (top->type == base->type) {
+    if (top->type == base->type && false) {
         // Equal buffer types; no color conversion required.
         pax_swr_blit_raw(base, top->buf, (pax_vec2i){top->width, top->height}, base_pos, top_orientation, top_pos);
     } else if (PAX_IS_PALETTE(base->type) && !PAX_IS_PALETTE(top->type)) {
         // Bottom is palette, top is not; do palette special case.
-        swr_blit_impl(base, top, (pax_vec2i){top->width, top->height}, base_pos, top_orientation, top_pos, 0, 1);
+        swr_blit_impl(base, top, (pax_vec2i){top->width, top->height}, base_pos, top_orientation, top_pos, 0, 0, 1);
     } else {
         // Different buffer types; color conversion required.
-        swr_blit_impl(base, top, (pax_vec2i){top->width, top->height}, base_pos, top_orientation, top_pos, 0, 0);
+        swr_blit_impl(base, top, (pax_vec2i){top->width, top->height}, base_pos, top_orientation, top_pos, 0, 0, 0);
     }
 }
 
@@ -186,7 +208,7 @@ __attribute__((noinline)) void pax_swr_blit_raw(
     pax_orientation_t top_orientation,
     pax_vec2i         top_pos
 ) {
-    swr_blit_impl(base, top, top_dims, base_pos, top_orientation, top_pos, true, false);
+    swr_blit_impl(base, top, top_dims, base_pos, top_orientation, top_pos, false, true, false);
 }
 
 
@@ -201,6 +223,7 @@ pax_render_funcs_t const pax_render_funcs_soft = {
     .shaded_rect   = pax_swr_shaded_rect,
     .shaded_quad   = pax_swr_shaded_quad,
     .shaded_tri    = pax_swr_shaded_tri,
+    .sprite        = pax_swr_sprite,
     .blit          = pax_swr_blit,
     .blit_raw      = pax_swr_blit_raw,
     .join          = NULL,

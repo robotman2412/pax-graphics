@@ -43,6 +43,38 @@ void pax_draw_line(pax_buf_t *buf, pax_col_t color, float x0, float y0, float x1
     pax_simple_line(buf, color, x0, y0, x1, y1);
 }
 
+// Draw a thick line using a rectangle.
+// Note: Will look different than `pax_draw_line` even if `thickness == 1`.
+void pax_draw_thick_line(pax_buf_t *buf, pax_col_t color, float x0, float y0, float x1, float y1, float thickness) {
+    pax_vec2f direction  = {x1 - x0, y1 - y0};
+    pax_vec2f tangent    = pax_vec2f_unify((pax_vec2f){-direction.y, direction.x});
+    tangent.x           *= thickness * 0.5f;
+    tangent.y           *= thickness * 0.5f;
+    pax_vec2f vert[4]    = {
+        {x0 + tangent.x, y0 + tangent.y},
+        {x1 + tangent.x, y1 + tangent.y},
+        {x1 - tangent.x, y1 - tangent.y},
+        {x0 - tangent.x, y0 - tangent.y},
+    };
+    for (int i = 0; i < 4; i++) {
+        vert[i] = matrix_2d_transform_alt(buf->stack_2d.value, vert[i]);
+    }
+    pax_dispatch_unshaded_quad(
+        buf,
+        color,
+        (pax_quadf){
+            vert[0].x,
+            vert[0].y,
+            vert[1].x,
+            vert[1].y,
+            vert[2].x,
+            vert[2].y,
+            vert[3].x,
+            vert[3].y,
+        }
+    );
+}
+
 
 // Draw a line with a shader.
 // Beta feature: UVs are not currently available.

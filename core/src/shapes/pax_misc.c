@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 #include "pax_internal.h"
+#include "pax_renderer.h"
 
 
 
@@ -115,38 +116,197 @@ pax_col_t pax_get_pixel_raw(pax_buf_t const *buf, int x, int y) {
 }
 
 
+
+// Draw a sprite; like a blit, but use color blending if applicable.
+void pax_draw_sprite(pax_buf_t *base, pax_buf_t const *top, int x, int y) {
+    PAX_BUF_CHECK(base);
+    PAX_BUF_CHECK(top);
+    pax_vec2i top_dims = pax_buf_get_dims(top);
+    pax_draw_sprite_rot_sized(base, top, x, y, PAX_O_UPRIGHT, 0, 0, top_dims.x, top_dims.y);
+}
+
+// Draw a sprite; like a blit, but use color blending if applicable.
+void pax_draw_sprite_rot(pax_buf_t *base, pax_buf_t const *top, int x, int y, pax_orientation_t rot) {
+    PAX_BUF_CHECK(base);
+    PAX_BUF_CHECK(top);
+    pax_vec2i top_dims = pax_buf_get_dims(top);
+    pax_draw_sprite_rot_sized(base, top, x, y, rot, 0, 0, top_dims.x, top_dims.y);
+}
+
+// Draw a sprite; like a blit, but use color blending if applicable.
+void pax_draw_sprite_sized(
+    pax_buf_t *base, pax_buf_t const *top, int x, int y, int top_x, int top_y, int top_w, int top_h
+) {
+    pax_draw_sprite_rot_sized(base, top, x, y, PAX_O_UPRIGHT, top_x, top_y, top_w, top_h);
+}
+
+// Draw a sprite; like a blit, but use color blending if applicable.
+void pax_draw_sprite_rot_sized(
+    pax_buf_t        *base,
+    pax_buf_t const  *top,
+    int               x,
+    int               y,
+    pax_orientation_t rot,
+    int               top_x,
+    int               top_y,
+    int               top_w,
+    int               top_h
+) {
+#if PAX_COMPILE_ORIENTATION
+    if (rot & 4) {
+        rot = ((rot - top->orientation) & 3) | 4;
+    } else {
+        rot = (rot + top->orientation) & 3;
+    }
+    if ((rot ^ top->orientation) & 1) {
+        PAX_SWAP(int, top_x, top_y);
+        PAX_SWAP(int, top_w, top_h);
+    }
+#endif
+    pax_dispatch_sprite(base, top, (pax_recti){x, y, top_w, top_h}, rot, (pax_vec2i){top_x, top_y});
+}
+
+
+
+// Perform a buffer copying operation with a PAX buffer.
+void pax_blit(pax_buf_t *base, pax_buf_t const *top, int x, int y) {
+    PAX_BUF_CHECK(base);
+    PAX_BUF_CHECK(top);
+    pax_vec2i top_dims = pax_buf_get_dims(top);
+    pax_blit_rot_sized(base, top, x, y, PAX_O_UPRIGHT, 0, 0, top_dims.x, top_dims.y);
+}
+
+// Perform a buffer copying operation with a PAX buffer.
+void pax_blit_rot(pax_buf_t *base, pax_buf_t const *top, int x, int y, pax_orientation_t rot) {
+    PAX_BUF_CHECK(base);
+    PAX_BUF_CHECK(top);
+    pax_vec2i top_dims = pax_buf_get_dims(top);
+    pax_blit_rot_sized(base, top, x, y, rot, 0, 0, top_dims.x, top_dims.y);
+}
+
+// Perform a buffer copying operation with a PAX buffer.
+void pax_blit_sized(pax_buf_t *base, pax_buf_t const *top, int x, int y, int top_x, int top_y, int top_w, int top_h) {
+    pax_blit_rot_sized(base, top, x, y, PAX_O_UPRIGHT, top_x, top_y, top_w, top_h);
+}
+
+// Perform a buffer copying operation with a PAX buffer.
+void pax_blit_rot_sized(
+    pax_buf_t        *base,
+    pax_buf_t const  *top,
+    int               x,
+    int               y,
+    pax_orientation_t rot,
+    int               top_x,
+    int               top_y,
+    int               top_w,
+    int               top_h
+) {
+#if PAX_COMPILE_ORIENTATION
+    if (rot & 4) {
+        rot = ((rot - top->orientation) & 3) | 4;
+    } else {
+        rot = (rot + top->orientation) & 3;
+    }
+    if ((rot ^ top->orientation) & 1) {
+        PAX_SWAP(int, top_x, top_y);
+        PAX_SWAP(int, top_w, top_h);
+    }
+#endif
+    pax_dispatch_blit(base, top, (pax_recti){x, y, top_w, top_h}, rot, (pax_vec2i){top_x, top_y});
+}
+
+
+
+// Perform a buffer copying operation with a PAX buffer.
+void pax_blit_raw(pax_buf_t *base, void const *top, pax_vec2i top_dims, int x, int y) {
+    pax_blit_raw_rot_sized(base, top, top_dims, x, y, PAX_O_UPRIGHT, 0, 0, top_dims.x, top_dims.y);
+}
+
+// Perform a buffer copying operation with a PAX buffer.
+void pax_blit_raw_rot(pax_buf_t *base, void const *top, pax_vec2i top_dims, int x, int y, pax_orientation_t rot) {
+    pax_blit_raw_rot_sized(base, top, top_dims, x, y, rot, 0, 0, top_dims.x, top_dims.y);
+}
+
+// Perform a buffer copying operation with a PAX buffer.
+void pax_blit_raw_sized(
+    pax_buf_t *base, void const *top, pax_vec2i top_dims, int x, int y, int top_x, int top_y, int top_w, int top_h
+) {
+    pax_blit_raw_rot_sized(base, top, top_dims, x, y, PAX_O_UPRIGHT, top_x, top_y, top_w, top_h);
+}
+
+// Perform a buffer copying operation with a PAX buffer.
+void pax_blit_raw_rot_sized(
+    pax_buf_t        *base,
+    void const       *top,
+    pax_vec2i         top_dims,
+    int               x,
+    int               y,
+    pax_orientation_t rot,
+    int               top_x,
+    int               top_y,
+    int               top_w,
+    int               top_h
+) {
+#if PAX_COMPILE_ORIENTATION
+    if (rot & 1) {
+        PAX_SWAP(int, top_x, top_y);
+        PAX_SWAP(int, top_w, top_h);
+    }
+#endif
+    pax_dispatch_blit_raw(base, top, top_dims, (pax_recti){x, y, top_w, top_h}, rot, (pax_vec2i){top_x, top_y});
+}
+
+
+
+// Draw an image with a prespecified size.
+static void draw_image_impl(
+    pax_buf_t *base, pax_buf_t const *top, float x, float y, float width, float height, bool assume_opaque
+) {
+    PAX_BUF_CHECK(base);
+    PAX_BUF_CHECK(top);
+
+    bool has_alpha = false;
+    if (!assume_opaque && PAX_IS_PALETTE(top->type)) {
+        for (size_t i = 0; i < top->palette_size; i++) {
+            if (top->palette[i] & 0xff000000 != 0xff000000) {
+                has_alpha = true;
+                break;
+            }
+        }
+    } else if (!assume_opaque) {
+        has_alpha = pax_buf_type_info(top->type).a > 0;
+    }
+
+    if (width == top->width && height == top->height && !has_alpha && matrix_2d_is_identity1(base->stack_2d.value)) {
+        matrix_2d_transform(base->stack_2d.value, &x, &y);
+        pax_draw_sprite(base, top, x, y);
+    } else if (has_alpha) {
+        pax_shade_rect(base, -1, &PAX_SHADER_TEXTURE(top), NULL, x, y, width, height);
+    } else {
+        pax_shade_rect(base, -1, &PAX_SHADER_TEXTURE_OP(top), NULL, x, y, width, height);
+    }
+}
+
 // Draws an image at the image's normal size.
 void pax_draw_image(pax_buf_t *buf, pax_buf_t const *image, float x, float y) {
-    PAX_BUF_CHECK(buf);
-    PAX_BUF_CHECK(image);
-    pax_draw_image_sized(buf, image, x, y, image->width, image->height);
+    draw_image_impl(buf, image, x, y, image ? image->width : 1, image ? image->height : 1, false);
 }
 
 // Draw an image with a prespecified size.
 void pax_draw_image_sized(pax_buf_t *buf, pax_buf_t const *image, float x, float y, float width, float height) {
-    PAX_BUF_CHECK(buf);
-    PAX_BUF_CHECK(image);
-    if (PAX_IS_ALPHA(image->type)) {
-        pax_shade_rect(buf, -1, &PAX_SHADER_TEXTURE(image), NULL, x, y, width, height);
-    } else {
-        pax_shade_rect(buf, -1, &PAX_SHADER_TEXTURE_OP(image), NULL, x, y, width, height);
-    }
+    draw_image_impl(buf, image, x, y, width, height, false);
 }
 
 // Draws an image at the image's normal size.
 // Assumes the image is completely opaque, any transparent parts are drawn opaque.
 void pax_draw_image_op(pax_buf_t *buf, pax_buf_t const *image, float x, float y) {
-    PAX_BUF_CHECK(buf);
-    PAX_BUF_CHECK(image);
-    pax_draw_image_sized_op(buf, image, x, y, image->width, image->height);
+    draw_image_impl(buf, image, x, y, image ? image->width : 1, image ? image->height : 1, true);
 }
 
 // Draw an image with a prespecified size.
 // Assumes the image is completely opaque, any transparent parts are drawn opaque.
 void pax_draw_image_sized_op(pax_buf_t *buf, pax_buf_t const *image, float x, float y, float width, float height) {
-    PAX_BUF_CHECK(buf);
-    PAX_BUF_CHECK(image);
-    pax_shade_rect(buf, -1, &PAX_SHADER_TEXTURE_OP(image), NULL, x, y, width, height);
+    draw_image_impl(buf, image, x, y, width, height, true);
 }
 
 

@@ -60,9 +60,16 @@ void pax_dispatch_shaded_tri(pax_buf_t *buf, pax_col_t color, pax_trif shape, pa
 }
 
 
+// Draw a sprite; like a blit, but use color blending if applicable.
+void pax_dispatch_sprite(
+    pax_buf_t *base, pax_buf_t const *top, pax_recti base_pos, pax_orientation_t top_orientation, pax_vec2i top_pos
+) {
+    pax_swr_sprite(base, top, base_pos, top_orientation, top_pos);
+}
+
 // Perform a buffer copying operation with a PAX buffer.
 void pax_dispatch_blit(
-    pax_buf_t *base, pax_buf_t *top, pax_recti base_pos, pax_orientation_t top_orientation, pax_vec2i top_pos
+    pax_buf_t *base, pax_buf_t const *top, pax_recti base_pos, pax_orientation_t top_orientation, pax_vec2i top_pos
 ) {
     pax_swr_blit(base, top, base_pos, top_orientation, top_pos);
 }
@@ -175,9 +182,19 @@ void pax_dispatch_shaded_tri(pax_buf_t *buf, pax_col_t color, pax_trif shape, pa
 }
 
 
+// Draw a sprite; like a blit, but use color blending if applicable.
+void pax_dispatch_sprite(
+    pax_buf_t *base, pax_buf_t const *top, pax_recti base_pos, pax_orientation_t top_orientation, pax_vec2i top_pos
+) {
+    if (implicit_dirty) {
+        pax_mark_dirty2(base, base_pos.x, base_pos.y, base_pos.w, base_pos.h);
+    }
+    renderfunc->sprite(base, top, base_pos, top_orientation, top_pos);
+}
+
 // Perform a buffer copying operation with a PAX buffer.
 void pax_dispatch_blit(
-    pax_buf_t *base, pax_buf_t *top, pax_recti base_pos, pax_orientation_t top_orientation, pax_vec2i top_pos
+    pax_buf_t *base, pax_buf_t const *top, pax_recti base_pos, pax_orientation_t top_orientation, pax_vec2i top_pos
 ) {
     if (implicit_dirty) {
         pax_mark_dirty2(base, base_pos.x, base_pos.y, base_pos.w, base_pos.h);

@@ -154,6 +154,8 @@ enum pax_text_align {
 // Type of task to do.
 // Things like text and arcs will decompose to rects and triangles.
 enum pax_task_type {
+    // Stop MCR worker.
+    PAX_TASK_STOP,
     // Quad draw.
     PAX_TASK_QUAD,
     // Rectangle draw.
@@ -162,8 +164,12 @@ enum pax_task_type {
     PAX_TASK_TRI,
     // Line draw.
     PAX_TASK_LINE,
-    // Stop MCR worker.
-    PAX_TASK_STOP,
+    // PAX draw sprite.
+    PAX_TASK_SPRITE,
+    // PAX framebuffer blit.
+    PAX_TASK_BLIT,
+    // Raw pixel data blit.
+    PAX_TASK_BLIT_RAW,
 };
 
 // Distinguishes between ways to draw fonts.
@@ -359,43 +365,6 @@ struct pax_buf_type_info {
     uint8_t : 8;
 };
 
-// A task to perform, used by multicore rendering.
-// Every task has pre-transformed co-ordinates.
-// If you change the shader object's content (AKA the value that args points to),
-// You should run pax_join before making the change.
-struct pax_task {
-    // The buffer to apply this task to.
-    pax_buf_t      *buffer;
-    // The type of thing to do.
-    pax_task_type_t type;
-    // Color to use.
-    pax_col_t       color;
-    // Shader to use.
-    pax_shader_t    shader;
-    // Whether to use a shader.
-    bool            use_shader;
-    // UVs to use.
-    union {
-        // UVs to use for rects and quads.
-        pax_quadf quad_uvs;
-        // UVs to use for triangles.
-        pax_trif  tri_uvs;
-        // UVs to use for lines.
-        pax_linef line_uvs;
-    };
-    // Shape parameters.
-    union {
-        // Shape parameters for quads.
-        pax_quadf quad_shape;
-        // Shape parameters for rects.
-        pax_rectf rect_shape;
-        // Shape parameters for triangles.
-        pax_trif  tri_shape;
-        // Shape parameters for lines.
-        pax_linef line_shape;
-    };
-};
-
 // Context used at drawing time for shaders.
 struct pax_shader_ctx {
     // The callback internally used per pixel.
@@ -418,8 +387,56 @@ struct pax_shader_ctx {
 #endif // PAX_TYPES_H
 
 #ifdef PAX_REVEAL_OPAQUE
-#ifndef PAX_TYPES_H_PAX_BUF_T
-    #define PAX_TYPES_H_PAX_BUF_T
+#ifndef PAX_TYPES_H_OPAQUE_REVEALED
+    #define PAX_TYPES_H_OPAQUE_REVEALED
+// A task to perform, used by multicore rendering.
+// Every task has pre-transformed co-ordinates.
+// If you change the shader object's content (AKA the value that args points to),
+// You should run pax_join before making the change.
+struct pax_task {
+    // The buffer to apply this task to.
+    pax_buf_t      *buffer;
+    // The type of thing to do.
+    pax_task_type_t type;
+    // Color to use.
+    pax_col_t       color;
+    // Shader to use.
+    pax_shader_t    shader;
+    // Whether to use a shader.
+    bool            use_shader;
+    union {
+        // Top framebuffer data for blit.
+        struct {
+            // Top framebuffer or raw pixel data.
+            void const       *top;
+            // Top framebuffer offset.
+            pax_vec2i         top_pos;
+            // Top framebuffer size in case of raw pixel data.
+            pax_vec2i         top_dims;
+            // Orientation of top framebuffer relative to bottom framebuffer.
+            pax_orientation_t top_orientation;
+        } blit;
+        // UVs to use for rects and quads.
+        pax_quadf quad_uvs;
+        // UVs to use for triangles.
+        pax_trif  tri_uvs;
+        // UVs to use for lines.
+        pax_linef line_uvs;
+    };
+    union {
+        // Shape parameters for quads.
+        pax_quadf quad_shape;
+        // Base rectangle for blit.
+        pax_recti blit_base_pos;
+        // Shape parameters for rects.
+        pax_rectf rect_shape;
+        // Shape parameters for triangles.
+        pax_trif  tri_shape;
+        // Shape parameters for lines.
+        pax_linef line_shape;
+    };
+};
+
 // The main data structure in PAX.
 // Stores pixel data and matrix information among other things.
 struct pax_buf {
@@ -488,5 +505,5 @@ struct pax_buf {
     // Orientation setting.
     pax_orientation_t orientation;
 };
-#endif
-#endif
+#endif // PAX_TYPES_H_OPAQUE_REVEALED
+#endif // PAX_REVEAL_OPAQUE

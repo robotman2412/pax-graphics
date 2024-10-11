@@ -10,9 +10,9 @@
 #include <math.h>
 
 #ifdef __cplusplus
-#define PAX_CXX_Vecf_union union
+    #define PAX_CXX_Vecf_union union
 #else
-#define PAX_CXX_Vecf_union struct
+    #define PAX_CXX_Vecf_union struct
 #endif
 
 /* Backwards compat typedefs. */
@@ -48,9 +48,9 @@ typedef union matrix_2d        matrix_2d_t;
 typedef struct matrix_stack_2d matrix_stack_2d_t;
 
 #ifdef __cplusplus
-#include <assert.h>
-#include <initializer_list>
-#include <memory>
+    #include <assert.h>
+    #include <initializer_list>
+    #include <memory>
 
 namespace pax {
 
@@ -72,165 +72,165 @@ typedef struct matrix_stack_2d Matrix2fStack;
 
 } // namespace pax
 
-#define PAX_CXX_Vec2f_INDEX()                                                                                          \
-    pax::Vec2f &operator[](int index) {                                                                                \
-        return ((pax::Vec2f *)arr)[index];                                                                             \
-    }                                                                                                                  \
-    const pax::Vec2f &operator[](int index) const {                                                                    \
-        return ((const pax::Vec2f *)arr)[index];                                                                       \
-    }
+    #define PAX_CXX_Vec2f_INDEX()                                                                                      \
+        pax::Vec2f &operator[](int index) {                                                                            \
+            return ((pax::Vec2f *)arr)[index];                                                                         \
+        }                                                                                                              \
+        const pax::Vec2f &operator[](int index) const {                                                                \
+            return ((const pax::Vec2f *)arr)[index];                                                                   \
+        }
 
-#define PAX_CXX_Vecf_AVERAGE()                                                                                         \
-    pax::Vec2f average() const {                                                                                       \
-        pax::Vec2f   avg(0, 0);                                                                                        \
-        const size_t _size = sizeof(arr) / 2 / sizeof(float);                                                          \
-        for (size_t i = 0; i < _size; i++) {                                                                           \
-            avg += arr[i];                                                                                             \
-        }                                                                                                              \
-        return avg / _size;                                                                                            \
-    }
+    #define PAX_CXX_Vecf_AVERAGE()                                                                                     \
+        pax::Vec2f average() const {                                                                                   \
+            pax::Vec2f   avg(0, 0);                                                                                    \
+            const size_t _size = sizeof(arr) / 2 / sizeof(float);                                                      \
+            for (size_t i = 0; i < _size; i++) {                                                                       \
+                avg += arr[i];                                                                                         \
+            }                                                                                                          \
+            return avg / _size;                                                                                        \
+        }
 
-#define PAX_CXX_Vecf_OPERATOR(_type, _oper)                                                                            \
-    _type operator _oper(_type rhs) const {                                                                            \
-        _type        out;                                                                                              \
-        const size_t _size = sizeof(arr) / 2 / sizeof(float);                                                          \
-        for (size_t i = 0; i < _size; i++) {                                                                           \
-            out.arr[i] = arr[i] _oper rhs.arr[i];                                                                      \
+    #define PAX_CXX_Vecf_OPERATOR(_type, _oper)                                                                        \
+        _type operator _oper(_type rhs) const {                                                                        \
+            _type        out;                                                                                          \
+            const size_t _size = sizeof(arr) / 2 / sizeof(float);                                                      \
+            for (size_t i = 0; i < _size; i++) {                                                                       \
+                out.arr[i] = arr[i] _oper rhs.arr[i];                                                                  \
+            }                                                                                                          \
+            return out;                                                                                                \
         }                                                                                                              \
-        return out;                                                                                                    \
-    }                                                                                                                  \
-    _type operator _oper(float rhs) const {                                                                            \
-        _type        out;                                                                                              \
-        const size_t _size = sizeof(arr) / 2 / sizeof(float);                                                          \
-        for (size_t i = 0; i < _size; i++) {                                                                           \
-            out.arr[i] = arr[i] _oper rhs;                                                                             \
-        }                                                                                                              \
-        return out;                                                                                                    \
-    }
+        _type operator _oper(float rhs) const {                                                                        \
+            _type        out;                                                                                          \
+            const size_t _size = sizeof(arr) / 2 / sizeof(float);                                                      \
+            for (size_t i = 0; i < _size; i++) {                                                                       \
+                out.arr[i] = arr[i] _oper rhs;                                                                         \
+            }                                                                                                          \
+            return out;                                                                                                \
+        }
 
-#define PAX_CXX_Vecf_OPERATOR_ASSIGN(_type, _oper)                                                                     \
-    _type &operator _oper(_type rhs) {                                                                                 \
-        const size_t _size = sizeof(arr) / 2 / sizeof(float);                                                          \
-        for (size_t i = 0; i < _size; i++) {                                                                           \
-            arr[i] _oper rhs.arr[i];                                                                                   \
+    #define PAX_CXX_Vecf_OPERATOR_ASSIGN(_type, _oper)                                                                 \
+        _type &operator _oper(_type rhs) {                                                                             \
+            const size_t _size = sizeof(arr) / 2 / sizeof(float);                                                      \
+            for (size_t i = 0; i < _size; i++) {                                                                       \
+                arr[i] _oper rhs.arr[i];                                                                               \
+            }                                                                                                          \
+            return *this;                                                                                              \
         }                                                                                                              \
-        return *this;                                                                                                  \
-    }                                                                                                                  \
-    _type &operator _oper(float rhs) {                                                                                 \
-        const size_t _size = sizeof(arr) / 2 / sizeof(float);                                                          \
-        for (size_t i = 0; i < _size; i++) {                                                                           \
-            arr[i] _oper rhs;                                                                                          \
-        }                                                                                                              \
-        return *this;                                                                                                  \
-    }
+        _type &operator _oper(float rhs) {                                                                             \
+            const size_t _size = sizeof(arr) / 2 / sizeof(float);                                                      \
+            for (size_t i = 0; i < _size; i++) {                                                                       \
+                arr[i] _oper rhs;                                                                                      \
+            }                                                                                                          \
+            return *this;                                                                                              \
+        }
 
-#define PAX_CXX_Vecf_OPERATORS(_type)                                                                                  \
-    _type round() const {                                                                                              \
-        _type        out;                                                                                              \
-        const size_t _size = sizeof(arr) / sizeof(float);                                                              \
-        for (size_t i = 0; i < _size; i++) {                                                                           \
-            out.arr[i] = roundf(arr[i]);                                                                               \
+    #define PAX_CXX_Vecf_OPERATORS(_type)                                                                              \
+        _type round() const {                                                                                          \
+            _type        out;                                                                                          \
+            const size_t _size = sizeof(arr) / sizeof(float);                                                          \
+            for (size_t i = 0; i < _size; i++) {                                                                       \
+                out.arr[i] = roundf(arr[i]);                                                                           \
+            }                                                                                                          \
+            return out;                                                                                                \
         }                                                                                                              \
-        return out;                                                                                                    \
-    }                                                                                                                  \
-    bool operator==(_type rhs) const {                                                                                 \
-        const size_t _size = sizeof(arr) / 2 / sizeof(float);                                                          \
-        for (size_t i = 0; i < _size; i++) {                                                                           \
-            if (arr[i] != rhs.arr[i])                                                                                  \
-                return false;                                                                                          \
+        bool operator==(_type rhs) const {                                                                             \
+            const size_t _size = sizeof(arr) / 2 / sizeof(float);                                                      \
+            for (size_t i = 0; i < _size; i++) {                                                                       \
+                if (arr[i] != rhs.arr[i])                                                                              \
+                    return false;                                                                                      \
+            }                                                                                                          \
+            return true;                                                                                               \
         }                                                                                                              \
-        return true;                                                                                                   \
-    }                                                                                                                  \
-    bool operator!=(_type rhs) const {                                                                                 \
-        const size_t _size = sizeof(arr) / 2 / sizeof(float);                                                          \
-        for (size_t i = 0; i < _size; i++) {                                                                           \
-            if (arr[i] == rhs.arr[i])                                                                                  \
-                return false;                                                                                          \
+        bool operator!=(_type rhs) const {                                                                             \
+            const size_t _size = sizeof(arr) / 2 / sizeof(float);                                                      \
+            for (size_t i = 0; i < _size; i++) {                                                                       \
+                if (arr[i] == rhs.arr[i])                                                                              \
+                    return false;                                                                                      \
+            }                                                                                                          \
+            return true;                                                                                               \
         }                                                                                                              \
-        return true;                                                                                                   \
-    }                                                                                                                  \
-    PAX_CXX_Vecf_OPERATOR(_type, +) PAX_CXX_Vecf_OPERATOR(_type, -) PAX_CXX_Vecf_OPERATOR(_type, *)                    \
-        PAX_CXX_Vecf_OPERATOR(_type, /) PAX_CXX_Vecf_OPERATOR_ASSIGN(_type, +=)                                        \
-            PAX_CXX_Vecf_OPERATOR_ASSIGN(_type, -=) PAX_CXX_Vecf_OPERATOR_ASSIGN(_type, *=)                            \
-                PAX_CXX_Vecf_OPERATOR_ASSIGN(_type, /=)
+        PAX_CXX_Vecf_OPERATOR(_type, +) PAX_CXX_Vecf_OPERATOR(_type, -) PAX_CXX_Vecf_OPERATOR(_type, *)                \
+            PAX_CXX_Vecf_OPERATOR(_type, /) PAX_CXX_Vecf_OPERATOR_ASSIGN(_type, +=)                                    \
+                PAX_CXX_Vecf_OPERATOR_ASSIGN(_type, -=) PAX_CXX_Vecf_OPERATOR_ASSIGN(_type, *=)                        \
+                    PAX_CXX_Vecf_OPERATOR_ASSIGN(_type, /=)
 
-#define PAX_CXX_Vec2i_INDEX()                                                                                          \
-    pax::Vec2i &operator[](int index) {                                                                                \
-        return ((pax::Vec2i *)arr)[index];                                                                             \
-    }                                                                                                                  \
-    const pax::Vec2i &operator[](int index) const {                                                                    \
-        return ((const pax::Vec2i *)arr)[index];                                                                       \
-    }
+    #define PAX_CXX_Vec2i_INDEX()                                                                                      \
+        pax::Vec2i &operator[](int index) {                                                                            \
+            return ((pax::Vec2i *)arr)[index];                                                                         \
+        }                                                                                                              \
+        const pax::Vec2i &operator[](int index) const {                                                                \
+            return ((const pax::Vec2i *)arr)[index];                                                                   \
+        }
 
-#define PAX_CXX_Veci_AVERAGE()                                                                                         \
-    pax::Vec2i average() const {                                                                                       \
-        int64_t      avgX, avgY;                                                                                       \
-        const size_t _size = sizeof(arr) / 2 / sizeof(int);                                                            \
-        for (size_t i = 0; i < _size; i++) {                                                                           \
-            avgX += arr[i].x;                                                                                          \
-            avgY += arr[i].y;                                                                                          \
-        }                                                                                                              \
-        return {(avgX + _size / 2) / _size, (avgY + _size / 2) / _size};                                               \
-    }
+    #define PAX_CXX_Veci_AVERAGE()                                                                                     \
+        pax::Vec2i average() const {                                                                                   \
+            int64_t      avgX, avgY;                                                                                   \
+            const size_t _size = sizeof(arr) / 2 / sizeof(int);                                                        \
+            for (size_t i = 0; i < _size; i++) {                                                                       \
+                avgX += arr[i].x;                                                                                      \
+                avgY += arr[i].y;                                                                                      \
+            }                                                                                                          \
+            return {(avgX + _size / 2) / _size, (avgY + _size / 2) / _size};                                           \
+        }
 
-#define PAX_CXX_Veci_OPERATOR(_type, _oper)                                                                            \
-    _type operator _oper(_type rhs) const {                                                                            \
-        _type        out;                                                                                              \
-        const size_t _size = sizeof(arr) / 2 / sizeof(int);                                                            \
-        for (size_t i = 0; i < _size; i++) {                                                                           \
-            out.arr[i] = arr[i] _oper rhs.arr[i];                                                                      \
+    #define PAX_CXX_Veci_OPERATOR(_type, _oper)                                                                        \
+        _type operator _oper(_type rhs) const {                                                                        \
+            _type        out;                                                                                          \
+            const size_t _size = sizeof(arr) / 2 / sizeof(int);                                                        \
+            for (size_t i = 0; i < _size; i++) {                                                                       \
+                out.arr[i] = arr[i] _oper rhs.arr[i];                                                                  \
+            }                                                                                                          \
+            return out;                                                                                                \
         }                                                                                                              \
-        return out;                                                                                                    \
-    }                                                                                                                  \
-    _type operator _oper(int rhs) const {                                                                              \
-        _type        out;                                                                                              \
-        const size_t _size = sizeof(arr) / 2 / sizeof(int);                                                            \
-        for (size_t i = 0; i < _size; i++) {                                                                           \
-            out.arr[i] = arr[i] _oper rhs;                                                                             \
-        }                                                                                                              \
-        return out;                                                                                                    \
-    }
+        _type operator _oper(int rhs) const {                                                                          \
+            _type        out;                                                                                          \
+            const size_t _size = sizeof(arr) / 2 / sizeof(int);                                                        \
+            for (size_t i = 0; i < _size; i++) {                                                                       \
+                out.arr[i] = arr[i] _oper rhs;                                                                         \
+            }                                                                                                          \
+            return out;                                                                                                \
+        }
 
-#define PAX_CXX_Veci_OPERATOR_ASSIGN(_type, _oper)                                                                     \
-    _type &operator _oper(_type rhs) {                                                                                 \
-        const size_t _size = sizeof(arr) / 2 / sizeof(int);                                                            \
-        for (size_t i = 0; i < _size; i++) {                                                                           \
-            arr[i] _oper rhs.arr[i];                                                                                   \
+    #define PAX_CXX_Veci_OPERATOR_ASSIGN(_type, _oper)                                                                 \
+        _type &operator _oper(_type rhs) {                                                                             \
+            const size_t _size = sizeof(arr) / 2 / sizeof(int);                                                        \
+            for (size_t i = 0; i < _size; i++) {                                                                       \
+                arr[i] _oper rhs.arr[i];                                                                               \
+            }                                                                                                          \
+            return *this;                                                                                              \
         }                                                                                                              \
-        return *this;                                                                                                  \
-    }                                                                                                                  \
-    _type &operator _oper(int rhs) {                                                                                   \
-        const size_t _size = sizeof(arr) / 2 / sizeof(int);                                                            \
-        for (size_t i = 0; i < _size; i++) {                                                                           \
-            arr[i] _oper rhs;                                                                                          \
-        }                                                                                                              \
-        return *this;                                                                                                  \
-    }
+        _type &operator _oper(int rhs) {                                                                               \
+            const size_t _size = sizeof(arr) / 2 / sizeof(int);                                                        \
+            for (size_t i = 0; i < _size; i++) {                                                                       \
+                arr[i] _oper rhs;                                                                                      \
+            }                                                                                                          \
+            return *this;                                                                                              \
+        }
 
-#define PAX_CXX_Veci_OPERATORS(_type)                                                                                  \
-    _type round() const {                                                                                              \
-        return *this;                                                                                                  \
-    }                                                                                                                  \
-    bool operator==(_type rhs) const {                                                                                 \
-        const size_t _size = sizeof(arr) / 2 / sizeof(int);                                                            \
-        for (size_t i = 0; i < _size; i++) {                                                                           \
-            if (arr[i] != rhs.arr[i])                                                                                  \
-                return false;                                                                                          \
+    #define PAX_CXX_Veci_OPERATORS(_type)                                                                              \
+        _type round() const {                                                                                          \
+            return *this;                                                                                              \
         }                                                                                                              \
-        return true;                                                                                                   \
-    }                                                                                                                  \
-    bool operator!=(_type rhs) const {                                                                                 \
-        const size_t _size = sizeof(arr) / 2 / sizeof(int);                                                            \
-        for (size_t i = 0; i < _size; i++) {                                                                           \
-            if (arr[i] == rhs.arr[i])                                                                                  \
-                return false;                                                                                          \
+        bool operator==(_type rhs) const {                                                                             \
+            const size_t _size = sizeof(arr) / 2 / sizeof(int);                                                        \
+            for (size_t i = 0; i < _size; i++) {                                                                       \
+                if (arr[i] != rhs.arr[i])                                                                              \
+                    return false;                                                                                      \
+            }                                                                                                          \
+            return true;                                                                                               \
         }                                                                                                              \
-        return true;                                                                                                   \
-    }                                                                                                                  \
-    PAX_CXX_Veci_OPERATOR(_type, +) PAX_CXX_Veci_OPERATOR(_type, -) PAX_CXX_Veci_OPERATOR(_type, *)                    \
-        PAX_CXX_Veci_OPERATOR(_type, /) PAX_CXX_Veci_OPERATOR_ASSIGN(_type, +=)                                        \
-            PAX_CXX_Veci_OPERATOR_ASSIGN(_type, -=) PAX_CXX_Veci_OPERATOR_ASSIGN(_type, *=)                            \
-                PAX_CXX_Veci_OPERATOR_ASSIGN(_type, /=)
+        bool operator!=(_type rhs) const {                                                                             \
+            const size_t _size = sizeof(arr) / 2 / sizeof(int);                                                        \
+            for (size_t i = 0; i < _size; i++) {                                                                       \
+                if (arr[i] == rhs.arr[i])                                                                              \
+                    return false;                                                                                      \
+            }                                                                                                          \
+            return true;                                                                                               \
+        }                                                                                                              \
+        PAX_CXX_Veci_OPERATOR(_type, +) PAX_CXX_Veci_OPERATOR(_type, -) PAX_CXX_Veci_OPERATOR(_type, *)                \
+            PAX_CXX_Veci_OPERATOR(_type, /) PAX_CXX_Veci_OPERATOR_ASSIGN(_type, +=)                                    \
+                PAX_CXX_Veci_OPERATOR_ASSIGN(_type, -=) PAX_CXX_Veci_OPERATOR_ASSIGN(_type, *=)                        \
+                    PAX_CXX_Veci_OPERATOR_ASSIGN(_type, /=)
 
 #endif //__cplusplus
 
@@ -745,7 +745,7 @@ pax_rectf pax_rectf_intersect(pax_rectf a, pax_rectf b) __attribute__((const));
 
 // 2D vector: unifies a given vector (it's magnitude will be 1).
 // Does not work for vectors with all zero.
-pax_vec2f vec1_unify(pax_vec2f vec);
+pax_vec2f pax_vec2f_unify(pax_vec2f vec);
 
 #ifdef __cplusplus
 } // extern "C"

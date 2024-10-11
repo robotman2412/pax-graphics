@@ -16,6 +16,9 @@ void pax_simple_line(pax_buf_t *buf, pax_col_t color, float x0, float y0, float 
 
 // Draw a line.
 void pax_draw_line(pax_buf_t *buf, pax_col_t color, float x0, float y0, float x1, float y1);
+// Draw a thick line using a rectangle.
+// Note: Will look different than `pax_draw_line` even if `thickness == 1`.
+void pax_draw_thick_line(pax_buf_t *buf, pax_col_t color, float x0, float y0, float x1, float y1, float thickness);
 
 // Draw a line with a shader.
 // If uvs is NULL, a default will be used (0,0; 1,0).

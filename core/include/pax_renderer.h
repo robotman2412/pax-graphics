@@ -35,9 +35,13 @@ typedef struct {
     // Draw a triangle with a shader.
     void (*shaded_tri)(pax_buf_t *buf, pax_col_t color, pax_trif shape, pax_shader_t const *shader, pax_trif uv);
 
+    // Draw a sprite; like a blit, but use color blending if applicable.
+    void (*sprite)(
+        pax_buf_t *base, pax_buf_t const *top, pax_recti base_pos, pax_orientation_t top_orientation, pax_vec2i top_pos
+    );
     // Perform a buffer copying operation with a PAX buffer.
     void (*blit)(
-        pax_buf_t *base, pax_buf_t *top, pax_recti base_pos, pax_orientation_t top_orientation, pax_vec2i top_pos
+        pax_buf_t *base, pax_buf_t const *top, pax_recti base_pos, pax_orientation_t top_orientation, pax_vec2i top_pos
     );
     // Perform a buffer copying operation with an unmanaged user buffer.
     void (*blit_raw)(
@@ -92,9 +96,13 @@ void pax_dispatch_shaded_quad(
 // Draw a triangle with a shader.
 void pax_dispatch_shaded_tri(pax_buf_t *buf, pax_col_t color, pax_trif shape, pax_shader_t const *shader, pax_trif uv);
 
+// Draw a sprite; like a blit, but use color blending if applicable.
+void pax_dispatch_sprite(
+    pax_buf_t *base, pax_buf_t const *top, pax_recti base_pos, pax_orientation_t top_orientation, pax_vec2i top_pos
+);
 // Perform a buffer copying operation with a PAX buffer.
 void pax_dispatch_blit(
-    pax_buf_t *base, pax_buf_t *top, pax_recti base_pos, pax_orientation_t top_orientation, pax_vec2i top_pos
+    pax_buf_t *base, pax_buf_t const *top, pax_recti base_pos, pax_orientation_t top_orientation, pax_vec2i top_pos
 );
 // Perform a buffer copying operation with an unmanaged user buffer.
 void pax_dispatch_blit_raw(
