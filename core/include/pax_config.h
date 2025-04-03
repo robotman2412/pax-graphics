@@ -60,8 +60,8 @@
 
 #ifndef CONFIG_PAX_RANGE_MERGER
     // Compile in the range merger for faster alpha blending.
-    // Set to 1 for per-BPP, or 2 for per-color-format.
-    #define CONFIG_PAX_RANGE_MERGER 2
+    // Creates a function per color format, trading memory for more speed.
+    #define CONFIG_PAX_RANGE_MERGER true
 #endif
 
 #ifndef CONFIG_PAX_COMPILE_ORIENTATION
