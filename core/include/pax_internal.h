@@ -53,14 +53,14 @@ extern "C" {
     #ifdef __cplusplus
 }
     #endif
-    #if CONFIG_PAX_COMPILE_MCR
+    #if CONFIG_PAX_COMPILE_ASYNC_RENDERER
         #include <pthread.h>
     #endif
     #ifdef __cplusplus
 extern "C" {
     #endif
 
-    #if CONFIG_PAX_COMPILE_MCR
+    #if CONFIG_PAX_COMPILE_ASYNC_RENDERER
 extern pthread_mutex_t pax_log_mutex;
 extern bool            pax_log_use_mutex;
 

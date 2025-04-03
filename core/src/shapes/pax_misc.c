@@ -315,7 +315,7 @@ PAX_PERF_CRITICAL_ATTR void pax_background(pax_buf_t *buf, pax_col_t color) {
     PAX_BUF_CHECK(buf);
     // TODO: Make into render callback.
 
-#if CONFIG_PAX_COMPILE_MCR
+#if CONFIG_PAX_COMPILE_ASYNC_RENDERER
     pax_join();
 #endif
 
@@ -367,7 +367,7 @@ PAX_PERF_CRITICAL_ATTR void pax_background(pax_buf_t *buf, pax_col_t color) {
 // Scroll the buffer, filling with a placeholder color.
 void pax_buf_scroll(pax_buf_t *buf, pax_col_t placeholder, int x, int y) {
     PAX_BUF_CHECK(buf);
-#if CONFIG_PAX_COMPILE_MCR
+#if CONFIG_PAX_COMPILE_ASYNC_RENDERER
     pax_join();
 #endif
     // TODO: Make into render callback.
