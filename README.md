@@ -1,5 +1,5 @@
 # PAX graphics
-An advanced high-performance 2D graphics library for games and GUIs on embedded systems.
+An easy-to-use but powerful 2D graphics library for games and GUIs on embedded systems.
 Supports affine transformations, shaders, text scaling, and multi-CPU software rendering.
 
 Made for [Badge.team](https://badge.team/) and licensed MIT.
