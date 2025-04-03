@@ -124,7 +124,7 @@ static
         return;
     }
     if (iy1 >= buf->clip.y + buf->clip.h) {
-        iy1 = buf->clip.y + buf->clip.h - 1;
+        iy1 = buf->clip.y + buf->clip.h;
     }
 
     #ifdef PDHG_MCR
