@@ -10,7 +10,7 @@
 void pax_merge_pixel(pax_buf_t *buf, pax_col_t color, int x, int y) {
     PAX_BUF_CHECK(buf);
 
-#if PAX_COMPILE_ORIENTATION
+#if CONFIG_PAX_COMPILE_ORIENTATION
     pax_vec2i tmp = pax_orient_det_vec2i(buf, (pax_vec2i){x, y});
     x             = tmp.x;
     y             = tmp.y;
@@ -40,7 +40,7 @@ void pax_merge_pixel(pax_buf_t *buf, pax_col_t color, int x, int y) {
 void pax_set_pixel(pax_buf_t *buf, pax_col_t color, int x, int y) {
     PAX_BUF_CHECK(buf);
 
-#if PAX_COMPILE_ORIENTATION
+#if CONFIG_PAX_COMPILE_ORIENTATION
     pax_vec2i tmp = pax_orient_det_vec2i(buf, (pax_vec2i){x, y});
     x             = tmp.x;
     y             = tmp.y;
@@ -65,7 +65,7 @@ void pax_set_pixel(pax_buf_t *buf, pax_col_t color, int x, int y) {
 pax_col_t pax_get_pixel(pax_buf_t const *buf, int x, int y) {
     PAX_BUF_CHECK(buf, 0);
 
-#if PAX_COMPILE_ORIENTATION
+#if CONFIG_PAX_COMPILE_ORIENTATION
     pax_vec2i tmp = pax_orient_det_vec2i(buf, (pax_vec2i){x, y});
     x             = tmp.x;
     y             = tmp.y;
@@ -82,7 +82,7 @@ pax_col_t pax_get_pixel(pax_buf_t const *buf, int x, int y) {
 void pax_set_pixel_raw(pax_buf_t *buf, pax_col_t color, int x, int y) {
     PAX_BUF_CHECK(buf);
 
-#if PAX_COMPILE_ORIENTATION
+#if CONFIG_PAX_COMPILE_ORIENTATION
     pax_vec2i tmp = pax_orient_det_vec2i(buf, (pax_vec2i){x, y});
     x             = tmp.x;
     y             = tmp.y;
@@ -102,7 +102,7 @@ void pax_set_pixel_raw(pax_buf_t *buf, pax_col_t color, int x, int y) {
 pax_col_t pax_get_pixel_raw(pax_buf_t const *buf, int x, int y) {
     PAX_BUF_CHECK(buf, 0);
 
-#if PAX_COMPILE_ORIENTATION
+#if CONFIG_PAX_COMPILE_ORIENTATION
     pax_vec2i tmp = pax_orient_det_vec2i(buf, (pax_vec2i){x, y});
     x             = tmp.x;
     y             = tmp.y;
@@ -152,7 +152,7 @@ void pax_draw_sprite_rot_sized(
     int               top_w,
     int               top_h
 ) {
-#if PAX_COMPILE_ORIENTATION
+#if CONFIG_PAX_COMPILE_ORIENTATION
     if (rot & 4) {
         rot = ((rot - top->orientation) & 3) | 4;
     } else {
@@ -201,7 +201,7 @@ void pax_blit_rot_sized(
     int               top_w,
     int               top_h
 ) {
-#if PAX_COMPILE_ORIENTATION
+#if CONFIG_PAX_COMPILE_ORIENTATION
     if (rot & 4) {
         rot = ((rot - top->orientation) & 3) | 4;
     } else {
@@ -247,7 +247,7 @@ void pax_blit_raw_rot_sized(
     int               top_w,
     int               top_h
 ) {
-#if PAX_COMPILE_ORIENTATION
+#if CONFIG_PAX_COMPILE_ORIENTATION
     if (rot & 1) {
         PAX_SWAP(int, top_x, top_y);
         PAX_SWAP(int, top_w, top_h);
@@ -315,7 +315,7 @@ PAX_PERF_CRITICAL_ATTR void pax_background(pax_buf_t *buf, pax_col_t color) {
     PAX_BUF_CHECK(buf);
     // TODO: Make into render callback.
 
-#if PAX_COMPILE_MCR
+#if CONFIG_PAX_COMPILE_MCR
     pax_join();
 #endif
 
@@ -367,12 +367,12 @@ PAX_PERF_CRITICAL_ATTR void pax_background(pax_buf_t *buf, pax_col_t color) {
 // Scroll the buffer, filling with a placeholder color.
 void pax_buf_scroll(pax_buf_t *buf, pax_col_t placeholder, int x, int y) {
     PAX_BUF_CHECK(buf);
-#if PAX_COMPILE_MCR
+#if CONFIG_PAX_COMPILE_MCR
     pax_join();
 #endif
     // TODO: Make into render callback.
 
-#if PAX_COMPILE_ORIENTATION
+#if CONFIG_PAX_COMPILE_ORIENTATION
     {
         int x0 = x, y0 = y;
         // Fix direction of scrolling.
@@ -440,7 +440,7 @@ void pax_buf_scroll(pax_buf_t *buf, pax_col_t placeholder, int x, int y) {
         }
     }
 
-#if PAX_COMPILE_ORIENTATION
+#if CONFIG_PAX_COMPILE_ORIENTATION
     // Ignore orientation for a moment.
     int rot          = buf->orientation;
     buf->orientation = 0;
@@ -458,7 +458,7 @@ void pax_buf_scroll(pax_buf_t *buf, pax_col_t placeholder, int x, int y) {
         pax_simple_rect(buf, placeholder, 0, buf->height, buf->width, y);
     }
 
-#if PAX_COMPILE_ORIENTATION
+#if CONFIG_PAX_COMPILE_ORIENTATION
     // Restore previous orientation.
     buf->orientation = rot;
 #endif

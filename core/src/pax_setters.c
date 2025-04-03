@@ -18,7 +18,7 @@ void pax_get_setters(
     pax_range_setter_t *range_setter,
     pax_range_setter_t *range_merger
 ) {
-#if PAX_RANGE_MERGER == 1
+#if CONFIG_PAX_RANGE_MERGER == 1
     switch (buf->bpp) {
         case (1): *range_merger = pax_range_merger_1bpp; break;
         case (2): *range_merger = pax_range_merger_2bpp; break;
@@ -46,7 +46,7 @@ void pax_get_setters(
             }
             break;
     }
-#elif PAX_RANGE_MERGER == 2
+#elif CONFIG_PAX_RANGE_MERGER == 2
     switch (buf->type) {
     #define PAX_DEF_BUF_TYPE_PAL(type_bpp, name)                                                                       \
         case name: *range_merger = pax_range_setter_##type_bpp##bpp; break;
@@ -61,7 +61,7 @@ void pax_get_setters(
 #else
     *range_merger = pax_range_merger_generic;
 #endif
-#if PAX_RANGE_SETTER
+#if CONFIG_PAX_RANGE_SETTER
     switch (buf->bpp) {
         case (1): *range_setter = pax_range_setter_1bpp; break;
         case (2): *range_setter = pax_range_setter_2bpp; break;
@@ -296,7 +296,7 @@ void pax_index_setter_32bpp_rev(pax_buf_t *buf, pax_col_t color, int index) {
 
 
 #pragma region range_setter
-#if PAX_RANGE_SETTER
+#if CONFIG_PAX_RANGE_SETTER
 // Sets a raw value range from a 1BPP buffer.
 void pax_range_setter_1bpp(pax_buf_t *buf, pax_col_t color, int index, int count) {
     if (!count) {
@@ -442,8 +442,8 @@ void pax_range_setter_generic(pax_buf_t *buf, pax_col_t color, int index, int co
 
 
 #pragma region range_merger
-#if PAX_RANGE_MERGER == 1
-#elif PAX_RANGE_MERGER == 2
+#if CONFIG_PAX_RANGE_MERGER == 1
+#elif CONFIG_PAX_RANGE_MERGER == 2
 
     #define pax_rev_endian_1(x) (x)
     #define pax_rev_endian_2(x) (x)

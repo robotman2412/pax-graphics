@@ -5,7 +5,7 @@
 
 #include "pax_internal.h"
 
-#if PAX_DO_BICUBIC
+#if CONFIG_PAX_DO_BICUBIC
     // Cubic interpolation: y = -2x³ + 3x²
     #define pax_interp_value(a) (-2 * a * a * a + 3 * a * a)
 #else

@@ -17,7 +17,7 @@ void pax_simple_rect(pax_buf_t *buf, pax_col_t color, float x, float y, float wi
     if (!pax_do_draw_col(buf, color))
         return;
 
-#if PAX_COMPILE_ORIENTATION
+#if CONFIG_PAX_COMPILE_ORIENTATION
     // Do rotation.
     pax_rectf tmp = pax_orient_det_rectf(buf, (pax_rectf){x, y, width, height});
     x             = tmp.x;
@@ -400,7 +400,7 @@ void pax_shade_rect(
         height *= buf->stack_2d.value.b1;
 
 // Perform rotation.
-#if PAX_COMPILE_ORIENTATION
+#if CONFIG_PAX_COMPILE_ORIENTATION
         pax_rectf tmp = pax_orient_det_rectf(buf, (pax_rectf){x, y, width, height});
         x             = tmp.x;
         y             = tmp.y;

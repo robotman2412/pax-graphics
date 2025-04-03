@@ -17,7 +17,7 @@ void pax_simple_line(pax_buf_t *buf, pax_col_t color, float x0, float y0, float 
         PAX_ERROR(PAX_ERR_INF);
     }
 
-#if PAX_COMPILE_ORIENTATION
+#if CONFIG_PAX_COMPILE_ORIENTATION
     // Rotate points.
     pax_vec1_t tmp = pax_orient_det_vec2f(buf, (pax_vec2f){x0, y0});
     x0             = tmp.x;

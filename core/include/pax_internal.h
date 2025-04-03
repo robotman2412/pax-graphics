@@ -53,14 +53,14 @@ extern "C" {
     #ifdef __cplusplus
 }
     #endif
-    #if PAX_COMPILE_MCR
+    #if CONFIG_PAX_COMPILE_MCR
         #include <pthread.h>
     #endif
     #ifdef __cplusplus
 extern "C" {
     #endif
 
-    #if PAX_COMPILE_MCR
+    #if CONFIG_PAX_COMPILE_MCR
 extern pthread_mutex_t pax_log_mutex;
 extern bool            pax_log_use_mutex;
 
@@ -231,7 +231,7 @@ void pax_index_setter_24bpp_rev(pax_buf_t *buf, pax_col_t color, int index);
 // Sets a raw value from a 32BPP buffer, reversed endianness.
 void pax_index_setter_32bpp_rev(pax_buf_t *buf, pax_col_t color, int index);
 
-#if PAX_RANGE_SETTER
+#if CONFIG_PAX_RANGE_SETTER
 // Sets a raw value range from a 1BPP buffer.
 void pax_range_setter_1bpp(pax_buf_t *buf, pax_col_t color, int index, int count);
 // Sets a raw value range from a 2BPP buffer.
@@ -257,7 +257,7 @@ void pax_range_setter_32bpp_rev(pax_buf_t *buf, pax_col_t color, int index, int 
 void pax_range_setter_generic(pax_buf_t *buf, pax_col_t color, int index, int count);
 #endif
 
-#if PAX_RANGE_MERGER == 1
+#if CONFIG_PAX_RANGE_MERGER == 1
 // Sets a raw value range from a 1BPP buffer.
 void pax_range_setter_1bpp(pax_buf_t *buf, pax_col_t color, int index, int count);
 // Sets a raw value range from a 2BPP buffer.
@@ -278,7 +278,7 @@ void pax_range_setter_16bpp_rev(pax_buf_t *buf, pax_col_t color, int index, int 
 void pax_range_setter_24bpp_rev(pax_buf_t *buf, pax_col_t color, int index, int count);
 // Sets a raw value range from a 32BPP buffer, reversed endianness.
 void pax_range_setter_32bpp_rev(pax_buf_t *buf, pax_col_t color, int index, int count);
-#elif PAX_RANGE_MERGER == 2
+#elif CONFIG_PAX_RANGE_MERGER == 2
     #define PAX_DEF_BUF_TYPE_PAL(bpp, name)                                                                            \
         void pax_range_merger_##bpp##_pal(pax_buf_t *buf, pax_col_t color, int index, int count);
     #define PAX_DEF_BUF_TYPE_GREY(bpp, name)                                                                           \

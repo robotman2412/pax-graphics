@@ -25,7 +25,7 @@ void pax_simple_tri(pax_buf_t *buf, pax_col_t color, float x0, float y0, float x
         return;
     }
 
-#if PAX_COMPILE_ORIENTATION
+#if CONFIG_PAX_COMPILE_ORIENTATION
     // Rotate points.
     pax_vec1_t tmp = pax_orient_det_vec2f(buf, (pax_vec2f){x0, y0});
     x0             = tmp.x;

@@ -6,7 +6,7 @@
 
 #include "pax_config.h"
 
-#if !PAX_USE_FIXED_POINT
+#if !CONFIG_PAX_USE_FIXED_POINT
 typedef float fixpt_t;
 
 static inline constexpr fixpt_t operator""_fix(unsigned long long in) {
@@ -17,7 +17,7 @@ static inline constexpr fixpt_t operator""_fix(long double in) {
 }
 #else
 
-#if PAX_USE_LONG_FIXED_POINT && defined(__SIZEOF_INT128__)
+#if CONFIG_PAX_USE_LONG_FIXED_POINT && defined(__SIZEOF_INT128__)
 #define PAX_FIXPT_INT_BITS  16ll
 #define PAX_FIXPT_FRAC_BITS 48ll
 #define PAX_FIXPT_MUL       0x0001000000000000ll
@@ -450,5 +450,5 @@ static inline constexpr bool operator>(fixpt_t a, double b) {
     return fixpt_t(a) > fixpt_t(b);
 }
 
-#endif // !PAX_USE_FIXED_POINT
+#endif // !CONFIG_PAX_USE_FIXED_POINT
 #endif // FIXPT_HPP

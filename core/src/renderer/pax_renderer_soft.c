@@ -9,6 +9,13 @@
 
 
 
+// Set the render engine to synchronous software renderer.
+void pax_set_render_engine_default() {
+    pax_set_renderer(&pax_render_engine_soft, NULL);
+}
+
+
+
 // Draw a solid-colored line.
 void pax_swr_unshaded_line(pax_buf_t *buf, pax_col_t color, pax_linef shape) {
     pax_line_unshaded(buf, color, shape.x0, shape.y0, shape.x1, shape.y1);
@@ -104,7 +111,7 @@ __attribute__((always_inline)) static inline void swr_blit_impl(
     bool              is_pal_buf
 ) {
     // Determine copying parameters for top buffer.
-#if PAX_COMPILE_ORIENTATION
+#if CONFIG_PAX_COMPILE_ORIENTATION
     // clang-format off
     int dx, dy; bool swap;
     int top_dx, top_dy, top_index;
@@ -252,7 +259,7 @@ __attribute__((always_inline)) static inline void pax_swr_blit_char_impl(
     // clang-format off
     int dx, dy;
     pax_recti effective_clip;
-#if PAX_COMPILE_ORIENTATION
+#if CONFIG_PAX_COMPILE_ORIENTATION
     effective_clip = pax_get_clip(buf);
     switch (buf->orientation) {
         case PAX_O_UPRIGHT:         dx =  1;          dy =  buf->width; break;

@@ -32,7 +32,7 @@ typedef struct {
     // Number of text render data slots in use.
     uint8_t           rsdata_len;
     // Text render data slots.
-    pax_text_rsdata_t rsdata[PAX_TEXT_BUCKET_SIZE];
+    pax_text_rsdata_t rsdata[CONFIG_PAX_TEXT_BUCKET_SIZE];
 } pax_text_render_t;
 
 
@@ -153,7 +153,7 @@ static void pixel_aligned_render(
     y = floorf(0.5 + y + buf->stack_2d.value.b2);
     pax_mark_dirty2(buf, x, y, width, height);
 
-#if PAX_COMPILE_ORIENTATION
+#if CONFIG_PAX_COMPILE_ORIENTATION
     pax_rectf tmp = pax_orient_det_rectf(buf, (pax_rectf){x, y, width, height});
     x             = tmp.x;
     y             = tmp.y;
@@ -214,7 +214,7 @@ static void dispatch_glyph(
     }
 
     // Allocate a struct for glyph rendering information.
-    if (ctx->rsdata_len >= PAX_TEXT_BUCKET_SIZE) {
+    if (ctx->rsdata_len >= CONFIG_PAX_TEXT_BUCKET_SIZE) {
         // All in use, wait for them to be free.
         pax_join();
         ctx->rsdata_len = 0;

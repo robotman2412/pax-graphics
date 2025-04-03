@@ -102,7 +102,7 @@ static int bezier_point_t_comp(const void *e0, const void *e1) {
 
 /* ============ CURVES =========== */
 
-#if PAX_COMPILE_BEZIER
+#if CONFIG_PAX_COMPILE_BEZIER
 
 // Convert a cubic bezier curve to line segments, with the given number of points.
 // From and to are from 0 to 1, but any value is accepted.
@@ -114,7 +114,7 @@ void pax_vectorise_bezier_part(pax_vec2f *ptr, size_t max_points, pax_4vec2f con
         return;
     }
 
-    #if PAX_USE_EXPENSIVE_BEZIER
+    #if CONFIG_PAX_USE_EXPENSIVE_BEZIER
 
     // Start with just three points: start, T=0.5 and end.
     bezier_point_t *points = malloc(sizeof(bezier_point_t) * max_points);
@@ -186,7 +186,7 @@ void pax_draw_bezier_part(pax_buf_t *buf, pax_col_t color, pax_4vec2f control_po
     if (to < from) {
         PAX_SWAP(float, to, from);
     }
-    #if PAX_USE_EXPENSIVE_BEZIER
+    #if CONFIG_PAX_USE_EXPENSIVE_BEZIER
     // Vectorise the bezier curve first.
     pax_vec2f *points;
     pax_vectorise_bezier(&points, n_points, control_points);
@@ -222,7 +222,7 @@ void pax_draw_bezier(pax_buf_t *buf, pax_col_t color, pax_4vec2f control_points)
 static bool bezier_warning = false;
 static void pax_bezier_warn() {
     if (!bezier_warning) {
-        PAX_LOGE(TAG, "Failed: Bezier curves not compiled, please define PAX_COMPILE_BEZIER.");
+        PAX_LOGE(TAG, "Failed: Bezier curves not compiled, please define CONFIG_PAX_COMPILE_BEZIER.");
     }
 }
 
@@ -257,7 +257,7 @@ void pax_draw_bezier(pax_buf_t *buf, pax_col_t color, pax_4vec2f control_points)
     PAX_ERROR(PAX_ERR_UNSUPPORTED);
 }
 
-#endif // PAX_COMPILE_BEZIER
+#endif // CONFIG_PAX_COMPILE_BEZIER
 
 
 
@@ -424,7 +424,7 @@ size_t pax_round_shape(pax_vec2f **output, size_t num_points, pax_vec2f *points,
 
 /* ======== TRIANGULATION ======== */
 
-#if PAX_COMPILE_TRIANGULATE
+#if CONFIG_PAX_COMPILE_TRIANGULATE
 // Determine whether the points go clockwise or counter-clockwise.
 // Does not work for less then 3 points.
 static bool is_clockwise(int num_points, indexed_point_t *points, int index, int num_test, float dy) {

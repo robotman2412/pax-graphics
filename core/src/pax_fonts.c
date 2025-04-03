@@ -94,7 +94,7 @@ static pax_font_range_t const font_7x9_ranges[] = {
 };
 
 pax_font_t const *pax_fonts_index[] = {
-#if PAX_COMPILE_FONT_INDEX
+#if CONFIG_PAX_COMPILE_FONT_INDEX
     &pax_font_sky_raw,
     &pax_font_sky_mono_raw,
     &pax_font_marker_raw,
@@ -145,7 +145,7 @@ pax_font_t const pax_font_saira_regular_raw = {
     .recommend_aa = true,
 };
 
-#if PAX_COMPILE_FONT_INDEX
+#if CONFIG_PAX_COMPILE_FONT_INDEX
 static char lower(char in) {
     if (in >= 'A' && in <= 'Z') {
         return in + 'a' - 'A';

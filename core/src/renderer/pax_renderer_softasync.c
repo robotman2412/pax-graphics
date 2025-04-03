@@ -13,17 +13,38 @@
 
 #include <pthread.h>
 
-bool is_multithreaded;
+#if !CONFIG_PAX_COMPILE_ASYNC_RENDERER
+
+// Enable the asynchronous renderer.
+// If `multithreaded` is `true` and `CONFIG_PAX_COMPILE_ASYNC_RENDERER` is set to `2`,
+// This will use two threads for rendering instead of just one.
+void pax_set_renderer_async(bool multithreaded) {
+    PAX_LOGE(
+        "pax-sasr",
+        "Async renderer is not compiled in, please define CONFIG_PAX_COMPILE_ASYNC_RENDERER to be 1 or 2."
+    );
+}
+
+#else
+
+// Enable the asynchronous renderer.
+// If `multithreaded` is `true` and `CONFIG_PAX_COMPILE_ASYNC_RENDERER` is set to `2`,
+// This will use two threads for rendering instead of just one.
+void pax_set_renderer_async(bool multithreaded) {
+    pax_set_renderer(&pax_render_engine_softasync, (void *)multithreaded);
+}
 
 
+
+static bool is_multithreaded;
 
 static pthread_t              handle0;
 static pax_sasr_worker_args_t args0;
 
-#if PAX_COMPILE_ASYNC_RENDERER == 2
+    #if CONFIG_PAX_COMPILE_ASYNC_RENDERER == 2
 static pthread_t              handle1;
 static pax_sasr_worker_args_t args1;
-#endif
+    #endif
 
 // Queue a draw call.
 static void pax_sasr_queue(pax_task_t *task);
@@ -31,20 +52,28 @@ static void pax_sasr_queue(pax_task_t *task);
 
 // Initialize the async renderer.
 static pax_render_funcs_t const *pax_sasr_init(void *arg) {
-    args0.queue = ptq_create_max(sizeof(pax_task_t), PAX_QUEUE_SIZE);
+    args0.queue = ptq_create_max(sizeof(pax_task_t), CONFIG_PAX_QUEUE_SIZE);
     pthread_mutex_init(&args0.rendermtx, NULL);
     args0.renderfuncs = &pax_render_funcs_soft;
 
-#if PAX_COMPILE_ASYNC_RENDERER == 2
+    #if CONFIG_PAX_COMPILE_ASYNC_RENDERER == 2
     is_multithreaded = arg;
     if (is_multithreaded) {
         args0.renderfuncs = &pax_render_funcs_mcr_thread0;
         args1.renderfuncs = &pax_render_funcs_mcr_thread1;
-        args1.queue       = ptq_create_max(sizeof(pax_task_t), PAX_QUEUE_SIZE);
+        args1.queue       = ptq_create_max(sizeof(pax_task_t), CONFIG_PAX_QUEUE_SIZE);
         pthread_mutex_init(&args1.rendermtx, NULL);
         pthread_create(&handle1, NULL, pax_sasr_worker, &args1);
     }
-#endif
+    #else
+    if (is_multithreaded) {
+        PAX_LOGW(
+            "pax-sasr",
+            "Async renderer is compiled in single-threaded mode; please define CONFIG_PAX_COMPILE_ASYNC_RENDERER to be "
+            "2 to use multithreaded mode."
+        );
+    }
+    #endif
     pthread_create(&handle0, NULL, pax_sasr_worker, &args0);
 
     return &pax_render_funcs_softasync;
@@ -57,12 +86,12 @@ static void pax_sasr_deinit() {
     };
     pax_sasr_queue(&task);
     pax_sasr_join();
-#if PAX_COMPILE_ASYNC_RENDERER == 2
+    #if CONFIG_PAX_COMPILE_ASYNC_RENDERER == 2
     if (is_multithreaded) {
         ptq_destroy(args1.queue);
         pthread_mutex_destroy(&args1.rendermtx);
     }
-#endif
+    #endif
     ptq_destroy(args0.queue);
     pthread_mutex_destroy(&args0.rendermtx);
 }
@@ -71,11 +100,11 @@ static void pax_sasr_deinit() {
 // Queue a draw call.
 static void pax_sasr_queue(pax_task_t *task) {
     ptq_send_block(args0.queue, task, NULL);
-#if PAX_COMPILE_ASYNC_RENDERER == 2
+    #if CONFIG_PAX_COMPILE_ASYNC_RENDERER == 2
     if (is_multithreaded) {
         ptq_send_block(args1.queue, task, NULL);
     }
-#endif
+    #endif
 }
 
 // Worker thread function for software async renderer.
@@ -138,7 +167,7 @@ void *pax_sasr_worker(void *_args) {
 }
 
 
-#if PAX_COMPILE_ASYNC_RENDERER == 2
+    #if CONFIG_PAX_COMPILE_ASYNC_RENDERER == 2
 
 // Read a single pixel from a raw buffer type by index.
 __attribute__((always_inline)) static inline pax_col_t
@@ -152,11 +181,11 @@ __attribute__((always_inline)) static inline pax_col_t
         case 4: return (buf_8bpp[index / 2] >> ((index % 2) * 4)) & 0x0f;
         case 8: return buf_8bpp[index];
         case 16: return buf_16bpp[index];
-    #if BYTE_ORDER == LITTLE_ENDIAN
+        #if BYTE_ORDER == LITTLE_ENDIAN
         case 24: return buf_8bpp[index] | (buf_8bpp[index + 1] << 8) | (buf_8bpp[index + 2] << 16);
-    #else
+        #else
         case 24: return buf_8bpp[index + 2] | (buf_8bpp[index + 1] << 8) | (buf_8bpp[index] << 16);
-    #endif
+        #endif
         case 32: return buf_32bpp[index];
         default: __builtin_unreachable();
     }
@@ -175,8 +204,8 @@ __attribute__((always_inline)) static inline void sasr_blit_impl_2(
     bool              is_raw_buf,
     bool              is_pal_buf
 ) {
-    // Determine copying parameters for top buffer.
-    #if PAX_COMPILE_ORIENTATION
+        // Determine copying parameters for top buffer.
+        #if CONFIG_PAX_COMPILE_ORIENTATION
     // clang-format off
     int dx, dy; bool swap;
     int top_dx, top_dy, top_index;
@@ -210,11 +239,11 @@ __attribute__((always_inline)) static inline void sasr_blit_impl_2(
         top_dy = top_dims.x * dy;
     }
     top_index = top_pos.x + top_pos.y * top_dims.x;
-    #else
+        #else
     int top_dx    = 1;
     int top_dy    = top_dims.x;
     int top_index = top_pos.x + top_dims.x * top_pos.y;
-    #endif
+        #endif
 
     // Determine copying parameters for bottom buffer.
     int base_dy    = base->width * 2 - base_pos.w;
@@ -390,7 +419,7 @@ __attribute__((always_inline)) static inline void pax_sasr_blit_char_impl_2(
     // clang-format off
     int dx, dy;
     pax_recti effective_clip;
-#if PAX_COMPILE_ORIENTATION
+#if CONFIG_PAX_COMPILE_ORIENTATION
     effective_clip = pax_get_clip(buf);
     switch (buf->orientation) {
         case PAX_O_UPRIGHT:         dx =  1;          dy =  buf->width; break;
@@ -668,7 +697,7 @@ void pax_mcrw1_blit_char(pax_buf_t *buf, pax_col_t color, pax_vec2i pos, int sca
     pax_sasr_blit_char_impl(1, buf, color, pos, scale, rsdata);
 }
 
-#endif
+    #endif
 
 
 // Draw a solid-colored line.
@@ -854,12 +883,12 @@ void pax_sasr_blit_char(pax_buf_t *buf, pax_col_t color, pax_vec2i pos, int scal
 void pax_sasr_join() {
     ptq_join(args0.queue, &args0.rendermtx);
     pthread_mutex_unlock(&args0.rendermtx);
-#if PAX_COMPILE_ASYNC_RENDERER == 2
+    #if CONFIG_PAX_COMPILE_ASYNC_RENDERER == 2
     if (is_multithreaded) {
         ptq_join(args1.queue, &args1.rendermtx);
         pthread_mutex_unlock(&args1.rendermtx);
     }
-#endif
+    #endif
 }
 
 
@@ -881,7 +910,7 @@ pax_render_funcs_t const pax_render_funcs_softasync = {
     .join          = pax_sasr_join,
 };
 
-#if PAX_COMPILE_ASYNC_RENDERER == 2
+    #if CONFIG_PAX_COMPILE_ASYNC_RENDERER == 2
 // Async software rendering functions.
 pax_render_funcs_t const pax_render_funcs_mcr_thread0 = {
     .unshaded_line = pax_mcrw0_unshaded_line,
@@ -913,7 +942,7 @@ pax_render_funcs_t const pax_render_funcs_mcr_thread1 = {
     .blit_raw      = pax_mcrw1_blit_raw,
     .blit_char     = pax_mcrw1_blit_char,
 };
-#endif
+    #endif
 
 // Async software rendering engine.
 pax_render_engine_t const pax_render_engine_softasync = {
@@ -921,3 +950,5 @@ pax_render_engine_t const pax_render_engine_softasync = {
     .deinit         = pax_sasr_deinit,
     .implicit_dirty = true,
 };
+
+#endif // CONFIG_PAX_COMPILE_ASYNC_RENDERER

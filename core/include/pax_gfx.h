@@ -30,11 +30,16 @@ char const *pax_desc_err(pax_err_t error);
 
 
 
-/* ===== MULTI-CORE RENDERING ==== */
+/* ===== RENDER ENGINE HOUSEKEEPING ==== */
 
 // Wait for all pending drawing operations to finish.
 void pax_join();
-
+// Set the render engine to synchronous software renderer.
+void pax_set_render_engine_default();
+// Enable the asynchronous renderer.
+// If `multithreaded` is `true` and `CONFIG_PAX_COMPILE_ASYNC_RENDERER` is set to `2`,
+// This will use two threads for rendering instead of just one.
+void pax_set_renderer_async(bool multithreaded);
 
 
 /* ============ BUFFER =========== */

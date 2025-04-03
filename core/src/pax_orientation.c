@@ -72,7 +72,7 @@ static inline pax_vec2f pax_orient_ccw3_flip_vec2f(pax_vec2i buf_dim, pax_vec2f 
 
 // Detects orientation and transforms co-ordinates accordingly.
 pax_vec2f pax_orient_det_vec2f(pax_buf_t const *buf, pax_vec2f vec) {
-#if PAX_COMPILE_ORIENTATION
+#if CONFIG_PAX_COMPILE_ORIENTATION
     pax_vec2i buf_dim = {buf->width, buf->height};
     switch (buf->orientation) {
         default:
@@ -92,7 +92,7 @@ pax_vec2f pax_orient_det_vec2f(pax_buf_t const *buf, pax_vec2f vec) {
 
 // Detects orientation and transforms co-ordinates accordingly.
 pax_vec2f pax_unorient_det_vec2f(pax_buf_t const *buf, pax_vec2f vec) {
-#if PAX_COMPILE_ORIENTATION
+#if CONFIG_PAX_COMPILE_ORIENTATION
     pax_vec2i buf_dim   = {buf->width, buf->height};
     pax_vec2i buf_dim_r = {buf->height, buf->width};
     switch (buf->orientation) {
@@ -191,7 +191,7 @@ static inline pax_rectf pax_orient_ccw3_flip_rectf(pax_vec2i buf_dim, pax_rectf 
 
 // Detects orientation and transforms co-ordinates accordingly.
 pax_rectf pax_orient_det_rectf(pax_buf_t const *buf, pax_rectf vec) {
-#if PAX_COMPILE_ORIENTATION
+#if CONFIG_PAX_COMPILE_ORIENTATION
     pax_vec2i buf_dim = {buf->width, buf->height};
     switch (buf->orientation) {
         default:
@@ -211,7 +211,7 @@ pax_rectf pax_orient_det_rectf(pax_buf_t const *buf, pax_rectf vec) {
 
 // Detects orientation and transforms co-ordinates accordingly.
 pax_rectf pax_unorient_det_rectf(pax_buf_t const *buf, pax_rectf vec) {
-#if PAX_COMPILE_ORIENTATION
+#if CONFIG_PAX_COMPILE_ORIENTATION
     pax_vec2i buf_dim   = {buf->width, buf->height};
     pax_vec2i buf_dim_r = {buf->height, buf->width};
     switch (buf->orientation) {
@@ -296,7 +296,7 @@ static inline pax_vec2i pax_orient_ccw3_flip_vec2i(pax_vec2i buf_dim, pax_vec2i 
 
 // Detects orientation and transforms co-ordinates accordingly.
 pax_vec2i pax_orient_det_vec2i(pax_buf_t const *buf, pax_vec2i vec) {
-#if PAX_COMPILE_ORIENTATION
+#if CONFIG_PAX_COMPILE_ORIENTATION
     pax_vec2i buf_dim = {buf->width, buf->height};
     switch (buf->orientation) {
         default:
@@ -316,7 +316,7 @@ pax_vec2i pax_orient_det_vec2i(pax_buf_t const *buf, pax_vec2i vec) {
 
 // Detects orientation and transforms co-ordinates accordingly.
 pax_vec2i pax_unorient_det_vec2i(pax_buf_t const *buf, pax_vec2i vec) {
-#if PAX_COMPILE_ORIENTATION
+#if CONFIG_PAX_COMPILE_ORIENTATION
     pax_vec2i buf_dim   = {buf->width, buf->height};
     pax_vec2i buf_dim_r = {buf->height, buf->width};
     switch (buf->orientation) {
@@ -415,7 +415,7 @@ static inline pax_recti pax_orient_ccw3_flip_recti(pax_vec2i buf_dim, pax_recti 
 
 // Detects orientation and transforms co-ordinates accordingly.
 pax_recti pax_orient_det_recti(pax_buf_t const *buf, pax_recti rect) {
-#if PAX_COMPILE_ORIENTATION
+#if CONFIG_PAX_COMPILE_ORIENTATION
     pax_vec2i buf_dim = {buf->width, buf->height};
     switch (buf->orientation) {
         default:
@@ -435,7 +435,7 @@ pax_recti pax_orient_det_recti(pax_buf_t const *buf, pax_recti rect) {
 
 // Detects orientation and transforms co-ordinates accordingly.
 pax_recti pax_unorient_det_recti(pax_buf_t const *buf, pax_recti rect) {
-#if PAX_COMPILE_ORIENTATION
+#if CONFIG_PAX_COMPILE_ORIENTATION
     pax_vec2i buf_dim   = {buf->width, buf->height};
     pax_vec2i buf_dim_r = {buf->height, buf->width};
     switch (buf->orientation) {
