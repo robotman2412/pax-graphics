@@ -170,6 +170,8 @@ enum pax_task_type {
     PAX_TASK_BLIT,
     // Raw pixel data blit.
     PAX_TASK_BLIT_RAW,
+    // PAX bitmapped character font blit.
+    PAX_TASK_BLIT_CHAR,
 };
 
 // Distinguishes between ways to draw fonts.
@@ -215,6 +217,7 @@ typedef struct pax_buf           pax_buf_t;
 typedef struct pax_shader        pax_shader_t;
 typedef struct pax_task          pax_task_t;
 typedef struct pax_shader_ctx    pax_shader_ctx_t;
+typedef struct pax_text_rsdata   pax_text_rsdata_t;
 typedef struct pax_bmpv          pax_bmpv_t;
 typedef struct pax_font          pax_font_t;
 typedef struct pax_font_range    pax_font_range_t;
@@ -292,15 +295,15 @@ struct pax_shader {
 };
 
 // Information relevant to each character of a variable pitch font.
-struct pax_bmpv {
+struct __attribute__((aligned(4))) pax_bmpv {
     // The position of the drawn portion.
-    int8_t  draw_x, draw_y;
+    int8_t   draw_x, draw_y;
     // The size of the drawn portion.
-    uint8_t draw_w, draw_h;
-    // The measured width of the glyph.
-    uint8_t measured_width;
+    uint8_t  draw_w, draw_h;
     // The index in the glyphs data for this glyph.
-    size_t  index;
+    uint32_t index          : 24;
+    // The measured width of the glyph.
+    uint32_t measured_width : 8;
 };
 
 // Information relevant for the entirety of each font.
@@ -389,6 +392,19 @@ struct pax_shader_ctx {
 #ifdef PAX_REVEAL_OPAQUE
 #ifndef PAX_TYPES_H_OPAQUE_REVEALED
     #define PAX_TYPES_H_OPAQUE_REVEALED
+// Internal temporary representation used for text rendering.
+// WARNING: Subject to change at any time for any reason, do not use this type yourself.
+struct pax_text_rsdata {
+    // Glyph size.
+    uint8_t        w, h;
+    // Glyph bits per pixel.
+    uint8_t        bpp;
+    // Stride between rows.
+    uint8_t        row_stride;
+    // Pointer to the glyph in the bitmap data.
+    uint8_t const *bitmap;
+};
+
 // A task to perform, used by multicore rendering.
 // Every task has pre-transformed co-ordinates.
 // If you change the shader object's content (AKA the value that args points to),
@@ -405,6 +421,8 @@ struct pax_task {
     // Whether to use a shader.
     bool            use_shader;
     union {
+        // Data for character blit.
+        pax_text_rsdata_t rsdata;
         // Top framebuffer data for blit.
         struct {
             // Top framebuffer or raw pixel data.
@@ -424,6 +442,11 @@ struct pax_task {
         pax_linef line_uvs;
     };
     union {
+        // Shape parameters for character blit.
+        struct {
+            pax_vec2i pos;
+            int       scale;
+        } blit_char;
         // Shape parameters for quads.
         pax_quadf quad_shape;
         // Base rectangle for blit.

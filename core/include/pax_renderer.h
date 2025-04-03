@@ -53,6 +53,9 @@ typedef struct {
         pax_vec2i         top_pos
     );
 
+    // Blit one or more characters of text in the bitmapped format.
+    void (*blit_char)(pax_buf_t *buf, pax_col_t color, pax_vec2i pos, int scale, pax_text_rsdata_t rsdata);
+
     // Wait for all pending drawing operations to finish.
     void (*join)();
 } pax_render_funcs_t;
@@ -113,6 +116,8 @@ void pax_dispatch_blit_raw(
     pax_orientation_t top_orientation,
     pax_vec2i         top_pos
 );
+// Blit one or more characters of text in the bitmapped format.
+void pax_dispatch_blit_char(pax_buf_t *buf, pax_col_t color, pax_vec2i pos, int scale, pax_text_rsdata_t rsdata);
 
 
 

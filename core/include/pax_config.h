@@ -82,4 +82,11 @@
     #endif
 #endif
 
+#ifndef PAX_TEXT_BUCKET_SIZE
+    // How many glyphs can be rendered at once before `pax_join()` is implicitly called.
+    // Low numbers may significantly hamper text performance if using asynchronous rendering.
+    // Uses 8 or 16 bytes of stack space per glyph for 32-bit and 64-bit systems respectively.
+    #define PAX_TEXT_BUCKET_SIZE 32
+#endif
+
 #endif // PAX_CONFIG_H

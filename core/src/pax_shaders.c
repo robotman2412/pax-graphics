@@ -5,268 +5,116 @@
 
 #include "pax_internal.h"
 
-static inline float pax_interp_cubic(float a) {
-    // Cubic interpolation: y = -2x³ + 3x²
-    return -2 * a * a * a + 3 * a * a;
-}
-
 #if PAX_DO_BICUBIC
-#define pax_interp_value pax_interp_cubic
+    // Cubic interpolation: y = -2x³ + 3x²
+    #define pax_interp_value(a) (-2 * a * a * a + 3 * a * a)
 #else
-// Linear interpolation: y = x
-#define pax_interp_value(a) (a)
+    // Linear interpolation: y = x
+    #define pax_interp_value(a) (a)
 #endif
 
-// Texture shader for multi-bpp bitmap fonts on palette type buffers.
-pax_col_t pax_shader_font_bmp_hi_pal(pax_col_t base, pax_col_t existing, int x, int y, float u, float v, void *args0) {
-    pax_font_bmp_args_t *args = args0;
 
-    // Extract texture coords.
-    int glyph_x = u;
-    int glyph_y = v;
-    if (glyph_x >= args->glyph_w)
-        glyph_x = args->glyph_w - 1;
-    if (glyph_y >= args->glyph_h)
-        glyph_y = args->glyph_h - 1;
 
-    // Find byte index of pixel.
-    size_t glyph_index = glyph_x / args->ppb + args->glyph_y_mul * glyph_y;
-
-    // Extract pixel data.
-    uint16_t val =
-        // Get bitmap at byte index.
-        (args->bitmap[glyph_index]
-         // Align the bits.
-         >> args->bpp * (glyph_x & (args->index_mask)))
-        // Mask out the ones we want.
-        & args->mask;
-
-    // Compute alpha.
-    uint8_t alpha = val * 255 / (args->mask);
-
-    // Pick the output value.
-    return alpha <= 127 ? existing : base;
+// Sample a pixel from a bitmap font glyph.
+static inline __attribute__((always_inline)) uint8_t sample_glyph(int x, int y, pax_text_rsdata_t const *rsdata) {
+    uint8_t value  = rsdata->bitmap[rsdata->row_stride * y + x * rsdata->bpp / 8];
+    value          = value >> (x * rsdata->bpp % 8);
+    value         &= (1 << rsdata->bpp) - 1;
+    value          = value * 255 / ((1 << rsdata->bpp) - 1);
+    return value;
 }
 
-// Texture shader for multi-bpp bitmap fonts.
-pax_col_t pax_shader_font_bmp_hi(pax_col_t base, pax_col_t existing, int x, int y, float u, float v, void *args0) {
-    pax_font_bmp_args_t *args = args0;
-
-    // Extract texture coords.
-    int glyph_x = u;
-    int glyph_y = v;
-    if (glyph_x >= args->glyph_w)
-        glyph_x = args->glyph_w - 1;
-    if (glyph_y >= args->glyph_h)
-        glyph_y = args->glyph_h - 1;
-
-    // Find byte index of pixel.
-    size_t glyph_index = glyph_x / args->ppb + args->glyph_y_mul * glyph_y;
-
-    // Extract pixel data.
-    uint16_t val =
-        // Get bitmap at byte index.
-        (args->bitmap[glyph_index]
-         // Align the bits.
-         >> args->bpp * (glyph_x & (args->index_mask)))
-        // Mask out the ones we want.
-        & args->mask;
-
-    // Compute alpha.
-    uint8_t alpha = val * 255 / (args->mask);
-
-    // Interpolate the output color.
-    uint8_t coeff8 = pax_lerp(alpha, 0, base >> 24);
-    return pax_col_lerp(coeff8, existing | 0xff000000, base);
-}
-
-// Texture shader for multi-bpp bitmap fonts with linear interpolation.
-pax_col_t pax_shader_font_bmp_hi_aa(pax_col_t base, pax_col_t existing, int x, int y, float u, float v, void *args0) {
-    pax_font_bmp_args_t *args = args0;
-
-    // Correct UVs for the offset caused by filtering.
-    u             -= 0.5;
-    v             -= 0.5;
-    // Get texture coords, round down instead of round to 0.
-    int   glyph_x  = floorf(u);
-    int   glyph_y  = floorf(v);
-    // Get subpixel coords.
-    float dx       = pax_interp_value(u - glyph_x);
-    float dy       = pax_interp_value(v - glyph_y);
-
-    // Coords out of bounds fix.
-    if (glyph_x >= args->glyph_w)
-        glyph_x = args->glyph_w - 1;
-    if (glyph_y >= args->glyph_h)
-        glyph_y = args->glyph_h - 1;
-
-    // Find byte indicies for four neighbouring pixels.
-    size_t glyph_index_0 = glyph_x / args->ppb + args->glyph_y_mul * glyph_y;
-    glyph_y++;
-    size_t glyph_index_2 = glyph_x / args->ppb + args->glyph_y_mul * glyph_y;
-    glyph_x++;
-    size_t glyph_index_3 = glyph_x / args->ppb + args->glyph_y_mul * glyph_y;
-    glyph_y--;
-    size_t glyph_index_1 = glyph_x / args->ppb + args->glyph_y_mul * glyph_y;
-    glyph_x--;
-
-    uint8_t const *arr         = args->bitmap;
-    uint8_t        glyph_bit_0 = 0;
-    uint8_t        glyph_bit_1 = 0;
-    uint8_t        glyph_bit_2 = 0;
-    uint8_t        glyph_bit_3 = 0;
-
-    // Top left bit.
-    if (glyph_x >= 0 && glyph_y >= 0) {
-        glyph_bit_0 = (arr[glyph_index_0] >> args->bpp * (glyph_x & (args->index_mask))) & args->mask;
-    }
-
-    // Top right bit.
-    if (glyph_x < args->glyph_w - 1 && glyph_y >= 0) {
-        glyph_bit_1 = (arr[glyph_index_1] >> args->bpp * ((glyph_x + 1) & (args->index_mask))) & args->mask;
-    }
-
-    // Bottom left bit.
-    if (glyph_x >= 0 && glyph_y < args->glyph_h - 1) {
-        glyph_bit_2 = (arr[glyph_index_2] >> args->bpp * (glyph_x & (args->index_mask))) & args->mask;
-    }
-
-    // Bottom right bit.
-    if (glyph_x < args->glyph_w - 1 && glyph_y < args->glyph_h - 1) {
-        glyph_bit_3 = (arr[glyph_index_3] >> args->bpp * ((glyph_x + 1) & (args->index_mask))) & args->mask;
-    }
-
-    // Turn them into floats.
-    float c0 = glyph_bit_0 / (float)args->mask;
-    float c1 = glyph_bit_1 / (float)args->mask;
-    float c2 = glyph_bit_2 / (float)args->mask;
-    float c3 = glyph_bit_3 / (float)args->mask;
-
-    // First stage interpolation.
-    float c4 = c0 + (c1 - c0) * dx;
-    float c5 = c2 + (c3 - c2) * dx;
-
-    // Second stage interpolation.
-    float coeff = c4 + (c5 - c4) * dy;
-
-    // Interpolate the output color.
-    uint8_t coeff8 = coeff * (base >> 24);
-    return pax_col_lerp(coeff8, existing | 0xff000000, base);
-}
-
-
-// Texture shader for 1bpp bitmap fonts on palette type buffers.
+// Texture shader for bitmap fonts on palette type buffers.
 pax_col_t pax_shader_font_bmp_pal(pax_col_t tint, pax_col_t existing, int x, int y, float u, float v, void *args0) {
-    pax_font_bmp_args_t *args = args0;
+    pax_text_rsdata_t const *args = args0;
 
     // Get texture coords.
     int glyph_x = u;
     int glyph_y = v;
-    // Coords out of bounds fix.
-    if (glyph_x >= args->glyph_w)
-        glyph_x = args->glyph_w - 1;
-    if (glyph_y >= args->glyph_h)
-        glyph_y = args->glyph_h - 1;
-    // Get byte index of pixel.
-    size_t glyph_index = glyph_x / 8 + args->glyph_y_mul * glyph_y;
+    // Clamp to bounds.
+    if (glyph_x >= args->w)
+        glyph_x = args->w - 1;
+    if (glyph_y >= args->h)
+        glyph_y = args->h - 1;
 
-    // Extract the pixel data.
-    bool pixdat = args->bitmap[glyph_index] & (1 << (glyph_x & 7));
-    return pixdat ? tint : existing;
+    return sample_glyph(glyph_x, glyph_y, args) >= 128 ? tint : existing;
 }
 
-// Texture shader for 1bpp bitmap fonts.
+// Texture shader for bitmap fonts.
 pax_col_t pax_shader_font_bmp(pax_col_t tint, pax_col_t existing, int x, int y, float u, float v, void *args0) {
-    pax_font_bmp_args_t *args = args0;
+    pax_text_rsdata_t const *args = args0;
 
     // Get texture coords.
     int glyph_x = u;
     int glyph_y = v;
-    // Coords out of bounds fix.
-    if (glyph_x >= args->glyph_w)
-        glyph_x = args->glyph_w - 1;
-    if (glyph_y >= args->glyph_h)
-        glyph_y = args->glyph_h - 1;
-    // Get byte index of pixel.
-    size_t glyph_index = glyph_x / 8 + args->glyph_y_mul * glyph_y;
+    // Clamp to bounds.
+    if (glyph_x >= args->w)
+        glyph_x = args->w - 1;
+    if (glyph_y >= args->h)
+        glyph_y = args->h - 1;
 
     // Extract the pixel data.
-    bool pixdat = args->bitmap[glyph_index] & (1 << (glyph_x & 7));
-    return pixdat ? pax_col_merge(existing, tint) : existing;
+    uint8_t value = sample_glyph(glyph_x, glyph_y, args);
+
+    // Alpha-blend with the existing color.
+    tint = (tint & 0x00ffffff) | (pax_lerp(value, 0, tint >> 24) << 24);
+    return pax_col_merge(existing, tint);
 }
 
-// Texture shader for 1bpp bitmap fonts with linear interpolation.
-pax_col_t pax_shader_font_bmp_aa(pax_col_t base, pax_col_t existing, int x, int y, float u, float v, void *args0) {
-    pax_font_bmp_args_t *args = args0;
+// Texture shader for bitmap fonts with linear interpolation.
+pax_col_t pax_shader_font_bmp_aa(pax_col_t tint, pax_col_t existing, int x, int y, float u, float v, void *args0) {
+    pax_text_rsdata_t const *args = args0;
 
     // Correct UVs for the offset caused by filtering.
-    u             -= 0.5;
-    v             -= 0.5;
+    u                -= 0.5;
+    v                -= 0.5;
     // Get texture coords, round down instead of round to 0.
-    int   glyph_x  = floorf(u);
-    int   glyph_y  = floorf(v);
+    int      glyph_x  = floorf(u);
+    int      glyph_y  = floorf(v);
     // Get subpixel coords.
-    float dx       = pax_interp_value(u - glyph_x);
-    float dy       = pax_interp_value(v - glyph_y);
+    uint16_t dx       = pax_interp_value(u - glyph_x) * 255;
+    uint16_t dy       = pax_interp_value(v - glyph_y) * 255;
+    dx               += dx >> 7;
+    dy               += dy >> 7;
 
     // Coords out of bounds fix.
-    if (glyph_x >= args->glyph_w)
-        glyph_x = args->glyph_w - 1;
-    if (glyph_y >= args->glyph_h)
-        glyph_y = args->glyph_h - 1;
+    if (glyph_x >= args->w)
+        glyph_x = args->w - 1;
+    if (glyph_y >= args->h)
+        glyph_y = args->h - 1;
 
-    // Find byte indicies for four neighbouring pixels.
-    size_t glyph_index_0 = glyph_x / 8 + args->glyph_y_mul * glyph_y;
-    glyph_y++;
-    size_t glyph_index_2 = glyph_x / 8 + args->glyph_y_mul * glyph_y;
-    glyph_x++;
-    size_t glyph_index_3 = glyph_x / 8 + args->glyph_y_mul * glyph_y;
-    glyph_y--;
-    size_t glyph_index_1 = glyph_x / 8 + args->glyph_y_mul * glyph_y;
-    glyph_x--;
-
-    uint8_t const *arr         = args->bitmap;
-    bool           glyph_bit_0 = 0;
-    bool           glyph_bit_1 = 0;
-    bool           glyph_bit_2 = 0;
-    bool           glyph_bit_3 = 0;
+    uint8_t c0, c1, c2, c3;
 
     // Top left bit.
     if (glyph_x >= 0 && glyph_y >= 0) {
-        glyph_bit_0 = arr[glyph_index_0] & (1 << (glyph_x & 7));
+        c0 = sample_glyph(glyph_x, glyph_y, args);
     }
 
     // Top right bit.
-    if (glyph_x < args->glyph_w - 1 && glyph_y >= 0) {
-        glyph_bit_1 = arr[glyph_index_1] & (1 << ((glyph_x + 1) & 7));
+    if (glyph_x < args->w - 1 && glyph_y >= 0) {
+        c1 = sample_glyph(glyph_x + 1, glyph_y, args);
     }
 
     // Bottom left bit.
-    if (glyph_x >= 0 && glyph_y < args->glyph_h - 1) {
-        glyph_bit_2 = arr[glyph_index_2] & (1 << (glyph_x & 7));
+    if (glyph_x >= 0 && glyph_y < args->h - 1) {
+        c2 = sample_glyph(glyph_x, glyph_y + 1, args);
     }
 
     // Bottom right bit.
-    if (glyph_x < args->glyph_w - 1 && glyph_y < args->glyph_h - 1) {
-        glyph_bit_3 = arr[glyph_index_3] & (1 << ((glyph_x + 1) & 7));
+    if (glyph_x < args->w - 1 && glyph_y < args->h - 1) {
+        c3 = sample_glyph(glyph_x + 1, glyph_y + 1, args);
     }
 
-    // Simple conversion to float.
-    float c0 = glyph_bit_0;
-    float c1 = glyph_bit_1;
-    float c2 = glyph_bit_2;
-    float c3 = glyph_bit_3;
-
     // First stage interpolation.
-    float c4 = c0 + (c1 - c0) * dx;
-    float c5 = c2 + (c3 - c2) * dx;
+    uint8_t c4 = c0 + (c1 - c0) * dx / 256;
+    uint8_t c5 = c2 + (c3 - c2) * dx / 256;
 
     // Second stage interpolation.
-    float coeff = c4 + (c5 - c4) * dy;
+    uint8_t value = c4 + (c5 - c4) * dy / 256;
 
-    // Interpolate the output color.
-    uint8_t coeff8 = coeff * (base >> 24);
-    return pax_col_lerp(coeff8, existing | 0xff000000, base);
+    // Alpha-blend with the existing color.
+    tint = (tint & 0x00ffffff) | (pax_lerp(value, 0, tint >> 24) << 24);
+    return pax_col_merge(existing, tint);
 }
 
 

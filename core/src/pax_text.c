@@ -15,10 +15,6 @@ typedef struct {
     // Whether or not to render text.
     // If false, only calculates size.
     bool              do_render;
-    // The buffer to render to, if any.
-    pax_buf_t        *buf;
-    // The color to draw with.
-    pax_col_t         color;
     // The on-screen position of the text.
     float             x, y;
     // The font to use.
@@ -27,20 +23,16 @@ typedef struct {
     float             font_size;
 
     /* ---- Rendering context ---- */
-    // The glyph offset, if any.
-    uint8_t const *glyph_offs;
-    // The glyph bits per pixel, if any.
-    uint8_t        glyph_bpp;
-    // The rendered size of the glyph.
-    uint8_t        render_width, render_height;
-    // The counted size of the glyph.
-    uint8_t        counted_width, counted_height;
-    // The rendering offset of the glyph.
-    uint8_t        dx, dy;
-    // The vertical offset in bits per pixel.
-    uint8_t        vertical_offs;
+    // The buffer to render to, if any.
+    pax_buf_t        *buf;
+    // The color to draw with.
+    pax_col_t         color;
     // Whether to do anti-aliasing and/or interpolation.
-    bool           do_aa;
+    bool              do_aa;
+    // Number of text render data slots in use.
+    uint8_t           rsdata_len;
+    // Text render data slots.
+    pax_text_rsdata_t rsdata[PAX_TEXT_BUCKET_SIZE];
 } pax_text_render_t;
 
 
@@ -137,9 +129,12 @@ size_t pax_utf8_seekprev_l(char const *cstr, size_t len, size_t cursor) {
 
 /* ======= DRAWING: TEXT ======= */
 
-static uint64_t text_promise_callback(pax_buf_t *buf, pax_col_t tint, void *args0) {
-    pax_font_bmp_args_t *args = args0;
-    return !(tint & 0xff000000) ? PAX_PROMISE_INVISIBLE : (args->bpp == 1 && !args->do_aa) ? PAX_PROMISE_CUTOUT : 0;
+static uint64_t text_promise_callback_cutout(pax_buf_t *buf, pax_col_t tint, void *args0) {
+    return PAX_PROMISE_CUTOUT;
+}
+
+static uint64_t text_promise_callback_none(pax_buf_t *buf, pax_col_t tint, void *args0) {
+    return 0;
 }
 
 // Pixel-aligned optimisation of pax_shade_rect, used for text.
@@ -205,85 +200,86 @@ static void pixel_aligned_render(
     );
 }
 
-// Internal method for monospace bitmapped characters.
-static pax_vec2f text_bitmap_mono(pax_text_render_t *ctx, pax_font_range_t const *range, uint32_t glyph) {
-    if (ctx->do_render && glyph != 0x20) {
-        // Set up shader.
-        pax_font_bmp_args_t args = {
-            .font        = ctx->font,
-            .range       = range,
-            .glyph       = glyph,
-            .glyph_y_mul = (range->bitmap_mono.width * range->bitmap_mono.bpp + 7) / 8,
-            .glyph_w     = range->bitmap_mono.width,
-            .glyph_h     = range->bitmap_mono.height,
-            .bpp         = range->bitmap_mono.bpp,
-            .ppb         = 8 / range->bitmap_mono.bpp,
-            .do_aa       = ctx->do_aa,
-        };
-        args.mask       = (1 << args.bpp) - 1;
-        args.index_mask = (1 << args.ppb) - 1;
+// Dispatch the correct draw call for a glyph.
+static void dispatch_glyph(
+    pax_text_render_t *ctx, pax_vec2f pos, float scale, pax_font_range_t const *range, pax_text_rsdata_t rsdata
+) {
+    matrix_2d_t const *mtx       = &ctx->buf->stack_2d.value;
+    float              mat_scale = mtx->a0 * scale;
+    if (mtx->a0 > 0 && fabsf(mtx->a0 - mtx->b1) < 0.01 && fabsf(mat_scale - (int)mat_scale) < 0.01
+        && matrix_2d_is_identity2(*mtx)) {
+        // This can be optimized to the special text blitting function.
+        pax_dispatch_blit_char(ctx->buf, ctx->color, (pax_vec2i){pos.x, pos.y}, floorf(mat_scale + 0.5), rsdata);
+        return;
+    }
 
-        size_t glyph_len  = args.glyph_y_mul * range->bitmap_mono.height;
-        size_t byte_index = glyph_len * (glyph - range->start);
-        args.bitmap       = range->bitmap_mono.glyphs + byte_index;
-
-        pax_shader_t shader = {
-            .schema_version    = 1,
-            .schema_complement = ~1,
-            .renderer_id       = PAX_RENDERER_ID_SWR,
-            .promise_callback  = text_promise_callback,
-            .callback_args     = &args,
-            .alpha_promise_0   = true,
-            .alpha_promise_255 = false,
-        };
-        if (range->bitmap_mono.bpp == 1) {
-            // Single bit per pixel impl.
-            shader.callback = PAX_IS_PALETTE(ctx->buf->type) ? pax_shader_font_bmp_pal : pax_shader_font_bmp;
-        } else {
-            // Multi-bit per pixel impl.
-            shader.callback = PAX_IS_PALETTE(ctx->buf->type)
-                                  ? pax_shader_font_bmp_hi_pal
-                                  : (ctx->do_aa ? pax_shader_font_bmp_hi_aa : pax_shader_font_bmp_hi);
-        }
-
-        // And UVs.
-        pax_quadf uvs = {
-            .x0 = 0,
-            .y0 = 0,
-            .x1 = range->bitmap_mono.width,
-            .y1 = 0,
-            .x2 = range->bitmap_mono.width,
-            .y2 = range->bitmap_mono.height,
-            .x3 = 0,
-            .y3 = range->bitmap_mono.height,
-        };
-
-        // Start drawing, boy!
-        if (matrix_2d_is_identity1(ctx->buf->stack_2d.value)) {
-            // Pixel-aligned instead of float optimisation/fix.
-            pixel_aligned_render(
-                ctx->buf,
-                ctx->color,
-                &shader,
-                &uvs,
-                0,
-                0,
-                range->bitmap_mono.width,
-                range->bitmap_mono.height
-            );
-        } else {
-            pax_shade_rect(
-                ctx->buf,
-                ctx->color,
-                &shader,
-                &uvs,
-                0,
-                0,
-                range->bitmap_mono.width,
-                range->bitmap_mono.height
-            );
-        }
+    // Allocate a struct for glyph rendering information.
+    if (ctx->rsdata_len >= PAX_TEXT_BUCKET_SIZE) {
+        // All in use, wait for them to be free.
         pax_join();
+        ctx->rsdata_len = 0;
+    }
+    pax_text_rsdata_t *rsdata_buf = &ctx->rsdata[ctx->rsdata_len++];
+
+    // Set up shader.
+    pax_shader_t shader = {
+        .schema_version    = 1,
+        .schema_complement = ~1,
+        .renderer_id       = PAX_RENDERER_ID_SWR,
+        .callback_args     = (void *)rsdata_buf,
+        .alpha_promise_0   = true,
+        .alpha_promise_255 = false,
+    };
+
+    // Select correct shader function.
+    if (PAX_IS_PALETTE(ctx->buf->type) || range->bitmap_mono.bpp == 1 && ctx->color >> 24 == 255) {
+        shader.promise_callback = text_promise_callback_cutout;
+        shader.callback         = pax_shader_font_bmp_pal;
+    } else if (ctx->do_aa) {
+        shader.promise_callback = text_promise_callback_none;
+        shader.callback         = pax_shader_font_bmp_aa;
+    } else {
+        shader.promise_callback = text_promise_callback_none;
+        shader.callback         = pax_shader_font_bmp;
+    }
+
+    // Set UVs to pixel coordinates for the glyph.
+    pax_quadf uvs = {
+        .x0 = 0,
+        .y0 = 0,
+        .x1 = rsdata.w,
+        .y1 = 0,
+        .x2 = rsdata.w,
+        .y2 = rsdata.h,
+        .x3 = 0,
+        .y3 = rsdata.h,
+    };
+
+    // Start drawing, boy!
+    if (matrix_2d_is_identity2(ctx->buf->stack_2d.value)) {
+        // Pixel-aligned optimisation.
+        pixel_aligned_render(ctx->buf, ctx->color, &shader, &uvs, pos.x, pos.y, scale * rsdata.w, scale * rsdata.h);
+    } else {
+        // Generic shader draw required.
+        pax_shade_rect(ctx->buf, ctx->color, &shader, &uvs, pos.x, pos.y, scale * rsdata.w, scale * rsdata.h);
+    }
+}
+
+// Internal method for monospace bitmapped characters.
+static pax_vec2f text_bitmap_mono(
+    pax_text_render_t *ctx, pax_vec2f pos, float scale, pax_font_range_t const *range, uint32_t glyph
+) {
+    if (ctx->do_render && glyph != 0x20) {
+        // Set up glyph rendering information.
+        pax_text_rsdata_t rsdata = {
+            .bpp = range->bitmap_mono.bpp,
+            .w   = range->bitmap_mono.width,
+            .h   = range->bitmap_mono.height,
+        };
+        rsdata.row_stride = (rsdata.w * rsdata.bpp + 7) / 8;
+        rsdata.bitmap     = range->bitmap_mono.glyphs + rsdata.row_stride * rsdata.h * (glyph - range->start);
+
+        dispatch_glyph(ctx, pos, scale, range, rsdata);
     }
 
     // Size calculation is very simple.
@@ -291,86 +287,24 @@ static pax_vec2f text_bitmap_mono(pax_text_render_t *ctx, pax_font_range_t const
 }
 
 // Internal method for variable pitch bitmapped characters.
-static pax_vec2f text_bitmap_var(pax_text_render_t *ctx, pax_font_range_t const *range, uint32_t glyph) {
+static pax_vec2f
+    text_bitmap_var(pax_text_render_t *ctx, pax_vec2f pos, float scale, pax_font_range_t const *range, uint32_t glyph) {
     size_t            index = (glyph - range->start);
     pax_bmpv_t const *dims  = &range->bitmap_var.dims[index];
+
     if (ctx->do_render && glyph != 0x20) {
-        // Set up shader.
-        pax_font_bmp_args_t args = {
-            .font        = ctx->font,
-            .range       = range,
-            .glyph       = glyph,
-            .glyph_y_mul = (dims->draw_w * range->bitmap_var.bpp + 7) / 8,
-            .glyph_w     = dims->draw_w,
-            .glyph_h     = dims->draw_h,
-            .bpp         = range->bitmap_var.bpp,
-            .ppb         = 8 / range->bitmap_var.bpp,
-            .do_aa       = ctx->do_aa,
+        // Set up glyph rendering information.
+        pax_text_rsdata_t rsdata = {
+            .bpp = range->bitmap_var.bpp,
+            .w   = dims->draw_w,
+            .h   = dims->draw_h,
         };
-        args.mask         = (1 << args.bpp) - 1;
-        args.index_mask   = args.ppb - 1;
-        size_t byte_index = dims->index;
-        args.bitmap       = range->bitmap_mono.glyphs + byte_index;
+        rsdata.row_stride = (rsdata.w * rsdata.bpp + 7) / 8;
+        rsdata.bitmap     = range->bitmap_var.glyphs + dims->index;
 
-        pax_shader_t shader = {
-            .schema_version    = 1,
-            .schema_complement = ~1,
-            .renderer_id       = PAX_RENDERER_ID_SWR,
-            .promise_callback  = text_promise_callback,
-            .callback_args     = &args,
-            .alpha_promise_0   = true,
-            .alpha_promise_255 = false,
-        };
-        if (range->bitmap_var.bpp == 1) {
-            // Single bit per pixel impl.
-            shader.callback = PAX_IS_PALETTE(ctx->buf->type) ? pax_shader_font_bmp_pal : pax_shader_font_bmp;
-        } else {
-            // Multi-bit per pixel impl.
-            shader.callback = PAX_IS_PALETTE(ctx->buf->type)
-                                  ? pax_shader_font_bmp_hi_pal
-                                  : (ctx->do_aa ? pax_shader_font_bmp_hi_aa : pax_shader_font_bmp_hi);
-        }
-
-        // And UVs.
-        pax_quadf uvs = {
-            .x0 = 0,
-            .y0 = 0,
-            .x1 = dims->draw_w,
-            .y1 = 0,
-            .x2 = dims->draw_w,
-            .y2 = dims->draw_h,
-            .x3 = 0,
-            .y3 = dims->draw_h,
-        };
-
-        // Start drawing, boy!
-        if (dims->draw_w && dims->draw_h) {
-            if (matrix_2d_is_identity1(ctx->buf->stack_2d.value)) {
-                // Pixel-aligned instead of float optimisation/fix.
-                pixel_aligned_render(
-                    ctx->buf,
-                    ctx->color,
-                    &shader,
-                    &uvs,
-                    dims->draw_x,
-                    dims->draw_y,
-                    dims->draw_w,
-                    dims->draw_h
-                );
-            } else {
-                pax_shade_rect(
-                    ctx->buf,
-                    ctx->color,
-                    &shader,
-                    &uvs,
-                    dims->draw_x,
-                    dims->draw_y,
-                    dims->draw_w,
-                    dims->draw_h
-                );
-            }
-            pax_join();
-        }
+        pos.x += dims->draw_x * scale;
+        pos.y += dims->draw_y * scale;
+        dispatch_glyph(ctx, pos, scale, range, rsdata);
     }
 
     // Size calculation is very simple.
@@ -396,7 +330,9 @@ static pax_font_range_t const *text_get_range(pax_font_t const *font, uint32_t c
 }
 
 // Internal method for rendering text and calculating text size.
-static pax_2vec2f text_generic(pax_text_render_t *ctx, char const *text, size_t len, ptrdiff_t cursorpos) {
+static pax_2vec2f text_generic(
+    pax_text_render_t *ctx, pax_vec2f pos, float scale, char const *text, size_t len, ptrdiff_t cursorpos
+) {
     // Sanity checks.
     if (!text) {
         return (pax_2vec2f){0, 0, NAN, NAN};
@@ -408,10 +344,6 @@ static pax_2vec2f text_generic(pax_text_render_t *ctx, char const *text, size_t 
 
     // Apply matrix transformation for size.
     float size_mul = ctx->font_size / ctx->font->default_size;
-    if (ctx->do_render) {
-        pax_push_2d(ctx->buf);
-        pax_apply_2d(ctx->buf, matrix_2d_scale(size_mul, size_mul));
-    }
     float x        = 0;
     float y        = 0;
     float max_x    = 0;
@@ -419,13 +351,13 @@ static pax_2vec2f text_generic(pax_text_render_t *ctx, char const *text, size_t 
     float cursor_y = NAN;
 
     // Simply loop over all characters.
-    size_t                  pos   = 0;
+    size_t                  i     = 0;
     pax_font_range_t const *range = NULL;
-    while (pos < len) {
+    while (i < len) {
         // Draw cursor.
-        if (cursorpos == pos) {
+        if (cursorpos == i) {
             if (ctx->do_render) {
-                pax_draw_line(ctx->buf, ctx->color, 0, 0, 0, ctx->font->default_size);
+                pax_draw_line(ctx->buf, ctx->color, pos.x, pos.y, pos.x, pos.y + scale * ctx->font->default_size);
             }
             cursor_x = x;
             cursor_y = y;
@@ -433,16 +365,16 @@ static pax_2vec2f text_generic(pax_text_render_t *ctx, char const *text, size_t 
 
         // Get a character.
         uint32_t glyph       = 0;
-        size_t   glyph_size  = pax_utf8_getch_l(text + pos, len - pos, &glyph);
-        pos                 += glyph_size ?: 1;
+        size_t   glyph_size  = pax_utf8_getch_l(text + i, len - i, &glyph);
+        i                   += glyph_size ?: 1;
 
         // Is it a newline?
         if (glyph == '\r') {
             // Consume a '\n' if the next character is one.
-            if (pos < len) {
-                size_t peek_size = pax_utf8_getch_l(text + pos, len - pos, &glyph);
+            if (i < len) {
+                size_t peek_size = pax_utf8_getch_l(text + i, len - i, &glyph);
                 if (glyph == '\n') {
-                    pos += peek_size ?: 1;
+                    i += peek_size ?: 1;
                 }
             }
             goto newline;
@@ -454,7 +386,7 @@ static pax_2vec2f text_generic(pax_text_render_t *ctx, char const *text, size_t 
                 max_x = x;
             }
             if (ctx->do_render) {
-                pax_apply_2d(ctx->buf, matrix_2d_translate(-x, ctx->font->default_size));
+                pos.x -= x * scale * ctx->font->default_size;
             }
             x  = 0;
             y += ctx->font->default_size;
@@ -474,33 +406,24 @@ static pax_2vec2f text_generic(pax_text_render_t *ctx, char const *text, size_t 
             if (range) {
                 // Handle the character.
                 switch (range->type) {
-                    case PAX_FONT_TYPE_BITMAP_MONO: dims = text_bitmap_mono(ctx, range, glyph); break;
-                    case PAX_FONT_TYPE_BITMAP_VAR: dims = text_bitmap_var(ctx, range, glyph); break;
+                    case PAX_FONT_TYPE_BITMAP_MONO: dims = text_bitmap_mono(ctx, pos, scale, range, glyph); break;
+                    case PAX_FONT_TYPE_BITMAP_VAR: dims = text_bitmap_var(ctx, pos, scale, range, glyph); break;
                 }
             } else {
                 // Ignore it for now.
             }
-            x += dims.x;
-            if (ctx->do_render) {
-                pax_apply_2d(ctx->buf, matrix_2d_translate(dims.x, 0));
-                //     if (cursorpos == pos) {
-                //         pax_draw_line(ctx->buf, ctx->color, 0, 0, 0, ctx->font->default_size);
-                //     }
-            }
+            x     += dims.x;
+            pos.x += dims.x * scale;
         }
     }
 
     // Edge case: Cursor at the end.
-    if (cursorpos == pos) {
+    if (cursorpos == i) {
         if (ctx->do_render) {
-            pax_draw_line(ctx->buf, ctx->color, 0, 0, 0, ctx->font->default_size);
+            pax_draw_line(ctx->buf, ctx->color, pos.x, pos.y, pos.x, pos.y + scale * ctx->font->default_size);
         }
         cursor_x = x;
         cursor_y = y;
-    }
-
-    if (ctx->do_render) {
-        pax_pop_2d(ctx->buf);
     }
 
     if (x > max_x) {
@@ -537,13 +460,9 @@ pax_2vec2f left_text(
         .font_size = font_size,
         .do_aa     = font->recommend_aa,
     };
-    if (do_render) {
-        pax_push_2d(buf);
-        pax_apply_2d(buf, matrix_2d_translate(x, y));
-    }
-    pax_2vec2f dims = text_generic(&ctx, text, len, cursorpos);
-    if (do_render) {
-        pax_pop_2d(buf);
+    pax_2vec2f dims = text_generic(&ctx, (pax_vec2f){x, y}, font_size / font->default_size, text, len, cursorpos);
+    if (do_render && ctx.rsdata_len) {
+        pax_join();
     }
     return dims;
 }

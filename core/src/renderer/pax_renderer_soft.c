@@ -211,6 +211,135 @@ __attribute__((noinline)) void pax_swr_blit_raw(
     swr_blit_impl(base, top, top_dims, base_pos, top_orientation, top_pos, false, true, false);
 }
 
+// Clipping routine for text characters.
+// Returns `true` if the character should be drawn at all.
+__attribute__((always_inline)) static inline bool
+    blit_char_clip(pax_recti clip, pax_vec2i pos, int scale, pax_recti *dims_out, pax_text_rsdata_t rsdata) {
+    pax_recti dims = {0, 0, rsdata.w * scale, rsdata.h * scale};
+
+    // Offset to calculate clipping.
+    dims.x += pos.x;
+    dims.y += pos.y;
+
+    // Actual clipping calculation.
+    if (dims.x < clip.x) {
+        dims.w -= clip.x - dims.x;
+        dims.x  = clip.x;
+    }
+    if (dims.y < clip.y) {
+        dims.h -= clip.y - dims.y;
+        dims.y  = clip.y;
+    }
+    if (dims.x + dims.w > clip.x + clip.w) {
+        dims.w = clip.x + clip.w - dims.x;
+    }
+    if (dims.y + dims.h > clip.y + clip.h) {
+        dims.h = clip.y + clip.h - dims.y;
+    }
+
+    // Undo the offset.
+    dims.x -= pos.x;
+    dims.y -= pos.y;
+
+    *dims_out = dims;
+    return dims.w > 0 && dims.h > 0;
+}
+
+// Blit one or more characters of text in the bitmapped format.
+__attribute__((always_inline)) static inline void pax_swr_blit_char_impl(
+    pax_buf_t *buf, pax_col_t color, pax_vec2i pos, int scale, pax_text_rsdata_t rsdata, bool direct_set
+) {
+    // clang-format off
+    int dx, dy;
+    pax_recti effective_clip;
+#if PAX_COMPILE_ORIENTATION
+    effective_clip = pax_get_clip(buf);
+    switch (buf->orientation) {
+        case PAX_O_UPRIGHT:         dx =  1;          dy =  buf->width; break;
+        case PAX_O_ROT_CCW:         dx = -buf->width; dy =  1;          break;
+        case PAX_O_ROT_HALF:        dx = -1;          dy = -buf->width; break;
+        case PAX_O_ROT_CW:          dx =  buf->width; dy = -1;          break;
+        case PAX_O_FLIP_H:          dx = -1;          dy =  buf->width; break;
+        case PAX_O_ROT_CCW_FLIP_H:  dx =  buf->width; dy =  1;          break;
+        case PAX_O_ROT_HALF_FLIP_H: dx =  1;          dy = -buf->width; break;
+        case PAX_O_ROT_CW_FLIP_H:   dx = -buf->width; dy = -1;          break;
+    }
+#else
+    dx = 1;
+    dy = buf->width;
+    effective_clip = buf->clip;
+#endif
+    // clang-format on
+
+    // Calculate correct multiplier for alpha.
+    uint8_t  bitmask   = (1 << rsdata.bpp) - 1;
+    uint16_t alpha_mul = (0xff00 / bitmask);
+    if (!direct_set) {
+        // Premultiply the color's alpha.
+        alpha_mul  = alpha_mul * ((color >> 24) + (color >> 31)) / 256;
+        color     &= 0x00ffffff;
+    }
+
+    // Clip char.
+    pax_recti dims;
+    if (blit_char_clip(effective_clip, pos, scale, &dims, rsdata)) {
+        // Char is not (entirely) outside framebuffer.
+        // Calculate drawing parameters.
+        int bits_dy = rsdata.row_stride << 3;
+        int offset  = (pos.x + dims.x) * dx + (pos.y + dims.y) * dy;
+
+        // Actual blit loop.
+        for (int y = dims.y; y < dims.y + dims.h; y++) {
+            for (int x = dims.x; x < dims.x + dims.w; x++) {
+                // Extract value from character bitmap.
+                int     bit   = x / scale * rsdata.bpp + y / scale * bits_dy;
+                uint8_t value = (rsdata.bitmap[bit >> 3] >> (bit & 7)) & bitmask;
+                // Multiply value into 0-255 range.
+                value         = (value * alpha_mul) >> 8;
+
+                if (direct_set) {
+                    // Directly set the pixel.
+                    if (value >= 128) {
+                        buf->setter(buf, color, offset);
+                    }
+                } else {
+                    // Perform correct alpha-blending.
+                    pax_col_t top    = color | (value << 24);
+                    pax_col_t base   = buf->buf2col(buf, buf->getter(buf, offset));
+                    pax_col_t merged = pax_col_merge(base, top);
+                    buf->setter(buf, buf->col2buf(buf, merged), offset);
+                }
+
+                offset += dx;
+            }
+            offset += dy - dx * (dims.w - dims.x);
+        }
+    }
+}
+
+// Blit one or more characters of text in the bitmapped format.
+__attribute__((noinline)) static void
+    pax_swr_blit_char_direct_set(pax_buf_t *buf, pax_col_t color, pax_vec2i pos, int scale, pax_text_rsdata_t rsdata) {
+    pax_swr_blit_char_impl(buf, color, pos, scale, rsdata, true);
+}
+
+// Blit one or more characters of text in the bitmapped format.
+__attribute__((noinline)) static void
+    pax_swr_blit_char_alpha_blend(pax_buf_t *buf, pax_col_t color, pax_vec2i pos, int scale, pax_text_rsdata_t rsdata) {
+    pax_swr_blit_char_impl(buf, color, pos, scale, rsdata, false);
+}
+
+// Blit one or more characters of text in the bitmapped format.
+void pax_swr_blit_char(pax_buf_t *buf, pax_col_t color, pax_vec2i pos, int scale, pax_text_rsdata_t rsdata) {
+    if ((rsdata.bpp == 1 && color >> 24 == 255) || PAX_IS_PALETTE(buf->type)) {
+        // If the BPP is 1 and the color is fully opaque OR the buffer is of palette type, no alpha blending happens.
+        pax_swr_blit_char_direct_set(buf, color, pos, scale, rsdata);
+    } else {
+        // Otherwise, alpha blending is necessary.
+        pax_swr_blit_char_alpha_blend(buf, color, pos, scale, rsdata);
+    }
+}
+
 
 
 // Software rendering functions.
@@ -226,6 +355,7 @@ pax_render_funcs_t const pax_render_funcs_soft = {
     .sprite        = pax_swr_sprite,
     .blit          = pax_swr_blit,
     .blit_raw      = pax_swr_blit_raw,
+    .blit_char     = pax_swr_blit_char,
     .join          = NULL,
 };
 
