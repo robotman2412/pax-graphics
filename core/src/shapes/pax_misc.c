@@ -22,7 +22,7 @@ void pax_merge_pixel(pax_buf_t *buf, pax_col_t color, int x, int y) {
     }
 
     int index = x + y * buf->width;
-    if (PAX_IS_PALETTE(buf->type)) {
+    if (buf->type_info.fmt_type == PAX_BUF_SUBTYPE_PALETTE) {
         // Palette colors don't have conversion.
         if (color & 0xff000000)
             buf->setter(buf, color, index);
@@ -52,7 +52,7 @@ void pax_set_pixel(pax_buf_t *buf, pax_col_t color, int x, int y) {
     }
 
     int index = x + y * buf->width;
-    if (PAX_IS_PALETTE(buf->type)) {
+    if (buf->type_info.fmt_type == PAX_BUF_SUBTYPE_PALETTE) {
         // Palette colors don't have conversion.
         buf->setter(buf, color, index);
     } else {
@@ -266,7 +266,7 @@ static void draw_image_impl(
     PAX_BUF_CHECK(top);
 
     bool has_alpha = false;
-    if (!assume_opaque && PAX_IS_PALETTE(top->type)) {
+    if (!assume_opaque && top->type_info.fmt_type == PAX_BUF_SUBTYPE_PALETTE) {
         for (size_t i = 0; i < top->palette_size; i++) {
             if (top->palette[i] & 0xff000000 != 0xff000000) {
                 has_alpha = true;
@@ -274,7 +274,7 @@ static void draw_image_impl(
             }
         }
     } else if (!assume_opaque) {
-        has_alpha = pax_buf_type_info(top->type).a > 0;
+        has_alpha = top->type_info.a > 0;
     }
 
     if (width == top->width && height == top->height && !has_alpha && matrix_2d_is_identity1(base->stack_2d.value)) {
@@ -320,7 +320,7 @@ PAX_PERF_CRITICAL_ATTR void pax_background(pax_buf_t *buf, pax_col_t color) {
 #endif
 
     uint32_t value;
-    if (PAX_IS_PALETTE(buf->type)) {
+    if (buf->type_info.fmt_type == PAX_BUF_SUBTYPE_PALETTE) {
         if (color > buf->palette_size)
             value = 0;
         else
@@ -330,8 +330,8 @@ PAX_PERF_CRITICAL_ATTR void pax_background(pax_buf_t *buf, pax_col_t color) {
     }
 
     if (value == 0) {
-        memset(buf->buf, 0, PAX_BUF_CALC_SIZE(buf->width, buf->height, buf->type));
-    } else if (buf->bpp == 16) {
+        memset(buf->buf, 0, pax_buf_calc_size_dynamic(buf->width, buf->height, buf->type));
+    } else if (buf->type_info.bpp == 16) {
         if (buf->reverse_endianness) {
             value = pax_rev_endian_16(value);
         }
@@ -339,7 +339,7 @@ PAX_PERF_CRITICAL_ATTR void pax_background(pax_buf_t *buf, pax_col_t color) {
         for (size_t i = 0; i < buf->width * buf->height; i++) {
             buf->buf_16bpp[i] = value;
         }
-    } else if (buf->bpp == 32) {
+    } else if (buf->type_info.bpp == 32) {
         if (buf->reverse_endianness) {
             value = pax_rev_endian_32(value);
         }
@@ -349,13 +349,13 @@ PAX_PERF_CRITICAL_ATTR void pax_background(pax_buf_t *buf, pax_col_t color) {
         }
     } else {
         // Fill <=8bpp parts.
-        if (buf->bpp == 1)
+        if (buf->type_info.bpp == 1)
             value = -value;
-        else if (buf->bpp == 2)
+        else if (buf->type_info.bpp == 2)
             value = value * 0x55;
-        else if (buf->bpp == 4)
+        else if (buf->type_info.bpp == 4)
             value = value * 0x11;
-        size_t limit = (7 + buf->width * buf->height * buf->bpp) / 8;
+        size_t limit = (7 + buf->width * buf->height * buf->type_info.bpp) / 8;
         for (size_t i = 0; i < limit; i++) {
             buf->buf_8bpp[i] = value;
         }
@@ -410,9 +410,9 @@ void pax_buf_scroll(pax_buf_t *buf, pax_col_t placeholder, int x, int y) {
     size_t    count = buf->width * buf->height - labs(off);
 
     // Bit index version of the offset.
-    ptrdiff_t bit_off   = PAX_GET_BPP(buf->type) * off;
+    ptrdiff_t bit_off   = buf->type_info.bpp * off;
     // Number of bits to copy.
-    size_t    bit_count = PAX_GET_BPP(buf->type) * count;
+    size_t    bit_count = buf->type_info.bpp * count;
 
     if ((bit_off & 7) == 0) {
         // If bit offset lines up to a byte, use memmove.

@@ -34,7 +34,7 @@ void pax_get_setters(
     *range_merger = pax_range_merger_generic;
 #endif
 #if CONFIG_PAX_RANGE_SETTER
-    switch (buf->bpp) {
+    switch (buf->type_info.bpp) {
         case (1): *range_setter = pax_range_setter_1bpp; break;
         case (2): *range_setter = pax_range_setter_2bpp; break;
         case (4): *range_setter = pax_range_setter_4bpp; break;
@@ -65,7 +65,7 @@ void pax_get_setters(
     *range_setter = pax_range_setter_generic;
 #endif
 
-    switch (buf->bpp) {
+    switch (buf->type_info.bpp) {
         case (1):
             *getter = pax_index_getter_1bpp;
             *setter = pax_index_setter_1bpp;
@@ -471,13 +471,13 @@ void pax_range_merger_generic(pax_buf_t *buf, pax_col_t color, int index, int co
 pax_index_setter_t pax_get_setter(pax_buf_t const *buf, pax_col_t *col_ptr, pax_shader_t const *shader) {
     pax_col_t col = *col_ptr;
 
-    if (PAX_IS_PALETTE(buf->type)) {
+    if (buf->type_info.fmt_type == PAX_BUF_SUBTYPE_PALETTE) {
         return pax_do_draw_col(buf, col) ? buf->setter : NULL;
     }
 
     if (shader && (shader->callback == pax_shader_texture || shader->callback == pax_shader_texture_aa)) {
         // We can determine whether to factor in alpha based on buffer type.
-        if (PAX_IS_ALPHA(((pax_buf_t *)shader->callback_args)->type)) {
+        if (((pax_buf_t *)shader->callback_args)->type_info.fmt_type == PAX_BUF_SUBTYPE_PALETTE) {
             // If alpha needs factoring in, return the merging setter.
             return col & 0xff000000 ? pax_merge_index : NULL;
         } else {
@@ -519,7 +519,7 @@ pax_index_setter_t pax_get_setter(pax_buf_t const *buf, pax_col_t *col_ptr, pax_
 pax_range_setter_t pax_get_range_setter(pax_buf_t const *buf, pax_col_t *col_ptr) {
     pax_col_t col = *col_ptr;
 
-    if (PAX_IS_PALETTE(buf->type)) {
+    if (buf->type_info.fmt_type == PAX_BUF_SUBTYPE_PALETTE) {
         return pax_do_draw_col(buf, col) ? buf->range_setter : NULL;
     }
 

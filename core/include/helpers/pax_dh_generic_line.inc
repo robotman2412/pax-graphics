@@ -61,13 +61,13 @@ static
     if (shader_ctx.skip)
         return;
     // Get pixel setter.
-    pax_col_conv_t     buf2col = PAX_IS_PALETTE(buf->type) ? pax_col_conv_dummy : buf->buf2col;
+    pax_col_conv_t     buf2col = buf->type_info.fmt_type == PAX_BUF_SUBTYPE_PALETTE ? pax_col_conv_dummy : buf->buf2col;
     pax_index_setter_t setter  = pax_get_setter(buf, &color, shader);
     if (!setter)
         return;
     #else  // PDHG_SHADED
     // Get pixel setter.
-    pax_col_conv_t     buf2col = PAX_IS_PALETTE(buf->type) ? pax_col_conv_dummy : buf->buf2col;
+    pax_col_conv_t     buf2col = buf->type_info.fmt_type == PAX_BUF_SUBTYPE_PALETTE ? pax_col_conv_dummy : buf->buf2col;
     pax_index_setter_t setter  = pax_get_setter(buf, &color, NULL);
     if (!setter)
         return;

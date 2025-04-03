@@ -139,12 +139,12 @@ void pax_overlay_buffer(pax_buf_t *base, pax_buf_t *top, int x, int y, int width
         && base->reverse_endianness == top->reverse_endianness) {
         // When copying one buffer onto another as a background,
         // and the types are the same, perform a memcpy() instead.
-        memcpy(base->buf, top->buf, (PAX_GET_BPP(base->type) * width * height + 7) >> 3);
+        memcpy(base->buf, top->buf, (base->type_info.bpp * width * height + 7) >> 3);
         return;
     }
 
     // Check alpha channel presence.
-    if (!PAX_IS_ALPHA(top->type)) {
+    if (!top->type_info.a && top->type_info.fmt_type != PAX_BUF_SUBTYPE_PALETTE) {
         assume_opaque = true;
     }
 
@@ -276,7 +276,8 @@ void pax_line_shaded_old(
     pax_shader_ctx_t shader_ctx = pax_get_shader_ctx(buf, color, shader);
     if (shader_ctx.skip)
         return;
-    pax_col_conv_t buf2col = PAX_IS_PALETTE(buf->type) ? pax_col_conv_dummy : buf->buf2col;
+    pax_col_conv_t buf2col = buf->type_info.fmt_type == PAX_BUF_SUBTYPE_PALETTE
+                           ? pax_col_conv_dummy : buf->buf2col;
 
     // Sort points vertially.
     if (y0 > y1) {

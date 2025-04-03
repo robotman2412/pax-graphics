@@ -47,22 +47,54 @@ void pax_set_renderer_async(bool multithreaded);
 // Get buffer type info.
 pax_buf_type_info_t pax_buf_type_info(pax_buf_type_t type) __attribute__((const));
 
+// Determine how much capacity a certain buffer initialisation needs.
+static inline size_t pax_buf_calc_size_dynamic(int width, int height, pax_buf_type_t type) {
+    pax_buf_type_info_t info = pax_buf_type_info(type);
+    return (info.bpp * width * height + 7) >> 3;
+}
+
+#define PAX__STATIC_BUF_TYPE_HELPER(bpp, palette, grey, a, r, g, b, name)                                              \
+    enum {                                                                                                             \
+        name##__BPP     = bpp,                                                                                         \
+        name##__PALETTE = palette,                                                                                     \
+        name##__GREY    = grey,                                                                                        \
+        name##__A       = a,                                                                                           \
+        name##__R       = r,                                                                                           \
+        name##__G       = g,                                                                                           \
+        name##__B       = b,                                                                                           \
+    };
+#define PAX_DEF_BUF_TYPE_PAL(bpp, name)              PAX__STATIC_BUF_TYPE_HELPER(bpp, 1, 0, 0, 0, 0, 0, name)
+#define PAX_DEF_BUF_TYPE_GREY(bpp, name)             PAX__STATIC_BUF_TYPE_HELPER(bpp, 0, 1, 0, 0, 0, 0, name)
+#define PAX_DEF_BUF_TYPE_ARGB(bpp, a, r, g, b, name) PAX__STATIC_BUF_TYPE_HELPER(bpp, 0, 0, a, r, g, b, name)
+#include "helpers/pax_buf_type.inc"
+#undef PAX__STATIC_BUF_TYPE_HELPER
+
 // Get the bits per pixel for the given buffer type.
-#define PAX_GET_BPP(type)    (pax_buf_type_info(type).bpp)
+// Assumes `type` is literally the type name; use `pax_buf_type_info` for dynamic info.
+#define PAX_GET_BPP(type)    type##__BPP
 // Reflects whether the buffer type is paletted.
-#define PAX_IS_PALETTE(type) (pax_buf_type_info(type).fmt_type == 1)
+// Assumes `type` is literally the type name; use `pax_buf_type_info` for dynamic info.
+#define PAX_IS_PALETTE(type) type##__PALETTE
 // Reflects whether the buffer type is greyscale.
-#define PAX_IS_GREY(type)    (pax_buf_type_info(type).fmt_type == 2)
+// Assumes `type` is literally the type name; use `pax_buf_type_info` for dynamic info.
+#define PAX_IS_GREY(type)    type##__GREY
 // Reflects whether the buffer type is color.
-#define PAX_IS_COLOR(type)   (pax_buf_type_info(type).fmt_type == 3)
+// Assumes `type` is literally the type name; use `pax_buf_type_info` for dynamic info.
+#define PAX_IS_COLOR(type)   type##__R
 // Whether the buffer type potentially has alpha.
-#define PAX_IS_ALPHA(type)   (pax_buf_type_info(type).a)
+// Assumes `type` is literally the type name; use `pax_buf_type_info` for dynamic info.
+#define PAX_IS_ALPHA(type)   (type##__A || type##__PALETTE)
 
 // Determine how much capacity a certain buffer initialisation needs.
+// Assumes `type` is literally the type name; use `pax_buf_calc_size_dynamic` for dynamic info.
 #define PAX_BUF_CALC_SIZE(width, height, type) ((PAX_GET_BPP(type) * (width) * (height) + 7) >> 3)
+
 // Create a new buffer.
-// If mem is NULL, a new area is allocated.
-pax_buf_t       *pax_buf_init(void *mem, int width, int height, pax_buf_type_t type);
+// If `mem` is `NULL`, a new area is allocated.
+pax_buf_t *pax_buf_new(void *mem, int width, int height, pax_buf_type_t type);
+// Destroy the buffer, freeing its memory.
+void       pax_buf_delete(pax_buf_t *buf);
+
 // Set the palette for buffers with palette types.
 // Creates an internal copy of the palette.
 void             pax_buf_set_palette(pax_buf_t *buf, pax_col_t const *palette, size_t palette_len);
@@ -74,8 +106,6 @@ pax_col_t const *pax_buf_get_palette(pax_buf_t *buf, size_t *palette_len);
 // Enable/disable the reversing of endianness for `buf`.
 // Some displays might require a feature like this one.
 void             pax_buf_reversed(pax_buf_t *buf, bool reversed_endianness);
-// Destroy the buffer, freeing its memory.
-void             pax_buf_destroy(pax_buf_t *buf);
 
 // Retrieve the width of the buffer.
 int            pax_buf_get_width(pax_buf_t const *buf);
@@ -191,8 +221,37 @@ void pax_reset_2d(pax_buf_t *buf, bool full);
 
 
 
+// Indicates that this version of PAX has the `pax_buf_new` and `pax_buf_delete` functions.
+#define PAX_HAS_PAX_BUF_NEW 1
+
 #ifdef __cplusplus
 } // extern "C"
 #endif //__cplusplus
 
 #endif // PAX_GFX_H
+
+#ifdef PAX_REVEAL_OPAQUE
+#ifndef PAX_GFX_H_OPAQUE_REVEALED
+    #define PAX_GFX_H_OPAQUE_REVEALED
+
+    #ifdef __cplusplus
+extern "C" {
+    #endif //__cplusplus
+
+// Initialize a buffer where the `pax_buf_t` struct is user-managed.
+// If `mem` is `NULL`, a new area is allocated.
+// WARNING: Only use this function if you know what you're doing!
+// WARNING: If you're using this function because the API changed in 2.0, seriously consider using `pax_buf_new`!
+bool pax_buf_init(pax_buf_t *buf, void *mem, int width, int height, pax_buf_type_t type);
+
+// De-initialize a buffer initialized by `pax_buf_init`.
+// WARNING: Only use this function if you know what you're doing!
+// WARNING: If you're using this function because the API changed in 2.0, seriously consider using `pax_buf_delete`!
+void pax_buf_destroy(pax_buf_t *buf);
+
+    #ifdef __cplusplus
+}
+    #endif //__cplusplus
+
+#endif // PAX_GFX_H_OPAQUE_REVEALED
+#endif // PAX_REVEAL_OPAQUE

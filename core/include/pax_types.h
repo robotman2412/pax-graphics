@@ -355,13 +355,17 @@ struct pax_font_range {
     };
 };
 
+#define PAX_BUF_SUBTYPE_PALETTE 1
+#define PAX_BUF_SUBTYPE_GREY    2
+#define PAX_BUF_SUBTYPE_COLOR   3
+
 // Info about a buffer type.
 struct pax_buf_type_info {
     // Bits per pixel.
     uint8_t bpp;
     // Bits per channel for ARGB.
     uint8_t a, r, g, b;
-    // Color format type.
+    // Color format type; 1 for palette, 2 for greyscale, 3 for ARGB or RGB.
     uint8_t fmt_type;
     // Padding
     uint8_t : 8;
@@ -392,6 +396,11 @@ struct pax_shader_ctx {
 #ifdef PAX_REVEAL_OPAQUE
 #ifndef PAX_TYPES_H_OPAQUE_REVEALED
     #define PAX_TYPES_H_OPAQUE_REVEALED
+
+    #ifdef __cplusplus
+extern "C" {
+    #endif //__cplusplus
+
 // Internal temporary representation used for text rendering.
 // WARNING: Subject to change at any time for any reason, do not use this type yourself.
 struct pax_text_rsdata {
@@ -481,8 +490,9 @@ struct pax_buf {
         // Buffer pointer.
         void     *buf;
     };
-    // Bits per pixel.
-    int bpp;
+
+    // Cached buffer type information.
+    pax_buf_type_info_t type_info;
 
     // Palette for buffers with a pallete type.
     pax_col_t const *palette;
@@ -528,5 +538,10 @@ struct pax_buf {
     // Orientation setting.
     pax_orientation_t orientation;
 };
+
+    #ifdef __cplusplus
+}
+    #endif //__cplusplus
+
 #endif // PAX_TYPES_H_OPAQUE_REVEALED
 #endif // PAX_REVEAL_OPAQUE

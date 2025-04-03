@@ -257,28 +257,7 @@ void pax_range_setter_32bpp_rev(pax_buf_t *buf, pax_col_t color, int index, int 
 void pax_range_setter_generic(pax_buf_t *buf, pax_col_t color, int index, int count);
 #endif
 
-#if CONFIG_PAX_RANGE_MERGER == 1
-// Sets a raw value range from a 1BPP buffer.
-void pax_range_setter_1bpp(pax_buf_t *buf, pax_col_t color, int index, int count);
-// Sets a raw value range from a 2BPP buffer.
-void pax_range_setter_2bpp(pax_buf_t *buf, pax_col_t color, int index, int count);
-// Sets a raw value range from a 4BPP buffer.
-void pax_range_setter_4bpp(pax_buf_t *buf, pax_col_t color, int index, int count);
-// Sets a raw value range from a 8BPP buffer.
-void pax_range_setter_8bpp(pax_buf_t *buf, pax_col_t color, int index, int count);
-// Sets a raw value range from a 16BPP buffer.
-void pax_range_setter_16bpp(pax_buf_t *buf, pax_col_t color, int index, int count);
-// Sets a raw value range from a 24BPP buffer.
-void pax_range_setter_24bpp(pax_buf_t *buf, pax_col_t color, int index, int count);
-// Sets a raw value range from a 32BPP buffer.
-void pax_range_setter_32bpp(pax_buf_t *buf, pax_col_t color, int index, int count);
-// Sets a raw value range from a 16BPP buffer, reversed endianness.
-void pax_range_setter_16bpp_rev(pax_buf_t *buf, pax_col_t color, int index, int count);
-// Sets a raw value range from a 24BPP buffer, reversed endianness.
-void pax_range_setter_24bpp_rev(pax_buf_t *buf, pax_col_t color, int index, int count);
-// Sets a raw value range from a 32BPP buffer, reversed endianness.
-void pax_range_setter_32bpp_rev(pax_buf_t *buf, pax_col_t color, int index, int count);
-#elif CONFIG_PAX_RANGE_MERGER == 2
+#if CONFIG_PAX_RANGE_MERGER
     #define PAX_DEF_BUF_TYPE_PAL(bpp, name)                                                                            \
         void pax_range_merger_##bpp##_pal(pax_buf_t *buf, pax_col_t color, int index, int count);
     #define PAX_DEF_BUF_TYPE_GREY(bpp, name)                                                                           \
@@ -394,7 +373,7 @@ pax_col_t pax_888rgb_to_col(pax_buf_t const *buf, pax_col_t color);
 // Non-palette buffers: Draw if alpha > 0.
 // Palette buffers: Draw if color in bounds.
 static inline bool pax_do_draw_col(pax_buf_t const *buf, pax_col_t col) {
-    if (PAX_IS_PALETTE(buf->type)) {
+    if (buf->type_info.fmt_type == PAX_BUF_SUBTYPE_PALETTE) {
         return col < buf->palette_size;
     } else {
         return col & 0xff000000;

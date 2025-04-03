@@ -163,7 +163,7 @@ void paxmcr_overlay_buffer(
     }
 
     // Check alpha channel presence.
-    if (!PAX_IS_ALPHA(top->type)) {
+    if (!top->type_info.a && top->type_info.fmt_type != PAX_BUF_SUBTYPE_PALETTE) {
         assume_opaque = true;
     }
 

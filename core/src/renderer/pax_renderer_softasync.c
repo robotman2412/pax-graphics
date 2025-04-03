@@ -265,7 +265,7 @@ __attribute__((always_inline)) static inline void sasr_blit_impl_2(
                 pax_col_t        top_col  = _top->buf2col(_top, _top->getter(_top, top_index));
                 base->setter(base, base->col2buf(base, pax_col_merge(base_col, top_col)), base_index);
             } else if (is_raw_buf) {
-                pax_col_t col = raw_get_pixel(top, base->bpp, top_dims, top_index);
+                pax_col_t col = raw_get_pixel(top, base->type_info.bpp, top_dims, top_index);
                 base->setter(base, col, base_index);
             } else if (is_pal_buf) {
                 pax_buf_t const *_top = top;
@@ -341,7 +341,8 @@ static void pax_sasr_blit_impl(
             top_orientation,
             top_pos
         );
-    } else if (PAX_IS_PALETTE(base->type) && !PAX_IS_PALETTE(top->type)) {
+    } else if (base->type_info.fmt_type == PAX_BUF_SUBTYPE_PALETTE
+               && top->type_info.fmt_type != PAX_BUF_SUBTYPE_PALETTE) {
         // Bottom is palette, top is not; do palette special case.
         sasr_blit_impl_2(
             odd_scanline,
@@ -507,7 +508,7 @@ __attribute__((noinline)) static void pax_sasr_blit_char_alpha_blend(
 void pax_sasr_blit_char_impl(
     bool odd_scanline, pax_buf_t *buf, pax_col_t color, pax_vec2i pos, int scale, pax_text_rsdata_t rsdata
 ) {
-    if ((rsdata.bpp == 1 && color >> 24 == 255) || PAX_IS_PALETTE(buf->type)) {
+    if ((rsdata.bpp == 1 && color >> 24 == 255) || buf->type_info.fmt_type == PAX_BUF_SUBTYPE_PALETTE) {
         // If the BPP is 1 and the color is fully opaque OR the buffer is of palette type, no alpha blending happens.
         pax_sasr_blit_char_direct_set(odd_scanline, buf, color, pos, scale, rsdata);
     } else {
