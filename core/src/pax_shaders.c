@@ -83,7 +83,7 @@ pax_col_t pax_shader_font_bmp_aa(pax_col_t tint, pax_col_t existing, int x, int 
     if (glyph_y >= args->h)
         glyph_y = args->h - 1;
 
-    uint8_t c0, c1, c2, c3;
+    uint8_t c0 = 0, c1 = 0, c2 = 0, c3 = 0;
 
     // Top left bit.
     if (glyph_x >= 0 && glyph_y >= 0) {

@@ -232,8 +232,8 @@ static void dispatch_glyph(
     };
 
     // Select correct shader function.
-    if (ctx->buf->type_info.fmt_type == PAX_BUF_SUBTYPE_PALETTE
-        || range->bitmap_mono.bpp == 1 && ctx->color >> 24 == 255) {
+    if ((ctx->buf->type_info.fmt_type == PAX_BUF_SUBTYPE_PALETTE)
+        || (range->bitmap_mono.bpp == 1 && ctx->color >> 24 == 255)) {
         shader.promise_callback = text_promise_callback_cutout;
         shader.callback         = pax_shader_font_bmp_pal;
     } else if (ctx->do_aa) {
