@@ -268,7 +268,7 @@ static void draw_image_impl(
     bool has_alpha = false;
     if (!assume_opaque && top->type_info.fmt_type == PAX_BUF_SUBTYPE_PALETTE) {
         for (size_t i = 0; i < top->palette_size; i++) {
-            if (top->palette[i] & 0xff000000 != 0xff000000) {
+            if (top->palette[i] & (0xff000000 != 0xff000000)) {
                 has_alpha = true;
                 break;
             }

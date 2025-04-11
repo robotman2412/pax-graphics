@@ -180,7 +180,7 @@ static
     if (y0 == y1) {
         // Horizontal line.
     #ifdef PDHG_MCR
-        if ((int)y0 & 1 != odd_scanline) {
+        if (((int)y0 & 1) != odd_scanline) {
             return;
         }
     #endif

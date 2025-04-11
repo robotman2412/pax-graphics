@@ -4,6 +4,9 @@
 #ifndef PAX_GFX_H
 #define PAX_GFX_H
 
+// To stay compatible with existing code.
+#define PAX_REVEAL_OPAQUE
+
 #include "pax_fonts.h"
 #include "pax_orientation.h"
 #include "pax_shaders.h"

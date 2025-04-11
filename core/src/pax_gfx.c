@@ -120,7 +120,7 @@ bool pax_buf_init(pax_buf_t *buf, void *mem, int width, int height, pax_buf_type
         if (!mem) {
             pax_set_err(PAX_ERR_NOMEM);
             free(buf);
-            return NULL;
+            return false;
         }
     }
     *buf = (pax_buf_t){
@@ -157,6 +157,7 @@ bool pax_buf_init(pax_buf_t *buf, void *mem, int width, int height, pax_buf_type
         );
     }
     pax_set_ok();
+    return true;
 }
 
 // De-initialize a buffer initialized by `pax_buf_init`.

@@ -113,7 +113,8 @@ __attribute__((always_inline)) static inline void swr_blit_impl(
     // Determine copying parameters for top buffer.
 #if CONFIG_PAX_COMPILE_ORIENTATION
     // clang-format off
-    int dx, dy; bool swap;
+    int dx = 0, dy = 0;
+    bool swap = false;
     int top_dx, top_dy, top_index;
     pax_vec2i top_pos0 = top_pos;
     switch (top_orientation & 7) {
@@ -258,7 +259,7 @@ __attribute__((always_inline)) static inline void pax_swr_blit_char_impl(
     pax_buf_t *buf, pax_col_t color, pax_vec2i pos, int scale, pax_text_rsdata_t rsdata, bool direct_set
 ) {
     // clang-format off
-    int dx, dy;
+    int dx = 0, dy = 0;
     pax_recti effective_clip;
 #if CONFIG_PAX_COMPILE_ORIENTATION
     effective_clip = pax_get_clip(buf);
