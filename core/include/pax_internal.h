@@ -4,8 +4,6 @@
 #ifndef PAX_INTERNAL_H
 #define PAX_INTERNAL_H
 
-#define PAX_REVEAL_OPAQUE
-
 #include "helpers/pax_precalculated.h"
 #include "pax_gfx.h"
 

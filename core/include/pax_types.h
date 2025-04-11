@@ -387,20 +387,6 @@ struct pax_shader_ctx {
 // The absolute minimum possible size a valid font can be in memory.
 #define PAX_FONT_LOADER_MINUMUM_SIZE (sizeof(pax_font_t) + sizeof(pax_font_range_t) + 3)
 
-#ifdef __cplusplus
-}
-#endif //__cplusplus
-
-#endif // PAX_TYPES_H
-
-#ifdef PAX_REVEAL_OPAQUE
-#ifndef PAX_TYPES_H_OPAQUE_REVEALED
-    #define PAX_TYPES_H_OPAQUE_REVEALED
-
-    #ifdef __cplusplus
-extern "C" {
-    #endif //__cplusplus
-
 // Internal temporary representation used for text rendering.
 // WARNING: Subject to change at any time for any reason, do not use this type yourself.
 struct pax_text_rsdata {
@@ -539,9 +525,8 @@ struct pax_buf {
     pax_orientation_t orientation;
 };
 
-    #ifdef __cplusplus
+#ifdef __cplusplus
 }
-    #endif //__cplusplus
+#endif //__cplusplus
 
-#endif // PAX_TYPES_H_OPAQUE_REVEALED
-#endif // PAX_REVEAL_OPAQUE
+#endif // PAX_TYPES_H

@@ -4,9 +4,6 @@
 #ifndef PAX_GFX_H
 #define PAX_GFX_H
 
-// To stay compatible with existing code.
-#define PAX_REVEAL_OPAQUE
-
 #include "pax_fonts.h"
 #include "pax_orientation.h"
 #include "pax_shaders.h"
@@ -97,6 +94,18 @@ static inline size_t pax_buf_calc_size_dynamic(int width, int height, pax_buf_ty
 pax_buf_t *pax_buf_new(void *mem, int width, int height, pax_buf_type_t type);
 // Destroy the buffer, freeing its memory.
 void       pax_buf_delete(pax_buf_t *buf);
+
+// Initialize a buffer where the `pax_buf_t` struct is user-managed.
+// If `mem` is `NULL`, a new area is allocated.
+// WARNING: Only use this function if you know what you're doing!
+// WARNING: If you're using this function because the API changed in 2.0, seriously consider using `pax_buf_new`!
+__attribute__((deprecated("Use `pax_buf_new`, `pax_buf_delete` instead."))) bool
+    pax_buf_init(pax_buf_t *buf, void *mem, int width, int height, pax_buf_type_t type);
+
+// De-initialize a buffer initialized by `pax_buf_init`.
+// WARNING: Only use this function if you know what you're doing!
+// WARNING: If you're using this function because the API changed in 2.0, seriously consider using `pax_buf_delete`!
+__attribute__((deprecated("Use `pax_buf_new`, `pax_buf_delete` instead."))) void pax_buf_destroy(pax_buf_t *buf);
 
 // Set the palette for buffers with palette types.
 // Creates an internal copy of the palette.
@@ -232,29 +241,3 @@ void pax_reset_2d(pax_buf_t *buf, bool full);
 #endif //__cplusplus
 
 #endif // PAX_GFX_H
-
-#ifdef PAX_REVEAL_OPAQUE
-#ifndef PAX_GFX_H_OPAQUE_REVEALED
-    #define PAX_GFX_H_OPAQUE_REVEALED
-
-    #ifdef __cplusplus
-extern "C" {
-    #endif //__cplusplus
-
-// Initialize a buffer where the `pax_buf_t` struct is user-managed.
-// If `mem` is `NULL`, a new area is allocated.
-// WARNING: Only use this function if you know what you're doing!
-// WARNING: If you're using this function because the API changed in 2.0, seriously consider using `pax_buf_new`!
-bool pax_buf_init(pax_buf_t *buf, void *mem, int width, int height, pax_buf_type_t type);
-
-// De-initialize a buffer initialized by `pax_buf_init`.
-// WARNING: Only use this function if you know what you're doing!
-// WARNING: If you're using this function because the API changed in 2.0, seriously consider using `pax_buf_delete`!
-void pax_buf_destroy(pax_buf_t *buf);
-
-    #ifdef __cplusplus
-}
-    #endif //__cplusplus
-
-#endif // PAX_GFX_H_OPAQUE_REVEALED
-#endif // PAX_REVEAL_OPAQUE

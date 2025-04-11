@@ -108,6 +108,8 @@ pax_buf_type_info_t pax_buf_type_info(pax_buf_type_t type) {
     }
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
 // Initialize a buffer where the `pax_buf_t` struct is user-managed.
 // If `mem` is `NULL`, a new area is allocated.
@@ -205,6 +207,7 @@ void pax_buf_delete(pax_buf_t *buf) {
     free(buf);
 }
 
+#pragma GCC diagnostic pop // ignore "-Wdeprecated-declarations"
 
 // Set the palette for buffers with palette types.
 // Creates an internal copy of the palette.
