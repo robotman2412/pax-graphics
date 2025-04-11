@@ -336,7 +336,7 @@ PAX_PERF_CRITICAL_ATTR void pax_background(pax_buf_t *buf, pax_col_t color) {
             value = pax_rev_endian_16(value);
         }
         // Fill 16bpp parts.
-        for (size_t i = 0; i < buf->width * buf->height; i++) {
+        for (size_t i = 0; i < (size_t)(buf->width * buf->height); i++) {
             buf->buf_16bpp[i] = value;
         }
     } else if (buf->type_info.bpp == 32) {
@@ -344,7 +344,7 @@ PAX_PERF_CRITICAL_ATTR void pax_background(pax_buf_t *buf, pax_col_t color) {
             value = pax_rev_endian_32(value);
         }
         // Fill 32bpp parts.
-        for (size_t i = 0; i < buf->width * buf->height; i++) {
+        for (size_t i = 0; i < (size_t)(buf->width * buf->height); i++) {
             buf->buf_32bpp[i] = value;
         }
     } else {
@@ -428,12 +428,12 @@ void pax_buf_scroll(pax_buf_t *buf, pax_col_t placeholder, int x, int y) {
     } else {
         // If it does not, an expensive copy must be performed.
         if (off > 0) {
-            for (ptrdiff_t i = count - 1; i >= 0; i--) {
+            for (size_t i = count - 1; i != SIZE_MAX; i--) {
                 pax_col_t value = buf->getter(buf, off + i);
                 buf->setter(buf, value, i);
             }
         } else {
-            for (ptrdiff_t i = 0; i < count; i++) {
+            for (size_t i = 0; i < count; i++) {
                 pax_col_t value = buf->getter(buf, i);
                 buf->setter(buf, value, off + i);
             }

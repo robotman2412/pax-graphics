@@ -26,6 +26,9 @@ pgui_elem_t *pgui_new_textbox(pgui_callback_t cb) {
 void pgui_calc2_textbox(
     pax_vec2i gfx_size, pax_vec2i pos, pgui_elem_t *elem, pgui_theme_t const *theme, uint32_t flags
 ) {
+    (void)gfx_size;
+    (void)pos;
+    (void)flags;
     pgui_text_t   *text    = (pgui_text_t *)elem;
     pgui_padding_t padding = *pgui_effective_padding(elem, theme);
 

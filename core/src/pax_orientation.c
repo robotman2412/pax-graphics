@@ -64,6 +64,7 @@ static inline pax_vec2f pax_orient_ccw2_flip_vec2f(pax_vec2i buf_dim, pax_vec2f 
 // Transforms the co-ordinates as 3x counter-clockwise rotation and flip horizontally.
 static inline pax_vec2f pax_orient_ccw3_flip_vec2f(pax_vec2i buf_dim, pax_vec2f vec) __attribute__((pure));
 static inline pax_vec2f pax_orient_ccw3_flip_vec2f(pax_vec2i buf_dim, pax_vec2f vec) {
+    (void)buf_dim;
     return (pax_vec2f){
         vec.y,
         vec.x,
@@ -86,6 +87,7 @@ pax_vec2f pax_orient_det_vec2f(pax_buf_t const *buf, pax_vec2f vec) {
         case PAX_O_ROT_CW_FLIP_H: return pax_orient_ccw3_flip_vec2f(buf_dim, vec);
     }
 #else
+    (void)buf;
     return vec;
 #endif
 }
@@ -107,6 +109,7 @@ pax_vec2f pax_unorient_det_vec2f(pax_buf_t const *buf, pax_vec2f vec) {
         case PAX_O_ROT_CW_FLIP_H: return pax_orient_ccw3_flip_vec2f(buf_dim_r, vec);
     }
 #else
+    (void)buf;
     return vec;
 #endif
 }
@@ -181,6 +184,7 @@ static inline pax_rectf pax_orient_ccw2_flip_rectf(pax_vec2i buf_dim, pax_rectf 
 // Transforms the co-ordinates as 3x counter-clockwise rotation and flip horizontally.
 static inline pax_rectf pax_orient_ccw3_flip_rectf(pax_vec2i buf_dim, pax_rectf vec) __attribute__((pure));
 static inline pax_rectf pax_orient_ccw3_flip_rectf(pax_vec2i buf_dim, pax_rectf vec) {
+    (void)buf_dim;
     return (pax_rectf){
         vec.y,
         vec.x,
@@ -205,6 +209,7 @@ pax_rectf pax_orient_det_rectf(pax_buf_t const *buf, pax_rectf vec) {
         case PAX_O_ROT_CW_FLIP_H: return pax_orient_ccw3_flip_rectf(buf_dim, vec);
     }
 #else
+    (void)buf;
     return vec;
 #endif
 }
@@ -226,6 +231,7 @@ pax_rectf pax_unorient_det_rectf(pax_buf_t const *buf, pax_rectf vec) {
         case PAX_O_ROT_CW_FLIP_H: return pax_orient_ccw3_flip_rectf(buf_dim_r, vec);
     }
 #else
+    (void)buf;
     return vec;
 #endif
 }
@@ -288,6 +294,7 @@ static inline pax_vec2i pax_orient_ccw2_flip_vec2i(pax_vec2i buf_dim, pax_vec2i 
 // Transforms the co-ordinates as 3x counter-clockwise rotation and flip horizontally.
 static inline pax_vec2i pax_orient_ccw3_flip_vec2i(pax_vec2i buf_dim, pax_vec2i vec) __attribute__((pure));
 static inline pax_vec2i pax_orient_ccw3_flip_vec2i(pax_vec2i buf_dim, pax_vec2i vec) {
+    (void)buf_dim;
     return (pax_vec2i){
         vec.y,
         vec.x,
@@ -310,6 +317,7 @@ pax_vec2i pax_orient_det_vec2i(pax_buf_t const *buf, pax_vec2i vec) {
         case PAX_O_ROT_CW_FLIP_H: return pax_orient_ccw3_flip_vec2i(buf_dim, vec);
     }
 #else
+    (void)buf;
     return vec;
 #endif
 }
@@ -331,6 +339,7 @@ pax_vec2i pax_unorient_det_vec2i(pax_buf_t const *buf, pax_vec2i vec) {
         case PAX_O_ROT_CW_FLIP_H: return pax_orient_ccw3_flip_vec2i(buf_dim_r, vec);
     }
 #else
+    (void)buf;
     return vec;
 #endif
 }
@@ -405,6 +414,7 @@ static inline pax_recti pax_orient_ccw2_flip_recti(pax_vec2i buf_dim, pax_recti 
 // Transforms the co-ordinates as 3x counter-clockwise rotation and flip horizontally.
 static inline pax_recti pax_orient_ccw3_flip_recti(pax_vec2i buf_dim, pax_recti rect) __attribute__((pure));
 static inline pax_recti pax_orient_ccw3_flip_recti(pax_vec2i buf_dim, pax_recti rect) {
+    (void)buf_dim;
     return (pax_recti){
         rect.y,
         rect.x,
@@ -429,6 +439,7 @@ pax_recti pax_orient_det_recti(pax_buf_t const *buf, pax_recti rect) {
         case PAX_O_ROT_CW_FLIP_H: return pax_orient_ccw3_flip_recti(buf_dim, rect);
     }
 #else
+    (void)buf;
     return rect;
 #endif
 }
@@ -450,6 +461,7 @@ pax_recti pax_unorient_det_recti(pax_buf_t const *buf, pax_recti rect) {
         case PAX_O_ROT_CW_FLIP_H: return pax_orient_ccw3_flip_recti(buf_dim_r, rect);
     }
 #else
+    (void)buf;
     return rect;
 #endif
 }

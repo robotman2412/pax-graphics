@@ -114,13 +114,14 @@ size_t pax_utf8_seeknext_l(char const *cstr, size_t cstr_len, size_t cursor) {
 
 // Seek to the previous UTF-8 character in a string.
 size_t pax_utf8_seekprev_l(char const *cstr, size_t len, size_t cursor) {
+    (void)len;
     if (!cursor) {
         return 0;
     }
 
     do {
         cursor--;
-    } while ((cstr[cursor] & 0xc0) == 0x80);
+    } while (cursor && (cstr[cursor] & 0xc0) == 0x80);
 
     return cursor;
 }
@@ -130,10 +131,16 @@ size_t pax_utf8_seekprev_l(char const *cstr, size_t len, size_t cursor) {
 /* ======= DRAWING: TEXT ======= */
 
 static uint64_t text_promise_callback_cutout(pax_buf_t *buf, pax_col_t tint, void *args0) {
+    (void)buf;
+    (void)tint;
+    (void)args0;
     return PAX_PROMISE_CUTOUT;
 }
 
 static uint64_t text_promise_callback_none(pax_buf_t *buf, pax_col_t tint, void *args0) {
+    (void)buf;
+    (void)tint;
+    (void)args0;
     return 0;
 }
 
@@ -356,7 +363,7 @@ static pax_2vec2f text_generic(
     pax_font_range_t const *range = NULL;
     while (i < len) {
         // Draw cursor.
-        if (cursorpos == i) {
+        if ((size_t)cursorpos == i) {
             if (ctx->do_render) {
                 pax_draw_line(ctx->buf, ctx->color, pos.x, pos.y, pos.x, pos.y + scale * ctx->font->default_size);
             }
@@ -419,7 +426,7 @@ static pax_2vec2f text_generic(
     }
 
     // Edge case: Cursor at the end.
-    if (cursorpos == i) {
+    if ((size_t)cursorpos == i) {
         if (ctx->do_render) {
             pax_draw_line(ctx->buf, ctx->color, pos.x, pos.y, pos.x, pos.y + scale * ctx->font->default_size);
         }

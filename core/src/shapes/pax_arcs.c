@@ -185,7 +185,7 @@ void pax_outline_arc(pax_buf_t *buf, pax_col_t color, float x, float y, float r,
     }
 
     // Pick an appropriate number of divisions.
-    int n_div  = pax_pick_arc_divs(&buf->stack_2d.value, r, a0, a1);
+    int n_div = pax_pick_arc_divs(&buf->stack_2d.value, r, a0, a1);
     if (!n_div) {
         n_div = 1;
     }
@@ -303,7 +303,7 @@ void pax_vectorise_arc(pax_vec2f *ptr, size_t n_div, float x, float y, float r, 
     float y0 = sinf(a0);
 
     // Draw it as a series of triangles, rotating with what is essentially matrix multiplication.
-    for (int i = 0; i < n_div; i++) {
+    for (size_t i = 0; i < n_div; i++) {
         // Perform the rotation.
         float x1 = x0 * c_cos - y0 * c_sin;
         float y1 = x0 * c_sin + y0 * c_cos;

@@ -17,26 +17,26 @@ static inline constexpr fixpt_t operator""_fix(long double in) {
 }
 #else
 
-#if CONFIG_PAX_USE_LONG_FIXED_POINT && defined(__SIZEOF_INT128__)
-#define PAX_FIXPT_INT_BITS  16ll
-#define PAX_FIXPT_FRAC_BITS 48ll
-#define PAX_FIXPT_MUL       0x0001000000000000ll
-#define FIXPT_RAW_MAX       INT64_MAX
-#define FIXPT_RAW_MIN       INT64_MIN
+    #if CONFIG_PAX_USE_LONG_FIXED_POINT && defined(__SIZEOF_INT128__)
+        #define PAX_FIXPT_INT_BITS  16ll
+        #define PAX_FIXPT_FRAC_BITS 48ll
+        #define PAX_FIXPT_MUL       0x0001000000000000ll
+        #define FIXPT_RAW_MAX       INT64_MAX
+        #define FIXPT_RAW_MIN       INT64_MIN
 typedef int64_t  fixpt_raw_t;
 typedef __int128 fixpt_long_raw_t;
-#else
-#define PAX_FIXPT_INT_BITS  12
-#define PAX_FIXPT_FRAC_BITS 20
-#define PAX_FIXPT_MUL       0x00100000
-#define FIXPT_RAW_MAX       INT32_MAX
-#define FIXPT_RAW_MIN       INT32_MIN
+    #else
+        #define PAX_FIXPT_INT_BITS  12
+        #define PAX_FIXPT_FRAC_BITS 20
+        #define PAX_FIXPT_MUL       0x00100000
+        #define FIXPT_RAW_MAX       INT32_MAX
+        #define FIXPT_RAW_MIN       INT32_MIN
 typedef int32_t fixpt_raw_t;
 typedef int64_t fixpt_long_raw_t;
-#endif
+    #endif
 
-#define FIXPT_MAX ((long double)INT64_MAX / PAX_FIXPT_MUL)
-#define FIXPT_MIN ((long double)INT64_MIN / PAX_FIXPT_MUL)
+    #define FIXPT_MAX ((long double)INT64_MAX / PAX_FIXPT_MUL)
+    #define FIXPT_MIN ((long double)INT64_MIN / PAX_FIXPT_MUL)
 
 class fixpt_t {
   public:
@@ -44,7 +44,7 @@ class fixpt_t {
 
   private:
     static constexpr fixpt_raw_t _div(fixpt_raw_t a, fixpt_raw_t b) {
-        // clang-format off
+            // clang-format off
         #define  div_tmp (b ? (((fixpt_long_raw_t)a << PAX_FIXPT_FRAC_BITS) / (fixpt_long_raw_t)b) \
                             : (a > 0 ? FIXPT_RAW_MAX : FIXPT_RAW_MIN))
         return (div_tmp <= FIXPT_RAW_MIN) ? FIXPT_RAW_MIN :
@@ -53,7 +53,7 @@ class fixpt_t {
         // clang-format on
     }
     static constexpr fixpt_raw_t _mul(fixpt_raw_t a, fixpt_raw_t b) {
-        // clang-format off
+            // clang-format off
         #define mul_tmp (((fixpt_long_raw_t)a * (fixpt_long_raw_t)b) >> PAX_FIXPT_FRAC_BITS)
         return (mul_tmp <= FIXPT_RAW_MIN) ? FIXPT_RAW_MIN :
                (mul_tmp >= FIXPT_RAW_MAX) ? FIXPT_RAW_MAX :
@@ -71,6 +71,7 @@ class fixpt_t {
         return (T)(in / (long double)PAX_FIXPT_MUL);
     }
     constexpr fixpt_t(fixpt_raw_t val, bool dummy) : raw_value(val) {
+        (void)dummy;
     }
     static fixpt_raw_t constexpr saturate_add(fixpt_raw_t a, fixpt_raw_t b) {
         // clang-format off

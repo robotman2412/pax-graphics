@@ -29,6 +29,8 @@ void pgui_draw_text(pax_buf_t *gfx, pax_vec2i pos, pgui_elem_t *elem, pgui_theme
 
 // Calculate the minimum size of text-based elements.
 void pgui_calc1_text(pax_vec2i gfx_size, pax_vec2i pos, pgui_elem_t *elem, pgui_theme_t const *theme, uint32_t flags) {
+    (void)gfx_size;
+    (void)pos;
     pgui_text_t *text = (pgui_text_t *)elem;
     if (text->shrink_to_fit || !text->text_len)
         return;

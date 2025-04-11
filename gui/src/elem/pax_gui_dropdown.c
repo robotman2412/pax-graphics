@@ -142,6 +142,8 @@ void pgui_draw_dropdown(pax_buf_t *gfx, pax_vec2i pos, pgui_elem_t *elem, pgui_t
 void pgui_calc1_dropdown(
     pax_vec2i gfx_size, pax_vec2i pos, pgui_elem_t *elem, pgui_theme_t const *theme, uint32_t flags
 ) {
+    (void)gfx_size;
+    (void)pos;
     pgui_padding_t padding = *pgui_effective_padding(elem, theme);
 
     if (!(flags & PGUI_FLAG_FIX_WIDTH)) {
@@ -243,7 +245,7 @@ void pgui_calc2_dropdown(
         y_offset += elem->size.y;
     }
 
-    if (elem->selected >= 0 && elem->selected < elem->children_len) {
+    if (elem->selected >= 0 && (size_t)elem->selected < elem->children_len) {
         // Update scroll position.
         elem->scroll.y = pgui_adjust_scroll(
             elem->size.y * elem->selected,
@@ -260,6 +262,8 @@ void pgui_calc2_dropdown(
 pgui_resp_t pgui_event_dropdown(
     pax_vec2i gfx_size, pax_vec2i pos, pgui_elem_t *elem, pgui_theme_t const *theme, uint32_t flags, pgui_event_t event
 ) {
+    (void)gfx_size;
+    (void)pos;
     pgui_dropdown_t *dropdown = (pgui_dropdown_t *)elem;
     if (flags & PGUI_FLAG_ACTIVE) {
         if (event.input == PGUI_INPUT_ACCEPT) {

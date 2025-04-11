@@ -392,6 +392,7 @@ void pax_transform_shape(size_t num_points, pax_vec2f *points, matrix_2d_t matri
     }
 }
 
+/*
 // Rounds a polygon with a uniform radius applied to all corners.
 // Each corner can be rounded up to 50% of the edges it is part of.
 // Capable of dealing with self-intersecting shapes.
@@ -417,8 +418,8 @@ size_t pax_round_shape_uniform(pax_vec2f **output, size_t num_points, pax_vec2f 
 // Capable of dealing with self-intersecting shapes.
 // Returns the amount of points created.
 size_t pax_round_shape(pax_vec2f **output, size_t num_points, pax_vec2f *points, float *radii) {
-    return 0;
 }
+*/
 
 
 
@@ -550,6 +551,7 @@ static bool line_intersects_outline(size_t num_points, pax_vec2f const *raw_poin
     return false;
 }
 
+/*
 // Triangulates a shape based on an outline (any shape).
 // In effect, this creates triangles which completely fill the shape.
 // Closes the shape: no need to have the last point overlap the first.
@@ -561,8 +563,8 @@ static bool line_intersects_outline(size_t num_points, pax_vec2f const *raw_poin
 // Stores triangles as triple-index pairs in output, which is a dynamically allocated size_t array.
 // The number of triangles created is num_points - 2.
 size_t pax_triang_complete(size_t **output, pax_vec2f **additional_points, size_t num_points, pax_vec2f *points) {
-    return 0;
 }
+*/
 
 // Triangulates a shape based on an outline (concave, non self-intersecting only).
 // In effect, this creates triangles which completely fill the shape.
@@ -598,7 +600,7 @@ size_t pax_triang_concave(size_t **output, size_t raw_num_points, pax_vec2f cons
 
     // The number of triangles is always 2 less than the number of points.
     size_t  n_tris    = num_points - 2;
-    int     tri_index = 0;
+    size_t  tri_index = 0;
     size_t *tris      = malloc(sizeof(size_t) * n_tris * 3);
     if (!tris) {
         PAX_LOGE(TAG, "Out of memory for triangulation!");
@@ -664,6 +666,8 @@ size_t pax_triang_concave(size_t **output, size_t raw_num_points, pax_vec2f cons
 void pax_draw_shape_triang(
     pax_buf_t *buf, pax_col_t color, size_t num_points, pax_vec2f const *points, size_t n_tris, size_t const *tris
 ) {
+    // TODO: The num_points parameter was intended to check bounds but never implemented. Remove?
+    (void)num_points;
     // Then draw all triangles.
     for (size_t i = 0, tri_index = 0; i < n_tris; i++) {
         pax_draw_tri(

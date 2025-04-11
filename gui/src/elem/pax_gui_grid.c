@@ -53,6 +53,8 @@ pgui_elem_t *pgui_new_grid(pax_vec2i num_cells) {
 
 // Calculate the minimum size of a grid.
 void pgui_calc1_grid(pax_vec2i gfx_size, pax_vec2i pos, pgui_elem_t *elem, pgui_theme_t const *theme, uint32_t flags) {
+    (void)gfx_size;
+    (void)pos;
     pgui_grid_t   *grid    = (pgui_grid_t *)elem;
     pgui_padding_t padding = *pgui_effective_padding(elem, theme);
 
@@ -75,7 +77,7 @@ void pgui_calc1_grid(pax_vec2i gfx_size, pax_vec2i pos, pgui_elem_t *elem, pgui_
     for (int x = 0; x < grid->cells.x; x++) {
         int width = padding.left + padding.right;
         for (int y = 0; y < grid->cells.y; y++) {
-            if (x + y * grid->cells.x >= elem->children_len)
+            if ((size_t)(x + y * grid->cells.x) >= elem->children_len)
                 continue;
             pgui_elem_t *child = elem->children[y * grid->cells.x + x];
             if (child && child->size.x > width && !(child->flags & PGUI_FLAG_HIDDEN)) {
@@ -91,7 +93,7 @@ void pgui_calc1_grid(pax_vec2i gfx_size, pax_vec2i pos, pgui_elem_t *elem, pgui_
     for (int y = 0; y < grid->cells.y; y++) {
         int height = padding.top + padding.bottom;
         for (int x = 0; x < grid->cells.x; x++) {
-            if (x + y * grid->cells.x >= elem->children_len)
+            if ((size_t)(x + y * grid->cells.x) >= elem->children_len)
                 continue;
             pgui_elem_t *child = elem->children[y * grid->cells.x + x];
             if (child && child->size.y > height && !(child->flags & PGUI_FLAG_HIDDEN)) {
@@ -134,6 +136,9 @@ static void fix_sizes(int distrib, int count, bool *resizable, int *sizes) {
 
 // Calculate the internal layout of a grid.
 void pgui_calc2_grid(pax_vec2i gfx_size, pax_vec2i pos, pgui_elem_t *elem, pgui_theme_t const *theme, uint32_t flags) {
+    (void)gfx_size;
+    (void)pos;
+    (void)flags;
     pgui_grid_t   *grid    = (pgui_grid_t *)elem;
     pgui_padding_t padding = *pgui_effective_padding(elem, theme);
 
@@ -150,7 +155,7 @@ void pgui_calc2_grid(pax_vec2i gfx_size, pax_vec2i pos, pgui_elem_t *elem, pgui_
     for (int y = 0; y < grid->cells.y; y++) {
         int x_offset = padding.left;
         for (int x = 0; x < grid->cells.x; x++) {
-            if (x + y * grid->cells.x >= elem->children_len)
+            if ((size_t)(x + y * grid->cells.x) >= elem->children_len)
                 continue;
             pgui_elem_t *child = elem->children[y * grid->cells.x + x];
             if (!child || (child->flags & PGUI_FLAG_HIDDEN))
@@ -173,7 +178,7 @@ void pgui_calc2_grid(pax_vec2i gfx_size, pax_vec2i pos, pgui_elem_t *elem, pgui_
         y_offset += grid->row_height[y] + padding.top + padding.bottom;
     }
 
-    if (elem->selected >= 0 && elem->selected < elem->children_len && elem->children[elem->selected]) {
+    if (elem->selected >= 0 && (size_t)elem->selected < elem->children_len && elem->children[elem->selected]) {
         // Update scroll position.
         elem->scroll = pgui_adjust_scroll_2d(
             (pax_recti){
@@ -232,6 +237,7 @@ void pgui_draw_grid(pax_buf_t *gfx, pax_vec2i pos, pgui_elem_t *elem, pgui_theme
 
 // Next/previous for grid elements.
 static pgui_resp_t pgui_grid_next(pgui_elem_t *elem, pgui_theme_t const *theme, uint32_t flags, bool next) {
+    (void)flags;
     pgui_padding_t padding = *pgui_effective_padding(elem, theme);
 
     // Original index.
@@ -286,6 +292,7 @@ static pgui_resp_t pgui_grid_next(pgui_elem_t *elem, pgui_theme_t const *theme, 
 // Navigation for grid elements.
 static pgui_resp_t
     pgui_grid_nav(pgui_elem_t *elem, pgui_theme_t const *theme, uint32_t flags, ptrdiff_t dx, ptrdiff_t dy) {
+    (void)flags;
     pgui_grid_t   *grid    = (pgui_grid_t *)elem;
     pgui_padding_t padding = *pgui_effective_padding(elem, theme);
 
@@ -298,7 +305,7 @@ static pgui_resp_t
     ptrdiff_t y = (y0 + dy + grid->cells.y) % grid->cells.y;
     while (x != x0 || y != y0) {
         ptrdiff_t i = x + y * grid->cells.x;
-        if (x + y * grid->cells.x < elem->children_len && elem->children[i]
+        if ((size_t)i < elem->children_len && elem->children[i]
             && (elem->children[i]->type->attr & PGUI_ATTR_SELECTABLE)) {
             if (elem->selected >= 0) {
                 // Unmark previous selection.
@@ -337,9 +344,11 @@ static pgui_resp_t
 pgui_resp_t pgui_event_grid(
     pax_vec2i gfx_size, pax_vec2i pos, pgui_elem_t *elem, pgui_theme_t const *theme, uint32_t flags, pgui_event_t event
 ) {
+    (void)gfx_size;
+    (void)pos;
     pgui_grid_t *grid = (pgui_grid_t *)elem;
 
-    if (elem->selected < 0 || elem->selected >= elem->children_len) {
+    if (elem->selected < 0 || (size_t)elem->selected >= elem->children_len) {
         if (event.input == PGUI_INPUT_ACCEPT && event.type == PGUI_EVENT_TYPE_RELEASE) {
             // Select lowest-indexed selectable child.
             for (size_t i = 0; i < elem->children_len; i++) {

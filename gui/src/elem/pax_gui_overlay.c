@@ -21,6 +21,9 @@ pgui_elem_t *pgui_new_overlay() {
 void pgui_calc2_overlay(
     pax_vec2i gfx_size, pax_vec2i pos, pgui_elem_t *elem, pgui_theme_t const *theme, uint32_t flags
 ) {
+    (void)gfx_size;
+    (void)pos;
+    (void)flags;
     pgui_padding_t padding = *pgui_effective_padding(elem, theme);
 
     for (size_t i = 0; i < elem->children_len; i++) {

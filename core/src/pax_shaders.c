@@ -27,6 +27,8 @@ static inline __attribute__((always_inline)) uint8_t sample_glyph(int x, int y, 
 // Texture shader for bitmap fonts on palette type buffers.
 pax_col_t pax_shader_font_bmp_pal(pax_col_t tint, pax_col_t existing, int x, int y, float u, float v, void *args0) {
     pax_text_rsdata_t const *args = args0;
+    (void)x;
+    (void)y;
 
     // Get texture coords.
     int glyph_x = u;
@@ -43,6 +45,8 @@ pax_col_t pax_shader_font_bmp_pal(pax_col_t tint, pax_col_t existing, int x, int
 // Texture shader for bitmap fonts.
 pax_col_t pax_shader_font_bmp(pax_col_t tint, pax_col_t existing, int x, int y, float u, float v, void *args0) {
     pax_text_rsdata_t const *args = args0;
+    (void)x;
+    (void)y;
 
     // Get texture coords.
     int glyph_x = u;
@@ -64,6 +68,8 @@ pax_col_t pax_shader_font_bmp(pax_col_t tint, pax_col_t existing, int x, int y, 
 // Texture shader for bitmap fonts with linear interpolation.
 pax_col_t pax_shader_font_bmp_aa(pax_col_t tint, pax_col_t existing, int x, int y, float u, float v, void *args0) {
     pax_text_rsdata_t const *args = args0;
+    (void)x;
+    (void)y;
 
     // Correct UVs for the offset caused by filtering.
     u                -= 0.5;
@@ -121,6 +127,8 @@ pax_col_t pax_shader_font_bmp_aa(pax_col_t tint, pax_col_t existing, int x, int 
 
 // Texture shader without interpolation.
 pax_col_t pax_shader_texture(pax_col_t tint, pax_col_t existing, int x, int y, float u, float v, void *args) {
+    (void)x;
+    (void)y;
     // Pointer cast to texture thingy.
     pax_buf_t const *image = (pax_buf_t const *)args;
     // Simply get a pixel.
@@ -138,6 +146,8 @@ pax_col_t pax_shader_texture(pax_col_t tint, pax_col_t existing, int x, int y, f
 
 // Texture shader with interpolation.
 pax_col_t pax_shader_texture_aa(pax_col_t tint, pax_col_t existing, int x, int y, float u, float v, void *args) {
+    (void)x;
+    (void)y;
     // Pointer cast to texture thingy.
     pax_buf_t const *image = (pax_buf_t const *)args;
 

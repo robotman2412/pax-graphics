@@ -24,6 +24,7 @@ pgui_elem_t *pgui_new_image(pax_buf_t *image, bool do_free_image) {
 
 // Visuals for image elements.
 void pgui_draw_image(pax_buf_t *gfx, pax_vec2i pos, pgui_elem_t *elem, pgui_theme_t const *theme, uint32_t flags) {
+    (void)flags;
     pgui_image_t  *image   = (pgui_image_t *)elem;
     pgui_padding_t padding = *pgui_effective_padding(elem, theme);
     pax_draw_image_sized(
@@ -38,6 +39,8 @@ void pgui_draw_image(pax_buf_t *gfx, pax_vec2i pos, pgui_elem_t *elem, pgui_them
 
 // Calculate the minimum size of image elements.
 void pgui_calc1_image(pax_vec2i gfx_size, pax_vec2i pos, pgui_elem_t *elem, pgui_theme_t const *theme, uint32_t flags) {
+    (void)gfx_size;
+    (void)pos;
     pgui_image_t *image = (pgui_image_t *)elem;
 
     int min_w = pax_buf_get_width(image->image);

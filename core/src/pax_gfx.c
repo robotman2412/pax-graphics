@@ -42,7 +42,7 @@ char const *pax_desc_err(pax_err_t error) {
         "Corrupted buffer",
         "Image encoding error",
     };
-    size_t n_desc = sizeof(desc) / sizeof(char *);
+    int n_desc = sizeof(desc) / sizeof(char *);
     if (error > 0 || -error > n_desc)
         return unknown;
     else
@@ -63,9 +63,9 @@ static pax_col_t
 
 // Gets the correct callback function for the shader.
 pax_shader_ctx_t pax_get_shader_ctx(pax_buf_t *buf, pax_col_t color, pax_shader_t const *shader) {
-    if (shader->schema_version != ~shader->schema_complement) {
-        // TODO: Bad.
-    }
+    (void)buf;
+    (void)color;
+
     if (shader->schema_version == 0) {
         // Use the old version.
         return (pax_shader_ctx_t){
@@ -239,7 +239,8 @@ void pax_buf_set_palette_rom(pax_buf_t *buf, pax_col_t const *palette, size_t pa
         free((pax_col_t *)buf->palette);
         buf->do_free_pal = false;
     }
-    buf->palette = palette;
+    buf->palette      = palette;
+    buf->palette_size = palette_len;
 }
 
 // Get the palette for buffers with palette types.

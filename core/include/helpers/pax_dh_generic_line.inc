@@ -60,18 +60,22 @@ static
     pax_shader_ctx_t shader_ctx = pax_get_shader_ctx(buf, color, shader);
     if (shader_ctx.skip)
         return;
+        #ifdef PDHG_NORMAL_UV
+    pax_col_conv_t buf2col = buf->type_info.fmt_type == PAX_BUF_SUBTYPE_PALETTE ? pax_col_conv_dummy : buf->buf2col;
+        #endif // PDHG_NORMAL_UV
     // Get pixel setter.
-    pax_col_conv_t     buf2col = buf->type_info.fmt_type == PAX_BUF_SUBTYPE_PALETTE ? pax_col_conv_dummy : buf->buf2col;
-    pax_index_setter_t setter  = pax_get_setter(buf, &color, shader);
+    pax_index_setter_t setter = pax_get_setter(buf, &color, shader);
     if (!setter)
         return;
-    #else  // PDHG_SHADED
+    #else // PDHG_SHADED
+        #ifdef PDHG_NORMAL_UV
+    pax_col_conv_t buf2col = buf->type_info.fmt_type == PAX_BUF_SUBTYPE_PALETTE ? pax_col_conv_dummy : buf->buf2col;
+        #endif // PDHG_NORMAL_UV
     // Get pixel setter.
-    pax_col_conv_t     buf2col = buf->type_info.fmt_type == PAX_BUF_SUBTYPE_PALETTE ? pax_col_conv_dummy : buf->buf2col;
-    pax_index_setter_t setter  = pax_get_setter(buf, &color, NULL);
+    pax_index_setter_t setter = pax_get_setter(buf, &color, NULL);
     if (!setter)
         return;
-    #endif // PDHG_SHADED
+    #endif     // PDHG_SHADED
 
     // Sort points vertially.
     if (y0 > y1) {

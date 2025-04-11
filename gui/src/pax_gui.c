@@ -30,7 +30,7 @@ static char const TAG[] = "pax-gui";
 // Create a heap-allocated copy.
 #define PGUI_OVERRIDE_DUP(thing)                                                                                       \
     ({                                                                                                                 \
-        __auto_type tmp      = (thing);                                                                                \
+        __auto_type      tmp = (thing);                                                                                \
         __typeof__(tmp) *mem = malloc(sizeof(tmp));                                                                    \
         if (mem) {                                                                                                     \
             *mem = tmp;                                                                                                \
@@ -46,6 +46,7 @@ void pgui_override_padding1(pgui_elem_t *elem, int padding) {
 // Override padding.
 void pgui_override_padding4(pgui_elem_t *elem, pgui_padding_t padding) {
     PGUI_OVERRIDE_ALLOC(elem);
+    elem->overrides->padding = PGUI_OVERRIDE_DUP(padding);
 }
 
 // Override theme; adds all attributes in the theme to the overrides.
@@ -295,7 +296,7 @@ static void pgui_draw_int(pax_buf_t *gfx, pax_vec2i pos, pgui_elem_t *elem, pgui
         child_offset = (pax_vec2i){0, 0};
     }
     for (size_t i = 0; i < elem->children_len; i++) {
-        if (i != elem->selected && elem->children[i]) {
+        if (i != (size_t)elem->selected && elem->children[i]) {
             pgui_draw_int(
                 gfx,
                 (pax_vec2i){
@@ -309,7 +310,7 @@ static void pgui_draw_int(pax_buf_t *gfx, pax_vec2i pos, pgui_elem_t *elem, pgui
         }
     }
     // Draw selected last so it appears on top.
-    if (elem->selected >= 0 && elem->selected < elem->children_len && elem->children[elem->selected]) {
+    if (elem->selected >= 0 && (size_t)elem->selected < elem->children_len && elem->children[elem->selected]) {
         pgui_draw_int(
             gfx,
             (pax_vec2i){
@@ -364,7 +365,7 @@ static pgui_resp_t pgui_event_int(
     if (elem->type->attr & PGUI_ATTR_ABSPOS) {
         child_offset = (pax_vec2i){0, 0};
     }
-    if (elem->selected >= 0 && elem->selected < elem->children_len && elem->children[elem->selected]) {
+    if (elem->selected >= 0 && (size_t)elem->selected < elem->children_len && elem->children[elem->selected]) {
         pgui_resp_t resp = pgui_event_int(
             gfx_size,
             (pax_vec2i){
@@ -589,7 +590,7 @@ bool pgui_get_col_growable(pgui_elem_t *elem, int col) {
 static void pgui_clear_selection(pgui_elem_t *elem) {
     while (1) {
         elem->flags &= ~PGUI_FLAG_ACTIVE & ~PGUI_FLAG_HIGHLIGHT;
-        if (elem->selected >= 0 && elem->selected < elem->children_len && elem->children[elem->selected]) {
+        if (elem->selected >= 0 && (size_t)elem->selected < elem->children_len && elem->children[elem->selected]) {
             elem = elem->children[elem->selected];
         } else {
             return;
@@ -604,12 +605,12 @@ void pgui_set_selection(pgui_elem_t *elem, ptrdiff_t selection) {
         return;
     if (selection < 0) {
         selection = -1;
-    } else if (selection >= elem->children_len) {
+    } else if ((size_t)selection >= elem->children_len) {
         selection = elem->children_len - 1;
     }
     if (elem->selected == selection)
         return;
-    if (elem->selected >= 0 && elem->selected < elem->children_len && elem->children[elem->selected]) {
+    if (elem->selected >= 0 && (size_t)elem->selected < elem->children_len && elem->children[elem->selected]) {
         pgui_clear_selection(elem->children[elem->selected]);
     }
     elem->selected = selection;
@@ -686,7 +687,7 @@ static void debug_recurse_impl(pgui_elem_t *elem, int depth, bool selected) {
     if (elem && elem->children_len) {
         pgui_di_printf("%zu children:\n", elem->children_len);
         for (size_t i = 0; i < elem->children_len; i++) {
-            debug_recurse_impl(elem->children[i], depth, elem->selected == i);
+            debug_recurse_impl(elem->children[i], depth, (size_t)elem->selected == i);
         }
     }
 }
@@ -716,7 +717,7 @@ bool pgui_child_insert(pgui_elem_t *parent, ptrdiff_t index, pgui_elem_t *child)
         return false;
     if (!(parent->type->attr & PGUI_ATTR_CONTAINER))
         return false;
-    if (index < 0 || index > parent->children_len)
+    if (index < 0 || (size_t)index > parent->children_len)
         return false;
     void *mem = realloc(parent->children, sizeof(void *) * (parent->children_len + 1));
     if (!mem)
@@ -739,7 +740,7 @@ pgui_elem_t *pgui_child_replace(pgui_elem_t *parent, ptrdiff_t index, pgui_elem_
         return NULL;
     if (index < 0)
         return NULL;
-    if (index >= parent->children_len) {
+    if ((size_t)index >= parent->children_len) {
         void *mem = realloc(parent->children, sizeof(void *) * (index + 1));
         if (!mem)
             return NULL;
@@ -759,7 +760,7 @@ pgui_elem_t *pgui_child_replace(pgui_elem_t *parent, ptrdiff_t index, pgui_elem_
 bool pgui_child_remove_p(pgui_elem_t *parent, pgui_elem_t *child) {
     if (!parent || !child)
         return false;
-    for (ptrdiff_t i = 0; i < parent->children_len; i++) {
+    for (ptrdiff_t i = 0; (size_t)i < parent->children_len; i++) {
         if (parent->children[i] == child) {
             pgui_child_remove_i(parent, i);
             return true;
@@ -772,7 +773,7 @@ bool pgui_child_remove_p(pgui_elem_t *parent, pgui_elem_t *child) {
 pgui_elem_t *pgui_child_remove_i(pgui_elem_t *parent, ptrdiff_t index) {
     if (!parent)
         return NULL;
-    if (index < 0 || index >= parent->children_len)
+    if (index < 0 || (size_t)index >= parent->children_len)
         return NULL;
     pgui_elem_t *removed = parent->children[index];
     memmove(parent->children + index, parent->children + index + 1, parent->children_len - index - 1);
@@ -789,7 +790,7 @@ pgui_elem_t *pgui_child_remove_i(pgui_elem_t *parent, ptrdiff_t index) {
 pgui_elem_t *pgui_child_get(pgui_elem_t *parent, ptrdiff_t index) {
     if (!parent)
         return NULL;
-    if (index < 0 || index >= parent->children_len)
+    if (index < 0 || (size_t)index >= parent->children_len)
         return NULL;
     return parent->children[index];
 }

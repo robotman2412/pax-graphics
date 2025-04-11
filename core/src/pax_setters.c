@@ -664,31 +664,37 @@ void pax_get_col_conv(pax_buf_t const *buf, pax_col_conv_t *col2buf, pax_col_con
 
 // Dummy color converter, returns color input directly.
 pax_col_t pax_col_conv_dummy(pax_buf_t const *buf, pax_col_t color) {
+    (void)buf;
     return color;
 }
 
 // Truncates input to 1 bit.
 pax_col_t pax_trunc_to_1(pax_buf_t const *buf, pax_col_t color) {
+    (void)buf;
     return color & 1;
 }
 
 // Truncates input to 2 bit.
 pax_col_t pax_trunc_to_2(pax_buf_t const *buf, pax_col_t color) {
+    (void)buf;
     return color & 3;
 }
 
 // Truncates input to 4 bit.
 pax_col_t pax_trunc_to_4(pax_buf_t const *buf, pax_col_t color) {
+    (void)buf;
     return color & 15;
 }
 
 // Truncates input to 8 bit.
 pax_col_t pax_trunc_to_8(pax_buf_t const *buf, pax_col_t color) {
+    (void)buf;
     return color & 255;
 }
 
 // Truncates input to 16 bit.
 pax_col_t pax_trunc_to_16(pax_buf_t const *buf, pax_col_t color) {
+    (void)buf;
     return color & 65535;
 }
 
@@ -696,24 +702,28 @@ pax_col_t pax_trunc_to_16(pax_buf_t const *buf, pax_col_t color) {
 
 // Converts ARGB to 1-bit greyscale (AKA black/white).
 pax_col_t pax_col_to_1_grey(pax_buf_t const *buf, pax_col_t color) {
+    (void)buf;
     uint_fast16_t total = (color & 0x0000ff) + ((color & 0x00ff00) >> 8) + ((color & 0xff0000) >> 16);
     return total > 128 * 3;
 }
 
 // Converts ARGB to 2-bit greyscale.
 pax_col_t pax_col_to_2_grey(pax_buf_t const *buf, pax_col_t color) {
+    (void)buf;
     uint_fast8_t total = ((color & 0x0000c0) >> 6) + ((color & 0x00c000) >> 14) + ((color & 0xc00000) >> 22);
     return total / 3;
 }
 
 // Converts ARGB to 4-bit greyscale.
 pax_col_t pax_col_to_4_grey(pax_buf_t const *buf, pax_col_t color) {
+    (void)buf;
     uint_fast8_t total = ((color & 0x0000f0) >> 4) + ((color & 0x00f000) >> 12) + ((color & 0xf00000) >> 20);
     return total / 3;
 }
 
 // Converts ARGB to 8-bit greyscale.
 pax_col_t pax_col_to_8_grey(pax_buf_t const *buf, pax_col_t color) {
+    (void)buf;
     uint_fast16_t total = (color & 0x0000ff) + ((color & 0x00ff00) >> 8) + ((color & 0xff0000) >> 16);
     return total / 3;
 }
@@ -722,6 +732,7 @@ pax_col_t pax_col_to_8_grey(pax_buf_t const *buf, pax_col_t color) {
 
 // Converts ARGB to 3, 3, 2 bit RGB.
 pax_col_t pax_col_to_332rgb(pax_buf_t const *buf, pax_col_t color) {
+    (void)buf;
     // 8BPP 332-RGB
     // From: Aaaa aaaa Rrrr rrrr Gggg gggg Bbbb bbbb
     // To:                                 RrrG ggBb
@@ -731,6 +742,7 @@ pax_col_t pax_col_to_332rgb(pax_buf_t const *buf, pax_col_t color) {
 
 // Converts ARGB to 5, 6, 5 bit RGB.
 pax_col_t pax_col_to_565rgb(pax_buf_t const *buf, pax_col_t color) {
+    (void)buf;
     // 16BPP 565-RGB
     // From: Aaaa aaaa Rrrr rrrr Gggg gggg Bbbb bbbb
     // To:                       Rrrr rGgg gggB bbbb
@@ -741,6 +753,7 @@ pax_col_t pax_col_to_565rgb(pax_buf_t const *buf, pax_col_t color) {
 
 // Converts ARGB to 1 bit per channel ARGB.
 pax_col_t pax_col_to_1111argb(pax_buf_t const *buf, pax_col_t color) {
+    (void)buf;
     // 4BPP 1111-ARGB
     // From: Aaaa aaaa Rrrr rrrr Gggg gggg Bbbb bbbb
     // To:                                      ARGB
@@ -750,6 +763,7 @@ pax_col_t pax_col_to_1111argb(pax_buf_t const *buf, pax_col_t color) {
 
 // Converts ARGB to 2 bit per channel ARGB.
 pax_col_t pax_col_to_2222argb(pax_buf_t const *buf, pax_col_t color) {
+    (void)buf;
     // 8BPP 2222-ARGB
     // From: Aaaa aaaa Rrrr rrrr Gggg gggg Bbbb bbbb
     // To:                                 AaRr GgBb
@@ -759,6 +773,7 @@ pax_col_t pax_col_to_2222argb(pax_buf_t const *buf, pax_col_t color) {
 
 // Converts ARGB to 4 bit per channel ARGB.
 pax_col_t pax_col_to_4444argb(pax_buf_t const *buf, pax_col_t color) {
+    (void)buf;
     // 16BPP 4444-ARGB
     // From: Aaaa aaaa Rrrr rrrr Gggg gggg Bbbb bbbb
     // To:                       Aaaa Rrrr Gggg Bbbb
@@ -775,11 +790,13 @@ pax_col_t pax_pal_lookup(pax_buf_t const *buf, pax_col_t index) {
 
 // Converts 1-bit greyscale (AKA black/white) to ARGB.
 pax_col_t pax_1_grey_to_col(pax_buf_t const *buf, pax_col_t color) {
+    (void)buf;
     return color ? 0xffffffff : 0xff000000;
 }
 
 // Converts 2-bit greyscale to ARGB.
 pax_col_t pax_2_grey_to_col(pax_buf_t const *buf, pax_col_t color) {
+    (void)buf;
     static pax_col_t const arr[] = {
         0xff000000,
         0xff555555,
@@ -791,11 +808,13 @@ pax_col_t pax_2_grey_to_col(pax_buf_t const *buf, pax_col_t color) {
 
 // Converts 4-bit greyscale to ARGB.
 pax_col_t pax_4_grey_to_col(pax_buf_t const *buf, pax_col_t color) {
+    (void)buf;
     return 0xff000000 | (color * 0x00111111);
 }
 
 // Converts 8-bit greyscale to ARGB.
 pax_col_t pax_8_grey_to_col(pax_buf_t const *buf, pax_col_t color) {
+    (void)buf;
     return 0xff000000 | (color * 0x00010101);
 }
 
@@ -803,6 +822,7 @@ pax_col_t pax_8_grey_to_col(pax_buf_t const *buf, pax_col_t color) {
 
 // Converts 3, 3, 2 bit RGB to ARGB.
 pax_col_t pax_332rgb_to_col(pax_buf_t const *buf, pax_col_t value) {
+    (void)buf;
     // 8BPP 332-RGB
     // From:                               RrrG ggBb
     // To:   .... .... Rrr. .... Ggg. .... .... ....
@@ -818,6 +838,7 @@ pax_col_t pax_332rgb_to_col(pax_buf_t const *buf, pax_col_t value) {
 
 // Converts 5, 6, 5 bit RGB to ARGB.
 pax_col_t pax_565rgb_to_col(pax_buf_t const *buf, pax_col_t value) {
+    (void)buf;
     // 16BPP 565-RGB
     // From:                     Rrrr rGgg gggB bbbb
     // To:   .... .... Rrrr r... Gggg gg.. Bbbb b...
@@ -833,6 +854,7 @@ pax_col_t pax_565rgb_to_col(pax_buf_t const *buf, pax_col_t value) {
 
 // Converts 1 bit per channel ARGB to ARGB.
 pax_col_t pax_1111argb_to_col(pax_buf_t const *buf, pax_col_t value) {
+    (void)buf;
     // 4BPP 1111-ARGB
     // From:                                    ARGB
     // To:   Aaaa aaaa Rrrr rrrr Gggg gggg Bbbb bbbb
@@ -846,6 +868,7 @@ pax_col_t pax_1111argb_to_col(pax_buf_t const *buf, pax_col_t value) {
 
 // Converts 2 bit per channel ARGB to ARGB.
 pax_col_t pax_2222argb_to_col(pax_buf_t const *buf, pax_col_t value) {
+    (void)buf;
     // 8BPP 2222-ARGB
     // From:                               AaRr GgBb
     // To:   Aaaa aaaa Rrrr rrrr Gggg gggg Bbbb bbbb
@@ -858,6 +881,7 @@ pax_col_t pax_2222argb_to_col(pax_buf_t const *buf, pax_col_t value) {
 
 // Converts 4 bit per channel ARGB to ARGB.
 pax_col_t pax_4444argb_to_col(pax_buf_t const *buf, pax_col_t value) {
+    (void)buf;
     // 16BPP 4444-ARGB
     // From:                     Aaaa Rrrr Gggg Bbbb
     // To:   Aaaa .... Rrrr .... Gggg .... Bbbb ....
@@ -871,5 +895,6 @@ pax_col_t pax_4444argb_to_col(pax_buf_t const *buf, pax_col_t value) {
 
 // Converts 8 bit per channel RGB to ARGB.
 pax_col_t pax_888rgb_to_col(pax_buf_t const *buf, pax_col_t color) {
+    (void)buf;
     return color | 0xff000000;
 }

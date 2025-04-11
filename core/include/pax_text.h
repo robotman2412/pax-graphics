@@ -38,11 +38,11 @@ static inline size_t pax_utf8_strlen(char const *cstr) {
     return pax_utf8_strlen_l(cstr, strlen(cstr));
 }
 // Seek to the next UTF-8 character in a string.
-static inline size_t pax_utf8_seeknext(char const *cstr, size_t len, size_t cursor) {
+static inline size_t pax_utf8_seeknext(char const *cstr, size_t cursor) {
     return pax_utf8_seeknext_l(cstr, strlen(cstr), cursor);
 }
 // Seek to the previous UTF-8 character in a string.
-static inline size_t pax_utf8_seekprev(char const *cstr, size_t len, size_t cursor) {
+static inline size_t pax_utf8_seekprev(char const *cstr, size_t cursor) {
     return pax_utf8_seekprev_l(cstr, strlen(cstr), cursor);
 }
 

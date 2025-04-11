@@ -175,6 +175,7 @@ pax_font_t const *pax_get_font(char const *name) {
 }
 #else
 pax_font_t const *pax_get_font(char const *name) {
+    (void)name;
     // Not compiled in, so ignore this.
     PAX_ERROR(PAX_ERR_UNSUPPORTED, NULL);
 }

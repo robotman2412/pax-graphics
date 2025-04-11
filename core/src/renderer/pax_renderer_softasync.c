@@ -170,8 +170,7 @@ void *pax_sasr_worker(void *_args) {
     #if CONFIG_PAX_COMPILE_ASYNC_RENDERER == 2
 
 // Read a single pixel from a raw buffer type by index.
-__attribute__((always_inline)) static inline pax_col_t
-    raw_get_pixel(void const *buf, uint8_t bpp, pax_vec2i dims, int index) {
+__attribute__((always_inline)) static inline pax_col_t raw_get_pixel(void const *buf, uint8_t bpp, int index) {
     uint8_t const  *buf_8bpp  = buf;
     uint16_t const *buf_16bpp = buf;
     uint32_t const *buf_32bpp = buf;
@@ -266,7 +265,7 @@ __attribute__((always_inline)) static inline void sasr_blit_impl_2(
                 pax_col_t        top_col  = _top->buf2col(_top, _top->getter(_top, top_index));
                 base->setter(base, base->col2buf(base, pax_col_merge(base_col, top_col)), base_index);
             } else if (is_raw_buf) {
-                pax_col_t col = raw_get_pixel(top, base->type_info.bpp, top_dims, top_index);
+                pax_col_t col = raw_get_pixel(top, base->type_info.bpp, top_index);
                 base->setter(base, col, base_index);
             } else if (is_pal_buf) {
                 pax_buf_t const *_top = top;

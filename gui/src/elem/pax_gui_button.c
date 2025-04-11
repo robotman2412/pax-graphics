@@ -44,6 +44,9 @@ void pgui_calc1_button(
 pgui_resp_t pgui_event_button(
     pax_vec2i gfx_size, pax_vec2i pos, pgui_elem_t *elem, pgui_theme_t const *theme, uint32_t flags, pgui_event_t event
 ) {
+    (void)gfx_size;
+    (void)pos;
+    (void)theme;
     if (event.input != PGUI_INPUT_ACCEPT) {
         if (elem->flags & PGUI_FLAG_ACTIVE) {
             return event.type == PGUI_EVENT_TYPE_RELEASE ? PGUI_RESP_CAPTURED : PGUI_RESP_CAPTURED_ERR;
