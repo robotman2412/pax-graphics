@@ -3,7 +3,6 @@
 
 #include "pax_renderer.h"
 
-#include "pax_internal.h"
 #include "renderer/pax_renderer_soft.h"
 
 #define DEFAULT_RENDERER_ONLY !CONFIG_PAX_COMPILE_ASYNC_RENDERER && !CONFIG_PAX_COMPILE_ESP32P4_PPA_RENDERER

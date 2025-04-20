@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: MIT
 
 #include "pax_internal.h"
+#include "pax_matrix.h"
+#include "pax_orientation.h"
 #include "pax_renderer.h"
 
 
@@ -162,6 +164,19 @@ void pax_draw_sprite_rot_sized(
         PAX_SWAP(int, top_x, top_y);
         PAX_SWAP(int, top_w, top_h);
     }
+    pax_recti tmp = pax_orient_det_recti(base, (pax_recti){x, y, top_w, top_h});
+    x             = tmp.x;
+    y             = tmp.y;
+    top_w         = tmp.w;
+    top_h         = tmp.h;
+    if (top_w < 0) {
+        x     += top_w;
+        top_w  = -top_w;
+    }
+    if (top_h < 0) {
+        y     += top_h;
+        top_h  = -top_h;
+    }
 #endif
     pax_dispatch_sprite(base, top, (pax_recti){x, y, top_w, top_h}, rot, (pax_vec2i){top_x, top_y});
 }
@@ -211,6 +226,19 @@ void pax_blit_rot_sized(
         PAX_SWAP(int, top_x, top_y);
         PAX_SWAP(int, top_w, top_h);
     }
+    pax_recti tmp = pax_orient_det_recti(base, (pax_recti){x, y, top_w, top_h});
+    x             = tmp.x;
+    y             = tmp.y;
+    top_w         = tmp.w;
+    top_h         = tmp.h;
+    if (top_w < 0) {
+        x     += top_w;
+        top_w  = -top_w;
+    }
+    if (top_h < 0) {
+        y     += top_h;
+        top_h  = -top_h;
+    }
 #endif
     pax_dispatch_blit(base, top, (pax_recti){x, y, top_w, top_h}, rot, (pax_vec2i){top_x, top_y});
 }
@@ -251,6 +279,19 @@ void pax_blit_raw_rot_sized(
     if (rot & 1) {
         PAX_SWAP(int, top_x, top_y);
         PAX_SWAP(int, top_w, top_h);
+    }
+    pax_recti tmp = pax_orient_det_recti(base, (pax_recti){x, y, top_w, top_h});
+    x             = tmp.x;
+    y             = tmp.y;
+    top_w         = tmp.w;
+    top_h         = tmp.h;
+    if (top_w < 0) {
+        x     += top_w;
+        top_w  = -top_w;
+    }
+    if (top_h < 0) {
+        y     += top_h;
+        top_h  = -top_h;
     }
 #endif
     pax_dispatch_blit_raw(base, top, top_dims, (pax_recti){x, y, top_w, top_h}, rot, (pax_vec2i){top_x, top_y});

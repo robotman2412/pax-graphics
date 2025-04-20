@@ -5,7 +5,6 @@
 
 #include "endian.h"
 #include "helpers/pax_drawing_helpers.h"
-#include "pax_internal.h"
 
 
 
@@ -109,6 +108,47 @@ __attribute__((always_inline)) static inline void swr_blit_impl(
     bool              is_raw_buf,
     bool              is_pal_buf
 ) {
+    // Clipping: dimensions of top buffer.
+#if CONFIG_PAX_COMPILE_ORIENTATION
+    if (top_orientation & 1) {
+        // Flip X and Y before size check.
+        if (base_pos.w > top_dims.y) {
+            base_pos.w = top_dims.y;
+        }
+        if (base_pos.h > top_dims.x) {
+            base_pos.h = top_dims.x;
+        }
+    } else
+#endif
+    {
+        if (base_pos.w > top_dims.x) {
+            base_pos.w = top_dims.x;
+        }
+        if (base_pos.h > top_dims.y) {
+            base_pos.h = top_dims.y;
+        }
+    }
+
+    // Clipping: clip rect of bottom buffer.
+    if (base_pos.x < base->clip.x) {
+        base_pos.w -= base->clip.x - base_pos.x;
+        base_pos.x  = base->clip.x;
+    }
+    if (base_pos.x + base_pos.w > base->clip.x + base->clip.w) {
+        base_pos.w = base->clip.x + base->clip.w - base_pos.x;
+    }
+    if (base_pos.y < base->clip.y) {
+        base_pos.h -= base->clip.y - base_pos.y;
+        base_pos.y  = base->clip.y;
+    }
+    if (base_pos.y + base_pos.h > base->clip.y + base->clip.h) {
+        base_pos.h = base->clip.y + base->clip.h - base_pos.y;
+    }
+
+    if (base_pos.x <= 0 || base_pos.w <= 0) {
+        return;
+    }
+
     // Determine copying parameters for top buffer.
 #if CONFIG_PAX_COMPILE_ORIENTATION
     // clang-format off

@@ -2,10 +2,8 @@
 // SPDX-License-Identifier: MIT
 
 #include "pax_internal.h"
-#include "pax_shaders.h"
 
 #include <malloc.h>
-#include <math.h>
 #include <string.h>
 
 
@@ -145,19 +143,6 @@ bool pax_buf_init(pax_buf_t *buf, void *mem, int width, int height, pax_buf_type
     pax_get_setters(buf, &buf->getter, &buf->setter, &buf->range_setter, &buf->range_merger);
     // The clip rectangle is disabled by default.
     pax_noclip(buf);
-    // Easter egg.
-    if (use_alloc) {
-        pax_background(buf, 0);
-        pax_draw_text(
-            buf,
-            buf->type_info.fmt_type == PAX_BUF_SUBTYPE_PALETTE ? 1 : 0xffffffff,
-            pax_font_sky,
-            9,
-            5,
-            5,
-            "Julian Wuz Here"
-        );
-    }
     pax_set_ok();
     return true;
 }
