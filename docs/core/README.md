@@ -40,8 +40,9 @@ Here, we use it with the type PAX_BUF_16_565RGB and reversed endianness, which i
 ```c
 void my_graphics_function() {
     // Setup.
-    pax_buf_t *gfx = pax_buf_init(NULL, 320, 240, PAX_BUF_16_565RGB);
-    pax_buf_reversed(gfx, true);
+    pax_buf_t gfx;
+    pax_buf_init(&gfx, NULL, 320, 240, PAX_BUF_16_565RGB);
+    pax_buf_reversed(&gfx, true);
 }
 ```
 This tells PAX to create a framebuffer for the screen, which is 320 by 240 pixels in size.
@@ -53,11 +54,12 @@ The [`pax_background`](#api-reference-basic-drawing) method fills the background
 ```c
 void my_graphics_function() {
     // Setup.
-    pax_buf_t *gfx = pax_buf_init(NULL, 320, 240, PAX_BUF_16_565RGB);
-    pax_buf_reversed(gfx, true);
+    pax_buf_t gfx;
+    pax_buf_init(&gfx, NULL, 320, 240, PAX_BUF_16_565RGB);
+    pax_buf_reversed(&gfx, true);
     
     // Green background.
-    pax_background(gfx, pax_col_rgb(0, 255, 0));
+    pax_background(&gfx, pax_col_rgb(0, 255, 0));
 }
 ```
 Here's what it looks like if you write it to the screen:
@@ -68,17 +70,18 @@ with a midpoint co-ordinates and the radius:
 ```c
 void my_graphics_function() {
     // Setup.
-    pax_buf_t *gfx = pax_buf_init(NULL, 320, 240, PAX_BUF_16_565RGB);
-    pax_buf_reversed(gfx, true);
+    pax_buf_t gfx;
+    pax_buf_init(&gfx, NULL, 320, 240, PAX_BUF_16_565RGB);
+    pax_buf_reversed(&gfx, true);
     
     // Green background.
-    pax_background(gfx, pax_col_rgb(0, 255, 0));
+    pax_background(&gfx, pax_col_rgb(0, 255, 0));
     
     // Red circle.
     float midpoint_x = pax_buf_get_width(gfx) / 2.0;  // Middle of the screen horizontally.
     float midpoint_y = pax_buf_get_height(gfx) / 2.0; // Middle of the screen vertically.
     float radius     = 50;                            // Nice, big circle.
-    pax_simple_circle(gfx, pax_col_rgb(255, 0, 0), midpoint_x, midpoint_y, radius);
+    pax_simple_circle(&gfx, pax_col_rgb(255, 0, 0), midpoint_x, midpoint_y, radius);
 }
 ```
 Here's what it looks like if you write it to the screen:
@@ -92,24 +95,25 @@ It accepts a font, a point size, a top left corner position and the text to draw
 ```c
 void my_graphics_function() {
     // Setup.
-    pax_buf_t *gfx = pax_buf_init(NULL, 320, 240, PAX_BUF_16_565RGB);
-    pax_buf_reversed(gfx, true);
+    pax_buf_t gfx;
+    pax_buf_init(&gfx, NULL, 320, 240, PAX_BUF_16_565RGB);
+    pax_buf_reversed(&gfx, true);
     
     // Green background.
-    pax_background(gfx, pax_col_rgb(0, 255, 0));
+    pax_background(&gfx, pax_col_rgb(0, 255, 0));
     
     // Red circle.
     float midpoint_x = pax_buf_get_width(gfx) / 2.0;  // Middle of the screen horizontally.
     float midpoint_y = pax_buf_get_height(gfx) / 2.0; // Middle of the screen vertically.
     float radius     = 50;                            // Nice, big circle.
-    pax_simple_circle(gfx, pax_col_rgb(255, 0, 0), midpoint_x, midpoint_y, radius);
+    pax_simple_circle(&gfx, pax_col_rgb(255, 0, 0), midpoint_x, midpoint_y, radius);
     
     // White text.
     float text_x     = 0;                   // Top left corner of the screen.
     float text_y     = 0;                   // Top left corner of the screen.
     char *my_text    = "Hello, World!";     // You can pick any message you'd like.
     float text_size  = 18;                  // Twice the normal size for "sky".
-    pax_draw_text(gfx, pax_col_rgb(255, 255, 255), pax_font_sky_mono, text_size, text_x, text_y, my_text);
+    pax_draw_text(&gfx, pax_col_rgb(255, 255, 255), pax_font_sky_mono, text_size, text_x, text_y, my_text);
 }
 ```
 Here's what it looks like if you write it to the screen:
@@ -121,7 +125,8 @@ This differs per screen type, but for the MCH2022 badge's screen you use the
 ```c
 void my_graphics_function() {
     // Setup.
-    pax_buf_t *gfx = pax_buf_init(NULL, 320, 240, PAX_BUF_16_565RGB);
+    pax_buf_t gfx;
+    pax_buf_init(&gfx, NULL, 320, 240, PAX_BUF_16_565RGB);
     
     // Green background.
     pax_background(gfx, pax_col_rgb(0, 255, 0));
@@ -157,34 +162,35 @@ If you don't want to use the buffer you made during setup anymore, you can clean
 ```c
 void my_graphics_function() {
     // Setup.
-    pax_buf_t *gfx = pax_buf_init(NULL, 320, 240, PAX_BUF_16_565RGB);
+    pax_buf_t gfx;
+    pax_buf_init(&gfx, NULL, 320, 240, PAX_BUF_16_565RGB);
     
     // Green background.
-    pax_background(gfx, pax_col_rgb(0, 255, 0));
-    pax_buf_reversed(gfx, true);
+    pax_background(&gfx, pax_col_rgb(0, 255, 0));
+    pax_buf_reversed(&gfx, true);
     
     // Red circle.
-    float midpoint_x = pax_buf_get_width(gfx) / 2.0;  // Middle of the screen horizontally.
-    float midpoint_y = pax_buf_get_height(gfx) / 2.0; // Middle of the screen vertically.
-    float radius     = 50;                            // Nice, big circle.
-    pax_simple_circle(gfx, pax_col_rgb(255, 0, 0), midpoint_x, midpoint_y, radius);
+    float midpoint_x = pax_buf_get_width(&gfx) / 2.0;  // Middle of the screen horizontally.
+    float midpoint_y = pax_buf_get_height(&gfx) / 2.0; // Middle of the screen vertically.
+    float radius     = 50;                             // Nice, big circle.
+    pax_simple_circle(&gfx, pax_col_rgb(255, 0, 0), midpoint_x, midpoint_y, radius);
     
     // White text.
     float text_x     = 0;                   // Top left corner of the screen.
     float text_y     = 0;                   // Top left corner of the screen.
     char *my_text    = "Hello, World!";     // You can pick any message you'd like.
     float text_size  = 18;                  // Twice the normal size for "sky".
-    pax_draw_text(gfx, pax_col_rgb(255, 255, 255), pax_font_sky_mono, text_size, text_x, text_y, my_text);
+    pax_draw_text(&gfx, pax_col_rgb(255, 255, 255), pax_font_sky_mono, text_size, text_x, text_y, my_text);
     
     // Put it on the screen.
-    if (ili9341_write(&display, pax_buf_get_pixels(gfx))) {
+    if (ili9341_write(&display, pax_buf_get_pixels(&gfx))) {
         ESP_LOGE("my_tag", "Display write failed.");
     } else {
         ESP_LOGI("my_tag", "Display write success.");
     }
     
     // Cleanup.
-    pax_buf_destroy(gfx);
+    pax_buf_destroy(&gfx);
 }
 ```
 
@@ -235,7 +241,8 @@ For setting up a buffer, use [`pax_buf_init`](setup.md#buffer-creation):
 For the MCH2022 badge, the size is 320x240, the format is [`PAX_BUF_16_565RGB`](setup.md#buffer-formats) and the endianness is reversed.
 ```c
 // Create a graphics context:
-pax_buf_t *gfx = pax_buf_init(memory, width, height, format);
+pax_buf_t gfx;
+pax_buf_init(&gfx, memory, width, height, format);
 ```
 If you want, you can use a different type for intermediary buffers (e.g. to store image textures):
 - [`PAX_BUF_32_8888ARGB`](setup.md#buffer-formats)

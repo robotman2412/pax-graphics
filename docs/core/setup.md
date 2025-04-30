@@ -49,7 +49,8 @@ After picking a format, it's very simple to create your buffer.
 To make a new buffer, use `pax_but_init`:
 ```c
 // Create a buffer and let PAX allocate memory for you.
-pax_buf_t *gfx = pax_buf_init(NULL, width, height, format);
+pax_buf_t gfx;
+pax_buf_init(&gfx, NULL, width, height, format);
 ```
 
 Or allocate memory yourself:
@@ -57,7 +58,8 @@ Or allocate memory yourself:
 // 256x256 with 32 bits per pixel (4 bytes)
 uint8_t my_memory[256*256*4];
 // You must be more careful with what you tell PAX about the buffer here, it will assume you know the exact size requirement.
-pax_buf_t *gfx = pax_buf_init(my_memory, 256, 256, PAX_BUF_32_8888ARGB);
+pax_buf_t gfx;
+pax_buf_init(&gfx, my_memory, 256, 256, PAX_BUF_32_8888ARGB);
 ```
 
 If you don't need the buffer anymore, use `pax_buf_destroy`:
