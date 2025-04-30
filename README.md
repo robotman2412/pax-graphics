@@ -1,12 +1,23 @@
 # PAX graphics
-An MIT graphics library for [Badge.team](https://badge.team/).
+An easy-to-use but powerful 2D graphics library for games and GUIs on embedded systems.
+Supports affine transformations, shaders, text scaling, and multi-CPU software rendering.
 
-Version: v1.1.1
+Made for [Badge.team](https://badge.team/) and licensed MIT.
+
+Version: v2.0.0-snapshot
 
 # Documentation
 Documentation can be found [here](docs).
 
+# Short-term TODO list (v2.0.0)
+- Document all current features
+
+# Long-term TODO list (v2.1.0)
+- Add support for ESP32-P4 hardware acceleration
+- Completely re-build shaders from the ground up
+
 # Feature wishlist
+- Official Rust bindings
 - GPU acceleration
 - Antialiasing
 - Import more fonts
@@ -23,7 +34,4 @@ The badge is an electronic event badge which can do much more than just show you
 To accomplish all the cool graphics people can draw, this graphics stack was made.
 
 # See also
-- https://github.com/badgeteam/mch2022-firmware-esp32 (firmware for which this was made)
-- https://github.com/robotman2412/mch2022-badge-tests (firmware i use to test changes)
-- https://mch2022.org/ (the associated hacker camp)
 - https://badge.team/  (the team for which i volunteer)

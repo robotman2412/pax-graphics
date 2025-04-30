@@ -1,39 +1,52 @@
-# This file arbitrates between different methods of building.
+
+# SPDX-License-Identifier: MIT
+
 cmake_minimum_required(VERSION 3.13)
 
-if(DEFINED IDF_TARGET)
-	# ESP-IDF detected (by IDF_TARGET being defined).
-	message(STATUS "Building PAX Graphics as ESP-IDF module.")
-	include(${CMAKE_CURRENT_LIST_DIR}/esp_idf.cmake)
-elseif(DEFINED PICO_SDK_PATH)
-	# Pi Pico SDK detected (by PICO_SDK_PATH being defined).
-	project(pax_graphics C CXX)
-	
-	message(STATUS "Building PAX Graphics for Pi Pico SDK.")
-	add_definitions(-DPAX_STANDALONE=0)
-	add_definitions(-DPAX_COMPILE_MCR=0)
-	add_definitions(-DPAX_PI_PICO=1)
-	include(${CMAKE_CURRENT_LIST_DIR}/standalone.cmake)
-elseif(DEFINED ENV{PAX_CMAKE_STANDALONE})
-	# Explicitly named SDK.
-	set(CMAKE_C_COMPILER_FORCED true)
-	set(CMAKE_CXX_COMPILER_FORCED true)
-	
-	project(pax_graphics C CXX)
-	add_definitions(-DPAX_STANDALONE=1)
-	add_definitions(-DPAX_COMPILE_MCR=0)
-	
-	message(STATUS "Building PAX Graphics for " $ENV{PAX_CMAKE_STANDALONE} ".")
-	include(${CMAKE_CURRENT_LIST_DIR}/standalone.cmake)
+# Version information.
+set(PAX_VERSION_IS_SNAPSHOT false)
+set(PAX_VERSION_MAJOR 2)
+set(PAX_VERSION_MINOR 0)
+set(PAX_VERSION_PATCH 0)
+
+set(PAX_VERSION ${PAX_VERSION_MAJOR}.${PAX_VERSION_MINOR}.${PAX_VERSION_PATCH})
+if(PAX_VERSION_IS_SNAPSHOT)
+    set(PAX_VERSION ${PAX_VERSION}-snapshot)
+endif()
+
+set(PAX_VERSION_IS_SNAPSHOT ${PAX_VERSION_IS_SNAPSHOT} PARENT_SCOPE)
+set(PAX_VERSION_MAJOR ${PAX_VERSION_MAJOR} PARENT_SCOPE)
+set(PAX_VERSION_MINOR ${PAX_VERSION_MINOR} PARENT_SCOPE)
+set(PAX_VERSION_PATCH ${PAX_VERSION_PATCH} PARENT_SCOPE)
+set(PAX_VERSION ${PAX_VERSION} PARENT_SCOPE)
+
+
+
+if(ESP_PLATFORM)
+    set(PAX_STATIC true)
+endif()
+
+if(PAX_STATIC)
+    set(_PAX_STATIC_OR_SHARED STATIC)
 else()
-	# Unknown SDK.
-	set(CMAKE_C_COMPILER_FORCED true)
-	set(CMAKE_CXX_COMPILER_FORCED true)
+    set(_PAX_STATIC_OR_SHARED SHARED)
+endif()
 
-	project(pax_graphics C CXX)
-	add_definitions(-DPAX_STANDALONE=1)
-	add_definitions(-DPAX_COMPILE_MCR=0)
+include(${CMAKE_CURRENT_LIST_DIR}/core/CMakeLists.txt)
+include(${CMAKE_CURRENT_LIST_DIR}/gui/CMakeLists.txt)
 
-	message(STATUS "Building PAX Graphics (unknown SDK).")
-	include(${CMAKE_CURRENT_LIST_DIR}/standalone.cmake)
+if(ESP_PLATFORM)
+    # ESP-IDF integration.
+    set(pax_esp_requires esp_timer esp_system esp_pm)
+    # idf_build_get_property(idf_target IDF_TARGET)
+    # if("${idf_target}" MATCHES "esp32p4")
+    #     list(APPEND pax_esp_requires esp_driver_ppa)
+    # endif()
+    idf_component_register(
+        SRCS ${pax_gfx_srcs} ${pax_gui_srcs}
+        INCLUDE_DIRS ${pax_gfx_include} ${pax_gui_include} ${pax_gui_priv_include}
+        REQUIRES ${pax_esp_requires}
+    )
+    target_compile_options(${COMPONENT_LIB} PUBLIC ${pax_gfx_options} ${pax_gui_options})
+    target_compile_options(${COMPONENT_LIB} PRIVATE -Wno-unused-const-variable)
 endif()

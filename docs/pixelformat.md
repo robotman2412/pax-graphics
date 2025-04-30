@@ -79,6 +79,7 @@ RGB pixel types can have 8 or 16 bits per pixel:
 | :---------------- | :------------- | :----- | :----- | :-----
 | PAX_BUF_8_332RGB  | 8              | 3      | 3      | 2
 | PAX_BUF_16_565RGB | 16             | 5      | 6      | 5
+| PAX_BUF_24_888RGB | 24             | 8      | 8      | 8
 
 The conversion is a simple scaling of the color values to fit the new bits for the respective channel.
 Additionally, alpha is *ignored* when converting to the pixel format, and set to 255 when converting to ARGB.
