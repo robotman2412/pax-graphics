@@ -89,23 +89,11 @@ static inline size_t pax_buf_calc_size_dynamic(int width, int height, pax_buf_ty
 // Assumes `type` is literally the type name; use `pax_buf_calc_size_dynamic` for dynamic info.
 #define PAX_BUF_CALC_SIZE(width, height, type) ((PAX_GET_BPP(type) * (width) * (height) + 7) >> 3)
 
-// Create a new buffer.
-// If `mem` is `NULL`, a new area is allocated.
-pax_buf_t *pax_buf_new(void *mem, int width, int height, pax_buf_type_t type);
-// Destroy the buffer, freeing its memory.
-void       pax_buf_delete(pax_buf_t *buf);
-
 // Initialize a buffer where the `pax_buf_t` struct is user-managed.
 // If `mem` is `NULL`, a new area is allocated.
-// WARNING: Only use this function if you know what you're doing!
-// WARNING: If you're using this function because the API changed in 2.0, seriously consider using `pax_buf_new`!
-__attribute__((deprecated("Use `pax_buf_new`, `pax_buf_delete` instead."))) bool
-    pax_buf_init(pax_buf_t *buf, void *mem, int width, int height, pax_buf_type_t type);
-
+bool pax_buf_init(pax_buf_t *buf, void *mem, int width, int height, pax_buf_type_t type);
 // De-initialize a buffer initialized by `pax_buf_init`.
-// WARNING: Only use this function if you know what you're doing!
-// WARNING: If you're using this function because the API changed in 2.0, seriously consider using `pax_buf_delete`!
-__attribute__((deprecated("Use `pax_buf_new`, `pax_buf_delete` instead."))) void pax_buf_destroy(pax_buf_t *buf);
+void pax_buf_destroy(pax_buf_t *buf);
 
 // Set the palette for buffers with palette types.
 // Creates an internal copy of the palette.
@@ -232,9 +220,6 @@ void pax_pop_2d(pax_buf_t *buf);
 void pax_reset_2d(pax_buf_t *buf, bool full);
 
 
-
-// Indicates that this version of PAX has the `pax_buf_new` and `pax_buf_delete` functions.
-#define PAX_HAS_PAX_BUF_NEW 1
 
 #ifdef __cplusplus
 } // extern "C"

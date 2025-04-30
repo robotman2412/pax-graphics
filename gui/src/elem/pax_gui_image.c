@@ -1,6 +1,7 @@
 
 // SPDX-License-Identifier: MIT
 
+#include "pax_gfx.h"
 #include "pax_gui_internal.h"
 #include "pax_gui_util.h"
 
@@ -63,7 +64,8 @@ void pgui_calc1_image(pax_vec2i gfx_size, pax_vec2i pos, pgui_elem_t *elem, pgui
 void pgui_del_image(pgui_elem_t *elem) {
     pgui_image_t *image = (pgui_image_t *)elem;
     if (image->do_free_image) {
-        pax_buf_delete(image->image);
+        pax_buf_destroy(image->image);
+        free(image->image);
     }
 }
 

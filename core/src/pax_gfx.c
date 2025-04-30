@@ -106,9 +106,6 @@ pax_buf_type_info_t pax_buf_type_info(pax_buf_type_t type) {
     }
 }
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-
 // Initialize a buffer where the `pax_buf_t` struct is user-managed.
 // If `mem` is `NULL`, a new area is allocated.
 // WARNING: Only use this function if you know what you're doing!
@@ -168,31 +165,6 @@ void pax_buf_destroy(pax_buf_t *buf) {
         free((pax_col_t *)buf->palette);
     }
 }
-
-
-// Create a new buffer.
-// If mem is NULL, a new area is allocated.
-pax_buf_t *pax_buf_new(void *mem, int width, int height, pax_buf_type_t type) {
-    pax_buf_t *buf = malloc(sizeof(pax_buf_t));
-    if (!buf) {
-        pax_set_err(PAX_ERR_NOMEM);
-        return NULL;
-    }
-    if (!pax_buf_init(buf, mem, width, height, type)) {
-        free(buf);
-        return NULL;
-    }
-    return buf;
-}
-
-// Destroy the buffer, freeing its memory.
-void pax_buf_delete(pax_buf_t *buf) {
-    PAX_BUF_CHECK(buf);
-    pax_buf_destroy(buf);
-    free(buf);
-}
-
-#pragma GCC diagnostic pop // ignore "-Wdeprecated-declarations"
 
 // Set the palette for buffers with palette types.
 // Creates an internal copy of the palette.
