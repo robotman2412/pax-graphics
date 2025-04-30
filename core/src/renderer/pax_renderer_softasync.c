@@ -492,18 +492,33 @@ __attribute__((always_inline)) static inline void pax_sasr_blit_char_impl_2(
     pax_recti dims;
     if (blit_char_clip(effective_clip, pos, scale, &dims, rsdata)) {
         // Char is not (entirely) outside framebuffer.
-        if (((pos.y + dims.y) & 1) != odd_scanline) {
+        int x_increment = 1, y_increment = 2;
+        #if CONFIG_PAX_COMPILE_ORIENTATION
+        pos = pax_orient_det_vec2i(buf, pos);
+
+        if (buf->orientation & 1) {
+            x_increment = 2, y_increment = 1;
+
+            if (((pos.y + dims.x) & 1) != odd_scanline) {
+                dims.x++;
+                dims.w--;
+            }
+        } else
+        #endif
+            if (((pos.y + dims.y) & 1) != odd_scanline) {
             dims.y++;
             dims.h--;
         }
 
+
         // Calculate drawing parameters.
         int bits_dy = rsdata.row_stride << 3;
-        int offset  = (pos.x + dims.x) * dx + (pos.y + dims.y) * dy;
+        int offset  = (pos.x + pos.y * buf->width) + (dims.x * dx + dims.y * dy);
 
         // Actual blit loop.
-        for (int y = dims.y; y < dims.y + dims.h; y += 2) {
-            for (int x = dims.x; x < dims.x + dims.w; x++) {
+        for (int y = dims.y; y < dims.y + dims.h; y += y_increment) {
+            int next_y_offset = offset + y_increment * dy;
+            for (int x = dims.x; x < dims.x + dims.w; x += x_increment) {
                 // Extract value from character bitmap.
                 int     bit   = x / scale * rsdata.bpp + y / scale * bits_dy;
                 uint8_t value = (rsdata.bitmap[bit >> 3] >> (bit & 7)) & bitmask;
@@ -523,9 +538,9 @@ __attribute__((always_inline)) static inline void pax_sasr_blit_char_impl_2(
                     buf->setter(buf, buf->col2buf(buf, merged), offset);
                 }
 
-                offset += dx;
+                offset += x_increment * dx;
             }
-            offset += 2 * dy - dx * (dims.w - dims.x);
+            offset = next_y_offset;
         }
     }
 }

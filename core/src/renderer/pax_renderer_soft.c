@@ -5,6 +5,7 @@
 
 #include "endian.h"
 #include "helpers/pax_drawing_helpers.h"
+#include "pax_orientation.h"
 
 
 
@@ -332,9 +333,12 @@ __attribute__((always_inline)) static inline void pax_swr_blit_char_impl(
     pax_recti dims;
     if (blit_char_clip(effective_clip, pos, scale, &dims, rsdata)) {
         // Char is not (entirely) outside framebuffer.
+#if CONFIG_PAX_COMPILE_ORIENTATION
+        pos = pax_orient_det_vec2i(buf, pos);
+#endif
         // Calculate drawing parameters.
         int bits_dy = rsdata.row_stride << 3;
-        int offset  = (pos.x + dims.x) * dx + (pos.y + dims.y) * dy;
+        int offset  = (pos.x + pos.y * buf->width) + (dims.x * dx + dims.y * dy);
 
         // Actual blit loop.
         for (int y = dims.y; y < dims.y + dims.h; y++) {

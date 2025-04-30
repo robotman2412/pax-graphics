@@ -17,10 +17,21 @@
 
 // Sample a pixel from a bitmap font glyph.
 static inline __attribute__((always_inline)) uint8_t sample_glyph(int x, int y, pax_text_rsdata_t const *rsdata) {
-    uint8_t value  = rsdata->bitmap[rsdata->row_stride * y + x * rsdata->bpp / 8];
-    value          = value >> (x * rsdata->bpp % 8);
-    value         &= (1 << rsdata->bpp) - 1;
-    value          = value * 255 / ((1 << rsdata->bpp) - 1);
+    // Clamp to bounds.
+    if (x < 0)
+        x = 0;
+    else if (x >= rsdata->w)
+        x = rsdata->w - 1;
+    if (y < 0)
+        y = 0;
+    else if (y >= rsdata->h)
+        y = rsdata->h - 1;
+    uint8_t value = rsdata->bitmap[rsdata->row_stride * y + x * rsdata->bpp / 8];
+
+    value  = value >> (x * rsdata->bpp % 8);
+    value &= (1 << rsdata->bpp) - 1;
+    value  = value * 255 / ((1 << rsdata->bpp) - 1);
+
     return value;
 }
 
@@ -33,11 +44,6 @@ pax_col_t pax_shader_font_bmp_pal(pax_col_t tint, pax_col_t existing, int x, int
     // Get texture coords.
     int glyph_x = u;
     int glyph_y = v;
-    // Clamp to bounds.
-    if (glyph_x >= args->w)
-        glyph_x = args->w - 1;
-    if (glyph_y >= args->h)
-        glyph_y = args->h - 1;
 
     return sample_glyph(glyph_x, glyph_y, args) >= 128 ? tint : existing;
 }
@@ -51,11 +57,6 @@ pax_col_t pax_shader_font_bmp(pax_col_t tint, pax_col_t existing, int x, int y, 
     // Get texture coords.
     int glyph_x = u;
     int glyph_y = v;
-    // Clamp to bounds.
-    if (glyph_x >= args->w)
-        glyph_x = args->w - 1;
-    if (glyph_y >= args->h)
-        glyph_y = args->h - 1;
 
     // Extract the pixel data.
     uint8_t value = sample_glyph(glyph_x, glyph_y, args);
@@ -82,12 +83,6 @@ pax_col_t pax_shader_font_bmp_aa(pax_col_t tint, pax_col_t existing, int x, int 
     uint16_t dy       = pax_interp_value(v - glyph_y) * 255;
     dx               += dx >> 7;
     dy               += dy >> 7;
-
-    // Coords out of bounds fix.
-    if (glyph_x >= args->w)
-        glyph_x = args->w - 1;
-    if (glyph_y >= args->h)
-        glyph_y = args->h - 1;
 
     uint8_t c0 = 0, c1 = 0, c2 = 0, c3 = 0;
 

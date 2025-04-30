@@ -1,6 +1,7 @@
 
 // SPDX-License-Identifier: MIT
 
+#include "pax_matrix.h"
 static char const *TAG = "pax_text";
 
 #include "pax_internal.h"
@@ -227,6 +228,7 @@ static void dispatch_glyph(
         ctx->rsdata_len = 0;
     }
     pax_text_rsdata_t *rsdata_buf = &ctx->rsdata[ctx->rsdata_len++];
+    *rsdata_buf                   = rsdata;
 
     // Set up shader.
     pax_shader_t shader = {
@@ -648,6 +650,10 @@ pax_2vec2f pax_draw_text_adv(
     pax_align_t       valign,
     ptrdiff_t         cursorpos
 ) {
+    if (!text) {
+        return (pax_2vec2f){0};
+    }
+
     // Determine vertical position.
     if (valign == PAX_ALIGN_CENTER) {
         y -= count_newlines(text, len) * font_size * 0.5f;
@@ -674,6 +680,9 @@ pax_2vec2f pax_text_size_adv(
     pax_align_t       valign,
     ptrdiff_t         cursorpos
 ) {
+    if (!text) {
+        return (pax_2vec2f){0};
+    }
     float y = 0;
 
     // Determine vertical position.
