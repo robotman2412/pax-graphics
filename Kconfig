@@ -1,0 +1,66 @@
+menu "PAX Graphics"
+	config PAX_BOUNDS_CHECK
+		bool "Add array index out of bounds checks to all PAX framebuffer access"
+		default n
+	
+	config PAX_DO_BICUBIC
+		bool "Perform bicubic interpolation in text and images"
+		default n
+	
+	config PAX_COMPILE_BEZIER
+		bool "Compile in bezier curves support"
+		default y
+	
+	config PAX_USE_EXPENSIVE_BEZIER
+    	bool "Use the more expensive, but more accurate algorithm in pax_draw_bezier"
+		default n
+	
+	config PAX_COMPILE_TRIANGULATE
+		bool "Compile in triangulation (filling the outline of a shape)"
+		default y
+	
+	choice
+		prompt "Compile in async renderer"
+		default PAX_COMPILE_ASYNC_RENDERER_MULTITHREAD
+		
+		config PAX_COMPILE_ASYNC_RENDERER_NONE
+			bool "Disabled"
+		
+		config PAX_COMPILE_ASYNC_RENDERER_SINGLETHREAD
+			bool "Single-threaded only"
+		
+		config PAX_COMPILE_ASYNC_RENDERER_MULTITHREAD
+			bool "Single- or multi-threaded"
+	endchoice
+	
+	config PAX_RANGE_SETTER
+		bool "Compile in the range setter for faster opaque drawing"
+		default y
+	
+	config PAX_RANGE_MERGER
+		bool "Compile in the range merger for faster alpha blending"
+		depends on PAX_RANGE_SETTER
+		default y
+	
+	config PAX_COMPILE_ORIENTATION
+		bool "Compile in buffer orientation settings"
+		default y
+	
+	config PAX_QUEUE_SIZE
+		depends on PAX_COMPILE_ASYNC_RENDERER_SINGLETHREAD || PAX_COMPILE_ASYNC_RENDERER_MULTITHREAD
+		int "Queue size to use for multi-core rendering"
+		default 32
+	
+	config PAX_USE_FIXED_POINT
+		bool "Whether to use fixed-point arithmetic internally"
+		default y
+	
+	config PAX_USE_LONG_FIXED_POINT
+		bool "Whether to use 64-bit instead of 32-bit fixed-point arithmetic"
+		depends on PAX_USE_FIXED_POINT
+		default y
+	
+	config PAX_TEXT_BUCKET_SIZE
+		int "How many glyphs can be rendered at once before `pax_join()` is implicitly called"
+		default 32
+endmenu

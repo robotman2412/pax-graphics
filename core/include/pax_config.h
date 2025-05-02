@@ -13,7 +13,7 @@
 #endif
 
 #ifndef CONFIG_PAX_BOUNDS_CHECK
-    // Force array index out of bounds checks be added to all PAX framebuffer access.
+    // Add array index out of bounds checks to all PAX framebuffer access.
     // WARNING: Enabling may significantly degrade performance.
     #define CONFIG_PAX_BOUNDS_CHECK false
 #endif
@@ -24,7 +24,7 @@
 #endif
 
 #ifndef CONFIG_PAX_COMPILE_BEZIER
-    // Compile in bezier curves.
+    // Compile in bezier curves support.
     #define CONFIG_PAX_COMPILE_BEZIER true
 #endif
 
@@ -54,9 +54,19 @@
 #endif
 
 #ifndef CONFIG_PAX_COMPILE_ASYNC_RENDERER
-    // Compile in async renderer.
-    // Set to 0 to disable, 1 for async single-threaded only, 2 for async single- or multi-threaded.
-    #define CONFIG_PAX_COMPILE_ASYNC_RENDERER 2
+    #if PAX_COMPILE_ASYNC_RENDERER_NONE
+        // Compile in async renderer.
+        // Set to 0 to disable, 1 for async single-threaded only, 2 for async single- or multi-threaded.
+        #define CONFIG_PAX_COMPILE_ASYNC_RENDERER 0
+    #elifdef PAX_COMPILE_ASYNC_RENDERER_SINGLETHREAD
+        // Compile in async renderer.
+        // Set to 0 to disable, 1 for async single-threaded only, 2 for async single- or multi-threaded.
+        #define CONFIG_PAX_COMPILE_ASYNC_RENDERER 1
+    #else
+        // Compile in async renderer.
+        // Set to 0 to disable, 1 for async single-threaded only, 2 for async single- or multi-threaded.
+        #define CONFIG_PAX_COMPILE_ASYNC_RENDERER 2
+    #endif
 #endif
 
 #ifndef CONFIG_PAX_RANGE_SETTER
