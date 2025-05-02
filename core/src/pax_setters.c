@@ -7,6 +7,28 @@
 #include <endian.h>
 
 
+static inline void __attribute__((always_inline))
+getter_setter_bounds_check(pax_buf_t const *buf, int index, int length) {
+#if !CONFIG_PAX_BOUNDS_CHECK
+    (void)buf;
+    (void)index;
+    (void)length;
+#else
+    if (index < 0 || (length > 0 && (index + length < index || index + length > buf->width * buf->height))) {
+        PAX_LOGE(
+            "pax",
+            "Frame buffer access out of bounds: index %d, length %d on a %dx%d buffer",
+            index,
+            length,
+            buf->width,
+            buf->height
+        );
+        abort();
+    }
+#endif
+}
+
+
 
 /* ===== GETTERS AND SETTERS ===== */
 
@@ -122,53 +144,63 @@ void pax_get_setters(
 #pragma region index_getter
 // Gets a raw value from a 1BPP buffer.
 pax_col_t pax_index_getter_1bpp(pax_buf_t const *buf, int index) {
+    getter_setter_bounds_check(buf, index, 1);
     return (buf->buf_8bpp[index >> 3] >> (index & 7)) & 1;
 }
 
 // Gets a raw value from a 2BPP buffer.
 pax_col_t pax_index_getter_2bpp(pax_buf_t const *buf, int index) {
+    getter_setter_bounds_check(buf, index, 1);
     return (buf->buf_8bpp[index >> 2] >> (index & 3) * 2) & 3;
 }
 
 // Gets a raw value from a 4BPP buffer.
 pax_col_t pax_index_getter_4bpp(pax_buf_t const *buf, int index) {
+    getter_setter_bounds_check(buf, index, 1);
     return (buf->buf_8bpp[index >> 1] >> (index & 1) * 4) & 15;
 }
 
 // Gets a raw value from a 8BPP buffer.
 pax_col_t pax_index_getter_8bpp(pax_buf_t const *buf, int index) {
+    getter_setter_bounds_check(buf, index, 1);
     return buf->buf_8bpp[index];
 }
 
 // Gets a raw value from a 16BPP buffer.
 pax_col_t pax_index_getter_16bpp(pax_buf_t const *buf, int index) {
+    getter_setter_bounds_check(buf, index, 1);
     return buf->buf_16bpp[index];
 }
 
 // Gets a raw value from a 24BPP buffer.
 pax_col_t pax_index_getter_24bpp(pax_buf_t const *buf, int index) {
+    getter_setter_bounds_check(buf, index, 1);
     index += 2 * index;
     return (buf->buf_8bpp[index + 0] << 0) | (buf->buf_8bpp[index + 1] << 8) | (buf->buf_8bpp[index + 2] << 16);
 }
 
 // Gets a raw value from a 32BPP buffer.
 pax_col_t pax_index_getter_32bpp(pax_buf_t const *buf, int index) {
+    getter_setter_bounds_check(buf, index, 1);
     return buf->buf_32bpp[index];
 }
 
 // Gets a raw value from a 16BPP buffer, reversed endianness.
 pax_col_t pax_index_getter_16bpp_rev(pax_buf_t const *buf, int index) {
+    getter_setter_bounds_check(buf, index, 1);
     return pax_rev_endian_16(buf->buf_16bpp[index]);
 }
 
 // Gets a raw value from a 24BPP buffer, reversed endianness.
 pax_col_t pax_index_getter_24bpp_rev(pax_buf_t const *buf, int index) {
+    getter_setter_bounds_check(buf, index, 1);
     index += 2 * index;
     return (buf->buf_8bpp[index + 0] << 16) | (buf->buf_8bpp[index + 1] << 8) | (buf->buf_8bpp[index + 2] << 0);
 }
 
 // Gets a raw value from a 32BPP buffer, reversed endianness.
 pax_col_t pax_index_getter_32bpp_rev(pax_buf_t const *buf, int index) {
+    getter_setter_bounds_check(buf, index, 1);
     return pax_rev_endian_32(buf->buf_32bpp[index]);
 }
 #pragma endregion index_getter
@@ -177,6 +209,7 @@ pax_col_t pax_index_getter_32bpp_rev(pax_buf_t const *buf, int index) {
 #pragma region index_setter
 // Sets a raw value from a 1BPP buffer.
 void pax_index_setter_1bpp(pax_buf_t *buf, pax_col_t color, int index) {
+    getter_setter_bounds_check(buf, index, 1);
     uint8_t *ptr = &buf->buf_8bpp[index >> 3];
     switch (index & 7) {
         case (0): *ptr = (*ptr & 0xfe) | (color << 0); break;
@@ -192,6 +225,7 @@ void pax_index_setter_1bpp(pax_buf_t *buf, pax_col_t color, int index) {
 
 // Sets a raw value from a 2BPP buffer.
 void pax_index_setter_2bpp(pax_buf_t *buf, pax_col_t color, int index) {
+    getter_setter_bounds_check(buf, index, 1);
     uint8_t *ptr  = &buf->buf_8bpp[index >> 2];
     color        &= 3;
     switch (index & 3) {
@@ -204,6 +238,7 @@ void pax_index_setter_2bpp(pax_buf_t *buf, pax_col_t color, int index) {
 
 // Sets a raw value from a 4BPP buffer.
 void pax_index_setter_4bpp(pax_buf_t *buf, pax_col_t color, int index) {
+    getter_setter_bounds_check(buf, index, 1);
     uint8_t *ptr = &buf->buf_8bpp[index >> 1];
     if (index & 1) {
         *ptr = (*ptr & 0x0f) | (color << 4);
@@ -214,16 +249,19 @@ void pax_index_setter_4bpp(pax_buf_t *buf, pax_col_t color, int index) {
 
 // Sets a raw value from a 8BPP buffer.
 void pax_index_setter_8bpp(pax_buf_t *buf, pax_col_t color, int index) {
+    getter_setter_bounds_check(buf, index, 1);
     buf->buf_8bpp[index] = color;
 }
 
 // Sets a raw value from a 16BPP buffer.
 void pax_index_setter_16bpp(pax_buf_t *buf, pax_col_t color, int index) {
+    getter_setter_bounds_check(buf, index, 1);
     buf->buf_16bpp[index] = color;
 }
 
 // Sets a raw value from a 24BPP buffer.
 void pax_index_setter_24bpp(pax_buf_t *buf, pax_col_t color, int index) {
+    getter_setter_bounds_check(buf, index, 1);
     index += 2 * index;
 #if BYTE_ORDER == LITTLE_ENDIAN
     buf->buf_8bpp[index + 0] = color >> 0;
@@ -238,16 +276,19 @@ void pax_index_setter_24bpp(pax_buf_t *buf, pax_col_t color, int index) {
 
 // Sets a raw value from a 32BPP buffer.
 void pax_index_setter_32bpp(pax_buf_t *buf, pax_col_t color, int index) {
+    getter_setter_bounds_check(buf, index, 1);
     buf->buf_32bpp[index] = color;
 }
 
 // Sets a raw value from a 16BPP buffer, reversed endianness.
 void pax_index_setter_16bpp_rev(pax_buf_t *buf, pax_col_t color, int index) {
+    getter_setter_bounds_check(buf, index, 1);
     buf->buf_16bpp[index] = pax_rev_endian_16(color);
 }
 
 // Sets a raw value from a 24BPP buffer, reversed endianness.
 void pax_index_setter_24bpp_rev(pax_buf_t *buf, pax_col_t color, int index) {
+    getter_setter_bounds_check(buf, index, 1);
     index += 2 * index;
 #if BYTE_ORDER == LITTLE_ENDIAN
     buf->buf_8bpp[index + 0] = color >> 16;
@@ -262,6 +303,7 @@ void pax_index_setter_24bpp_rev(pax_buf_t *buf, pax_col_t color, int index) {
 
 // Sets a raw value from a 32BPP buffer, reversed endianness.
 void pax_index_setter_32bpp_rev(pax_buf_t *buf, pax_col_t color, int index) {
+    getter_setter_bounds_check(buf, index, 1);
     buf->buf_32bpp[index] = pax_rev_endian_32(color);
 }
 #pragma endregion index_setter
@@ -271,6 +313,7 @@ void pax_index_setter_32bpp_rev(pax_buf_t *buf, pax_col_t color, int index) {
 #if CONFIG_PAX_RANGE_SETTER
 // Sets a raw value range from a 1BPP buffer.
 void pax_range_setter_1bpp(pax_buf_t *buf, pax_col_t color, int index, int count) {
+    getter_setter_bounds_check(buf, index, count);
     if (!count) {
         return;
     }
@@ -290,6 +333,7 @@ void pax_range_setter_1bpp(pax_buf_t *buf, pax_col_t color, int index, int count
 
 // Sets a raw value range from a 2BPP buffer.
 void pax_range_setter_2bpp(pax_buf_t *buf, pax_col_t color, int index, int count) {
+    getter_setter_bounds_check(buf, index, count);
     if (!count) {
         return;
     }
@@ -309,6 +353,7 @@ void pax_range_setter_2bpp(pax_buf_t *buf, pax_col_t color, int index, int count
 
 // Sets a raw value range from a 4BPP buffer.
 void pax_range_setter_4bpp(pax_buf_t *buf, pax_col_t color, int index, int count) {
+    getter_setter_bounds_check(buf, index, count);
     if (!count) {
         return;
     }
@@ -327,11 +372,13 @@ void pax_range_setter_4bpp(pax_buf_t *buf, pax_col_t color, int index, int count
 
 // Sets a raw value range from a 8BPP buffer.
 void pax_range_setter_8bpp(pax_buf_t *buf, pax_col_t color, int index, int count) {
+    getter_setter_bounds_check(buf, index, count);
     memset(buf->buf_8bpp + index, color, count);
 }
 
 // Sets a raw value range from a 16BPP buffer.
 void pax_range_setter_16bpp(pax_buf_t *buf, pax_col_t color, int index, int count) {
+    getter_setter_bounds_check(buf, index, count);
     if (!count) {
         return;
     }
@@ -353,6 +400,7 @@ void pax_range_setter_16bpp(pax_buf_t *buf, pax_col_t color, int index, int coun
 
 // Sets a raw value range from a 24BPP buffer.
 void pax_range_setter_24bpp(pax_buf_t *buf, pax_col_t color, int index, int count) {
+    getter_setter_bounds_check(buf, index, count);
     if (!count) {
         return;
     }
@@ -382,6 +430,7 @@ void pax_range_setter_24bpp(pax_buf_t *buf, pax_col_t color, int index, int coun
 
 // Sets a raw value range from a 32BPP buffer.
 void pax_range_setter_32bpp(pax_buf_t *buf, pax_col_t color, int index, int count) {
+    getter_setter_bounds_check(buf, index, count);
     for (int i = index; i < index + count; i++) {
         buf->buf_32bpp[i] = color;
     }
@@ -389,16 +438,19 @@ void pax_range_setter_32bpp(pax_buf_t *buf, pax_col_t color, int index, int coun
 
 // Sets a raw value range from a 16BPP buffer, reversed endianness.
 void pax_range_setter_16bpp_rev(pax_buf_t *buf, pax_col_t color, int index, int count) {
+    getter_setter_bounds_check(buf, index, count);
     pax_range_setter_16bpp(buf, pax_rev_endian_16(color), index, count);
 }
 
 // Sets a raw value range from a 24BPP buffer, reversed endianness.
 void pax_range_setter_24bpp_rev(pax_buf_t *buf, pax_col_t color, int index, int count) {
+    getter_setter_bounds_check(buf, index, count);
     pax_range_setter_24bpp(buf, pax_rev_endian_24(color), index, count);
 }
 
 // Sets a raw value range from a 32BPP buffer, reversed endianness.
 void pax_range_setter_32bpp_rev(pax_buf_t *buf, pax_col_t color, int index, int count) {
+    getter_setter_bounds_check(buf, index, count);
     pax_range_setter_32bpp(buf, pax_rev_endian_32(color), index, count);
 }
 #else
@@ -423,6 +475,7 @@ void pax_range_setter_generic(pax_buf_t *buf, pax_col_t color, int index, int co
 
     #define GENERIC_RANGE_MERGER(type, type_bpp)                                                                       \
         PAX_PERF_CRITICAL_ATTR void pax_range_merger_##type(pax_buf_t *buf, pax_col_t color, int index, int count) {   \
+            getter_setter_bounds_check(buf, index, count);                                                             \
             int i = 0;                                                                                                 \
             if (type_bpp > 8 && buf->reverse_endianness) {                                                             \
                 while (i < count) {                                                                                    \

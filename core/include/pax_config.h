@@ -12,6 +12,12 @@
     #include <sdkconfig.h>
 #endif
 
+#ifndef CONFIG_PAX_BOUNDS_CHECK
+    // Force array index out of bounds checks be added to all PAX framebuffer access.
+    // WARNING: Enabling may significantly degrade performance.
+    #define CONFIG_PAX_BOUNDS_CHECK false
+#endif
+
 #ifndef CONFIG_PAX_DO_BICUBIC
     // Perform bicubic interpolation in text and images.
     #define CONFIG_PAX_DO_BICUBIC false
