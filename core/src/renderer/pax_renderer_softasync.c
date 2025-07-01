@@ -486,6 +486,9 @@ __attribute__((always_inline)) static inline void pax_sasr_blit_char_impl_2(
         // Premultiply the color's alpha.
         alpha_mul  = alpha_mul * ((color >> 24) + (color >> 31)) / 256;
         color     &= 0x00ffffff;
+    } else {
+        // Pre-convert the color.
+        color = buf->col2buf(buf, color);
     }
 
     // Clip char.
@@ -922,10 +925,10 @@ void pax_sasr_blit_raw(
 // Blit one or more characters of text in the bitmapped format.
 void pax_sasr_blit_char(pax_buf_t *buf, pax_col_t color, pax_vec2i pos, int scale, pax_text_rsdata_t rsdata) {
     pax_task_t task = {
-        .buffer = buf,
-        .type   = PAX_TASK_BLIT_CHAR,
-        .color  = color,
-        .rsdata = rsdata,
+        .buffer    = buf,
+        .type      = PAX_TASK_BLIT_CHAR,
+        .color     = color,
+        .rsdata    = rsdata,
         .blit_char = {
             .pos   = pos,
             .scale = scale,
