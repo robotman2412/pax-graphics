@@ -4,12 +4,10 @@ Supports affine transformations, shaders, text scaling, and multi-CPU software r
 
 Made for [Badge.team](https://badge.team/) and licensed MIT.
 
-Version: v2.0.0-snapshot
-
 # Documentation
 Documentation can be found [here](docs).
 
-# Short-term TODO list (v2.0.0)
+# Short-term TODO list (v2.0.x)
 - Document all current features
 
 # Long-term TODO list (v2.1.0)
@@ -25,13 +23,6 @@ Documentation can be found [here](docs).
 - Support for outline-based (.ttf or similar) fonts
 - Built-in simple GUI library
 - 3D rendering
-
-# MCH2022?
-[MCH2022](https://mch2022.org/) was a hackercamp in the summer of 2022.
-MCH is the successor of SHA2017, where [Badge.Team](https://badge.team/) made their first badge.
-
-The badge is an electronic event badge which can do much more than just show your name.
-To accomplish all the cool graphics people can draw, this graphics stack was made.
 
 # See also
 - https://badge.team/  (the team for which i volunteer)
