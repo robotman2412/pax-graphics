@@ -327,6 +327,9 @@ __attribute__((always_inline)) static inline void pax_swr_blit_char_impl(
         // Premultiply the color's alpha.
         alpha_mul  = alpha_mul * ((color >> 24) + (color >> 31)) / 256;
         color     &= 0x00ffffff;
+    } else {
+        // Pre-convert the color.
+        color = buf->col2buf(buf, color);
     }
 
     // Clip char.
