@@ -367,7 +367,7 @@ __attribute__((always_inline)) static inline void pax_swr_blit_char_impl(
 
                 offset += dx;
             }
-            offset += dy - dx * (dims.w - dims.x);
+            offset += dy - dx * dims.w;
         }
     }
 }
