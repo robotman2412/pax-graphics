@@ -61,6 +61,20 @@ void pax_sasr_blit_raw(
 );
 // Blit one or more characters of text in the bitmapped format.
 void pax_sasr_blit_char(pax_buf_t *buf, pax_col_t color, pax_vec2i pos, int scale, pax_text_rsdata_t rsdata);
+// Draw a string of text in the bitmapped format.
+void pax_sasr_text(
+    pax_buf_t        *buf,
+    matrix_2d_t       matrix,
+    pax_col_t         color,
+    pax_font_t const *font,
+    float             font_size,
+    pax_vec2f         pos,
+    char const       *text,
+    size_t            text_len,
+    pax_align_t       halign,
+    pax_align_t       valign,
+    ptrdiff_t         cursorpos
+);
 
 // Wait for all pending draw calls to finish.
 void pax_sasr_join();

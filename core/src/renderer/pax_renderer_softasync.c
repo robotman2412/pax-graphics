@@ -5,6 +5,7 @@
 
 #include "endian.h"
 #include "helpers/pax_drawing_helpers.h"
+#include "pax_types.h"
 #include "ptq.h"
 #include "renderer/pax_renderer_soft.h"
 
@@ -119,46 +120,67 @@ void *pax_sasr_worker(void *_args) {
             return NULL;
         } else if (task.type == PAX_TASK_QUAD) {
             if (task.use_shader) {
-                args->renderfuncs->shaded_quad(task.buffer, task.color, task.quad_shape, &task.shader, task.quad_uvs);
+                args->renderfuncs->shaded_quad(task.buffer, task.color, task.quadf.shape, &task.shader, task.quadf.uvs);
             } else {
-                args->renderfuncs->unshaded_quad(task.buffer, task.color, task.quad_shape);
+                args->renderfuncs->unshaded_quad(task.buffer, task.color, task.quadf.shape);
             }
         } else if (task.type == PAX_TASK_RECT) {
             if (task.use_shader) {
-                args->renderfuncs->shaded_rect(task.buffer, task.color, task.rect_shape, &task.shader, task.quad_uvs);
+                args->renderfuncs->shaded_rect(task.buffer, task.color, task.rectf.shape, &task.shader, task.rectf.uvs);
             } else {
-                args->renderfuncs->unshaded_rect(task.buffer, task.color, task.rect_shape);
+                args->renderfuncs->unshaded_rect(task.buffer, task.color, task.rectf.shape);
             }
         } else if (task.type == PAX_TASK_TRI) {
             if (task.use_shader) {
-                args->renderfuncs->shaded_tri(task.buffer, task.color, task.tri_shape, &task.shader, task.tri_uvs);
+                args->renderfuncs->shaded_tri(task.buffer, task.color, task.trif.shape, &task.shader, task.trif.uvs);
             } else {
-                args->renderfuncs->unshaded_tri(task.buffer, task.color, task.tri_shape);
+                args->renderfuncs->unshaded_tri(task.buffer, task.color, task.trif.shape);
             }
         } else if (task.type == PAX_TASK_LINE) {
             if (task.use_shader) {
-                args->renderfuncs->shaded_line(task.buffer, task.color, task.line_shape, &task.shader, task.line_uvs);
+                args->renderfuncs->shaded_line(task.buffer, task.color, task.linef.shape, &task.shader, task.linef.uvs);
             } else {
-                args->renderfuncs->unshaded_line(task.buffer, task.color, task.line_shape);
+                args->renderfuncs->unshaded_line(task.buffer, task.color, task.linef.shape);
             }
         } else if (task.type == PAX_TASK_SPRITE) {
             args->renderfuncs
-                ->sprite(task.buffer, task.blit.top, task.blit_base_pos, task.blit.top_orientation, task.blit.top_pos);
+                ->sprite(task.buffer, task.blit.top, task.blit.base_pos, task.blit.top_orientation, task.blit.top_pos);
         } else if (task.type == PAX_TASK_BLIT) {
             args->renderfuncs
-                ->blit(task.buffer, task.blit.top, task.blit_base_pos, task.blit.top_orientation, task.blit.top_pos);
+                ->blit(task.buffer, task.blit.top, task.blit.base_pos, task.blit.top_orientation, task.blit.top_pos);
         } else if (task.type == PAX_TASK_BLIT_RAW) {
             args->renderfuncs->blit_raw(
                 task.buffer,
                 task.blit.top,
                 task.blit.top_dims,
-                task.blit_base_pos,
+                task.blit.base_pos,
                 task.blit.top_orientation,
                 task.blit.top_pos
             );
         } else if (task.type == PAX_TASK_BLIT_CHAR) {
             args->renderfuncs
-                ->blit_char(task.buffer, task.color, task.blit_char.pos, task.blit_char.scale, task.rsdata);
+                ->blit_char(task.buffer, task.color, task.blit_char.pos, task.blit_char.scale, task.blit_char.rsdata);
+        } else if (task.type == PAX_TASK_TEXT) {
+            /*
+            args->renderfuncs->text(
+                task.buffer,
+                task.text.matrix,
+                task.color,
+                task.text.font,
+                task.text.font_size,
+                task.text.pos,
+                task.text.str.len > PAX_SSO_BUF_LEN ? task.text.str.ptr->data : task.text.str.sso,
+                task.text.str.len,
+                task.text.halign,
+                task.text.valign,
+                task.text.cursorpos
+            );
+            if (task.text.str.len > PAX_SSO_BUF_LEN) {
+                if (atomic_fetch_sub(&task.text.str.ptr->refcount, memory_order_relaxed) == 1) {
+                    free(task.text.str.ptr);
+                }
+            }
+            */
         }
 
         pthread_mutex_unlock(&args->rendermtx);
@@ -762,11 +784,11 @@ void pax_mcrw1_blit_char(pax_buf_t *buf, pax_col_t color, pax_vec2i pos, int sca
 // Draw a solid-colored line.
 void pax_sasr_unshaded_line(pax_buf_t *buf, pax_col_t color, pax_linef shape) {
     pax_task_t task = {
-        .buffer     = buf,
-        .type       = PAX_TASK_LINE,
-        .color      = color,
-        .use_shader = false,
-        .line_shape = shape,
+        .buffer      = buf,
+        .type        = PAX_TASK_LINE,
+        .color       = color,
+        .use_shader  = false,
+        .linef.shape = shape,
     };
     pax_sasr_queue(&task);
 }
@@ -774,11 +796,11 @@ void pax_sasr_unshaded_line(pax_buf_t *buf, pax_col_t color, pax_linef shape) {
 // Draw a solid-colored rectangle.
 void pax_sasr_unshaded_rect(pax_buf_t *buf, pax_col_t color, pax_rectf shape) {
     pax_task_t task = {
-        .buffer     = buf,
-        .type       = PAX_TASK_RECT,
-        .color      = color,
-        .use_shader = false,
-        .rect_shape = shape,
+        .buffer      = buf,
+        .type        = PAX_TASK_RECT,
+        .color       = color,
+        .use_shader  = false,
+        .rectf.shape = shape,
     };
     pax_sasr_queue(&task);
 }
@@ -786,11 +808,11 @@ void pax_sasr_unshaded_rect(pax_buf_t *buf, pax_col_t color, pax_rectf shape) {
 // Draw a solid-colored quad.
 void pax_sasr_unshaded_quad(pax_buf_t *buf, pax_col_t color, pax_quadf shape) {
     pax_task_t task = {
-        .buffer     = buf,
-        .type       = PAX_TASK_QUAD,
-        .color      = color,
-        .use_shader = false,
-        .quad_shape = shape,
+        .buffer      = buf,
+        .type        = PAX_TASK_QUAD,
+        .color       = color,
+        .use_shader  = false,
+        .quadf.shape = shape,
     };
     pax_sasr_queue(&task);
 }
@@ -802,7 +824,7 @@ void pax_sasr_unshaded_tri(pax_buf_t *buf, pax_col_t color, pax_trif shape) {
         .type       = PAX_TASK_TRI,
         .color      = color,
         .use_shader = false,
-        .tri_shape  = shape,
+        .trif.shape = shape,
     };
     pax_sasr_queue(&task);
 }
@@ -811,13 +833,13 @@ void pax_sasr_unshaded_tri(pax_buf_t *buf, pax_col_t color, pax_trif shape) {
 // Draw a line with a shader.
 void pax_sasr_shaded_line(pax_buf_t *buf, pax_col_t color, pax_linef shape, pax_shader_t const *shader, pax_linef uv) {
     pax_task_t task = {
-        .buffer     = buf,
-        .type       = PAX_TASK_LINE,
-        .color      = color,
-        .shader     = *shader,
-        .use_shader = true,
-        .line_shape = shape,
-        .line_uvs   = uv,
+        .buffer      = buf,
+        .type        = PAX_TASK_LINE,
+        .color       = color,
+        .shader      = *shader,
+        .use_shader  = true,
+        .linef.shape = shape,
+        .linef.uvs   = uv,
     };
     pax_sasr_queue(&task);
 }
@@ -825,13 +847,13 @@ void pax_sasr_shaded_line(pax_buf_t *buf, pax_col_t color, pax_linef shape, pax_
 // Draw a rectangle with a shader.
 void pax_sasr_shaded_rect(pax_buf_t *buf, pax_col_t color, pax_rectf shape, pax_shader_t const *shader, pax_quadf uv) {
     pax_task_t task = {
-        .buffer     = buf,
-        .type       = PAX_TASK_RECT,
-        .color      = color,
-        .shader     = *shader,
-        .use_shader = true,
-        .rect_shape = shape,
-        .quad_uvs   = uv,
+        .buffer      = buf,
+        .type        = PAX_TASK_RECT,
+        .color       = color,
+        .shader      = *shader,
+        .use_shader  = true,
+        .rectf.shape = shape,
+        .rectf.uvs   = uv,
     };
     pax_sasr_queue(&task);
 }
@@ -839,13 +861,13 @@ void pax_sasr_shaded_rect(pax_buf_t *buf, pax_col_t color, pax_rectf shape, pax_
 // Draw a quad with a shader.
 void pax_sasr_shaded_quad(pax_buf_t *buf, pax_col_t color, pax_quadf shape, pax_shader_t const *shader, pax_quadf uv) {
     pax_task_t task = {
-        .buffer     = buf,
-        .type       = PAX_TASK_QUAD,
-        .color      = color,
-        .shader     = *shader,
-        .use_shader = true,
-        .quad_shape = shape,
-        .quad_uvs   = uv,
+        .buffer      = buf,
+        .type        = PAX_TASK_QUAD,
+        .color       = color,
+        .shader      = *shader,
+        .use_shader  = true,
+        .quadf.shape = shape,
+        .quadf.uvs   = uv,
     };
     pax_sasr_queue(&task);
 }
@@ -858,8 +880,8 @@ void pax_sasr_shaded_tri(pax_buf_t *buf, pax_col_t color, pax_trif shape, pax_sh
         .color      = color,
         .shader     = *shader,
         .use_shader = true,
-        .tri_shape  = shape,
-        .tri_uvs    = uv,
+        .trif.shape = shape,
+        .trif.uvs   = uv,
     };
     pax_sasr_queue(&task);
 }
@@ -877,7 +899,7 @@ void pax_sasr_sprite(
             .top_orientation = top_orientation,
             .top_pos         = top_pos,
         },
-        .blit_base_pos = base_pos,
+        .blit.base_pos = base_pos,
     };
     pax_sasr_queue(&task);
 }
@@ -894,7 +916,7 @@ void pax_sasr_blit(
             .top_orientation = top_orientation,
             .top_pos         = top_pos,
         },
-        .blit_base_pos = base_pos,
+        .blit.base_pos = base_pos,
     };
     pax_sasr_queue(&task);
 }
@@ -917,7 +939,7 @@ void pax_sasr_blit_raw(
             .top_orientation = top_orientation,
             .top_pos         = top_pos,
         },
-        .blit_base_pos = base_pos,
+        .blit.base_pos = base_pos,
     };
     pax_sasr_queue(&task);
 }
@@ -928,14 +950,55 @@ void pax_sasr_blit_char(pax_buf_t *buf, pax_col_t color, pax_vec2i pos, int scal
         .buffer    = buf,
         .type      = PAX_TASK_BLIT_CHAR,
         .color     = color,
-        .rsdata    = rsdata,
         .blit_char = {
-            .pos   = pos,
-            .scale = scale,
+            .rsdata = rsdata,
+            .pos    = pos,
+            .scale  = scale,
         },
     };
     pax_sasr_queue(&task);
 }
+
+/*
+// Draw a string of text in the bitmapped format.
+void pax_sasr_text(
+    pax_buf_t        *buf,
+    matrix_2d_t       matrix,
+    pax_col_t         color,
+    pax_font_t const *font,
+    float             font_size,
+    pax_vec2f         pos,
+    char const       *text,
+    size_t            text_len,
+    pax_align_t       halign,
+    pax_align_t       valign,
+    ptrdiff_t         cursorpos
+) {
+    pax_task_str_t str;
+    str.len = text_len;
+    if (text_len <= PAX_SSO_BUF_LEN) {
+        memcpy(str.sso, text, text_len);
+    } else {
+        str.ptr = malloc(sizeof(pax_rcstr_t) + text_len);
+        memcpy(str.ptr->data, text, text_len);
+        atomic_store(&str.ptr->refcount, is_multithreaded + 1);
+    }
+    pax_task_t task = {
+        .buffer         = buf,
+        .type           = PAX_TASK_BLIT_CHAR,
+        .color          = color,
+        .text.font      = font,
+        .text.font_size = font_size,
+        .text.pos       = pos,
+        .text.halign    = halign,
+        .text.valign    = valign,
+        .text.cursorpos = cursorpos,
+        .text.matrix    = matrix,
+        .text.str       = str,
+    };
+    pax_sasr_queue(&task);
+}
+*/
 
 
 // Wait for all pending draw calls to finish.

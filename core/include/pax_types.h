@@ -7,6 +7,8 @@
 #include "pax_config.h"
 #include "pax_matrix.h"
 
+#include <stdatomic.h>
+
 #include <math.h>
 
 #ifdef __cplusplus
@@ -172,6 +174,8 @@ enum pax_task_type {
     PAX_TASK_BLIT_RAW,
     // PAX bitmapped character font blit.
     PAX_TASK_BLIT_CHAR,
+    // Text drawing.
+    PAX_TASK_TEXT,
 };
 
 // Distinguishes between ways to draw fonts.
@@ -217,12 +221,16 @@ typedef struct pax_buf           pax_buf_t;
 typedef struct pax_shader        pax_shader_t;
 typedef struct pax_task          pax_task_t;
 typedef struct pax_shader_ctx    pax_shader_ctx_t;
+typedef struct pax_text_render   pax_text_render_t;
 typedef struct pax_text_rsdata   pax_text_rsdata_t;
+typedef struct pax_rcstr         pax_rcstr_t;
+typedef struct pax_task_str      pax_task_str_t;
 typedef struct pax_bmpv          pax_bmpv_t;
 typedef struct pax_font          pax_font_t;
 typedef struct pax_font_range    pax_font_range_t;
 typedef struct pax_buf_type_info pax_buf_type_info_t;
-typedef struct pax_blit_spec     pax_blit_spec_t;
+typedef struct pax_render_funcs  pax_render_funcs_t;
+typedef struct pax_render_engine pax_render_engine_t;
 
 typedef uint32_t            pax_col_t;
 typedef union pax_col_union pax_col_union_t;
@@ -387,6 +395,30 @@ struct pax_shader_ctx {
 // The absolute minimum possible size a valid font can be in memory.
 #define PAX_FONT_LOADER_MINUMUM_SIZE (sizeof(pax_font_t) + sizeof(pax_font_range_t) + 3)
 
+// Internal struct used for text rendering context.
+// WARNING: Subject to change at any time for any reason, do not use this type yourself.
+struct pax_text_render {
+    /* ---- Generic context ---- */
+    // Whether or not to render text.
+    // If false, only calculates size.
+    bool              do_render;
+    // The font to use.
+    pax_font_t const *font;
+    // The font size to use.
+    float             font_size;
+
+    /* ---- Rendering context ---- */
+    // The buffer to render to, if any.
+    pax_buf_t                *buf;
+    // The renderer functions to use, if any.
+    // Must block until all references passed are no longer needed.
+    pax_render_funcs_t const *renderfuncs;
+    // The matrix transform to apply to glyphs being rendered.
+    matrix_2d_t               matrix;
+    // The color to draw with.
+    pax_col_t                 color;
+};
+
 // Internal temporary representation used for text rendering.
 // WARNING: Subject to change at any time for any reason, do not use this type yourself.
 struct pax_text_rsdata {
@@ -400,10 +432,36 @@ struct pax_text_rsdata {
     uint8_t const *bitmap;
 };
 
+// Heap-allocated version of `pax_task_str_t`; reference-counted.
+// WARNING: Subject to change at any time for any reason, do not use this type yourself.
+struct pax_rcstr {
+    // String refcount.
+    atomic_int refcount;
+    // String data.
+    char       data[];
+};
+
+#define PAX_SSO_BUF_LEN 32
+
+// String buffer for text in `pax_task_t`.
+// Not implicitly null-terminated.
+// WARNING: Subject to change at any time for any reason, do not use this type yourself.
+struct pax_task_str {
+    // String length; any over PAX_SSO_BUF_LEN is stored via a pointer.
+    uint32_t len;
+    union {
+        // Short string optimization (stored in this struct directly).
+        char         sso[PAX_SSO_BUF_LEN];
+        // Pointer (heap-allocated `pax_rcstr_t`).
+        pax_rcstr_t *ptr;
+    };
+};
+
 // A task to perform, used by multicore rendering.
 // Every task has pre-transformed co-ordinates.
 // If you change the shader object's content (AKA the value that args points to),
 // You should run pax_join before making the change.
+// WARNING: Subject to change at any time for any reason, do not use this type yourself.
 struct pax_task {
     // The buffer to apply this task to.
     pax_buf_t      *buffer;
@@ -415,6 +473,63 @@ struct pax_task {
     pax_shader_t    shader;
     // Whether to use a shader.
     bool            use_shader;
+
+    union {
+        struct {
+            // Data for character blit.
+            pax_text_rsdata_t rsdata;
+            // Character position.
+            pax_vec2i         pos;
+            // Character scale; nonzero.
+            int               scale;
+        } blit_char;
+        struct {
+            // Top framebuffer or raw pixel data.
+            void const       *top;
+            // Top framebuffer offset.
+            pax_vec2i         top_pos;
+            // Top framebuffer size in case of raw pixel data.
+            pax_vec2i         top_dims;
+            // Orientation of top framebuffer relative to bottom framebuffer.
+            pax_orientation_t top_orientation;
+            // Base rectangle for blit.
+            pax_recti         base_pos;
+        } blit;
+        struct {
+            // Text font.
+            pax_font_t const *font;
+            // Text font size.
+            float             font_size;
+            // Text anchor position.
+            pax_vec2f         pos;
+            // Packed text alignment.
+            uint8_t           halign, valign;
+            // Cursor position.
+            int32_t           cursorpos;
+            // Text transform matrix.
+            matrix_2d_t       matrix;
+            // String to draw.
+            pax_task_str_t    str;
+        } text;
+        // Rectangles.
+        struct {
+            pax_rectf shape;
+            pax_quadf uvs;
+        } rectf;
+        // Quads.
+        struct {
+            pax_quadf shape, uvs;
+        } quadf;
+        // Triangles.
+        struct {
+            pax_trif shape, uvs;
+        } trif;
+        // Lines.
+        struct {
+            pax_linef shape, uvs;
+        } linef;
+    };
+    /*
     union {
         // Data for character blit.
         pax_text_rsdata_t rsdata;
@@ -453,6 +568,7 @@ struct pax_task {
         // Shape parameters for lines.
         pax_linef line_shape;
     };
+    */
 };
 
 // The main data structure in PAX.
@@ -523,6 +639,77 @@ struct pax_buf {
 
     // Orientation setting.
     pax_orientation_t orientation;
+};
+
+// Render engine function table definition.
+// The renderer gets coordinates after orientation and matrix transform, but before the clipping checks.
+struct pax_render_funcs {
+    // Draw a solid-colored line.
+    void (*unshaded_line)(pax_buf_t *buf, pax_col_t color, pax_linef shape);
+    // Draw a solid-colored rectangle.
+    void (*unshaded_rect)(pax_buf_t *buf, pax_col_t color, pax_rectf shape);
+    // Draw a solid-colored quad.
+    void (*unshaded_quad)(pax_buf_t *buf, pax_col_t color, pax_quadf shape);
+    // Draw a solid-colored triangle.
+    void (*unshaded_tri)(pax_buf_t *buf, pax_col_t color, pax_trif shape);
+
+    // Draw a line with a shader.
+    void (*shaded_line)(pax_buf_t *buf, pax_col_t color, pax_linef shape, pax_shader_t const *shader, pax_linef uv);
+    // Draw a rectangle with a shader.
+    void (*shaded_rect)(pax_buf_t *buf, pax_col_t color, pax_rectf shape, pax_shader_t const *shader, pax_quadf uv);
+    // Draw a quad with a shader.
+    void (*shaded_quad)(pax_buf_t *buf, pax_col_t color, pax_quadf shape, pax_shader_t const *shader, pax_quadf uv);
+    // Draw a triangle with a shader.
+    void (*shaded_tri)(pax_buf_t *buf, pax_col_t color, pax_trif shape, pax_shader_t const *shader, pax_trif uv);
+
+    // Draw a sprite; like a blit, but use color blending if applicable.
+    void (*sprite)(
+        pax_buf_t *base, pax_buf_t const *top, pax_recti base_pos, pax_orientation_t top_orientation, pax_vec2i top_pos
+    );
+    // Perform a buffer copying operation with a PAX buffer.
+    void (*blit)(
+        pax_buf_t *base, pax_buf_t const *top, pax_recti base_pos, pax_orientation_t top_orientation, pax_vec2i top_pos
+    );
+    // Perform a buffer copying operation with an unmanaged user buffer.
+    void (*blit_raw)(
+        pax_buf_t        *base,
+        void const       *top,
+        pax_vec2i         top_dims,
+        pax_recti         base_pos,
+        pax_orientation_t top_orientation,
+        pax_vec2i         top_pos
+    );
+
+    // Blit a character of text in the bitmapped format.
+    void (*blit_char)(pax_buf_t *buf, pax_col_t color, pax_vec2i pos, int scale, pax_text_rsdata_t rsdata);
+    // Draw a string of text in the bitmapped format.
+    void (*text)(
+        pax_buf_t        *buf,
+        matrix_2d_t       matrix,
+        pax_col_t         color,
+        pax_font_t const *font,
+        float             font_size,
+        pax_vec2f         pos,
+        char const       *text,
+        size_t            text_len,
+        pax_align_t       halign,
+        pax_align_t       valign,
+        ptrdiff_t         cursorpos
+    );
+
+    // Wait for all pending drawing operations to finish.
+    void (*join)();
+};
+
+// Render engine definition.
+struct pax_render_engine {
+    // Renderer init function; after this returns, the renderer must be ready.
+    pax_render_funcs_t const *(*init)(void *init_cookie);
+    // Renderer de-init function; clean up any implicitly-allocated resources.
+    // Optional.
+    void (*deinit)();
+    // Have the dispatch run dirty marking on behalf of the renderer.
+    bool implicit_dirty;
 };
 
 #ifdef __cplusplus

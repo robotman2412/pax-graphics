@@ -5,7 +5,9 @@
 
 #include "endian.h"
 #include "helpers/pax_drawing_helpers.h"
+#include "pax_internal.h"
 #include "pax_orientation.h"
+#include "pax_types.h"
 
 
 
@@ -396,6 +398,32 @@ void pax_swr_blit_char(pax_buf_t *buf, pax_col_t color, pax_vec2i pos, int scale
 }
 
 
+// Draw a string of text in the bitmapped format.
+void pax_swr_text(
+    pax_buf_t        *buf,
+    matrix_2d_t       matrix,
+    pax_col_t         color,
+    pax_font_t const *font,
+    float             font_size,
+    pax_vec2f         pos,
+    char const       *text,
+    size_t            text_len,
+    pax_align_t       halign,
+    pax_align_t       valign,
+    ptrdiff_t         cursorpos
+) {
+    pax_text_render_t ctx = {
+        .do_render   = true,
+        .renderfuncs = &pax_render_funcs_soft,
+        .buf         = buf,
+        .color       = color,
+        .font        = font,
+        .font_size   = font_size,
+        .matrix      = matrix,
+    };
+    pax_internal_text_generic(&ctx, pos, text, text_len, cursorpos, halign, valign);
+}
+
 
 // Software rendering functions.
 pax_render_funcs_t const pax_render_funcs_soft = {
@@ -411,6 +439,7 @@ pax_render_funcs_t const pax_render_funcs_soft = {
     .blit          = pax_swr_blit,
     .blit_raw      = pax_swr_blit_raw,
     .blit_char     = pax_swr_blit_char,
+    .text          = pax_swr_text,
     .join          = NULL,
 };
 

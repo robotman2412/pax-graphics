@@ -2,39 +2,15 @@
 // SPDX-License-Identifier: MIT
 
 #include "pax_matrix.h"
+#include "pax_orientation.h"
+#include "pax_types.h"
+
+#include <math.h>
 static char const *TAG = "pax_text";
 
 #include "pax_internal.h"
 #include "pax_renderer.h"
 #include "string.h"
-
-
-
-/* ===== PRIVATE TYPEDEFS ====== */
-typedef struct {
-    /* ---- Generic context ---- */
-    // Whether or not to render text.
-    // If false, only calculates size.
-    bool              do_render;
-    // The on-screen position of the text.
-    float             x, y;
-    // The font to use.
-    pax_font_t const *font;
-    // The font size to use.
-    float             font_size;
-
-    /* ---- Rendering context ---- */
-    // The buffer to render to, if any.
-    pax_buf_t        *buf;
-    // The color to draw with.
-    pax_col_t         color;
-    // Whether to do anti-aliasing and/or interpolation.
-    bool              do_aa;
-    // Number of text render data slots in use.
-    uint8_t           rsdata_len;
-    // Text render data slots.
-    pax_text_rsdata_t rsdata[CONFIG_PAX_TEXT_BUCKET_SIZE];
-} pax_text_render_t;
 
 
 
@@ -147,8 +123,7 @@ static uint64_t text_promise_callback_none(pax_buf_t *buf, pax_col_t tint, void 
 
 // Pixel-aligned optimisation of pax_shade_rect, used for text.
 static void pixel_aligned_render(
-    pax_buf_t          *buf,
-    pax_col_t           color,
+    pax_text_render_t  *ctx,
     pax_shader_t const *shader,
     pax_quadf const    *uvs,
     float               x,
@@ -157,19 +132,19 @@ static void pixel_aligned_render(
     float               height
 ) {
     // Offset and pixel-align co-ordinates.
-    x = floorf(0.5 + x + buf->stack_2d.value.a2);
-    y = floorf(0.5 + y + buf->stack_2d.value.b2);
-    pax_mark_dirty2(buf, x, y, width, height);
+    x = floorf(0.5 + x + ctx->buf->stack_2d.value.a2);
+    y = floorf(0.5 + y + ctx->buf->stack_2d.value.b2);
+    pax_mark_dirty2(ctx->buf, x, y, width, height);
 
 #if CONFIG_PAX_COMPILE_ORIENTATION
-    pax_rectf tmp = pax_orient_det_rectf(buf, (pax_rectf){x, y, width, height});
+    pax_rectf tmp = pax_orient_det_rectf(ctx->buf, (pax_rectf){x, y, width, height});
     x             = tmp.x;
     y             = tmp.y;
     width         = tmp.w;
     height        = tmp.h;
 
     pax_quadf uvs_rotated;
-    if (buf->orientation & 1) {
+    if (ctx->buf->orientation & 1) {
         uvs_rotated = (pax_quadf){
             uvs->x0,
             uvs->y0,
@@ -185,9 +160,9 @@ static void pixel_aligned_render(
 #endif
 
     // Single core option.
-    pax_dispatch_shaded_rect(
-        buf,
-        color,
+    ctx->renderfuncs->shaded_rect(
+        ctx->buf,
+        ctx->color,
         (pax_rectf){
             x,
             y,
@@ -212,30 +187,20 @@ static void pixel_aligned_render(
 static void dispatch_glyph(
     pax_text_render_t *ctx, pax_vec2f pos, float scale, pax_font_range_t const *range, pax_text_rsdata_t rsdata
 ) {
-    matrix_2d_t const *mtx       = &ctx->buf->stack_2d.value;
-    float              mat_scale = mtx->a0 * scale;
-    if (mtx->a0 > 0 && fabsf(mtx->a0 - mtx->b1) < 0.01 && fabsf(mat_scale - (int)mat_scale) < 0.01
-        && matrix_2d_is_identity2(*mtx)) {
+    float mat_scale = ctx->matrix.a0 * scale;
+    if (ctx->matrix.a0 > 0 && fabsf(ctx->matrix.a0 - ctx->matrix.b1) < 0.01 && fabsf(mat_scale - (int)mat_scale) < 0.01
+        && matrix_2d_is_identity2(ctx->matrix)) {
         // This can be optimized to the special text blitting function.
-        pax_dispatch_blit_char(ctx->buf, ctx->color, (pax_vec2i){pos.x, pos.y}, floorf(mat_scale + 0.5), rsdata);
+        ctx->renderfuncs->blit_char(ctx->buf, ctx->color, (pax_vec2i){pos.x, pos.y}, floorf(mat_scale + 0.5), rsdata);
         return;
     }
-
-    // Allocate a struct for glyph rendering information.
-    if (ctx->rsdata_len >= CONFIG_PAX_TEXT_BUCKET_SIZE) {
-        // All in use, wait for them to be free.
-        pax_join();
-        ctx->rsdata_len = 0;
-    }
-    pax_text_rsdata_t *rsdata_buf = &ctx->rsdata[ctx->rsdata_len++];
-    *rsdata_buf                   = rsdata;
 
     // Set up shader.
     pax_shader_t shader = {
         .schema_version    = 1,
         .schema_complement = ~1,
         .renderer_id       = PAX_RENDERER_ID_SWR,
-        .callback_args     = (void *)rsdata_buf,
+        .callback_args     = (void *)&rsdata,
         .alpha_promise_0   = true,
         .alpha_promise_255 = false,
     };
@@ -245,7 +210,7 @@ static void dispatch_glyph(
         || (range->bitmap_mono.bpp == 1 && ctx->color >> 24 == 255)) {
         shader.promise_callback = text_promise_callback_cutout;
         shader.callback         = pax_shader_font_bmp_pal;
-    } else if (ctx->do_aa) {
+    } else if (ctx->font->recommend_aa) {
         shader.promise_callback = text_promise_callback_none;
         shader.callback         = pax_shader_font_bmp_aa;
     } else {
@@ -268,10 +233,23 @@ static void dispatch_glyph(
     // Start drawing, boy!
     if (matrix_2d_is_identity2(ctx->buf->stack_2d.value)) {
         // Pixel-aligned optimisation.
-        pixel_aligned_render(ctx->buf, ctx->color, &shader, &uvs, pos.x, pos.y, scale * rsdata.w, scale * rsdata.h);
+        pixel_aligned_render(ctx, &shader, &uvs, pos.x, pos.y, scale * rsdata.w, scale * rsdata.h);
     } else {
         // Generic shader draw required.
-        pax_shade_rect(ctx->buf, ctx->color, &shader, &uvs, pos.x, pos.y, scale * rsdata.w, scale * rsdata.h);
+        pax_vec2f p0 = matrix_2d_transform_alt(ctx->matrix, (pax_vec2f){pos.x, pos.y});
+        pax_vec2f p1 = matrix_2d_transform_alt(ctx->matrix, (pax_vec2f){pos.x + rsdata.w, pos.y});
+        pax_vec2f p2 = matrix_2d_transform_alt(ctx->matrix, (pax_vec2f){pos.x + rsdata.w, pos.y + rsdata.h});
+        pax_vec2f p3 = matrix_2d_transform_alt(ctx->matrix, (pax_vec2f){pos.x, pos.y + rsdata.h});
+#if CONFIG_PAX_COMPILE_ORIENTATION
+        p0 = pax_orient_det_vec2f(ctx->buf, p0);
+        p1 = pax_orient_det_vec2f(ctx->buf, p1);
+        p2 = pax_orient_det_vec2f(ctx->buf, p2);
+        p3 = pax_orient_det_vec2f(ctx->buf, p3);
+#endif
+        pax_quadf shape
+            = {.x0 = p0.x, .y0 = p0.y, .x1 = p1.x, .y1 = p1.y, .x2 = p2.x, .y2 = p2.y, .x3 = p3.x, .y3 = p3.y};
+        ctx->renderfuncs->shaded_quad(ctx->buf, ctx->color, shape, &shader, uvs);
+        // pax_shade_rect(ctx->buf, ctx->color, &shader, &uvs, pos.x, pos.y, scale * rsdata.w, scale * rsdata.h);
     }
 }
 
@@ -340,25 +318,14 @@ static pax_font_range_t const *text_get_range(pax_font_t const *font, uint32_t c
 }
 
 // Internal method for rendering text and calculating text size.
-static pax_2vec2f text_generic(
-    pax_text_render_t *ctx, pax_vec2f pos, float scale, char const *text, size_t len, ptrdiff_t cursorpos
+static pax_vec2f text_line_generic_impl(
+    pax_text_render_t *ctx, bool do_render, pax_vec2f pos, char const *text, size_t len, ptrdiff_t cursorpos
 ) {
-    // Sanity checks.
-    if (!text) {
-        return (pax_2vec2f){0, 0, NAN, NAN};
-    }
-    // Render checks.
-    if (ctx->buf && !pax_do_draw_col(ctx->buf, ctx->color)) {
-        ctx->do_render = false;
-    }
-
     // Apply matrix transformation for size.
-    float size_mul = ctx->font_size / ctx->font->default_size;
-    float x        = 0;
-    float y        = 0;
-    float max_x    = 0;
-    float cursor_x = NAN;
-    float cursor_y = NAN;
+    float const scale    = ctx->font_size / ctx->font->default_size;
+    float       x        = 0;
+    float       max_x    = 0;
+    float       cursor_x = NAN;
 
     // Simply loop over all characters.
     size_t                  i     = 0;
@@ -367,10 +334,13 @@ static pax_2vec2f text_generic(
         // Draw cursor.
         if ((size_t)cursorpos == i) {
             if (ctx->do_render) {
-                pax_draw_line(ctx->buf, ctx->color, pos.x, pos.y, pos.x, pos.y + scale * ctx->font->default_size);
+                pax_vec2f p0 = pos;
+                pax_vec2f p1
+                    = matrix_2d_transform_alt(ctx->matrix, (pax_vec2f){pos.x, pos.y + scale * ctx->font->default_size});
+                pax_linef shape = {p0.x, p0.y, p1.x, p1.y};
+                ctx->renderfuncs->unshaded_line(ctx->buf, ctx->color, shape);
             }
             cursor_x = x;
-            cursor_y = y;
         }
 
         // Get a character.
@@ -378,248 +348,53 @@ static pax_2vec2f text_generic(
         size_t   glyph_size  = pax_utf8_getch_l(text + i, len - i, &glyph);
         i                   += glyph_size ?: 1;
 
-        // Is it a newline?
-        if (glyph == '\r') {
-            // Consume a '\n' if the next character is one.
-            if (i < len) {
-                size_t peek_size = pax_utf8_getch_l(text + i, len - i, &glyph);
-                if (glyph == '\n') {
-                    i += peek_size ?: 1;
-                }
-            }
-            goto newline;
-
-        } else if (glyph == '\n') {
-        newline:
-            // Insert a newline.
-            if (x > max_x) {
-                max_x = x;
-            }
-            if (ctx->do_render) {
-                pos.x -= x * scale * ctx->font->default_size;
-            }
-            x  = 0;
-            y += ctx->font->default_size;
-
-        } else {
-            if (glyph == 0xa0) {
-                // Non-breaking space is implicitly converted to space.
-                glyph = 0x20;
-            }
-
-            // Try to find a range the glyph is in.
-            if (!range || !text_range_includes(range, glyph)) {
-                range = text_get_range(ctx->font, glyph);
-            }
-
-            pax_vec2f dims = {0, 0};
-            if (range) {
-                // Handle the character.
-                switch (range->type) {
-                    case PAX_FONT_TYPE_BITMAP_MONO: dims = text_bitmap_mono(ctx, pos, scale, range, glyph); break;
-                    case PAX_FONT_TYPE_BITMAP_VAR: dims = text_bitmap_var(ctx, pos, scale, range, glyph); break;
-                }
-            } else {
-                // Ignore it for now.
-            }
-            x     += dims.x;
-            pos.x += dims.x * scale;
+        if (glyph == 0xa0) {
+            // Non-breaking space is implicitly converted to space.
+            glyph = 0x20;
         }
+
+        // Try to find a range the glyph is in.
+        if (!range || !text_range_includes(range, glyph)) {
+            range = text_get_range(ctx->font, glyph);
+        }
+
+        pax_vec2f dims = {0, 0};
+        if (range) {
+            // Handle the character.
+            switch (range->type) {
+                case PAX_FONT_TYPE_BITMAP_MONO: dims = text_bitmap_mono(ctx, pos, scale, range, glyph); break;
+                case PAX_FONT_TYPE_BITMAP_VAR: dims = text_bitmap_var(ctx, pos, scale, range, glyph); break;
+            }
+        } else {
+            // Ignore it for now.
+        }
+        x     += dims.x;
+        pos.x += dims.x * scale;
     }
 
     // Edge case: Cursor at the end.
     if ((size_t)cursorpos == i) {
         if (ctx->do_render) {
-            pax_draw_line(ctx->buf, ctx->color, pos.x, pos.y, pos.x, pos.y + scale * ctx->font->default_size);
+            pax_vec2f p0 = pos;
+            pax_vec2f p1
+                = matrix_2d_transform_alt(ctx->matrix, (pax_vec2f){pos.x, pos.y + scale * ctx->font->default_size});
+            pax_linef shape = {p0.x, p0.y, p1.x, p1.y};
+            ctx->renderfuncs->unshaded_line(ctx->buf, ctx->color, shape);
         }
         cursor_x = x;
-        cursor_y = y;
     }
 
     if (x > max_x) {
         max_x = x;
     }
-    return (pax_2vec2f){
-        size_mul * max_x,
-        size_mul * (y + ctx->font->default_size),
-        size_mul * cursor_x,
-        size_mul * cursor_y,
+    return (pax_vec2f){
+        scale * max_x,
+        scale * cursor_x,
     };
-}
-
-// Implementation of left-aligned text.
-pax_2vec2f left_text(
-    pax_buf_t        *buf,
-    pax_col_t         color,
-    pax_font_t const *font,
-    float             font_size,
-    float             x,
-    float             y,
-    char const       *text,
-    size_t            len,
-    ptrdiff_t         cursorpos,
-    bool              do_render
-) {
-    pax_text_render_t ctx = {
-        .do_render = do_render,
-        .buf       = buf,
-        .color     = color,
-        .x         = x,
-        .y         = y,
-        .font      = font,
-        .font_size = font_size,
-        .do_aa     = font->recommend_aa,
-    };
-    pax_2vec2f dims = text_generic(&ctx, (pax_vec2f){x, y}, font_size / font->default_size, text, len, cursorpos);
-    if (do_render && ctx.rsdata_len) {
-        pax_join();
-    }
-    return dims;
-}
-
-// A single line of `pax_center_text`.
-static pax_2vec2f pax_center_line(
-    pax_buf_t        *buf,
-    pax_col_t         color,
-    pax_font_t const *font,
-    float             font_size,
-    float             x,
-    float             y,
-    char const       *text,
-    size_t            len,
-    ptrdiff_t         cursorpos,
-    bool              do_render
-) {
-    pax_2vec2f dims = left_text(NULL, 0, font, font_size, 0, 0, text, len, cursorpos, false);
-    left_text(buf, color, font, font_size, x - dims.x0 * 0.5f, y, text, len, cursorpos, do_render);
-    return (pax_2vec2f){
-        dims.x0,
-        dims.y0,
-        dims.x1 - dims.x0 * 0.5f,
-        0,
-    };
-}
-
-// A single line of `pax_right_text`.
-static pax_2vec2f pax_right_line(
-    pax_buf_t        *buf,
-    pax_col_t         color,
-    pax_font_t const *font,
-    float             font_size,
-    float             x,
-    float             y,
-    char const       *text,
-    size_t            len,
-    ptrdiff_t         cursorpos,
-    bool              do_render
-) {
-    pax_2vec2f dims = left_text(NULL, 0, font, font_size, 0, 0, text, len, cursorpos, false);
-    left_text(buf, color, font, font_size, x - dims.x0, y, text, len, cursorpos, do_render);
-    return (pax_2vec2f){
-        dims.x0,
-        dims.y0,
-        dims.x1 - dims.x0,
-        0,
-    };
-}
-
-// Implementation of center- and right-aligned text.
-static pax_2vec2f aligned_text(
-    pax_buf_t        *buf,
-    pax_col_t         color,
-    pax_font_t const *font,
-    float             font_size,
-    float             x,
-    float             y,
-    char const       *text,
-    size_t            len,
-    ptrdiff_t         cursorpos,
-    bool              center,
-    bool              do_render
-) {
-    float width = 0, height = 0;
-    float cursor_x = NAN, cursor_y = NAN;
-
-    // Continuously look for newlines.
-    while (len) {
-        // Look for newline characters.
-        char *cr    = memchr(text, '\r', len);
-        char *lf    = memchr(text, '\n', len);
-        // Determine which comes earlier.
-        char *found = cr && (!lf || cr < lf) ? cr : lf;
-        // Determine where to keep going afterwards.
-        char *next  = cr && lf && (lf == cr + 1) ? lf + 1 : found + 1;
-
-        if (!cr && !lf) {
-            // Nothing special left to do.
-            pax_2vec2f dims;
-            if (center) {
-                dims = pax_center_line(buf, color, font, font_size, x, y + height, text, len, cursorpos, do_render);
-            } else {
-                dims = pax_right_line(buf, color, font, font_size, x, y + height, text, len, cursorpos, do_render);
-            }
-            if (dims.x0 > width) {
-                width = dims.x0;
-            }
-            if (!isnan(dims.x1) && !isnan(dims.y1)) {
-                cursor_x = dims.x1;
-                cursor_y = dims.y1 + height;
-            }
-            height += dims.y0;
-            break;
-
-        } else {
-            // Draw this line individually.
-            pax_2vec2f dims;
-            if (center) {
-                dims = pax_center_line(
-                    buf,
-                    color,
-                    font,
-                    font_size,
-                    x,
-                    y + height,
-                    text,
-                    found - text,
-                    cursorpos,
-                    do_render
-                );
-            } else {
-                dims = pax_right_line(
-                    buf,
-                    color,
-                    font,
-                    font_size,
-                    x,
-                    y + height,
-                    text,
-                    found - text,
-                    cursorpos,
-                    do_render
-                );
-            }
-            if (dims.x0 > width) {
-                width = dims.x0;
-            }
-            if (!isnan(dims.x1) && !isnan(dims.y1)) {
-                cursor_x = dims.x1;
-                cursor_y = dims.y1 + height;
-            }
-            height += dims.y0;
-
-            // Set text pointer to next line.
-            len       -= next - text;
-            cursorpos -= next - text;
-            text       = next;
-        }
-    }
-
-    // Clean up and return total size.
-    return (pax_2vec2f){width, height, cursor_x, cursor_y};
 }
 
 // Count the number of newlines in a string.
-static size_t count_newlines(char const *str, size_t len) {
+static inline size_t count_newlines(char const *str, size_t len) {
     size_t found = 0;
     char   prev  = 0;
     while (len) {
@@ -633,6 +408,85 @@ static size_t count_newlines(char const *str, size_t len) {
         len--;
     }
     return found;
+}
+
+// Count how many bytes of data there is in the current line.
+static inline void get_line_length(char const *str, size_t len, size_t *line_len_out, size_t *next_line_out) {
+    for (size_t i = 0; i < len; i++) {
+        if (str[i] == '\r') {
+            *line_len_out = i;
+            if (i < len - 1 && str[i + 1] == '\n') {
+                *next_line_out = i + 2;
+            } else {
+                *next_line_out = i + 1;
+            }
+            return;
+        } else if (str[i] == '\n') {
+            *line_len_out  = i;
+            *next_line_out = i + 1;
+            return;
+        }
+    }
+    *line_len_out  = len;
+    *next_line_out = len;
+}
+
+// Internal method for rendering text and calculating text size.
+static inline pax_vec2f text_line_generic(
+    pax_text_render_t *ctx, pax_vec2f pos, char const *text, size_t len, pax_align_t halign, ptrdiff_t cursorpos
+) {
+    if (halign == PAX_ALIGN_BEGIN) {
+        return text_line_generic_impl(ctx, ctx->do_render, pos, text, len, cursorpos);
+    } else if (halign == PAX_ALIGN_CENTER) {
+        pax_vec2f size = text_line_generic_impl(ctx, false, pos, text, len, cursorpos);
+        if (ctx->do_render) {
+            text_line_generic_impl(ctx, true, (pax_vec2f){pos.x - size.x * 0.5f, pos.y}, text, len, cursorpos);
+        }
+        return (pax_vec2f){size.x, size.y - size.x * 0.5f};
+    } else if (halign == PAX_ALIGN_END) {
+        pax_vec2f size = text_line_generic_impl(ctx, false, pos, text, len, cursorpos);
+        if (ctx->do_render) {
+            text_line_generic_impl(ctx, true, (pax_vec2f){pos.x - size.x, pos.y}, text, len, cursorpos);
+        }
+        return (pax_vec2f){size.x, size.y - size.x};
+    } else {
+        return (pax_vec2f){0, NAN};
+    }
+}
+
+// Internal method for rendering text and calculating text size.
+pax_2vec2f pax_internal_text_generic(
+    pax_text_render_t *ctx,
+    pax_vec2f          pos,
+    char const        *text,
+    size_t             len,
+    ptrdiff_t          cursorpos,
+    pax_align_t        halign,
+    pax_align_t        valign
+) {
+    pax_2vec2f size = {0};
+    size.y0         = ctx->font_size * count_newlines(text, len) * 0.5f;
+    if (valign == PAX_ALIGN_CENTER) {
+        pos.y -= size.y0 * 0.5f;
+    } else if (valign == PAX_ALIGN_END) {
+        pos.y -= size.y0;
+    }
+
+    while (len) {
+        size_t line_len = len, next_line = len;
+        get_line_length(text, len, &line_len, &next_line);
+        pax_vec2f line_size = text_line_generic(ctx, pos, text, line_len, halign, cursorpos);
+        size.x0             = fmaxf(size.x0, line_size.x);
+        if (cursorpos >= 0 && cursorpos < next_line) {
+            size.x1 = line_size.y;
+            size.y1 = pos.y;
+        }
+        text      += next_line;
+        len       -= next_line;
+        cursorpos -= next_line;
+    }
+
+    return size;
 }
 
 // Draw a string with given font, size, alignment and optional cursor index.
@@ -651,22 +505,27 @@ pax_2vec2f pax_draw_text_adv(
     ptrdiff_t         cursorpos
 ) {
     if (!text) {
-        return (pax_2vec2f){0};
+        return (pax_2vec2f){0, 0, NAN, NAN};
     }
-
-    // Determine vertical position.
-    if (valign == PAX_ALIGN_CENTER) {
-        y -= count_newlines(text, len) * font_size * 0.5f;
-    } else if (valign == PAX_ALIGN_END) {
-        y -= count_newlines(text, len) * font_size;
-    }
-
-    // Select appropriate variant for horizontal position.
-    if (halign == PAX_ALIGN_BEGIN) {
-        return left_text(buf, color, font, font_size, x, y, text, len, cursorpos, true);
-    } else {
-        return aligned_text(buf, color, font, font_size, x, y, text, len, cursorpos, halign == PAX_ALIGN_CENTER, true);
-    }
+    pax_dispatch_text(
+        buf,
+        buf->stack_2d.value,
+        color,
+        font,
+        font_size,
+        (pax_vec2f){x, y},
+        text,
+        len,
+        halign,
+        valign,
+        cursorpos
+    );
+    pax_text_render_t ctx = {
+        .do_render = false,
+        .font      = font,
+        .font_size = font_size,
+    };
+    return pax_internal_text_generic(&ctx, (pax_vec2f){0, 0}, text, len, cursorpos, halign, valign);
 }
 
 // Measure the size of a string with given font, size, alignment and optional cursor index.
@@ -681,26 +540,14 @@ pax_2vec2f pax_text_size_adv(
     ptrdiff_t         cursorpos
 ) {
     if (!text) {
-        return (pax_2vec2f){0};
+        return (pax_2vec2f){0, 0, NAN, NAN};
     }
-    float y = 0;
-
-    // Determine vertical position.
-    if (valign == PAX_ALIGN_CENTER) {
-        y -= count_newlines(text, len) * font_size * 0.5f;
-    } else if (valign == PAX_ALIGN_END) {
-        y -= count_newlines(text, len) * font_size;
-    }
-
-    // Select appropriate variant for horizontal position.
-    pax_2vec2f ret;
-    if (halign == PAX_ALIGN_BEGIN) {
-        ret = left_text(NULL, 0, font, font_size, 0, 0, text, len, cursorpos, false);
-    } else {
-        ret = aligned_text(NULL, 0, font, font_size, 0, 0, text, len, cursorpos, halign == PAX_ALIGN_CENTER, false);
-    }
-    ret.y1 += y;
-    return ret;
+    pax_text_render_t ctx = {
+        .do_render = false,
+        .font      = font,
+        .font_size = font_size,
+    };
+    return pax_internal_text_generic(&ctx, (pax_vec2f){0, 0}, text, len, cursorpos, halign, valign);
 }
 
 

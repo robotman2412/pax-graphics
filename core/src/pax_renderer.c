@@ -178,6 +178,23 @@ void pax_dispatch_blit_char(pax_buf_t *buf, pax_col_t color, pax_vec2i pos, int 
     RENDERFUNC(blit_char)(buf, color, pos, scale, rsdata);
 }
 
+// Draw a string of text in the bitmapped format.
+void pax_dispatch_text(
+    pax_buf_t        *buf,
+    matrix_2d_t       matrix,
+    pax_col_t         color,
+    pax_font_t const *font,
+    float             font_size,
+    pax_vec2f         pos,
+    char const       *text,
+    size_t            text_len,
+    pax_align_t       halign,
+    pax_align_t       valign,
+    ptrdiff_t         cursorpos
+) {
+    RENDERFUNC(text)(buf, matrix, color, font, font_size, pos, text, text_len, halign, valign, cursorpos);
+}
+
 
 
 #if DEFAULT_RENDERER_ONLY

@@ -433,6 +433,18 @@ pax_shader_ctx_t pax_get_shader_ctx(pax_buf_t *buf, pax_col_t color, pax_shader_
 // The scheduler for multicore rendering.
 void paxmcr_add_task(pax_task_t *task);
 
+// Internal method for rendering text and calculating text size.
+pax_2vec2f pax_internal_text_generic(
+    pax_text_render_t *ctx,
+    pax_vec2f          pos,
+    char const        *text,
+    size_t             len,
+    ptrdiff_t          cursorpos,
+    pax_align_t        halign,
+    pax_align_t        valign
+);
+
+
 
 #ifdef __cplusplus
 }
