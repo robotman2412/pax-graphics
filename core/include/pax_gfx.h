@@ -108,11 +108,24 @@ pax_col_t const *pax_buf_get_palette(pax_buf_t *buf, size_t *palette_len);
 void             pax_buf_reversed(pax_buf_t *buf, bool reversed_endianness);
 
 // Retrieve the width of the buffer.
-int            pax_buf_get_width(pax_buf_t const *buf);
+int                 pax_buf_get_width(pax_buf_t const *buf);
 // Retrieve the height of the buffer.
-int            pax_buf_get_height(pax_buf_t const *buf);
+int                 pax_buf_get_height(pax_buf_t const *buf);
 // Retrieve dimensions of the buffer.
-pax_vec2i      pax_buf_get_dims(pax_buf_t const *buf);
+pax_vec2i           pax_buf_get_dims(pax_buf_t const *buf);
+// Retrieve the width of the buffer.
+static inline float pax_buf_get_widthf(pax_buf_t const *buf) {
+    return pax_buf_get_width(buf);
+}
+// Retrieve the height of the buffer.
+static inline float pax_buf_get_heightf(pax_buf_t const *buf) {
+    return pax_buf_get_height(buf);
+}
+// Retrieve dimensions of the buffer.
+static inline pax_vec2f pax_buf_get_dimsf(pax_buf_t const *buf) {
+    pax_vec2i tmp = pax_buf_get_dims(buf);
+    return (pax_vec2f){tmp.x, tmp.y};
+}
 // Retrieve the width of the buffer without applying orientation.
 int            pax_buf_get_width_raw(pax_buf_t const *buf);
 // Retrieve the height of the buffer without applying orientation.
