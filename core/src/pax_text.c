@@ -255,9 +255,9 @@ static void dispatch_glyph(
 
 // Internal method for monospace bitmapped characters.
 static pax_vec2f text_bitmap_mono(
-    pax_text_render_t *ctx, pax_vec2f pos, float scale, pax_font_range_t const *range, uint32_t glyph
+    pax_text_render_t *ctx, bool do_render, pax_vec2f pos, float scale, pax_font_range_t const *range, uint32_t glyph
 ) {
-    if (ctx->do_render && glyph != 0x20) {
+    if (do_render && glyph != 0x20) {
         // Set up glyph rendering information.
         pax_text_rsdata_t rsdata = {
             .bpp = range->bitmap_mono.bpp,
@@ -275,12 +275,13 @@ static pax_vec2f text_bitmap_mono(
 }
 
 // Internal method for variable pitch bitmapped characters.
-static pax_vec2f
-    text_bitmap_var(pax_text_render_t *ctx, pax_vec2f pos, float scale, pax_font_range_t const *range, uint32_t glyph) {
+static pax_vec2f text_bitmap_var(
+    pax_text_render_t *ctx, bool do_render, pax_vec2f pos, float scale, pax_font_range_t const *range, uint32_t glyph
+) {
     size_t            index = (glyph - range->start);
     pax_bmpv_t const *dims  = &range->bitmap_var.dims[index];
 
-    if (ctx->do_render && glyph != 0x20) {
+    if (do_render && glyph != 0x20) {
         // Set up glyph rendering information.
         pax_text_rsdata_t rsdata = {
             .bpp = range->bitmap_var.bpp,
@@ -333,7 +334,7 @@ static pax_vec2f text_line_generic_impl(
     while (i < len) {
         // Draw cursor.
         if ((size_t)cursorpos == i) {
-            if (ctx->do_render) {
+            if (do_render) {
                 pax_vec2f p0 = pos;
                 pax_vec2f p1
                     = matrix_2d_transform_alt(ctx->matrix, (pax_vec2f){pos.x, pos.y + scale * ctx->font->default_size});
@@ -362,8 +363,10 @@ static pax_vec2f text_line_generic_impl(
         if (range) {
             // Handle the character.
             switch (range->type) {
-                case PAX_FONT_TYPE_BITMAP_MONO: dims = text_bitmap_mono(ctx, pos, scale, range, glyph); break;
-                case PAX_FONT_TYPE_BITMAP_VAR: dims = text_bitmap_var(ctx, pos, scale, range, glyph); break;
+                case PAX_FONT_TYPE_BITMAP_MONO:
+                    dims = text_bitmap_mono(ctx, do_render, pos, scale, range, glyph);
+                    break;
+                case PAX_FONT_TYPE_BITMAP_VAR: dims = text_bitmap_var(ctx, do_render, pos, scale, range, glyph); break;
             }
         } else {
             // Ignore it for now.
@@ -374,7 +377,7 @@ static pax_vec2f text_line_generic_impl(
 
     // Edge case: Cursor at the end.
     if ((size_t)cursorpos == i) {
-        if (ctx->do_render) {
+        if (do_render) {
             pax_vec2f p0 = pos;
             pax_vec2f p1
                 = matrix_2d_transform_alt(ctx->matrix, (pax_vec2f){pos.x, pos.y + scale * ctx->font->default_size});
@@ -465,7 +468,7 @@ pax_2vec2f pax_internal_text_generic(
     pax_align_t        valign
 ) {
     pax_2vec2f size = {0};
-    size.y0         = ctx->font_size * count_newlines(text, len) * 0.5f;
+    size.y0         = ctx->font_size * (1 + count_newlines(text, len));
     if (valign == PAX_ALIGN_CENTER) {
         pos.y -= size.y0 * 0.5f;
     } else if (valign == PAX_ALIGN_END) {
@@ -484,6 +487,7 @@ pax_2vec2f pax_internal_text_generic(
         text      += next_line;
         len       -= next_line;
         cursorpos -= next_line;
+        pos.y     += ctx->font_size;
     }
 
     return size;
