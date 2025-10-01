@@ -372,34 +372,8 @@ PAX_PERF_CRITICAL_ATTR void pax_background(pax_buf_t *buf, pax_col_t color) {
 
     if (value == 0) {
         memset(buf->buf, 0, pax_buf_calc_size_dynamic(buf->width, buf->height, buf->type));
-    } else if (buf->type_info.bpp == 16) {
-        if (buf->reverse_endianness) {
-            value = pax_rev_endian_16(value);
-        }
-        // Fill 16bpp parts.
-        for (size_t i = 0; i < (size_t)(buf->width * buf->height); i++) {
-            buf->buf_16bpp[i] = value;
-        }
-    } else if (buf->type_info.bpp == 32) {
-        if (buf->reverse_endianness) {
-            value = pax_rev_endian_32(value);
-        }
-        // Fill 32bpp parts.
-        for (size_t i = 0; i < (size_t)(buf->width * buf->height); i++) {
-            buf->buf_32bpp[i] = value;
-        }
     } else {
-        // Fill <=8bpp parts.
-        if (buf->type_info.bpp == 1)
-            value = -value;
-        else if (buf->type_info.bpp == 2)
-            value = value * 0x55;
-        else if (buf->type_info.bpp == 4)
-            value = value * 0x11;
-        size_t limit = (7 + buf->width * buf->height * buf->type_info.bpp) / 8;
-        for (size_t i = 0; i < limit; i++) {
-            buf->buf_8bpp[i] = value;
-        }
+        buf->range_setter(buf, value, 0, buf->width * buf->height);
     }
 
     pax_mark_dirty0(buf);
