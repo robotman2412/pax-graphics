@@ -148,7 +148,7 @@ __attribute__((always_inline)) static inline void swr_blit_impl(
         base_pos.h = base->clip.y + base->clip.h - base_pos.y;
     }
 
-    if (base_pos.x <= 0 || base_pos.w <= 0) {
+    if (base_pos.h <= 0 || base_pos.w <= 0) {
         return;
     }
 
