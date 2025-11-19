@@ -405,13 +405,13 @@ void pax_range_setter_24bpp(pax_buf_t *buf, pax_col_t color, int index, int coun
         return;
     }
     color &= 0xffffff;
-    int i  = 0;
-    if (index & 1) {
+    int i  = index;
+    if (i & 1) {
         pax_index_setter_24bpp(buf, color, i);
         i++;
     }
-    uint16_t *ptr = (uint16_t *)(buf->buf_8bpp + (index + i) * 3);
-    for (; i < count - 1; i += 2) {
+    uint16_t *ptr = (uint16_t *)(buf->buf_8bpp + i * 3);
+    for (; i + 1 < index + count; i += 2) {
     #if BYTE_ORDER == LITTLE_ENDIAN
         ptr[0] = color;
         ptr[1] = (color >> 16) | ((color & 255) << 8);
@@ -423,7 +423,7 @@ void pax_range_setter_24bpp(pax_buf_t *buf, pax_col_t color, int index, int coun
     #endif
         ptr += 3;
     }
-    if (i < count) {
+    if (i < index + count) {
         pax_index_setter_24bpp(buf, color, i);
     }
 }
