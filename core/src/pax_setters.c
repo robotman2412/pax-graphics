@@ -6,7 +6,6 @@
 
 #include <endian.h>
 
-
 static inline void __attribute__((always_inline))
 getter_setter_bounds_check(pax_buf_t const *buf, int index, int length) {
 #if !CONFIG_PAX_BOUNDS_CHECK
