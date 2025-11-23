@@ -177,6 +177,9 @@ void pax_draw_sprite_rot_sized(
         y     += top_h;
         top_h  = -top_h;
     }
+    // Adjust rotation to account for base buffer's orientation transform
+    // This ensures blit reads source in correct order after dimensions were transformed
+    rot = (rot + base->orientation) & 3;
 #endif
     pax_dispatch_sprite(base, top, (pax_recti){x, y, top_w, top_h}, rot, (pax_vec2i){top_x, top_y});
 }
@@ -239,6 +242,9 @@ void pax_blit_rot_sized(
         y     += top_h;
         top_h  = -top_h;
     }
+    // Adjust rotation to account for base buffer's orientation transform
+    // This ensures blit reads source in correct order after dimensions were transformed
+    rot = (rot + base->orientation) & 3;
 #endif
     pax_dispatch_blit(base, top, (pax_recti){x, y, top_w, top_h}, rot, (pax_vec2i){top_x, top_y});
 }
@@ -379,6 +385,17 @@ PAX_PERF_CRITICAL_ATTR void pax_background(pax_buf_t *buf, pax_col_t color) {
         // Fill 16bpp parts.
         for (size_t i = 0; i < (size_t)(buf->width * buf->height); i++) {
             buf->buf_16bpp[i] = value;
+        }
+    } else if (buf->type_info.bpp == 24) {
+        // Fill 24bpp parts (3 bytes per pixel).
+        uint8_t byte0 = (value >> 0) & 0xFF;
+        uint8_t byte1 = (value >> 8) & 0xFF;
+        uint8_t byte2 = (value >> 16) & 0xFF;
+        size_t pixel_count = (size_t)(buf->width * buf->height);
+        for (size_t i = 0; i < pixel_count; i++) {
+            buf->buf_8bpp[i * 3 + 0] = byte0;
+            buf->buf_8bpp[i * 3 + 1] = byte1;
+            buf->buf_8bpp[i * 3 + 2] = byte2;
         }
     } else if (buf->type_info.bpp == 32) {
         if (buf->reverse_endianness) {

@@ -90,9 +90,9 @@ __attribute__((always_inline)) static inline pax_col_t raw_get_pixel(void const 
         case 8: return buf_8bpp[index];
         case 16: return buf_16bpp[index];
 #if BYTE_ORDER == LITTLE_ENDIAN
-        case 24: return buf_8bpp[index] | (buf_8bpp[index + 1] << 8) | (buf_8bpp[index + 2] << 16);
+        case 24: return buf_8bpp[index * 3] | (buf_8bpp[index * 3 + 1] << 8) | (buf_8bpp[index * 3 + 2] << 16);
 #else
-        case 24: return buf_8bpp[index + 2] | (buf_8bpp[index + 1] << 8) | (buf_8bpp[index] << 16);
+        case 24: return buf_8bpp[index * 3 + 2] | (buf_8bpp[index * 3 + 1] << 8) | (buf_8bpp[index * 3] << 16);
 #endif
         case 32: return buf_32bpp[index];
         default: __builtin_unreachable();
