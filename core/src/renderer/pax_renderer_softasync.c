@@ -490,9 +490,9 @@ __attribute__((always_inline)) static inline void pax_sasr_blit_char_impl_2(
         case PAX_O_ROT_HALF:        dx = -1;          dy = -buf->width; break;
         case PAX_O_ROT_CW:          dx =  buf->width; dy = -1;          break;
         case PAX_O_FLIP_H:          dx = -1;          dy =  buf->width; break;
-        case PAX_O_ROT_CCW_FLIP_H:  dx =  buf->width; dy =  1;          break;
+        case PAX_O_ROT_CCW_FLIP_H:  dx = -buf->width; dy = -1;          break;
         case PAX_O_ROT_HALF_FLIP_H: dx =  1;          dy = -buf->width; break;
-        case PAX_O_ROT_CW_FLIP_H:   dx = -buf->width; dy = -1;          break;
+        case PAX_O_ROT_CW_FLIP_H:   dx =  buf->width; dy =  1;          break;
     }
 #else
     dx = 1;
