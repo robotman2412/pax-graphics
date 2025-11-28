@@ -480,7 +480,7 @@ pax_2vec2f pax_internal_text_generic(
         get_line_length(text, len, &line_len, &next_line);
         pax_vec2f line_size = text_line_generic(ctx, pos, text, line_len, halign, cursorpos);
         size.x0             = fmaxf(size.x0, line_size.x);
-        if (cursorpos >= 0 && cursorpos < next_line) {
+        if (cursorpos >= 0 && cursorpos < (ptrdiff_t)next_line) {
             size.x1 = line_size.y;
             size.y1 = pos.y;
         }
@@ -594,11 +594,6 @@ static size_t pax_calc_range_size(pax_font_range_t const *range, bool include_st
 // Calculates the size of the region's bitmap data.
 static inline size_t pax_calc_range_bitmap_size(pax_font_range_t const *range) {
     return pax_calc_range_size(range, false);
-}
-
-// Calculates the size of the region's bitmap data and structs.
-static inline size_t pax_calc_range_total_size(pax_font_range_t const *range) {
-    return pax_calc_range_size(range, true);
 }
 
 // Reads a number from the file (little-endian).
@@ -761,7 +756,6 @@ pax_font_t *pax_load_font(FILE *fd) {
     out->ranges          = (void *)(out_addr + sizeof(pax_font_t));
 
     // Read range data.
-    size_t bitmap_blob_size = 0;
     for (size_t i = 0; i < out->n_ranges; i++) {
         pax_font_range_t *range = (pax_font_range_t *)&out->ranges[i];
 
@@ -856,9 +850,6 @@ pax_font_t *pax_load_font(FILE *fd) {
             free(out);
             return NULL;
         }
-
-        // Tally up the bitmap blob size for later use.
-        bitmap_blob_size += pax_calc_range_bitmap_size(range);
     }
 
     /* ==== RAW BITMAP DATA ==== */
@@ -932,7 +923,6 @@ void pax_store_font(FILE *fd, pax_font_t const *font) {
     xwritenum_assert(font->recommend_aa, 1, fd);
 
     /* ==== RANGE DATA ==== */
-    size_t raw_data_offs = 0;
     for (size_t i = 0; i < font->n_ranges; i++) {
         pax_font_range_t const *range      = &font->ranges[i];
         size_t                  range_size = range->end - range->start + 1;
@@ -975,8 +965,6 @@ void pax_store_font(FILE *fd, pax_font_t const *font) {
                 xwritenum_assert(bmpv.index, sizeof(uint64_t), fd);
             }
         }
-
-        raw_data_offs += pax_calc_range_bitmap_size(range);
     }
 
     /* ==== RAW DATA ==== */
