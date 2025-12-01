@@ -177,6 +177,9 @@ void pax_draw_sprite_rot_sized(
         y     += top_h;
         top_h  = -top_h;
     }
+    // Adjust rotation to account for base buffer's orientation transform
+    // This ensures blit reads source in correct order after dimensions were transformed
+    rot = (rot + base->orientation) & 3;
 #endif
     pax_dispatch_sprite(base, top, (pax_recti){x, y, top_w, top_h}, rot, (pax_vec2i){top_x, top_y});
 }
@@ -239,6 +242,9 @@ void pax_blit_rot_sized(
         y     += top_h;
         top_h  = -top_h;
     }
+    // Adjust rotation to account for base buffer's orientation transform
+    // This ensures blit reads source in correct order after dimensions were transformed
+    rot = (rot + base->orientation) & 3;
 #endif
     pax_dispatch_blit(base, top, (pax_recti){x, y, top_w, top_h}, rot, (pax_vec2i){top_x, top_y});
 }
@@ -309,7 +315,7 @@ static void draw_image_impl(
     bool has_alpha = false;
     if (!assume_opaque && top->type_info.fmt_type == PAX_BUF_SUBTYPE_PALETTE) {
         for (size_t i = 0; i < top->palette_size; i++) {
-            if (top->palette[i] & (0xff000000 != 0xff000000)) {
+            if ((top->palette[i] & 0xff000000) != 0xff000000) {
                 has_alpha = true;
                 break;
             }
@@ -318,13 +324,17 @@ static void draw_image_impl(
         has_alpha = top->type_info.a > 0;
     }
 
-    if (width == top->width && height == top->height && !has_alpha && matrix_2d_is_identity1(base->stack_2d.value)) {
+    if (width == top->width && height == top->height && matrix_2d_is_identity1(base->stack_2d.value)) {
         matrix_2d_transform(base->stack_2d.value, &x, &y);
-        pax_draw_sprite(base, top, x, y);
+        if (has_alpha) {
+            pax_draw_sprite(base, top, x, y);
+        } else {
+            pax_blit(base, top, x, y);
+        }
     } else if (has_alpha) {
-        pax_shade_rect(base, -1, &PAX_SHADER_TEXTURE(top), NULL, x, y, width, height);
+        // pax_shade_rect(base, -1, &PAX_SHADER_TEXTURE(top), NULL, x, y, width, height);
     } else {
-        pax_shade_rect(base, -1, &PAX_SHADER_TEXTURE_OP(top), NULL, x, y, width, height);
+        // pax_shade_rect(base, -1, &PAX_SHADER_TEXTURE_OP(top), NULL, x, y, width, height);
     }
 }
 
@@ -372,34 +382,8 @@ PAX_PERF_CRITICAL_ATTR void pax_background(pax_buf_t *buf, pax_col_t color) {
 
     if (value == 0) {
         memset(buf->buf, 0, pax_buf_calc_size_dynamic(buf->width, buf->height, buf->type));
-    } else if (buf->type_info.bpp == 16) {
-        if (buf->reverse_endianness) {
-            value = pax_rev_endian_16(value);
-        }
-        // Fill 16bpp parts.
-        for (size_t i = 0; i < (size_t)(buf->width * buf->height); i++) {
-            buf->buf_16bpp[i] = value;
-        }
-    } else if (buf->type_info.bpp == 32) {
-        if (buf->reverse_endianness) {
-            value = pax_rev_endian_32(value);
-        }
-        // Fill 32bpp parts.
-        for (size_t i = 0; i < (size_t)(buf->width * buf->height); i++) {
-            buf->buf_32bpp[i] = value;
-        }
     } else {
-        // Fill <=8bpp parts.
-        if (buf->type_info.bpp == 1)
-            value = -value;
-        else if (buf->type_info.bpp == 2)
-            value = value * 0x55;
-        else if (buf->type_info.bpp == 4)
-            value = value * 0x11;
-        size_t limit = (7 + buf->width * buf->height * buf->type_info.bpp) / 8;
-        for (size_t i = 0; i < limit; i++) {
-            buf->buf_8bpp[i] = value;
-        }
+        buf->range_setter(buf, value, 0, buf->width * buf->height);
     }
 
     pax_mark_dirty0(buf);

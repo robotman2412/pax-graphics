@@ -7,8 +7,6 @@
 #include "pax_config.h"
 #include "pax_matrix.h"
 
-#include <stdatomic.h>
-
 #include <math.h>
 
 #ifdef __cplusplus
@@ -436,9 +434,9 @@ struct pax_text_rsdata {
 // WARNING: Subject to change at any time for any reason, do not use this type yourself.
 struct pax_rcstr {
     // String refcount.
-    atomic_int refcount;
+    int  refcount;
     // String data.
-    char       data[];
+    char data[];
 };
 
 #define PAX_SSO_BUF_LEN 32

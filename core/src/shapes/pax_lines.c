@@ -118,6 +118,7 @@ void pax_shade_line(
         PAX_ERROR(PAX_ERR_INF);
     }
 
+#if CONFIG_PAX_COMPILE_ORIENTATION
     // Rotate points.
     pax_vec1_t tmp = pax_orient_det_vec2f(buf, (pax_vec2f){x0, y0});
     x0             = tmp.x;
@@ -125,6 +126,7 @@ void pax_shade_line(
     tmp            = pax_orient_det_vec2f(buf, (pax_vec2f){x1, y1});
     x1             = tmp.x;
     y1             = tmp.y;
+#endif
 
     // If any point is outside clip now, we don't draw a line.
     if (y0 < buf->clip.y || y1 > buf->clip.y + buf->clip.h - 1)

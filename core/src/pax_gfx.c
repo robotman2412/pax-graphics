@@ -113,7 +113,7 @@ bool pax_buf_init(pax_buf_t *buf, void *mem, int width, int height, pax_buf_type
     bool use_alloc = !mem;
     if (use_alloc) {
         // Allocate the right amount of bytes.
-        mem = malloc(pax_buf_calc_size_dynamic(width, height, type));
+        mem = calloc(1, pax_buf_calc_size_dynamic(width, height, type));
         if (!mem) {
             pax_set_err(PAX_ERR_NOMEM);
             free(buf);

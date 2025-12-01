@@ -93,6 +93,7 @@ void pax_shade_tri(
         PAX_ERROR(PAX_ERR_INF);
     }
 
+#if CONFIG_PAX_COMPILE_ORIENTATION
     // Rotate points.
     pax_vec1_t tmp = pax_orient_det_vec2f(buf, (pax_vec2f){x0, y0});
     x0             = tmp.x;
@@ -103,6 +104,7 @@ void pax_shade_tri(
     tmp            = pax_orient_det_vec2f(buf, (pax_vec2f){x2, y2});
     x2             = tmp.x;
     y2             = tmp.y;
+#endif
 
     if (!uvs) {
         // Apply default UVs.

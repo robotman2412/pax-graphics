@@ -90,9 +90,9 @@ __attribute__((always_inline)) static inline pax_col_t raw_get_pixel(void const 
         case 8: return buf_8bpp[index];
         case 16: return buf_16bpp[index];
 #if BYTE_ORDER == LITTLE_ENDIAN
-        case 24: return buf_8bpp[index] | (buf_8bpp[index + 1] << 8) | (buf_8bpp[index + 2] << 16);
+        case 24: return buf_8bpp[index * 3] | (buf_8bpp[index * 3 + 1] << 8) | (buf_8bpp[index * 3 + 2] << 16);
 #else
-        case 24: return buf_8bpp[index + 2] | (buf_8bpp[index + 1] << 8) | (buf_8bpp[index] << 16);
+        case 24: return buf_8bpp[index * 3 + 2] | (buf_8bpp[index * 3 + 1] << 8) | (buf_8bpp[index * 3] << 16);
 #endif
         case 32: return buf_32bpp[index];
         default: __builtin_unreachable();
@@ -148,7 +148,7 @@ __attribute__((always_inline)) static inline void swr_blit_impl(
         base_pos.h = base->clip.y + base->clip.h - base_pos.y;
     }
 
-    if (base_pos.x <= 0 || base_pos.w <= 0) {
+    if (base_pos.h <= 0 || base_pos.w <= 0) {
         return;
     }
 
@@ -311,9 +311,9 @@ __attribute__((always_inline)) static inline void pax_swr_blit_char_impl(
         case PAX_O_ROT_HALF:        dx = -1;          dy = -buf->width; break;
         case PAX_O_ROT_CW:          dx =  buf->width; dy = -1;          break;
         case PAX_O_FLIP_H:          dx = -1;          dy =  buf->width; break;
-        case PAX_O_ROT_CCW_FLIP_H:  dx =  buf->width; dy =  1;          break;
+        case PAX_O_ROT_CCW_FLIP_H:  dx = -buf->width; dy = -1;          break;
         case PAX_O_ROT_HALF_FLIP_H: dx =  1;          dy = -buf->width; break;
-        case PAX_O_ROT_CW_FLIP_H:   dx = -buf->width; dy = -1;          break;
+        case PAX_O_ROT_CW_FLIP_H:   dx =  buf->width; dy =  1;          break;
     }
 #else
     dx = 1;

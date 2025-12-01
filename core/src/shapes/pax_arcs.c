@@ -2,6 +2,9 @@
 // SPDX-License-Identifier: MIT
 
 #include "pax_internal.h"
+#include "pax_orientation.h"
+
+#include <math.h>
 
 
 
