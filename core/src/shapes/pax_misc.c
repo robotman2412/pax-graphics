@@ -177,6 +177,9 @@ void pax_draw_sprite_rot_sized(
         y     += top_h;
         top_h  = -top_h;
     }
+    // Adjust rotation to account for base buffer's orientation transform
+    // This ensures blit reads source in correct order after dimensions were transformed
+    rot = (rot + base->orientation) & 3;
 #endif
     pax_dispatch_sprite(base, top, (pax_recti){x, y, top_w, top_h}, rot, (pax_vec2i){top_x, top_y});
 }
@@ -239,6 +242,9 @@ void pax_blit_rot_sized(
         y     += top_h;
         top_h  = -top_h;
     }
+    // Adjust rotation to account for base buffer's orientation transform
+    // This ensures blit reads source in correct order after dimensions were transformed
+    rot = (rot + base->orientation) & 3;
 #endif
     pax_dispatch_blit(base, top, (pax_recti){x, y, top_w, top_h}, rot, (pax_vec2i){top_x, top_y});
 }

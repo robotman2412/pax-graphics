@@ -407,6 +407,16 @@ void pax_shade_rect(
         width         = tmp.w;
         height        = tmp.h;
 
+        // Normalize negative dimensions after orientation transform
+        if (width < 0) {
+            x += width;
+            width = -width;
+        }
+        if (height < 0) {
+            y += height;
+            height = -height;
+        }
+
         pax_quadf uvs_rotated;
         if (buf->orientation & 1) {
             uvs_rotated = (pax_quadf){
