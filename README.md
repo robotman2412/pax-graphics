@@ -9,7 +9,6 @@ Documentation can be found [here](docs).
 
 # Short-term TODO list (v2.0.x)
 - Document all current features
-- Refactor text rendering to use less stack
 
 # Long-term TODO list (v2.1.0)
 - Add support for ESP32-P4 hardware acceleration
