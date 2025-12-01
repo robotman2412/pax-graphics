@@ -2,7 +2,9 @@
 // SPDX-License-Identifier: MIT
 
 #include "pax_internal.h"
+#include "pax_orientation.h"
 #include "pax_renderer.h"
+#include "pax_types.h"
 
 
 
@@ -51,6 +53,12 @@ void pax_draw_rect(pax_buf_t *buf, pax_col_t color, float x, float y, float widt
             matrix_2d_transform_alt(mtx, (pax_vec2f){x + width, y + height}),
             matrix_2d_transform_alt(mtx, (pax_vec2f){x, y + height}),
         };
+#if CONFIG_PAX_COMPILE_ORIENTATION
+        vertex[0] = pax_orient_det_vec2f(buf, vertex[0]);
+        vertex[1] = pax_orient_det_vec2f(buf, vertex[1]);
+        vertex[2] = pax_orient_det_vec2f(buf, vertex[2]);
+        vertex[3] = pax_orient_det_vec2f(buf, vertex[3]);
+#endif
         pax_dispatch_unshaded_quad(
             buf,
             color,
@@ -374,7 +382,7 @@ void pax_shade_rect(
     pax_buf_t          *buf,
     pax_col_t           color,
     pax_shader_t const *shader,
-    pax_quadf const    *uvs,
+    pax_quadf const    *uvs_ptr,
     float               x,
     float               y,
     float               width,
@@ -388,10 +396,7 @@ void pax_shade_rect(
 
     PAX_BUF_CHECK(buf);
 
-    if (!uvs) {
-        // Apply default UVs.
-        uvs = &dummy_quad_uvs;
-    }
+    pax_quadf uvs = *(uvs_ptr ?: &dummy_quad_uvs);
 
     if (matrix_2d_is_identity2(buf->stack_2d.value)) {
         // We don't need to use triangles here.
@@ -399,37 +404,25 @@ void pax_shade_rect(
         width  *= buf->stack_2d.value.a0;
         height *= buf->stack_2d.value.b1;
 
-// Perform rotation.
 #if CONFIG_PAX_COMPILE_ORIENTATION
+        // Perform rotation.
         pax_rectf tmp = pax_orient_det_rectf(buf, (pax_rectf){x, y, width, height});
         x             = tmp.x;
         y             = tmp.y;
         width         = tmp.w;
         height        = tmp.h;
 
-        // Normalize negative dimensions after orientation transform
-        if (width < 0) {
-            x += width;
-            width = -width;
-        }
-        if (height < 0) {
-            y += height;
-            height = -height;
-        }
-
-        pax_quadf uvs_rotated;
         if (buf->orientation & 1) {
-            uvs_rotated = (pax_quadf){
-                uvs->x0,
-                uvs->y0,
-                uvs->x3,
-                uvs->y3,
-                uvs->x2,
-                uvs->y2,
-                uvs->x1,
-                uvs->y1,
+            uvs = (pax_quadf){
+                uvs.x0,
+                uvs.y0,
+                uvs.x3,
+                uvs.y3,
+                uvs.x2,
+                uvs.y2,
+                uvs.x1,
+                uvs.y1,
             };
-            uvs = &uvs_rotated;
         }
 #endif
 
@@ -443,16 +436,7 @@ void pax_shade_rect(
                 height,
             },
             shader,
-            (pax_quadf){
-                uvs->x0,
-                uvs->y0,
-                uvs->x1,
-                uvs->y1,
-                uvs->x2,
-                uvs->y2,
-                uvs->x3,
-                uvs->y3,
-            }
+            uvs
         );
     } else {
         // Draw as a quad.
@@ -463,6 +447,14 @@ void pax_shade_rect(
             matrix_2d_transform_alt(mtx, (pax_vec2f){x + width, y + height}),
             matrix_2d_transform_alt(mtx, (pax_vec2f){x, y + height}),
         };
+
+#if CONFIG_PAX_COMPILE_ORIENTATION
+        vertex[0] = pax_orient_det_vec2f(buf, vertex[0]);
+        vertex[1] = pax_orient_det_vec2f(buf, vertex[1]);
+        vertex[2] = pax_orient_det_vec2f(buf, vertex[2]);
+        vertex[3] = pax_orient_det_vec2f(buf, vertex[3]);
+#endif
+
         pax_dispatch_shaded_quad(
             buf,
             color,
@@ -477,16 +469,7 @@ void pax_shade_rect(
                 vertex[3].y,
             },
             shader,
-            (pax_quadf){
-                uvs->x0,
-                uvs->y0,
-                uvs->x1,
-                uvs->y1,
-                uvs->x2,
-                uvs->y2,
-                uvs->x3,
-                uvs->y3,
-            }
+            uvs
         );
     }
 }

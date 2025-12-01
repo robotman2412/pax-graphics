@@ -315,7 +315,7 @@ static void draw_image_impl(
     bool has_alpha = false;
     if (!assume_opaque && top->type_info.fmt_type == PAX_BUF_SUBTYPE_PALETTE) {
         for (size_t i = 0; i < top->palette_size; i++) {
-            if (top->palette[i] & (0xff000000 != 0xff000000)) {
+            if ((top->palette[i] & 0xff000000) != 0xff000000) {
                 has_alpha = true;
                 break;
             }
@@ -324,13 +324,17 @@ static void draw_image_impl(
         has_alpha = top->type_info.a > 0;
     }
 
-    if (width == top->width && height == top->height && !has_alpha && matrix_2d_is_identity1(base->stack_2d.value)) {
+    if (width == top->width && height == top->height && matrix_2d_is_identity1(base->stack_2d.value)) {
         matrix_2d_transform(base->stack_2d.value, &x, &y);
-        pax_draw_sprite(base, top, x, y);
+        if (has_alpha) {
+            pax_draw_sprite(base, top, x, y);
+        } else {
+            pax_blit(base, top, x, y);
+        }
     } else if (has_alpha) {
-        pax_shade_rect(base, -1, &PAX_SHADER_TEXTURE(top), NULL, x, y, width, height);
+        // pax_shade_rect(base, -1, &PAX_SHADER_TEXTURE(top), NULL, x, y, width, height);
     } else {
-        pax_shade_rect(base, -1, &PAX_SHADER_TEXTURE_OP(top), NULL, x, y, width, height);
+        // pax_shade_rect(base, -1, &PAX_SHADER_TEXTURE_OP(top), NULL, x, y, width, height);
     }
 }
 
