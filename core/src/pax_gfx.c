@@ -112,13 +112,18 @@ pax_buf_type_info_t pax_buf_type_info(pax_buf_type_t type) {
 bool pax_buf_init(pax_buf_t *buf, void *mem, int width, int height, pax_buf_type_t type) {
     bool use_alloc = !mem;
     if (use_alloc) {
-        // Allocate the right amount of bytes.
-        mem = calloc(1, pax_buf_calc_size_dynamic(width, height, type));
+        // Allocate with 64-byte alignment to provide better support for processors
+        // with hardware acceleration (e.g. the ESP32-P4's PPA DMA engine requires
+        // buffers to be aligned to the cache line size).
+        size_t size = pax_buf_calc_size_dynamic(width, height, type);
+        size_t aligned_size = (size + 63) & ~(size_t)63;  // aligned_alloc requires size to be a multiple of alignment
+        mem = aligned_alloc(64, aligned_size);
         if (!mem) {
             pax_set_err(PAX_ERR_NOMEM);
             free(buf);
             return false;
         }
+        memset(mem, 0, aligned_size);
     }
     *buf = (pax_buf_t){
         // Buffer size information.
