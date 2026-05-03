@@ -444,109 +444,74 @@ static bool is_clockwise(int num_points, indexed_point_t *points, int index, int
     return result < 0;
 }
 
-// Gets the slope of a line.
-// Returns +/- infinity for vertical lines.
-static inline float line_slope(pax_2vec2f line) {
-    return (line.y1 - line.y0) / (line.x1 - line.x0);
-}
-
-// Creates a bounding rectangle for a line.
-static pax_rectf line_bounding_box(pax_2vec2f line) {
-    // Create a simple bounding box.
-    pax_rectf box = {
-        .x = line.x0,
-        .y = line.y0,
-        .w = line.x1 - line.x0,
-        .h = line.y1 - line.y0,
-    };
-
-    // Fix width/height so they are positive.
-    if (box.w < 0) {
-        box.x += box.w;
-        box.w  = -box.w;
-    }
-    if (box.h < 0) {
-        box.y += box.h;
-        box.h  = -box.h;
-    }
-
-    return box;
-}
-
-// Determines whether a point is in the bounding box, but not on it's edge.
-static inline bool bounding_box_contains(pax_rectf box, pax_vec2f point) {
-    if (box.w == 0 && box.h == 0) {
-        return point.x == box.x && point.x == box.y;
-    } else if (box.w == 0) {
-        return point.x >= box.x && point.y > box.y && point.x <= box.x + box.w && point.y < box.y + box.h;
-    } else if (box.h == 0) {
-        return point.x > box.x && point.y >= box.y && point.x < box.x + box.w && point.y <= box.y + box.h;
-    } else {
-        return point.x > box.x && point.y > box.y && point.x < box.x + box.w && point.y < box.y + box.h;
-    }
-}
-
-// Tests whether lines A and B intersect.
-// Does not consider touching lines to intersect.
+// Tests whether segments A and B cross each other strictly in their interior.
+// Endpoint-touching does NOT count as intersection.
+//
+// FP-stable: uses the parametric / cross-product form (no slope, no division
+// by near-zero, no `==` on floats). Near-parallel lines are treated as
+// non-intersecting. The endpoint-exclusion epsilon prevents two segments that
+// share a vertex from being misreported as crossing due to rounding error.
 static bool line_intersects_line(pax_2vec2f line_a, pax_2vec2f line_b, pax_vec2f *intersection) {
-    // If slopes are equal, then it will never intersect.
-    float rc_a = line_slope(line_a);
-    float rc_b = line_slope(line_b);
-    if (rc_a == rc_b || (isinf(rc_a) && isinf(rc_b)))
+    float d1x = line_a.x1 - line_a.x0;
+    float d1y = line_a.y1 - line_a.y0;
+    float d2x = line_b.x1 - line_b.x0;
+    float d2y = line_b.y1 - line_b.y0;
+
+    float denom = d1x * d2y - d1y * d2x;
+
+    // Scale-aware parallel test. The cross product has magnitude ~ |d1|*|d2|*sin(theta);
+    // require sin(theta) bigger than ~1e-6 of the longer segment to call it non-parallel.
+    float scale1 = fmaxf(fabsf(d1x), fabsf(d1y));
+    float scale2 = fmaxf(fabsf(d2x), fabsf(d2y));
+    float eps_denom = 1e-6f * scale1 * scale2;
+    if (fabsf(denom) <= eps_denom) {
         return false;
-
-    // Determine b in Y=a*X+b line formulas.
-    float dy_a = line_a.y0 - rc_a * line_a.x0;
-    float dy_b = line_b.y0 - rc_b * line_b.x0;
-
-    // Determine bounding boxes.
-    pax_rectf box_a = line_bounding_box(line_a);
-    pax_rectf box_b = line_bounding_box(line_b);
-
-    // Special cases for one of two lines is vertical.
-    if (isinf(rc_a)) {
-        float y = rc_b * line_a.x0 + dy_b;
-        if (y > box_a.y && y < box_a.y + box_a.h) {
-            if (intersection) {
-                *intersection = (pax_vec2f){box_a.x, y};
-            }
-            return true;
-        }
-    }
-    if (isinf(rc_b)) {
-        float y = rc_a * line_b.x0 + dy_a;
-        if (y > box_b.y && y < box_b.y + box_b.h) {
-            if (intersection) {
-                *intersection = (pax_vec2f){box_b.x, y};
-            }
-            return true;
-        }
     }
 
-    // Find the intersection point, assuming infinitely long lines.
-    float x = (dy_b - dy_a) / (rc_a - rc_b);
-    float y = x * rc_a + dy_a;
+    float dx = line_b.x0 - line_a.x0;
+    float dy = line_b.y0 - line_a.y0;
+    float s  = (dx * d2y - dy * d2x) / denom;
+    float t  = (dx * d1y - dy * d1x) / denom;
 
-    // If this lies within both bounding boxes, the lines intersect.
-    bool intersects
-        = bounding_box_contains(box_a, (pax_vec2f){x, y}) && bounding_box_contains(box_b, (pax_vec2f){x, y});
-    if (intersects && intersection) {
-        *intersection = (pax_vec2f){x, y};
+    // Intersection must lie strictly inside both segments. The endpoint
+    // epsilon must be small (so legitimate near-end intersections are kept)
+    // but bigger than typical FP error in computing s/t.
+    const float eps = 1e-5f;
+    if (s <= eps || s >= 1.0f - eps || t <= eps || t >= 1.0f - eps) {
+        return false;
     }
-    return intersects;
+
+    if (intersection) {
+        intersection->x = line_a.x0 + s * d1x;
+        intersection->y = line_a.y0 + s * d1y;
+    }
+    return true;
 }
 
-// Tests whether a line intersects any of the lines in the dataset.
-// Intersection is NOT counted when only the end points touch.
-static bool line_intersects_outline(size_t num_points, pax_vec2f const *raw_points, pax_vec2f start, pax_vec2f end) {
-    for (size_t i = 0; i < num_points; i++) {
-        size_t index1 = (i + 1) % num_points;
+// Tests whether the chord between two vertices of the *current* (shrinking)
+// polygon crosses any polygon edge other than the four edges that meet at
+// the chord's endpoints. Operates on `points`/`num_points`, NOT the original
+// raw outline -- otherwise edges that have already been clipped would be
+// re-tested as if still present and reject geometrically-valid ears.
+static bool ear_chord_crosses_outline(
+    indexed_point_t const *points, size_t num_points, size_t chord_i0, size_t chord_i1
+) {
+    pax_vec2f start = points[chord_i0].vector;
+    pax_vec2f end   = points[chord_i1].vector;
+    for (size_t j = 0; j < num_points; j++) {
+        size_t k = (j + 1) % num_points;
+        // Skip edges sharing an endpoint with the chord; they touch by
+        // construction and any "intersection" is FP noise.
+        if (j == chord_i0 || j == chord_i1 || k == chord_i0 || k == chord_i1) {
+            continue;
+        }
         if (line_intersects_line(
                 (pax_2vec2f){start.x, start.y, end.x, end.y},
-                (pax_2vec2f){raw_points[i].x, raw_points[i].y, raw_points[index1].x, raw_points[index1].y},
+                (pax_2vec2f){points[j].vector.x, points[j].vector.y, points[k].vector.x, points[k].vector.y},
                 NULL
-            ))
+            )) {
             return true;
+        }
     }
     return false;
 }
@@ -610,39 +575,40 @@ size_t pax_triang_concave(size_t **output, size_t raw_num_points, pax_vec2f cons
     // Find the funny ordering.
     bool clockwise = is_clockwise(num_points, points, 0, num_points, dy);
 
-    // LOCATE all EARS conTINUousLY.
-    for (size_t i = 0; i < n_tris; i++) {
-        // LOOK for an EAR.
+    // Locate ears continuously. Each outer iteration must clip exactly one
+    // ear; if it fails to find any, the polygon is unsolvable and we bail
+    // immediately rather than spinning the same fruitless scan again.
+    for (size_t t = 0; t < n_tris; t++) {
+        bool found = false;
         for (size_t i = 0; i < num_points; i++) {
-            // bool attempt = is_clockwise3(num_points, points, i);
             bool attempt = is_clockwise(num_points, points, i, 3, dy);
 
-            // It is an ear when the clockwisedness matches and the line does not intersect any of the source lines.
+            // Candidate ear is the triangle (i, i+1, i+2). It's a valid ear
+            // when its winding matches the polygon and the chord (i, i+2)
+            // does not cross any non-adjacent polygon edge. The outline check
+            // operates on the *current* points array and skips edges that
+            // share an endpoint with the chord -- earlier versions used the
+            // original raw outline plus FP-fragile slope/box tests, which
+            // could falsely reject valid ears (PAX_LOGE "Cannot handle shape
+            // for triangulation!").
             bool is_ear = clockwise == attempt
-                          && !line_intersects_outline(
-                              raw_num_points,
-                              raw_points,
-                              points[i].vector,
-                              points[(i + 2) % num_points].vector
-                          );
+                          && !ear_chord_crosses_outline(points, num_points, i, (i + 2) % num_points);
             if (is_ear) {
-                // We found an EAR, now we CONVERT IT.
-                tris[tri_index] = points[i % num_points].index;
-                tri_index++;
-                tris[tri_index] = points[(i + 1) % num_points].index;
-                tri_index++;
-                tris[tri_index] = points[(i + 2) % num_points].index;
-                tri_index++;
+                tris[tri_index++] = points[i].index;
+                tris[tri_index++] = points[(i + 1) % num_points].index;
+                tris[tri_index++] = points[(i + 2) % num_points].index;
 
-                // REMOVE the ear's CENTER POINT.
-                int remove = (i + 1) % num_points;
-                int post   = num_points - remove - 1;
-                // By means of MEMCPY.
+                // Remove the ear's center point from the working polygon.
+                size_t remove = (i + 1) % num_points;
+                size_t post   = num_points - remove - 1;
                 memcpy(&points[remove], &points[remove + 1], sizeof(indexed_point_t) * post);
                 num_points--;
-                // Now, we CONTINUE FINIDIGN ERA.
+                found = true;
                 break;
             }
+        }
+        if (!found) {
+            break;
         }
     }
 
