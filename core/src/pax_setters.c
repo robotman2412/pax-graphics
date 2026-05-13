@@ -322,7 +322,7 @@ void pax_range_setter_1bpp(pax_buf_t *buf, pax_col_t color, int index, int count
         pax_index_setter_1bpp(buf, color, i);
         i++;
     }
-    memset(buf->buf_8bpp + i / 8, color * 0x55, (index + count - i) / 8);
+    memset(buf->buf_8bpp + i / 8, color * 0xff, (index + count - i) / 8);
     i += (index + count - i) / 8 * 8;
     while (i < index + count) {
         pax_index_setter_1bpp(buf, color, i);
@@ -362,7 +362,7 @@ void pax_range_setter_4bpp(pax_buf_t *buf, pax_col_t color, int index, int count
         pax_index_setter_4bpp(buf, color, i);
         i++;
     }
-    memset(buf->buf_8bpp + i / 2, color * 0x55, (index + count - i) / 2);
+    memset(buf->buf_8bpp + i / 2, color * 0x11, (index + count - i) / 2);
     i += (index + count - i) / 2 * 2;
     if (i < index + count) {
         pax_index_setter_4bpp(buf, color, i);
@@ -910,11 +910,11 @@ pax_col_t pax_1111argb_to_col(pax_buf_t const *buf, pax_col_t value) {
     // 4BPP 1111-ARGB
     // From:                                    ARGB
     // To:   Aaaa aaaa Rrrr rrrr Gggg gggg Bbbb bbbb
-    pax_col_t color = ((value << 28) & 0x80000000) | ((value << 21) & 0x00800000) | ((value << 14) & 0x00008000)
-                      | ((value << 7) & 0x00000080);
-    color |= color >> 1;
-    color |= color >> 2;
-    color |= color >> 4;
+    pax_col_t color  = ((value << 28) & 0x80000000) | ((value << 21) & 0x00800000) | ((value << 14) & 0x00008000)
+                       | ((value << 7) & 0x00000080);
+    color           |= color >> 1;
+    color           |= color >> 2;
+    color           |= color >> 4;
     return color;
 }
 
@@ -924,10 +924,10 @@ pax_col_t pax_2222argb_to_col(pax_buf_t const *buf, pax_col_t value) {
     // 8BPP 2222-ARGB
     // From:                               AaRr GgBb
     // To:   Aaaa aaaa Rrrr rrrr Gggg gggg Bbbb bbbb
-    pax_col_t color = ((value << 24) & 0xc0000000) | ((value << 18) & 0x00c00000) | ((value << 12) & 0x0000c000)
-                      | ((value << 6) & 0x000000c0);
-    color |= color >> 2;
-    color |= color >> 4;
+    pax_col_t color  = ((value << 24) & 0xc0000000) | ((value << 18) & 0x00c00000) | ((value << 12) & 0x0000c000)
+                       | ((value << 6) & 0x000000c0);
+    color           |= color >> 2;
+    color           |= color >> 4;
     return color;
 }
 
@@ -938,10 +938,10 @@ pax_col_t pax_4444argb_to_col(pax_buf_t const *buf, pax_col_t value) {
     // From:                     Aaaa Rrrr Gggg Bbbb
     // To:   Aaaa .... Rrrr .... Gggg .... Bbbb ....
     // Add:  .... Aaaa .... Rrrr .... Gggg .... Bbbb
-    pax_col_t color = ((value << 16) & 0xf0000000) | ((value << 12) & 0x00f00000) | ((value << 8) & 0x0000f000)
-                      | ((value << 4) & 0x000000f0);
+    pax_col_t color  = ((value << 16) & 0xf0000000) | ((value << 12) & 0x00f00000) | ((value << 8) & 0x0000f000)
+                       | ((value << 4) & 0x000000f0);
     // Now fill in some missing bits.
-    color |= color >> 4;
+    color           |= color >> 4;
     return color;
 }
 
