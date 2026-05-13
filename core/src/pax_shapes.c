@@ -5,6 +5,7 @@
 
 #include "pax_internal.h"
 
+#include <assert.h>
 #include <malloc.h>
 #include <string.h>
 
@@ -117,7 +118,7 @@ void pax_vectorise_bezier_part(pax_vec2f *ptr, size_t max_points, pax_4vec2f con
     #if CONFIG_PAX_USE_EXPENSIVE_BEZIER
 
     // Start with just three points: start, T=0.5 and end.
-    bezier_point_t *points = malloc(sizeof(bezier_point_t) * max_points);
+    bezier_point_t *points = calloc(max_points, sizeof(bezier_point_t));
     if (!points) {
         PAX_ERROR(PAX_ERR_NOMEM);
         return;
@@ -128,7 +129,7 @@ void pax_vectorise_bezier_part(pax_vec2f *ptr, size_t max_points, pax_4vec2f con
     size_t n_points = 3;
 
     // Turn the points into lines.
-    bezier_segment_t *lines = malloc(sizeof(bezier_segment_t) * (max_points - 1));
+    bezier_segment_t *lines = calloc(max_points - 1, sizeof(bezier_segment_t));
     if (!lines) {
         free(points);
         PAX_ERROR(PAX_ERR_NOMEM);
@@ -296,7 +297,7 @@ void pax_outline_shape_part_cl(
     }
 
     // Calculate total distance.
-    float *dist       = malloc(sizeof(float) * num_points);
+    float *dist       = calloc(num_points, sizeof(float));
     float  total_dist = 0;
     float  start_dist = 0;
     if (!dist) {
@@ -461,8 +462,8 @@ static bool line_intersects_line(pax_2vec2f line_a, pax_2vec2f line_b, pax_vec2f
 
     // Scale-aware parallel test. The cross product has magnitude ~ |d1|*|d2|*sin(theta);
     // require sin(theta) bigger than ~1e-6 of the longer segment to call it non-parallel.
-    float scale1 = fmaxf(fabsf(d1x), fabsf(d1y));
-    float scale2 = fmaxf(fabsf(d2x), fabsf(d2y));
+    float scale1    = fmaxf(fabsf(d1x), fabsf(d1y));
+    float scale2    = fmaxf(fabsf(d2x), fabsf(d2y));
     float eps_denom = 1e-6f * scale1 * scale2;
     if (fabsf(denom) <= eps_denom) {
         return false;
@@ -476,7 +477,7 @@ static bool line_intersects_line(pax_2vec2f line_a, pax_2vec2f line_b, pax_vec2f
     // Intersection must lie strictly inside both segments. The endpoint
     // epsilon must be small (so legitimate near-end intersections are kept)
     // but bigger than typical FP error in computing s/t.
-    const float eps = 1e-5f;
+    float const eps = 1e-5f;
     if (s <= eps || s >= 1.0f - eps || t <= eps || t >= 1.0f - eps) {
         return false;
     }
@@ -493,9 +494,8 @@ static bool line_intersects_line(pax_2vec2f line_a, pax_2vec2f line_b, pax_vec2f
 // the chord's endpoints. Operates on `points`/`num_points`, NOT the original
 // raw outline -- otherwise edges that have already been clipped would be
 // re-tested as if still present and reject geometrically-valid ears.
-static bool ear_chord_crosses_outline(
-    indexed_point_t const *points, size_t num_points, size_t chord_i0, size_t chord_i1
-) {
+static bool
+    ear_chord_crosses_outline(indexed_point_t const *points, size_t num_points, size_t chord_i0, size_t chord_i1) {
     pax_vec2f start = points[chord_i0].vector;
     pax_vec2f end   = points[chord_i1].vector;
     for (size_t j = 0; j < num_points; j++) {
@@ -538,18 +538,17 @@ size_t pax_triang_complete(size_t **output, pax_vec2f **additional_points, size_
 //
 // Stores triangles as triple-index pairs in output, which is a dynamically allocated size_t array.
 // Returns the number of triangles created.
-size_t pax_triang_concave(size_t **output, size_t raw_num_points, pax_vec2f const *raw_points) {
+size_t pax_triang_concave(size_t **output, size_t num_points, pax_vec2f const *raw_points) {
     // Cannot triangulate with less than 3 points.
-    if (raw_num_points < 3) {
+    if (num_points < 3) {
         *output = NULL;
         return 0;
     }
 
     // Find an annoying variable.
-    float            dy         = 0;
+    float            dy     = 0;
     // Create another handy dandy points array which includes their original index.
-    size_t           num_points = raw_num_points;
-    indexed_point_t *points     = malloc(sizeof(indexed_point_t) * num_points);
+    indexed_point_t *points = calloc(num_points, sizeof(indexed_point_t));
     if (points == NULL) {
         *output = NULL;
         return 0;
@@ -564,9 +563,17 @@ size_t pax_triang_concave(size_t **output, size_t raw_num_points, pax_vec2f cons
     dy += 2;
 
     // The number of triangles is always 2 less than the number of points.
-    size_t  n_tris    = num_points - 2;
-    size_t  tri_index = 0;
-    size_t *tris      = malloc(sizeof(size_t) * n_tris * 3);
+    size_t n_tris    = num_points - 2;
+    size_t tri_index = 0;
+    #if defined __GNUC__ && !defined __clang__
+        // GCC thinks `n_tris` can underflow, but it can't.
+        #pragma GCC diagnostic push
+        #pragma GCC diagnostic ignored "-Walloc-size-larger-than=*"
+    #endif
+    size_t *tris = calloc(n_tris, sizeof(size_t) * 3);
+    #if defined __GNUC__ && !defined __clang__
+        #pragma GCC diagnostic pop
+    #endif
     if (!tris) {
         PAX_LOGE(TAG, "Out of memory for triangulation!");
         *output = NULL;
@@ -591,8 +598,8 @@ size_t pax_triang_concave(size_t **output, size_t raw_num_points, pax_vec2f cons
             // original raw outline plus FP-fragile slope/box tests, which
             // could falsely reject valid ears (PAX_LOGE "Cannot handle shape
             // for triangulation!").
-            bool is_ear = clockwise == attempt
-                          && !ear_chord_crosses_outline(points, num_points, i, (i + 2) % num_points);
+            bool is_ear
+                = clockwise == attempt && !ear_chord_crosses_outline(points, num_points, i, (i + 2) % num_points);
             if (is_ear) {
                 tris[tri_index++] = points[i].index;
                 tris[tri_index++] = points[(i + 1) % num_points].index;
