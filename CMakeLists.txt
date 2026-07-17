@@ -37,8 +37,11 @@ include(${CMAKE_CURRENT_LIST_DIR}/gui/CMakeLists.txt)
 
 if(ESP_PLATFORM)
     # ESP-IDF integration.
-    set(pax_esp_requires esp_timer esp_system esp_pm)
-    # idf_build_get_property(idf_target IDF_TARGET)
+    set(pax_esp_requires esp_timer esp_system)
+    idf_build_get_property(idf_target IDF_TARGET)
+    if(NOT "${IDF_TARGET}" STREQUAL "linux")
+        list(APPEND pax_esp_requires esp_pm)
+    endif()
     # if("${idf_target}" MATCHES "esp32p4")
     #     list(APPEND pax_esp_requires esp_driver_ppa)
     # endif()
