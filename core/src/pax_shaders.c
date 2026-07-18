@@ -135,8 +135,17 @@ static inline __attribute__((always_inline)) int tx_calc_px_index(pax_buf_t cons
     y             = tmp.y;
 #endif
 
-    x %= buf->width;
-    y %= buf->height;
+    if (x < 0) {
+        x = 0;
+    } else if (x > buf->width) {
+        x = buf->width;
+    }
+    if (y < 0) {
+        y = 0;
+    } else if (y > buf->height) {
+        y = buf->height;
+    }
+
     return x + y * buf->width;
 }
 
