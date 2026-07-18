@@ -115,9 +115,9 @@ bool pax_buf_init(pax_buf_t *buf, void *mem, int width, int height, pax_buf_type
         // Allocate with 64-byte alignment to provide better support for processors
         // with hardware acceleration (e.g. the ESP32-P4's PPA DMA engine requires
         // buffers to be aligned to the cache line size).
-        size_t size = pax_buf_calc_size_dynamic(width, height, type);
-        size_t aligned_size = (size + 63) & ~(size_t)63;  // aligned_alloc requires size to be a multiple of alignment
-        mem = aligned_alloc(64, aligned_size);
+        size_t size         = pax_buf_calc_size_dynamic(width, height, type);
+        size_t aligned_size = (size + 63) & ~(size_t)63; // aligned_alloc requires size to be a multiple of alignment
+        mem                 = aligned_alloc(64, aligned_size);
         if (!mem) {
             pax_set_err(PAX_ERR_NOMEM);
             free(buf);
@@ -661,41 +661,17 @@ void pax_undo_hsv_alt(pax_col_t in, uint16_t *h, uint8_t *s, uint8_t *v) {
 
 // Linearly interpolates between from and to, including alpha.
 pax_col_t pax_col_lerp(uint8_t part, pax_col_t from, pax_col_t to) {
-    return (pax_lerp(part, from >> 24, to >> 24) << 24) | (pax_lerp(part, from >> 16, to >> 16) << 16)
-           | (pax_lerp(part, from >> 8, to >> 8) << 8) | pax_lerp(part, from, to);
+    return pax_col_lerp_inlined(part, from, to);
 }
 
 // Merges the two colors, based on alpha.
 pax_col_t pax_col_merge(pax_col_t base, pax_col_t top) {
-    // It is not more optimal to add exceptions for full or zero alpha due to linearity.
-
-    // Otherwise, do a full alpha blend.
-    uint8_t part = top >> 24;
-    // clang-format off
-    top |= 0xff000000;
-    return pax_lerp_mask(0x00ff00ff, part, base, top)
-         | pax_lerp_mask(0xff00ff00, part, base, top);
-
-    // return pax_lerp_off(24, part, base, 255)
-    //      | pax_lerp_off(16, part, base, top)
-    //      | pax_lerp_off( 8, part, base, top)
-    //      | pax_lerp_off( 0, part, base, top);
-
-    // return (pax_lerp(part, base >> 24, 255) << 24)
-    //      | (pax_lerp(part, base >> 16, top >> 16) << 16)
-    //      | (pax_lerp(part, base >> 8, top >> 8) << 8)
-    //      |  pax_lerp(part, base, top);
-
-    // clang-format on
+    return pax_col_merge_inlined(base, top);
 }
 
 // Tints the color, commonly used for textures.
 pax_col_t pax_col_tint(pax_col_t col, pax_col_t tint) {
-    // It is not more optimal to add exceptions for full or zero alpha due to linearity.
-
-    // Otherwise, do a full tint.
-    return (pax_lerp(tint >> 24, 0, col >> 24) << 24) | (pax_lerp(tint >> 16, 0, col >> 16) << 16)
-           | (pax_lerp(tint >> 8, 0, col >> 8) << 8) | pax_lerp(tint, 0, col);
+    return pax_col_tint_inlined(col, tint);
 }
 
 

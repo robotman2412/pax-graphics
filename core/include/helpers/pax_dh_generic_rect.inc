@@ -306,6 +306,9 @@ static
     #ifdef PDHG_IGNORE_UV
     fixpt_t u = 0, v = 0;
     #endif
+    #ifdef PDHG_SHADED
+    const pax_index_getter_t buf_getter = buf->getter;
+    #endif
     for (; c_y <= y + height - 0.5; c_y += PDHG_INCREMENT) {
     #ifdef PDHG_NORMAL_UV
         fixpt_t ua_ub_du = (u_b - u_a) / (max_x - min_x);
@@ -319,7 +322,7 @@ static
         for (int c_x = x + 0.5; c_x <= x + width - 0.5; c_x++) {
             pax_col_t result = (shader_ctx.callback)(
                 color,
-                shader_ctx.do_getter ? buf2col(buf, buf->getter(buf, c_x + delta)) : 0,
+                shader_ctx.do_getter ? buf2col(buf, buf_getter(buf, c_x + delta)) : 0,
                 c_x,
                 c_y,
                 u,

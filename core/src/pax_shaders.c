@@ -3,7 +3,15 @@
 
 #include "pax_shaders.h"
 
+#include "pax_gfx.h"
 #include "pax_internal.h"
+#include "pax_types.h"
+
+#include <stdint.h>
+
+#if defined __GNUC__ && !defined __clang__
+    #pragma GCC optimize 3
+#endif
 
 #if CONFIG_PAX_DO_BICUBIC
     // Cubic interpolation: y = -2x³ + 3x²
@@ -63,7 +71,7 @@ pax_col_t pax_shader_font_bmp(pax_col_t tint, pax_col_t existing, int x, int y, 
 
     // Alpha-blend with the existing color.
     tint = (tint & 0x00ffffff) | (pax_lerp(value, 0, tint >> 24) << 24);
-    return pax_col_merge(existing, tint);
+    return pax_col_merge_inlined(existing, tint);
 }
 
 // Texture shader for bitmap fonts with linear interpolation.
@@ -115,10 +123,22 @@ pax_col_t pax_shader_font_bmp_aa(pax_col_t tint, pax_col_t existing, int x, int 
 
     // Alpha-blend with the existing color.
     tint = (tint & 0x00ffffff) | (pax_lerp(value, 0, tint >> 24) << 24);
-    return pax_col_merge(existing, tint);
+    return pax_col_merge_inlined(existing, tint);
 }
 
 
+
+static inline __attribute__((always_inline)) int tx_calc_px_index(pax_buf_t const *buf, int x, int y) {
+#if CONFIG_PAX_COMPILE_ORIENTATION
+    pax_vec2i tmp = pax_orient_det_vec2i(buf, (pax_vec2i){x, y});
+    x             = tmp.x;
+    y             = tmp.y;
+#endif
+
+    x %= buf->width;
+    y %= buf->height;
+    return x + y * buf->width;
+}
 
 // Texture shader without interpolation.
 pax_col_t pax_shader_texture(pax_col_t tint, pax_col_t existing, int x, int y, float u, float v, void *args) {
@@ -126,17 +146,37 @@ pax_col_t pax_shader_texture(pax_col_t tint, pax_col_t existing, int x, int y, f
     (void)y;
     // Pointer cast to texture thingy.
     pax_buf_t const *image = (pax_buf_t const *)args;
-    // Simply get a pixel.
-    pax_col_t        color = pax_get_pixel(image, u * image->width, v * image->height);
-    // And return it.
-    if (tint != 0xffffffff) {
-        color = pax_col_tint(color, tint);
+
+    // Remap UVs.
+#if CONFIG_PAX_COMPILE_ORIENTATION
+    if (image->orientation & 1) {
+        v *= image->width;
+        u *= image->height;
+    } else
+#endif
+    {
+        u *= image->width;
+        v *= image->height;
     }
-    if ((color | 0x00ffffff) == 0xffffffff) {
-        return pax_col_merge(existing, color);
+
+    // Simply get a pixel.
+    int       index = tx_calc_px_index(image, u, v);
+    pax_col_t color = image->buf2col(image, image->getter(image, index));
+    // And return it.
+    if ((color >> 24) != 255) {
+        return pax_col_merge_inlined(existing, color);
     } else {
         return color;
     }
+}
+
+// A linear interpolation based only on ints.
+// Coeff: 0 through 256 inclusive.
+static inline __attribute__((always_inline)) uint32_t
+    txaa_lerp_mask(uint32_t mask, uint32_t coeff, uint32_t from, uint32_t to) {
+    from &= mask;
+    to   &= mask;
+    return mask & (from + ((((uint64_t)to - from) * coeff) >> 8));
 }
 
 // Texture shader with interpolation.
@@ -147,8 +187,16 @@ pax_col_t pax_shader_texture_aa(pax_col_t tint, pax_col_t existing, int x, int y
     pax_buf_t const *image = (pax_buf_t const *)args;
 
     // Remap UVs.
-    u *= image->width;
-    v *= image->height;
+#if CONFIG_PAX_COMPILE_ORIENTATION
+    if (image->orientation & 1) {
+        v *= image->width;
+        u *= image->height;
+    } else
+#endif
+    {
+        u *= image->width;
+        v *= image->height;
+    }
     // Correct UVs for the offset caused by filtering.
     u -= 0.5;
     v -= 0.5;
@@ -161,40 +209,40 @@ pax_col_t pax_shader_texture_aa(pax_col_t tint, pax_col_t existing, int x, int y
     float dy    = pax_interp_value(v - tex_y);
 
     // Get four pixels.
-    pax_col_union_t col0 = {.col = pax_get_pixel(image, tex_x, tex_y)};
-    pax_col_union_t col1 = {.col = pax_get_pixel(image, tex_x + 1, tex_y)};
-    pax_col_union_t col2 = {.col = pax_get_pixel(image, tex_x + 1, tex_y + 1)};
-    pax_col_union_t col3 = {.col = pax_get_pixel(image, tex_x, tex_y + 1)};
+    int                idx0 = tx_calc_px_index(image, tex_x, tex_y);
+    int                idx1 = tx_calc_px_index(image, tex_x + 1, tex_y);
+    int                idx2 = tx_calc_px_index(image, tex_x + 1, tex_y + 1);
+    int                idx3 = tx_calc_px_index(image, tex_x, tex_y + 1);
+    pax_index_getter_t get  = image->getter;
+    pax_col_conv_t     conv = image->buf2col;
+    uint32_t           raw0 = get(image, idx0);
+    uint32_t           raw1 = get(image, idx1);
+    uint32_t           raw2 = get(image, idx2);
+    uint32_t           raw3 = get(image, idx3);
+    pax_col_t          col0 = conv(image, raw0);
+    pax_col_t          col1 = conv(image, raw1);
+    pax_col_t          col2 = conv(image, raw2);
+    pax_col_t          col3 = conv(image, raw3);
 
     // Compute interpolation coefficients.
-    uint_fast32_t coeffx = dx * 256;
-    uint_fast32_t coeffy = dy * 256;
-    uint_fast32_t coeff0 = (256 - coeffx) * (256 - coeffy);
-    uint_fast32_t coeff1 = coeffx * (256 - coeffy);
-    uint_fast32_t coeff2 = coeffx * coeffy;
-    uint_fast32_t coeff3 = (256 - coeffx) * coeffy;
+    uint32_t coeffx  = dx * 255;
+    uint32_t coeffy  = dy * 255;
+    coeffx          &= 255;
+    coeffy          &= 255;
+    coeffx          += coeffx >> 7;
+    coeffy          += coeffy >> 7;
 
-    pax_col_union_t col_out;
-
-    // Interpolate alpha.
-    bool do_alpha = (col0.a & col1.a & col2.a & col3.a) != 255;
-    if (do_alpha) {
-        col_out.a = (col0.a * coeff0 + col1.a * coeff1 + col2.a * coeff2 + col3.a * coeff3) >> 16;
-    } else {
-        col_out.a = 255;
-    }
-    // Interpolate RGB.
-    col_out.r       = (col0.r * coeff0 + col1.r * coeff1 + col2.r * coeff2 + col3.r * coeff3) >> 16;
-    col_out.g       = (col0.g * coeff0 + col1.g * coeff1 + col2.g * coeff2 + col3.g * coeff3) >> 16;
-    col_out.b       = (col0.b * coeff0 + col1.b * coeff1 + col2.b * coeff2 + col3.b * coeff3) >> 16;
-    pax_col_t color = col_out.col;
+    pax_col_t col01_a = txaa_lerp_mask(0xff00ff00, coeffx, col0, col1);
+    pax_col_t col32_a = txaa_lerp_mask(0xff00ff00, coeffx, col3, col2);
+    pax_col_t color_a = txaa_lerp_mask(0xff00ff00, coeffy, col01_a, col32_a);
+    pax_col_t col01_b = txaa_lerp_mask(0x00ff00ff, coeffx, col0, col1);
+    pax_col_t col32_b = txaa_lerp_mask(0x00ff00ff, coeffx, col3, col2);
+    pax_col_t color_b = txaa_lerp_mask(0x00ff00ff, coeffy, col01_b, col32_b);
+    pax_col_t color   = color_a | color_b;
 
     // And return it.
-    if (tint != 0xffffffff) {
-        color = pax_col_tint(color, tint);
-    }
-    if (do_alpha) {
-        return pax_col_merge(existing, color);
+    if ((color >> 24) != 255) {
+        return pax_col_merge_inlined(existing, color);
     } else {
         return color;
     }
