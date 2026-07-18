@@ -15,6 +15,9 @@ extern "C" {
 
 /* ==== Raw draw call dispatching API ==== */
 
+// Background fill.
+void pax_dispatch_background(pax_buf_t *buf, pax_col_t color);
+
 // Draw a solid-colored line.
 void pax_dispatch_unshaded_line(pax_buf_t *buf, pax_col_t color, pax_linef shape);
 // Draw a solid-colored rectangle.

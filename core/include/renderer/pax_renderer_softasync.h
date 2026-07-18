@@ -12,17 +12,8 @@
 extern "C" {
 #endif //__cplusplus
 
-// Args for software async renderer.
-typedef struct {
-    ptq_queue_t               queue;
-    pax_render_funcs_t const *renderfuncs;
-    pthread_mutex_t           rendermtx;
-} pax_sasr_worker_args_t;
-
-
-// Worker thread function for software async renderer.
-void *pax_sasr_worker(void *renderfuncs);
-
+// Background fill.
+void pax_sasr_background(pax_buf_t *buf, pax_col_t color);
 
 // Draw a solid-colored line.
 void pax_sasr_unshaded_line(pax_buf_t *buf, pax_col_t color, pax_linef shape);
@@ -42,6 +33,10 @@ void pax_sasr_shaded_quad(pax_buf_t *buf, pax_col_t color, pax_quadf shape, pax_
 // Draw a triangle with a shader.
 void pax_sasr_shaded_tri(pax_buf_t *buf, pax_col_t color, pax_trif shape, pax_shader_t const *shader, pax_trif uv);
 
+// Draw an axis-aligned image with fractional scaling.
+void pax_sasr_scaled_image(
+    pax_buf_t *base, pax_buf_t const *top, pax_recti base_pos, pax_orientation_t top_orientation, pax_rectf top_pos
+);
 // Draw a sprite; like a blit, but use color blending if applicable.
 void pax_sasr_sprite(
     pax_buf_t *base, pax_buf_t const *top, pax_recti base_pos, pax_orientation_t top_orientation, pax_vec2i top_pos

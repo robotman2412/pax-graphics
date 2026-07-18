@@ -78,14 +78,8 @@ SpaceAroundPointerQualifiers: After
 SortIncludes: CaseInsensitive
 IncludeBlocks: Regroup
 IncludeCategories:
-  # External headers
-  - Regex: '^\<('
-    Priority: 3
-    SortPriority: 0
-    CaseSensitive: false
-
   # System headers
-  - Regex: '^\<(std.*|inttypes)'
+  - Regex: '^\<'
     Priority: 2
     SortPriority: 0
     CaseSensitive: false

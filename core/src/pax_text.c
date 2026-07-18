@@ -249,7 +249,6 @@ static void dispatch_glyph(
         pax_quadf shape
             = {.x0 = p0.x, .y0 = p0.y, .x1 = p1.x, .y1 = p1.y, .x2 = p2.x, .y2 = p2.y, .x3 = p3.x, .y3 = p3.y};
         ctx->renderfuncs->shaded_quad(ctx->buf, ctx->color, shape, &shader, uvs);
-        // pax_shade_rect(ctx->buf, ctx->color, &shader, &uvs, pos.x, pos.y, scale * rsdata.w, scale * rsdata.h);
     }
 }
 

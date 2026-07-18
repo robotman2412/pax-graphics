@@ -1,10 +1,14 @@
 
 // SPDX-License-Identifier: MIT
 
+#include "pax_gfx.h"
 #include "pax_internal.h"
 #include "pax_matrix.h"
 #include "pax_orientation.h"
 #include "pax_renderer.h"
+#include "shapes/pax_rects.h"
+
+#include <stdatomic.h>
 
 
 
@@ -362,31 +366,8 @@ void pax_draw_image_sized_op(pax_buf_t *buf, pax_buf_t const *image, float x, fl
 
 
 // Fill the background.
-PAX_PERF_CRITICAL_ATTR void pax_background(pax_buf_t *buf, pax_col_t color) {
-    PAX_BUF_CHECK(buf);
-    // TODO: Make into render callback.
-
-#if CONFIG_PAX_COMPILE_ASYNC_RENDERER
-    pax_join();
-#endif
-
-    uint32_t value;
-    if (buf->type_info.fmt_type == PAX_BUF_SUBTYPE_PALETTE) {
-        if (color > buf->palette_size)
-            value = 0;
-        else
-            value = color;
-    } else {
-        value = buf->col2buf(buf, color);
-    }
-
-    if (value == 0) {
-        memset(buf->buf, 0, pax_buf_calc_size_dynamic(buf->width, buf->height, buf->type));
-    } else {
-        buf->range_setter(buf, value, 0, buf->width * buf->height);
-    }
-
-    pax_mark_dirty0(buf);
+void pax_background(pax_buf_t *buf, pax_col_t color) {
+    pax_dispatch_background(buf, color);
 }
 
 // Scroll the buffer, filling with a placeholder color.

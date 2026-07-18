@@ -18,6 +18,25 @@ void pax_set_render_engine_default() {
 
 
 
+// Background fill.
+void pax_swr_background(pax_buf_t *buf, pax_col_t color) {
+    uint32_t value;
+    if (buf->type_info.fmt_type == PAX_BUF_SUBTYPE_PALETTE) {
+        if (color > buf->palette_size)
+            value = 0;
+        else
+            value = color;
+    } else {
+        value = buf->col2buf(buf, color);
+    }
+
+    if (value == 0) {
+        memset(buf->buf, 0, pax_buf_calc_size_dynamic(buf->width, buf->height, buf->type));
+    } else {
+        buf->range_setter(buf, value, 0, buf->width * buf->height);
+    }
+}
+
 // Draw a solid-colored line.
 void pax_swr_unshaded_line(pax_buf_t *buf, pax_col_t color, pax_linef shape) {
     pax_line_unshaded(buf, color, shape.x0, shape.y0, shape.x1, shape.y1);
@@ -77,6 +96,13 @@ void pax_swr_shaded_tri(pax_buf_t *buf, pax_col_t color, pax_trif shape, pax_sha
     // clang-format on
 }
 
+
+
+// Draw an axis-aligned image with fractional scaling.
+void pax_swr_scaled_image(
+    pax_buf_t *base, pax_buf_t const *top, pax_recti base_pos, pax_orientation_t top_orientation, pax_rectf top_pos
+) {
+}
 
 // Read a single pixel from a raw buffer type by index.
 __attribute__((always_inline)) static inline pax_col_t raw_get_pixel(void const *buf, uint8_t bpp, int index) {
@@ -240,8 +266,9 @@ void pax_swr_blit(
     if (top->type == base->type && false) {
         // Equal buffer types; no color conversion required.
         pax_swr_blit_raw(base, top->buf, (pax_vec2i){top->width, top->height}, base_pos, top_orientation, top_pos);
-    } else if (base->type_info.fmt_type == PAX_BUF_SUBTYPE_PALETTE
-               && top->type_info.fmt_type != PAX_BUF_SUBTYPE_PALETTE) {
+    } else if (
+        base->type_info.fmt_type == PAX_BUF_SUBTYPE_PALETTE && top->type_info.fmt_type != PAX_BUF_SUBTYPE_PALETTE
+    ) {
         // Bottom is palette, top is not; do palette special case.
         swr_blit_impl(base, top, (pax_vec2i){top->width, top->height}, base_pos, top_orientation, top_pos, 0, 0, 1);
     } else {
@@ -427,6 +454,7 @@ void pax_swr_text(
 
 // Software rendering functions.
 pax_render_funcs_t const pax_render_funcs_soft = {
+    .background    = pax_swr_background,
     .unshaded_line = pax_swr_unshaded_line,
     .unshaded_rect = pax_swr_unshaded_rect,
     .unshaded_quad = pax_swr_unshaded_quad,

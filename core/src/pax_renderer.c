@@ -3,6 +3,7 @@
 
 #include "pax_renderer.h"
 
+#include "pax_gfx.h"
 #include "renderer/pax_renderer_soft.h"
 
 #define DEFAULT_RENDERER_ONLY !CONFIG_PAX_COMPILE_ASYNC_RENDERER && !CONFIG_PAX_COMPILE_ESP32P4_PPA_RENDERER
@@ -50,6 +51,14 @@ static pax_render_engine_t const *renderer       = &pax_render_engine_soft;
 static pax_render_funcs_t const  *renderfunc     = &pax_render_funcs_soft;
     #define RENDERFUNC(function) renderfunc->function
 #endif
+
+// Background fill.
+void pax_dispatch_background(pax_buf_t *buf, pax_col_t color) {
+    if (implicit_dirty) {
+        pax_mark_dirty0(buf);
+    }
+    RENDERFUNC(background)(buf, color);
+}
 
 // Draw a solid-colored line.
 void pax_dispatch_unshaded_line(pax_buf_t *buf, pax_col_t color, pax_linef shape) {

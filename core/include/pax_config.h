@@ -10,6 +10,12 @@
 
 #ifdef ESP_PLATFORM
     #include <sdkconfig.h>
+    #define CONFIG_PAX_USE_FREERTOS 1
+#endif
+
+#ifndef CONFIG_PAX_USE_FREERTOS
+    // Use FreeRTOS in async renderer instead of pthreads.
+    #define CONFIG_PAX_USE_FREERTOS 0
 #endif
 
 #ifndef CONFIG_PAX_BOUNDS_CHECK

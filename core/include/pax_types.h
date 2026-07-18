@@ -8,6 +8,7 @@
 #include "pax_matrix.h"
 
 #include <math.h>
+#include <stdatomic.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -174,6 +175,8 @@ enum pax_task_type {
     PAX_TASK_BLIT_CHAR,
     // Text drawing.
     PAX_TASK_TEXT,
+    // Background fill.
+    PAX_TASK_BACKGROUND,
 };
 
 // Distinguishes between ways to draw fonts.
@@ -434,9 +437,9 @@ struct pax_text_rsdata {
 // WARNING: Subject to change at any time for any reason, do not use this type yourself.
 struct pax_rcstr {
     // String refcount.
-    int  refcount;
+    atomic_int refcount;
     // String data.
-    char data[];
+    char       data[];
 };
 
 #define PAX_SSO_BUF_LEN 32
@@ -467,10 +470,17 @@ struct pax_task {
     pax_task_type_t type;
     // Color to use.
     pax_col_t       color;
-    // Shader to use.
-    pax_shader_t    shader;
-    // Whether to use a shader.
-    bool            use_shader;
+    union {
+        struct {
+            // Shader to use.
+            pax_shader_t shader;
+            // Whether to use a shader.
+            bool         use_shader;
+        };
+        // Text transform matrix.
+        // Packed in here because text tasks never use a shader.
+        matrix_2d_t text_matrix;
+    };
 
     union {
         struct {
@@ -504,8 +514,6 @@ struct pax_task {
             uint8_t           halign, valign;
             // Cursor position.
             int32_t           cursorpos;
-            // Text transform matrix.
-            matrix_2d_t       matrix;
             // String to draw.
             pax_task_str_t    str;
         } text;
@@ -642,6 +650,9 @@ struct pax_buf {
 // Render engine function table definition.
 // The renderer gets coordinates after orientation and matrix transform, but before the clipping checks.
 struct pax_render_funcs {
+    // Background fill.
+    void (*background)(pax_buf_t *buf, pax_col_t color);
+
     // Draw a solid-colored line.
     void (*unshaded_line)(pax_buf_t *buf, pax_col_t color, pax_linef shape);
     // Draw a solid-colored rectangle.
@@ -660,6 +671,10 @@ struct pax_render_funcs {
     // Draw a triangle with a shader.
     void (*shaded_tri)(pax_buf_t *buf, pax_col_t color, pax_trif shape, pax_shader_t const *shader, pax_trif uv);
 
+    // Draw an axis-aligned image with fractional scaling.
+    void (*scaled_image)(
+        pax_buf_t *base, pax_buf_t const *top, pax_recti base_pos, pax_orientation_t top_orientation, pax_rectf top_pos
+    );
     // Draw a sprite; like a blit, but use color blending if applicable.
     void (*sprite)(
         pax_buf_t *base, pax_buf_t const *top, pax_recti base_pos, pax_orientation_t top_orientation, pax_vec2i top_pos

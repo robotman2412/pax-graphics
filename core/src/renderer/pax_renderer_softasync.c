@@ -3,15 +3,23 @@
 
 #include "renderer/pax_renderer_softasync.h"
 
-#include "endian.h"
+#include "freertos/idf_additions.h"
 #include "helpers/pax_drawing_helpers.h"
+#include "pax_internal.h"
 #include "pax_types.h"
 #include "ptq.h"
 #include "renderer/pax_renderer_soft.h"
+#include "semaphore.h"
 
+#include <sched.h>
+#include <stdbool.h>
+
+#if CONFIG_PAX_USE_FREERTOS
+    #include <freertos/FreeRTOS.h>
+#else
+    #include <pthread.h>
+#endif
 #include <stdatomic.h>
-
-#include <pthread.h>
 
 #if !CONFIG_PAX_COMPILE_ASYNC_RENDERER
 
@@ -34,26 +42,45 @@ void pax_set_renderer_async(bool multithreaded) {
     pax_set_renderer(&pax_render_engine_softasync, (void *)multithreaded);
 }
 
+// Args for software async renderer.
+typedef struct {
+    ptq_queue_t               queue;
+    pax_render_funcs_t const *renderfuncs;
+    pthread_mutex_t           rendermtx;
+} pax_sasr_worker_args_t;
+
 
 
 static bool is_multithreaded;
 
-static pthread_t              handle0;
 static pax_sasr_worker_args_t args0;
 
     #if CONFIG_PAX_COMPILE_ASYNC_RENDERER == 2
-static pthread_t              handle1;
 static pax_sasr_worker_args_t args1;
     #endif
 
 // Queue a draw call.
 static void pax_sasr_queue(pax_task_t *task);
 
+    #if CONFIG_PAX_USE_FREERTOS
+// Worker thread function for software async renderer.
+static void pax_sasr_worker(void *_args);
+    #else
+// Worker thread function for software async renderer.
+static void *pax_sasr_worker(void *_args);
+    #endif
+
+// Number of completions that still need to happen.
+static atomic_int outstanding;
+// Semaphore posted every time a piece of work finishes.
+static sem_t      complete_sem;
 
 // Initialize the async renderer.
 static pax_render_funcs_t const *pax_sasr_init(void *arg) {
-    args0.queue = ptq_create_max(sizeof(pax_task_t), CONFIG_PAX_QUEUE_SIZE);
-    pthread_mutex_init(&args0.rendermtx, NULL);
+    sem_init(&complete_sem, 0, 0);
+    outstanding = 0;
+
+    args0.queue       = ptq_create_max(sizeof(pax_task_t), CONFIG_PAX_QUEUE_SIZE);
     args0.renderfuncs = &pax_render_funcs_soft;
 
     #if CONFIG_PAX_COMPILE_ASYNC_RENDERER == 2
@@ -63,7 +90,14 @@ static pax_render_funcs_t const *pax_sasr_init(void *arg) {
         args1.renderfuncs = &pax_render_funcs_mcr_thread1;
         args1.queue       = ptq_create_max(sizeof(pax_task_t), CONFIG_PAX_QUEUE_SIZE);
         pthread_mutex_init(&args1.rendermtx, NULL);
-        pthread_create(&handle1, NULL, pax_sasr_worker, &args1);
+        #if CONFIG_PAX_USE_FREERTOS
+        TaskHandle_t dummy_handle;
+        xTaskCreatePinnedToCore(pax_sasr_worker, "MCRW1", 4096, &args1, 1, &dummy_handle, 1);
+        #else
+        pthread_t handle;
+        pthread_create(&handle, NULL, pax_sasr_worker, &args1);
+        pthread_detach(handle);
+        #endif
     }
     #else
     if (is_multithreaded) {
@@ -74,7 +108,16 @@ static pax_render_funcs_t const *pax_sasr_init(void *arg) {
         );
     }
     #endif
-    pthread_create(&handle0, NULL, pax_sasr_worker, &args0);
+
+    pthread_mutex_init(&args0.rendermtx, NULL);
+    #if CONFIG_PAX_USE_FREERTOS
+    TaskHandle_t dummy_handle;
+    xTaskCreatePinnedToCore(pax_sasr_worker, "MCRW0", 4096, &args0, 1, &dummy_handle, 0);
+    #else
+    pthread_t handle;
+    pthread_create(&handle, NULL, pax_sasr_worker, &args0);
+    pthread_detach(handle);
+    #endif
 
     return &pax_render_funcs_softasync;
 }
@@ -94,11 +137,13 @@ static void pax_sasr_deinit() {
     #endif
     ptq_destroy(args0.queue);
     pthread_mutex_destroy(&args0.rendermtx);
+    sem_destroy(&complete_sem);
 }
 
 
 // Queue a draw call.
 static void pax_sasr_queue(pax_task_t *task) {
+    atomic_fetch_add_explicit(&outstanding, 1 + is_multithreaded, memory_order_relaxed);
     ptq_send_block(args0.queue, task, NULL);
     #if CONFIG_PAX_COMPILE_ASYNC_RENDERER == 2
     if (is_multithreaded) {
@@ -107,17 +152,30 @@ static void pax_sasr_queue(pax_task_t *task) {
     #endif
 }
 
+    #if CONFIG_PAX_USE_FREERTOS
 // Worker thread function for software async renderer.
-void *pax_sasr_worker(void *_args) {
+static void pax_sasr_worker(void *_args) {
+    #else
+// Worker thread function for software async renderer.
+static void *pax_sasr_worker(void *_args) {
+    #endif
     pax_sasr_worker_args_t *args = _args;
 
     while (1) {
         pax_task_t task;
         ptq_receive_block(args->queue, &task, &args->rendermtx);
+        atomic_thread_fence(memory_order_acquire);
 
         if (task.type == PAX_TASK_STOP) {
+            sem_post(&complete_sem);
             pthread_mutex_unlock(&args->rendermtx);
+    #if CONFIG_PAX_USE_FREERTOS
+            vTaskDelete(NULL);
+    #else
             return NULL;
+    #endif
+        } else if (task.type == PAX_TASK_BACKGROUND) {
+            args->renderfuncs->background(task.buffer, task.color);
         } else if (task.type == PAX_TASK_QUAD) {
             if (task.use_shader) {
                 args->renderfuncs->shaded_quad(task.buffer, task.color, task.quadf.shape, &task.shader, task.quadf.uvs);
@@ -161,10 +219,9 @@ void *pax_sasr_worker(void *_args) {
             args->renderfuncs
                 ->blit_char(task.buffer, task.color, task.blit_char.pos, task.blit_char.scale, task.blit_char.rsdata);
         } else if (task.type == PAX_TASK_TEXT) {
-            /*
             args->renderfuncs->text(
                 task.buffer,
-                task.text.matrix,
+                task.text_matrix,
                 task.color,
                 task.text.font,
                 task.text.font_size,
@@ -180,15 +237,35 @@ void *pax_sasr_worker(void *_args) {
                     free(task.text.str.ptr);
                 }
             }
-            */
         }
 
+        sem_post(&complete_sem);
         pthread_mutex_unlock(&args->rendermtx);
     }
 }
 
 
     #if CONFIG_PAX_COMPILE_ASYNC_RENDERER == 2
+
+// Background fill.
+static void pax_sasr_background_impl(bool odd_scanline, pax_buf_t *buf, pax_col_t color) {
+    uint32_t value;
+    if (buf->type_info.fmt_type == PAX_BUF_SUBTYPE_PALETTE) {
+        if (color > buf->palette_size)
+            value = 0;
+        else
+            value = color;
+    } else {
+        value = buf->col2buf(buf, color);
+    }
+
+    pax_range_setter_t setter = buf->range_setter;
+    int                width  = buf->width;
+    int                height = buf->height;
+    for (int row = odd_scanline; row < height; row += 2) {
+        setter(buf, value, row * width, width);
+    }
+}
 
 // Read a single pixel from a raw buffer type by index.
 __attribute__((always_inline)) static inline pax_col_t raw_get_pixel(void const *buf, uint8_t bpp, int index) {
@@ -346,7 +423,6 @@ __attribute__((always_inline)) static inline void sasr_blit_impl_2(
     }
 }
 
-
 // Draw a sprite; like a blit, but use color blending if applicable.
 static void pax_sasr_sprite_impl(
     bool              odd_scanline,
@@ -403,8 +479,9 @@ static void pax_sasr_blit_impl(
             top_orientation,
             top_pos
         );
-    } else if (base->type_info.fmt_type == PAX_BUF_SUBTYPE_PALETTE
-               && top->type_info.fmt_type != PAX_BUF_SUBTYPE_PALETTE) {
+    } else if (
+        base->type_info.fmt_type == PAX_BUF_SUBTYPE_PALETTE && top->type_info.fmt_type != PAX_BUF_SUBTYPE_PALETTE
+    ) {
         // Bottom is palette, top is not; do palette special case.
         sasr_blit_impl_2(
             odd_scanline,
@@ -585,7 +662,7 @@ __attribute__((noinline)) static void pax_sasr_blit_char_alpha_blend(
 }
 
 // Blit one or more characters of text in the bitmapped format.
-void pax_sasr_blit_char_impl(
+static void pax_sasr_blit_char_impl(
     bool odd_scanline, pax_buf_t *buf, pax_col_t color, pax_vec2i pos, int scale, pax_text_rsdata_t rsdata
 ) {
     if ((rsdata.bpp == 1 && color >> 24 == 255) || buf->type_info.fmt_type == PAX_BUF_SUBTYPE_PALETTE) {
@@ -598,6 +675,11 @@ void pax_sasr_blit_char_impl(
 }
 
 
+
+// Background fill.
+void pax_mcrw0_background(pax_buf_t *buf, pax_col_t color) {
+    pax_sasr_background_impl(0, buf, color);
+}
 
 // Draw a solid-colored line.
 void pax_mcrw0_unshaded_line(pax_buf_t *buf, pax_col_t color, pax_linef shape) {
@@ -657,6 +739,13 @@ void pax_mcrw0_shaded_tri(pax_buf_t *buf, pax_col_t color, pax_trif shape, pax_s
     // clang-format on
 }
 
+
+// Draw an axis-aligned image with fractional scaling.
+void pax_mcrw0_scaled_image(
+    pax_buf_t *base, pax_buf_t const *top, pax_recti base_pos, pax_orientation_t top_orientation, pax_rectf top_pos
+) {
+}
+
 // Draw a sprite; like a blit, but use color blending if applicable.
 void pax_mcrw0_sprite(
     pax_buf_t *base, pax_buf_t const *top, pax_recti base_pos, pax_orientation_t top_orientation, pax_vec2i top_pos
@@ -688,6 +777,37 @@ void pax_mcrw0_blit_char(pax_buf_t *buf, pax_col_t color, pax_vec2i pos, int sca
     pax_sasr_blit_char_impl(0, buf, color, pos, scale, rsdata);
 }
 
+// Draw a string of text in the bitmapped format.
+void pax_mcrw0_text(
+    pax_buf_t        *buf,
+    matrix_2d_t       matrix,
+    pax_col_t         color,
+    pax_font_t const *font,
+    float             font_size,
+    pax_vec2f         pos,
+    char const       *text,
+    size_t            text_len,
+    pax_align_t       halign,
+    pax_align_t       valign,
+    ptrdiff_t         cursorpos
+) {
+    pax_text_render_t ctx = {
+        .do_render   = true,
+        .renderfuncs = &pax_render_funcs_mcr_thread0,
+        .buf         = buf,
+        .color       = color,
+        .font        = font,
+        .font_size   = font_size,
+        .matrix      = matrix,
+    };
+    pax_internal_text_generic(&ctx, pos, text, text_len, cursorpos, halign, valign);
+}
+
+
+// Background fill.
+void pax_mcrw1_background(pax_buf_t *buf, pax_col_t color) {
+    pax_sasr_background_impl(1, buf, color);
+}
 
 // Draw a solid-colored line.
 void pax_mcrw1_unshaded_line(pax_buf_t *buf, pax_col_t color, pax_linef shape) {
@@ -747,6 +867,12 @@ void pax_mcrw1_shaded_tri(pax_buf_t *buf, pax_col_t color, pax_trif shape, pax_s
     // clang-format on
 }
 
+// Draw an axis-aligned image with fractional scaling.
+void pax_mcrw1_scaled_image(
+    pax_buf_t *base, pax_buf_t const *top, pax_recti base_pos, pax_orientation_t top_orientation, pax_rectf top_pos
+) {
+}
+
 // Draw a sprite; like a blit, but use color blending if applicable.
 void pax_mcrw1_sprite(
     pax_buf_t *base, pax_buf_t const *top, pax_recti base_pos, pax_orientation_t top_orientation, pax_vec2i top_pos
@@ -778,8 +904,44 @@ void pax_mcrw1_blit_char(pax_buf_t *buf, pax_col_t color, pax_vec2i pos, int sca
     pax_sasr_blit_char_impl(1, buf, color, pos, scale, rsdata);
 }
 
+// Draw a string of text in the bitmapped format.
+void pax_mcrw1_text(
+    pax_buf_t        *buf,
+    matrix_2d_t       matrix,
+    pax_col_t         color,
+    pax_font_t const *font,
+    float             font_size,
+    pax_vec2f         pos,
+    char const       *text,
+    size_t            text_len,
+    pax_align_t       halign,
+    pax_align_t       valign,
+    ptrdiff_t         cursorpos
+) {
+    pax_text_render_t ctx = {
+        .do_render   = true,
+        .renderfuncs = &pax_render_funcs_mcr_thread1,
+        .buf         = buf,
+        .color       = color,
+        .font        = font,
+        .font_size   = font_size,
+        .matrix      = matrix,
+    };
+    pax_internal_text_generic(&ctx, pos, text, text_len, cursorpos, halign, valign);
+}
+
     #endif
 
+
+// Background fill.
+void pax_sasr_background(pax_buf_t *buf, pax_col_t color) {
+    pax_task_t task = {
+        .buffer = buf,
+        .type   = PAX_TASK_BACKGROUND,
+        .color  = color,
+    };
+    pax_sasr_queue(&task);
+}
 
 // Draw a solid-colored line.
 void pax_sasr_unshaded_line(pax_buf_t *buf, pax_col_t color, pax_linef shape) {
@@ -959,7 +1121,6 @@ void pax_sasr_blit_char(pax_buf_t *buf, pax_col_t color, pax_vec2i pos, int scal
     pax_sasr_queue(&task);
 }
 
-/*
 // Draw a string of text in the bitmapped format.
 void pax_sasr_text(
     pax_buf_t        *buf,
@@ -985,38 +1146,35 @@ void pax_sasr_text(
     }
     pax_task_t task = {
         .buffer         = buf,
-        .type           = PAX_TASK_BLIT_CHAR,
+        .type           = PAX_TASK_TEXT,
         .color          = color,
+        .text_matrix    = matrix,
         .text.font      = font,
         .text.font_size = font_size,
         .text.pos       = pos,
         .text.halign    = halign,
         .text.valign    = valign,
         .text.cursorpos = cursorpos,
-        .text.matrix    = matrix,
         .text.str       = str,
     };
     pax_sasr_queue(&task);
 }
-*/
+
 
 
 // Wait for all pending draw calls to finish.
 void pax_sasr_join() {
-    ptq_join(args0.queue, &args0.rendermtx);
-    pthread_mutex_unlock(&args0.rendermtx);
-    #if CONFIG_PAX_COMPILE_ASYNC_RENDERER == 2
-    if (is_multithreaded) {
-        ptq_join(args1.queue, &args1.rendermtx);
-        pthread_mutex_unlock(&args1.rendermtx);
+    int count = atomic_exchange_explicit(&outstanding, 0, memory_order_relaxed);
+    while (count--) {
+        sem_wait(&complete_sem);
     }
-    #endif
 }
 
 
 
 // Async software rendering functions.
 pax_render_funcs_t const pax_render_funcs_softasync = {
+    .background    = pax_sasr_background,
     .unshaded_line = pax_sasr_unshaded_line,
     .unshaded_rect = pax_sasr_unshaded_rect,
     .unshaded_quad = pax_sasr_unshaded_quad,
@@ -1030,11 +1188,13 @@ pax_render_funcs_t const pax_render_funcs_softasync = {
     .blit_raw      = pax_sasr_blit_raw,
     .blit_char     = pax_sasr_blit_char,
     .join          = pax_sasr_join,
+    .text          = pax_sasr_text,
 };
 
     #if CONFIG_PAX_COMPILE_ASYNC_RENDERER == 2
 // Async software rendering functions.
 pax_render_funcs_t const pax_render_funcs_mcr_thread0 = {
+    .background    = pax_mcrw0_background,
     .unshaded_line = pax_mcrw0_unshaded_line,
     .unshaded_rect = pax_mcrw0_unshaded_rect,
     .unshaded_quad = pax_mcrw0_unshaded_quad,
@@ -1047,10 +1207,12 @@ pax_render_funcs_t const pax_render_funcs_mcr_thread0 = {
     .blit          = pax_mcrw0_blit,
     .blit_raw      = pax_mcrw0_blit_raw,
     .blit_char     = pax_mcrw0_blit_char,
+    .text          = pax_mcrw0_text,
 };
 
 // Async software rendering functions.
 pax_render_funcs_t const pax_render_funcs_mcr_thread1 = {
+    .background    = pax_mcrw1_background,
     .unshaded_line = pax_mcrw1_unshaded_line,
     .unshaded_rect = pax_mcrw1_unshaded_rect,
     .unshaded_quad = pax_mcrw1_unshaded_quad,
@@ -1063,6 +1225,7 @@ pax_render_funcs_t const pax_render_funcs_mcr_thread1 = {
     .blit          = pax_mcrw1_blit,
     .blit_raw      = pax_mcrw1_blit_raw,
     .blit_char     = pax_mcrw1_blit_char,
+    .text          = pax_mcrw1_text,
 };
     #endif
 
