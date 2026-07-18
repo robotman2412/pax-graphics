@@ -279,9 +279,9 @@ __attribute__((always_inline)) static inline pax_col_t raw_get_pixel(void const 
         case 8: return buf_8bpp[index];
         case 16: return buf_16bpp[index];
         #if BYTE_ORDER == LITTLE_ENDIAN
-        case 24: return buf_8bpp[index] | (buf_8bpp[index + 1] << 8) | (buf_8bpp[index + 2] << 16);
+        case 24: return buf_8bpp[index * 3] | (buf_8bpp[index * 3 + 1] << 8) | (buf_8bpp[index * 3 + 2] << 16);
         #else
-        case 24: return buf_8bpp[index + 2] | (buf_8bpp[index + 1] << 8) | (buf_8bpp[index] << 16);
+        case 24: return buf_8bpp[index * 3 + 2] | (buf_8bpp[index * 3 + 1] << 8) | (buf_8bpp[index * 3] << 16);
         #endif
         case 32: return buf_32bpp[index];
         default: __builtin_unreachable();
@@ -400,7 +400,7 @@ __attribute__((always_inline)) static inline void sasr_blit_impl_2(
         for (int x = base_pos.x; x < base_pos.x + base_pos.w; x++) {
             if (is_merge) {
                 pax_buf_t const *_top     = top;
-                pax_col_t        base_col = base->buf2col(base, base->getter(base, top_index));
+                pax_col_t        base_col = base->buf2col(base, base->getter(base, base_index));
                 pax_col_t        top_col  = _top->buf2col(_top, _top->getter(_top, top_index));
                 base->setter(base, base->col2buf(base, pax_col_merge(base_col, top_col)), base_index);
             } else if (is_raw_buf) {
