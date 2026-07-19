@@ -10,10 +10,10 @@
 #include <math.h>
 
 #ifdef __cplusplus
-#include <atomic>
+    #include <atomic>
 using atomic_int = std::atomic<int>;
 #else
-#include <stdatomic.h>
+    #include <stdatomic.h>
 #endif //__cplusplus
 
 #ifdef __cplusplus
@@ -529,7 +529,6 @@ struct pax_task {
             pax_buf_t const  *top;
             pax_recti         base_pos;
             pax_orientation_t top_orientation;
-            pax_rectf         top_pos;
             bool              assume_opaque;
         } scaled_image;
         // Rectangles.
@@ -688,12 +687,7 @@ struct pax_render_funcs {
 
     // Draw an axis-aligned image with fractional scaling.
     void (*scaled_image)(
-        pax_buf_t        *base,
-        pax_buf_t const  *top,
-        pax_recti         base_pos,
-        pax_orientation_t top_orientation,
-        pax_rectf         top_pos,
-        bool              assume_opaque
+        pax_buf_t *base, pax_buf_t const *top, pax_recti base_pos, pax_orientation_t top_orientation, bool assume_opaque
     );
     // Draw a sprite; like a blit, but use color blending if applicable.
     void (*sprite)(

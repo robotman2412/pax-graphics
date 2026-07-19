@@ -379,17 +379,6 @@ static void draw_image_oriented(
     }
 #endif
 
-    // Source rectangle: the whole image, transposed if the composed orientation reads
-    // it rotated 90 degrees relative to how it is actually stored.
-    pax_rectf top_pos = {0, 0, (float)top->width, (float)top->height};
-#if CONFIG_PAX_COMPILE_ORIENTATION
-    if ((rot ^ top->orientation) & 1) {
-        float tmp = top_pos.w;
-        top_pos.w = top_pos.h;
-        top_pos.h = tmp;
-    }
-#endif
-
 #if CONFIG_PAX_COMPILE_ORIENTATION
     // Account for the base buffer's own physical storage orientation.
     screen_pos = pax_rectf_abs(pax_orient_det_rectf(base, screen_pos));
@@ -403,7 +392,7 @@ static void draw_image_oriented(
         (int)roundf(screen_pos.h),
     };
 
-    pax_dispatch_scaled_image(base, top, base_pos, rot, top_pos, assume_opaque);
+    pax_dispatch_scaled_image(base, top, base_pos, rot, assume_opaque);
 }
 
 // Draw an axis-aligned image with scaling (if you want to draw 1:1, try blit).

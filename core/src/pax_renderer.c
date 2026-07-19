@@ -146,17 +146,12 @@ void pax_dispatch_shaded_tri(pax_buf_t *buf, pax_col_t color, pax_trif shape, pa
 
 // Draw an axis-aligned image with fractional scaling.
 void pax_dispatch_scaled_image(
-    pax_buf_t        *base,
-    pax_buf_t const  *top,
-    pax_recti         base_pos,
-    pax_orientation_t top_orientation,
-    pax_rectf         top_pos,
-    bool              assume_opaque
+    pax_buf_t *base, pax_buf_t const *top, pax_recti base_pos, pax_orientation_t top_orientation, bool assume_opaque
 ) {
     if (implicit_dirty) {
         clipped_mark_dirty2(base, base_pos.x, base_pos.y, base_pos.w, base_pos.h);
     }
-    RENDERFUNC(scaled_image)(base, top, base_pos, top_orientation, top_pos, assume_opaque);
+    RENDERFUNC(scaled_image)(base, top, base_pos, top_orientation, assume_opaque);
 }
 
 // Draw a sprite; like a blit, but use color blending if applicable.

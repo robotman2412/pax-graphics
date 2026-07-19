@@ -3,7 +3,6 @@
 
 #include "renderer/pax_renderer_softasync.h"
 
-#include "freertos/idf_additions.h"
 #include "helpers/pax_drawing_helpers.h"
 #include "pax_internal.h"
 #include "pax_types.h"
@@ -244,7 +243,6 @@ static void *pax_sasr_worker(void *_args)
                 task.scaled_image.top,
                 task.scaled_image.base_pos,
                 task.scaled_image.top_orientation,
-                task.scaled_image.top_pos,
                 task.scaled_image.assume_opaque
             );
         }
@@ -723,7 +721,6 @@ void pax_sasr_scaled_image_impl(
     pax_buf_t const  *top,
     pax_recti         base_pos,
     pax_orientation_t top_orientation,
-    pax_rectf         top_pos,
     bool              assume_opaque
 ) {
     pax_index_getter_t tget     = top->getter;
@@ -902,14 +899,9 @@ void pax_mcrw0_shaded_tri(pax_buf_t *buf, pax_col_t color, pax_trif shape, pax_s
 
 // Draw an axis-aligned image with fractional scaling.
 void pax_mcrw0_scaled_image(
-    pax_buf_t        *base,
-    pax_buf_t const  *top,
-    pax_recti         base_pos,
-    pax_orientation_t top_orientation,
-    pax_rectf         top_pos,
-    bool              assume_opaque
+    pax_buf_t *base, pax_buf_t const *top, pax_recti base_pos, pax_orientation_t top_orientation, bool assume_opaque
 ) {
-    pax_sasr_scaled_image_impl(0, base, top, base_pos, top_orientation, top_pos, assume_opaque);
+    pax_sasr_scaled_image_impl(0, base, top, base_pos, top_orientation, assume_opaque);
 }
 
 // Draw a sprite; like a blit, but use color blending if applicable.
@@ -1035,14 +1027,9 @@ void pax_mcrw1_shaded_tri(pax_buf_t *buf, pax_col_t color, pax_trif shape, pax_s
 
 // Draw an axis-aligned image with fractional scaling.
 void pax_mcrw1_scaled_image(
-    pax_buf_t        *base,
-    pax_buf_t const  *top,
-    pax_recti         base_pos,
-    pax_orientation_t top_orientation,
-    pax_rectf         top_pos,
-    bool              assume_opaque
+    pax_buf_t *base, pax_buf_t const *top, pax_recti base_pos, pax_orientation_t top_orientation, bool assume_opaque
 ) {
-    pax_sasr_scaled_image_impl(1, base, top, base_pos, top_orientation, top_pos, assume_opaque);
+    pax_sasr_scaled_image_impl(1, base, top, base_pos, top_orientation, assume_opaque);
 }
 
 // Draw a sprite; like a blit, but use color blending if applicable.
@@ -1224,12 +1211,7 @@ void pax_sasr_shaded_tri(pax_buf_t *buf, pax_col_t color, pax_trif shape, pax_sh
 
 // Draw an axis-aligned image with fractional scaling.
 void pax_sasr_scaled_image(
-    pax_buf_t        *base,
-    pax_buf_t const  *top,
-    pax_recti         base_pos,
-    pax_orientation_t top_orientation,
-    pax_rectf         top_pos,
-    bool              assume_opaque
+    pax_buf_t *base, pax_buf_t const *top, pax_recti base_pos, pax_orientation_t top_orientation, bool assume_opaque
 ) {
     pax_task_t task = {
         .buffer       = base,
@@ -1238,7 +1220,6 @@ void pax_sasr_scaled_image(
             .top             = top,
             .base_pos        = base_pos,
             .top_orientation = top_orientation,
-            .top_pos         = top_pos,
             .assume_opaque   = assume_opaque,
         },
     };

@@ -130,6 +130,7 @@ pax_col_t pax_shader_font_bmp_aa(pax_col_t tint, pax_col_t existing, int x, int 
 
 // Texture shader without interpolation.
 pax_col_t pax_shader_texture(pax_col_t tint, pax_col_t existing, int x, int y, float u, float v, void *args) {
+    (void)tint;
     (void)x;
     (void)y;
     // Pointer cast to texture thingy.
@@ -169,6 +170,7 @@ static inline __attribute__((always_inline)) uint32_t
 
 // Texture shader with interpolation.
 pax_col_t pax_shader_texture_aa(pax_col_t tint, pax_col_t existing, int x, int y, float u, float v, void *args) {
+    (void)tint;
     (void)x;
     (void)y;
     // Pointer cast to texture thingy.
