@@ -478,7 +478,7 @@ static void pax_sasr_blit_impl(
     pax_orientation_t top_orientation,
     pax_vec2i         top_pos
 ) {
-    if (top->type == base->type && false) {
+    if (top->type == base->type) {
         // Equal buffer types; no color conversion required.
         pax_sasr_blit_raw_impl(
             odd_scanline,

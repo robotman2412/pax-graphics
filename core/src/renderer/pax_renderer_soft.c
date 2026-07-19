@@ -416,7 +416,7 @@ void pax_swr_sprite(
 void pax_swr_blit(
     pax_buf_t *base, pax_buf_t const *top, pax_recti base_pos, pax_orientation_t top_orientation, pax_vec2i top_pos
 ) {
-    if (top->type == base->type && false) {
+    if (top->type == base->type) {
         // Equal buffer types; no color conversion required.
         pax_swr_blit_raw(base, top->buf, (pax_vec2i){top->width, top->height}, base_pos, top_orientation, top_pos);
     } else if (
