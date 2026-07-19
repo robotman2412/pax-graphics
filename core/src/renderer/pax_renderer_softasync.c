@@ -687,6 +687,9 @@ static void pax_sasr_blit_char_impl(
 // Image reading helper for `pax_swr_scaled_image`.
 static inline __attribute__((always_inline)) pax_col_t
     scaled_image_get_pixel(pax_buf_t const *buf, pax_vec2f pos, pax_index_getter_t get, pax_col_conv_t conv) {
+    pos.x -= 0.5f;
+    pos.y -= 0.5f;
+
     int tex_x = floorf(pos.x);
     int tex_y = floorf(pos.y);
 
@@ -703,8 +706,10 @@ static inline __attribute__((always_inline)) pax_col_t
     pax_col_t col2 = conv(buf, raw2);
     pax_col_t col3 = conv(buf, raw3);
 
-    uint32_t coeffx = (pos.x - tex_x) * 255;
-    uint32_t coeffy = (pos.y - tex_y) * 255;
+    uint32_t coeffx  = (pos.x - tex_x) * 255;
+    uint32_t coeffy  = (pos.y - tex_y) * 255;
+    coeffx          &= 255;
+    coeffy          &= 255;
 
     pax_col_t col01_a = pax_lerp_mask(0xff00ff00, coeffx, col0, col1);
     pax_col_t col32_a = pax_lerp_mask(0xff00ff00, coeffx, col3, col2);
@@ -771,25 +776,41 @@ void pax_sasr_scaled_image_impl(
         float dy = (tex_end.y - tex_start.y) / base_pos.h;
 
         if (base_pos.x < base->clip.x) {
-            int diff     = base->clip.x - base_pos.x;
-            tex_start.x += diff * dx;
-            base_pos.w  += diff;
-            base_pos.x  += diff;
+            int diff = base->clip.x - base_pos.x;
+            if (top_orientation & 1) {
+                tex_start.y += diff * dy;
+            } else {
+                tex_start.x += diff * dx;
+            }
+            base_pos.w -= diff;
+            base_pos.x += diff;
         }
         if (base_pos.x + base_pos.w > base->clip.x + base->clip.w) {
-            int diff    = (base_pos.x + base_pos.w) - (base->clip.x + base->clip.w);
-            tex_end.x  -= diff * dx;
+            int diff = (base_pos.x + base_pos.w) - (base->clip.x + base->clip.w);
+            if (top_orientation & 1) {
+                tex_end.y -= diff * dy;
+            } else {
+                tex_end.x -= diff * dx;
+            }
             base_pos.w -= diff;
         }
         if (base_pos.y < base->clip.y) {
-            int diff     = base->clip.y - base_pos.y;
-            tex_start.y += diff * dy;
-            base_pos.w  += diff;
-            base_pos.y  += diff;
+            int diff = base->clip.y - base_pos.y;
+            if (top_orientation & 1) {
+                tex_start.x += diff * dx;
+            } else {
+                tex_start.y += diff * dy;
+            }
+            base_pos.h -= diff;
+            base_pos.y += diff;
         }
         if (base_pos.y + base_pos.h > base->clip.y + base->clip.h) {
-            int diff    = (base_pos.y + base_pos.h) - (base->clip.y + base->clip.h);
-            tex_end.y  -= diff * dy;
+            int diff = (base_pos.y + base_pos.h) - (base->clip.y + base->clip.h);
+            if (top_orientation & 1) {
+                tex_end.x -= diff * dx;
+            } else {
+                tex_end.y -= diff * dy;
+            }
             base_pos.h -= diff;
         }
         if (base_pos.w < 0 || base_pos.h < 0) {
