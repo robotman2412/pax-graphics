@@ -102,6 +102,9 @@ void pax_swr_shaded_tri(pax_buf_t *buf, pax_col_t color, pax_trif shape, pax_sha
 // Image reading helper for `pax_swr_scaled_image`.
 static inline __attribute__((always_inline)) pax_col_t
     scaled_image_get_pixel(pax_buf_t const *buf, pax_vec2f pos, pax_index_getter_t get, pax_col_conv_t conv) {
+    pos.x -= 0.5f;
+    pos.y -= 0.5f;
+
     int tex_x = floorf(pos.x);
     int tex_y = floorf(pos.y);
 
@@ -118,8 +121,10 @@ static inline __attribute__((always_inline)) pax_col_t
     pax_col_t col2 = conv(buf, raw2);
     pax_col_t col3 = conv(buf, raw3);
 
-    uint32_t coeffx = (pos.x - tex_x) * 255;
-    uint32_t coeffy = (pos.y - tex_y) * 255;
+    uint32_t coeffx  = (pos.x - tex_x) * 255;
+    uint32_t coeffy  = (pos.y - tex_y) * 255;
+    coeffx          &= 255;
+    coeffy          &= 255;
 
     pax_col_t col01_a = pax_lerp_mask(0xff00ff00, coeffx, col0, col1);
     pax_col_t col32_a = pax_lerp_mask(0xff00ff00, coeffx, col3, col2);
