@@ -366,11 +366,10 @@ static bool try_detect_orientation(matrix_2d_t const *mtx, pax_orientation_t *ro
 // orientation and the base buffer's physical storage orientation, then dispatches
 // directly instead of going through the generic shader-based rasterizer.
 static void draw_image_oriented(
-    pax_buf_t *base, pax_buf_t const *top, pax_rectf screen_pos, pax_orientation_t orientation, bool assume_opaque
+    pax_buf_t *base, pax_buf_t const *top, pax_rectf screen_pos, pax_orientation_t rot, bool assume_opaque
 ) {
     // Orientation requested by the matrix, composed with the top image's own storage
     // orientation (same composition rule as pax_draw_sprite_rot_sized/pax_blit_rot_sized).
-    pax_orientation_t rot = orientation;
 #if CONFIG_PAX_COMPILE_ORIENTATION
     if (rot & 4) {
         rot = ((rot - top->orientation) & 3) | 4;
@@ -382,7 +381,7 @@ static void draw_image_oriented(
 #if CONFIG_PAX_COMPILE_ORIENTATION
     // Account for the base buffer's own physical storage orientation.
     screen_pos = pax_rectf_abs(pax_orient_det_rectf(base, screen_pos));
-    rot        = (rot + base->orientation) & 3;
+    rot        = ((rot + base->orientation) & 3) | (rot & 4);
 #endif
 
     pax_recti base_pos = {
