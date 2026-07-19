@@ -399,30 +399,46 @@ static inline uint32_t pax_lerp_mask(uint32_t mask, uint8_t part, uint32_t from,
     return mask & (from + ((((uint64_t)to - from) * part2) >> 8));
 }
 
-static inline pax_col_t pax_col_lerp_inlined(uint8_t coeff, pax_col_t from, pax_col_t to)
-    __attribute__((always_inline));
-static inline pax_col_t pax_col_lerp_inlined(uint8_t coeff, pax_col_t from, pax_col_t to) {
+static inline __attribute__((always_inline)) pax_col_t
+    pax_col_lerp_inlined(uint8_t coeff, pax_col_t from, pax_col_t to) {
     return pax_lerp_mask(0x00ff00ff, coeff, from, to) | pax_lerp_mask(0xff00ff00, coeff, from, to);
 }
 
-static inline uint8_t pax_mul8(uint8_t a, uint8_t b) __attribute__((always_inline));
-static inline uint8_t pax_mul8(uint8_t a, uint8_t b) {
+static inline __attribute__((always_inline)) uint8_t pax_mul8(uint8_t a, uint8_t b) {
     return ((a + (a >> 7)) * b) >> 8;
 }
 
-static inline pax_col_t pax_col_tint_inlined(pax_col_t a, pax_col_t b) __attribute__((always_inline));
-static inline pax_col_t pax_col_tint_inlined(pax_col_t a, pax_col_t b) {
+static inline __attribute__((always_inline)) pax_col_t pax_col_tint_inlined(pax_col_t a, pax_col_t b) {
     return pax_mul8(a >> 24, b >> 24) << 24 | pax_mul8(a >> 16, b >> 16) << 16 | pax_mul8(a >> 8, b >> 8) << 8
            | pax_mul8(a, b);
 }
 
 // Merges the two colors, based on alpha.
-static inline pax_col_t pax_col_merge_inlined(pax_col_t base, pax_col_t top) __attribute__((always_inline));
-// Merges the two colors, based on alpha.
-static inline pax_col_t pax_col_merge_inlined(pax_col_t base, pax_col_t top) {
+static inline __attribute__((always_inline)) pax_col_t pax_col_merge_inlined(pax_col_t base, pax_col_t top) {
     uint8_t coeff  = top >> 24;
     top           |= 0xff000000;
     return pax_lerp_mask(0x00ff00ff, coeff, base, top) | pax_lerp_mask(0xff00ff00, coeff, base, top);
+}
+
+static inline __attribute__((always_inline)) int pax_clamped_index(pax_buf_t const *buf, int x, int y) {
+#if CONFIG_PAX_COMPILE_ORIENTATION
+    pax_vec2i tmp = pax_orient_det_vec2i(buf, (pax_vec2i){x, y});
+    x             = tmp.x;
+    y             = tmp.y;
+#endif
+
+    if (x < 0) {
+        x = 0;
+    } else if (x > buf->width - 1) {
+        x = buf->width - 1;
+    }
+    if (y < 0) {
+        y = 0;
+    } else if (y > buf->height - 1) {
+        y = buf->height - 1;
+    }
+
+    return x + y * buf->width;
 }
 
 
