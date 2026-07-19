@@ -181,25 +181,41 @@ void pax_swr_scaled_image(
         float dy = (tex_end.y - tex_start.y) / base_pos.h;
 
         if (base_pos.x < base->clip.x) {
-            int diff     = base->clip.x - base_pos.x;
-            tex_start.x += diff * dx;
-            base_pos.w  += diff;
-            base_pos.x  += diff;
+            int diff = base->clip.x - base_pos.x;
+            if (top_orientation & 1) {
+                tex_start.y += diff * dy;
+            } else {
+                tex_start.x += diff * dx;
+            }
+            base_pos.w -= diff;
+            base_pos.x += diff;
         }
         if (base_pos.x + base_pos.w > base->clip.x + base->clip.w) {
-            int diff    = (base_pos.x + base_pos.w) - (base->clip.x + base->clip.w);
-            tex_end.x  -= diff * dx;
+            int diff = (base_pos.x + base_pos.w) - (base->clip.x + base->clip.w);
+            if (top_orientation & 1) {
+                tex_end.y -= diff * dy;
+            } else {
+                tex_end.x -= diff * dx;
+            }
             base_pos.w -= diff;
         }
         if (base_pos.y < base->clip.y) {
-            int diff     = base->clip.y - base_pos.y;
-            tex_start.y += diff * dy;
-            base_pos.w  += diff;
-            base_pos.y  += diff;
+            int diff = base->clip.y - base_pos.y;
+            if (top_orientation & 1) {
+                tex_start.x += diff * dx;
+            } else {
+                tex_start.y += diff * dy;
+            }
+            base_pos.h -= diff;
+            base_pos.y += diff;
         }
         if (base_pos.y + base_pos.h > base->clip.y + base->clip.h) {
-            int diff    = (base_pos.y + base_pos.h) - (base->clip.y + base->clip.h);
-            tex_end.y  -= diff * dy;
+            int diff = (base_pos.y + base_pos.h) - (base->clip.y + base->clip.h);
+            if (top_orientation & 1) {
+                tex_end.x -= diff * dx;
+            } else {
+                tex_end.y -= diff * dy;
+            }
             base_pos.h -= diff;
         }
         if (base_pos.w < 0 || base_pos.h < 0) {
