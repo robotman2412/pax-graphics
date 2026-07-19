@@ -738,7 +738,7 @@ void pax_sasr_scaled_image_impl(
     pax_col_conv_t     bbuf2col = base->buf2col;
 
     pax_vec2f tex_start, tex_end;
-    bool      swap_xy;
+    bool      swap_xy = false;
 
     switch (top_orientation & 3) {
         case PAX_O_UPRIGHT:
