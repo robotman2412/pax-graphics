@@ -250,11 +250,7 @@ __attribute__((always_inline)) static inline pax_col_t raw_get_pixel(void const 
         case 4: return (buf_8bpp[index / 2] >> ((index % 2) * 4)) & 0x0f;
         case 8: return buf_8bpp[index];
         case 16: return buf_16bpp[index];
-#if BYTE_ORDER == LITTLE_ENDIAN
         case 24: return buf_8bpp[index * 3] | (buf_8bpp[index * 3 + 1] << 8) | (buf_8bpp[index * 3 + 2] << 16);
-#else
-        case 24: return buf_8bpp[index * 3 + 2] | (buf_8bpp[index * 3 + 1] << 8) | (buf_8bpp[index * 3] << 16);
-#endif
         case 32: return buf_32bpp[index];
         default: __builtin_unreachable();
     }
@@ -293,26 +289,6 @@ __attribute__((always_inline)) static inline void swr_blit_impl(
         }
     }
 
-    // Clipping: clip rect of bottom buffer.
-    if (base_pos.x < base->clip.x) {
-        base_pos.w -= base->clip.x - base_pos.x;
-        base_pos.x  = base->clip.x;
-    }
-    if (base_pos.x + base_pos.w > base->clip.x + base->clip.w) {
-        base_pos.w = base->clip.x + base->clip.w - base_pos.x;
-    }
-    if (base_pos.y < base->clip.y) {
-        base_pos.h -= base->clip.y - base_pos.y;
-        base_pos.y  = base->clip.y;
-    }
-    if (base_pos.y + base_pos.h > base->clip.y + base->clip.h) {
-        base_pos.h = base->clip.y + base->clip.h - base_pos.y;
-    }
-
-    if (base_pos.h <= 0 || base_pos.w <= 0) {
-        return;
-    }
-
     // Determine copying parameters for top buffer.
 #if CONFIG_PAX_COMPILE_ORIENTATION
     // clang-format off
@@ -348,23 +324,44 @@ __attribute__((always_inline)) static inline void swr_blit_impl(
         top_dx = dx;
         top_dy = top_dims.x * dy;
     }
-    top_dy    -= base_pos.w * top_dx;
-    top_index  = top_pos.x + top_pos.y * top_dims.x;
+    top_index = top_pos.x + top_pos.y * top_dims.x;
 #else
     int top_dx    = 1;
-    int top_dy    = top_dims.x - base_pos.w;
+    int top_dy    = top_dims.x;
     int top_index = top_pos.x + top_dims.x * top_pos.y;
 #endif
 
-    // Determine copying parameters for bottom buffer.
-    int base_dy    = base->width - base_pos.w;
-    int base_index = base_pos.x + base->width * base_pos.y;
+    // Clipping: clip rect of bottom buffer.
+    if (base_pos.x < base->clip.x) {
+        top_index  += top_dx * (base->clip.x - base_pos.x);
+        base_pos.w -= base->clip.x - base_pos.x;
+        base_pos.x  = base->clip.x;
+    }
+    if (base_pos.x + base_pos.w > base->clip.x + base->clip.w) {
+        base_pos.w = base->clip.x + base->clip.w - base_pos.x;
+    }
+    if (base_pos.y < base->clip.y) {
+        top_index  += top_dy * (base->clip.y - base_pos.y);
+        base_pos.h -= base->clip.y - base_pos.y;
+        base_pos.y  = base->clip.y;
+    }
+    if (base_pos.y + base_pos.h > base->clip.y + base->clip.h) {
+        base_pos.h = base->clip.y + base->clip.h - base_pos.y;
+    }
 
+    if (base_pos.h <= 0 || base_pos.w <= 0) {
+        return;
+    }
+
+    // Determine copying parameters for bottom buffer.
+    int base_dy     = base->width - base_pos.w;
+    int base_index  = base_pos.x + base->width * base_pos.y;
+    top_dy         -= base_pos.w * top_dx;
     for (int y = base_pos.y; y < base_pos.y + base_pos.h; y++) {
         for (int x = base_pos.x; x < base_pos.x + base_pos.w; x++) {
             if (is_merge) {
                 pax_buf_t const *_top     = top;
-                pax_col_t        base_col = base->buf2col(base, base->getter(base, x + y * base->width));
+                pax_col_t        base_col = base->buf2col(base, base->getter(base, base_index));
                 pax_col_t        top_col  = _top->buf2col(_top, _top->getter(_top, top_index));
                 base->setter(base, base->col2buf(base, pax_col_merge(base_col, top_col)), base_index);
             } else if (is_raw_buf) {
@@ -421,7 +418,7 @@ __attribute__((noinline)) void pax_swr_blit_raw(
     pax_orientation_t top_orientation,
     pax_vec2i         top_pos
 ) {
-    swr_blit_impl(base, top, top_dims, base_pos, top_orientation, top_pos, false, true, false);
+    swr_blit_impl(base, top, top_dims, base_pos, top_orientation, top_pos, 0, 1, 0);
 }
 
 // Clipping routine for text characters.

@@ -330,26 +330,6 @@ __attribute__((always_inline)) static inline void sasr_blit_impl_2(
         }
     }
 
-    // Clipping: clip rect of bottom buffer.
-    if (base_pos.x < base->clip.x) {
-        base_pos.w -= base->clip.x - base_pos.x;
-        base_pos.x  = base->clip.x;
-    }
-    if (base_pos.x + base_pos.w > base->clip.x + base->clip.w) {
-        base_pos.w = base->clip.x + base->clip.w - base_pos.x;
-    }
-    if (base_pos.y < base->clip.y) {
-        base_pos.h -= base->clip.y - base_pos.y;
-        base_pos.y  = base->clip.y;
-    }
-    if (base_pos.y + base_pos.h > base->clip.y + base->clip.h) {
-        base_pos.h = base->clip.y + base->clip.h - base_pos.y;
-    }
-
-    if (base_pos.h <= 0 || base_pos.w <= 0) {
-        return;
-    }
-
         // Determine copying parameters for top buffer.
         #if CONFIG_PAX_COMPILE_ORIENTATION
     // clang-format off
@@ -391,6 +371,28 @@ __attribute__((always_inline)) static inline void sasr_blit_impl_2(
     int top_dy    = top_dims.x;
     int top_index = top_pos.x + top_dims.x * top_pos.y;
         #endif
+
+    // Clipping: clip rect of bottom buffer.
+    if (base_pos.x < base->clip.x) {
+        top_index  += top_dx * (base->clip.x - base_pos.x);
+        base_pos.w -= base->clip.x - base_pos.x;
+        base_pos.x  = base->clip.x;
+    }
+    if (base_pos.x + base_pos.w > base->clip.x + base->clip.w) {
+        base_pos.w = base->clip.x + base->clip.w - base_pos.x;
+    }
+    if (base_pos.y < base->clip.y) {
+        top_index  += top_dy * (base->clip.y - base_pos.y);
+        base_pos.h -= base->clip.y - base_pos.y;
+        base_pos.y  = base->clip.y;
+    }
+    if (base_pos.y + base_pos.h > base->clip.y + base->clip.h) {
+        base_pos.h = base->clip.y + base->clip.h - base_pos.y;
+    }
+
+    if (base_pos.h <= 0 || base_pos.w <= 0) {
+        return;
+    }
 
     // Determine copying parameters for bottom buffer.
     int base_dy    = base->width * 2 - base_pos.w;
