@@ -45,7 +45,6 @@ void pax_set_renderer_async(bool multithreaded) {
 typedef struct {
     ptq_queue_t               queue;
     pax_render_funcs_t const *renderfuncs;
-    pthread_mutex_t           rendermtx;
 } pax_sasr_worker_args_t;
 
 
@@ -57,6 +56,8 @@ static pax_sasr_worker_args_t args0;
     #if CONFIG_PAX_COMPILE_ASYNC_RENDERER == 2
 static pax_sasr_worker_args_t args1;
     #endif
+
+static pthread_mutex_t joinmtx;
 
 // Queue a draw call.
 static void pax_sasr_queue(pax_task_t *task);
@@ -78,6 +79,7 @@ static sem_t      complete_sem;
 static pax_render_funcs_t const *pax_sasr_init(void *arg) {
     sem_init(&complete_sem, 0, 0);
     outstanding = 0;
+    pthread_mutex_init(&joinmtx, NULL);
 
     args0.queue       = ptq_create_max(sizeof(pax_task_t), CONFIG_PAX_QUEUE_SIZE);
     args0.renderfuncs = &pax_render_funcs_soft;
@@ -88,7 +90,6 @@ static pax_render_funcs_t const *pax_sasr_init(void *arg) {
         args0.renderfuncs = &pax_render_funcs_mcr_thread0;
         args1.renderfuncs = &pax_render_funcs_mcr_thread1;
         args1.queue       = ptq_create_max(sizeof(pax_task_t), CONFIG_PAX_QUEUE_SIZE);
-        pthread_mutex_init(&args1.rendermtx, NULL);
         #if CONFIG_PAX_USE_FREERTOS
         TaskHandle_t dummy_handle;
         xTaskCreatePinnedToCore(pax_sasr_worker, "MCRW1", 4096, &args1, 1, &dummy_handle, 1);
@@ -108,7 +109,6 @@ static pax_render_funcs_t const *pax_sasr_init(void *arg) {
     }
     #endif
 
-    pthread_mutex_init(&args0.rendermtx, NULL);
     #if CONFIG_PAX_USE_FREERTOS
     TaskHandle_t dummy_handle;
     xTaskCreatePinnedToCore(pax_sasr_worker, "MCRW0", 4096, &args0, 1, &dummy_handle, 0);
@@ -131,12 +131,11 @@ static void pax_sasr_deinit() {
     #if CONFIG_PAX_COMPILE_ASYNC_RENDERER == 2
     if (is_multithreaded) {
         ptq_destroy(args1.queue);
-        pthread_mutex_destroy(&args1.rendermtx);
     }
     #endif
     ptq_destroy(args0.queue);
-    pthread_mutex_destroy(&args0.rendermtx);
     sem_destroy(&complete_sem);
+    pthread_mutex_destroy(&joinmtx);
 }
 
 
@@ -163,12 +162,11 @@ static void *pax_sasr_worker(void *_args)
 
     while (1) {
         pax_task_t task;
-        ptq_receive_block(args->queue, &task, &args->rendermtx);
+        ptq_receive_block(args->queue, &task, NULL);
         atomic_thread_fence(memory_order_acquire);
 
         if (task.type == PAX_TASK_STOP) {
             sem_post(&complete_sem);
-            pthread_mutex_unlock(&args->rendermtx);
     #if CONFIG_PAX_USE_FREERTOS
             vTaskDelete(NULL);
     #else
@@ -248,7 +246,6 @@ static void *pax_sasr_worker(void *_args)
         }
 
         sem_post(&complete_sem);
-        pthread_mutex_unlock(&args->rendermtx);
     }
 }
 
@@ -1364,10 +1361,12 @@ void pax_sasr_text(
 
 // Wait for all pending draw calls to finish.
 void pax_sasr_join() {
+    pthread_mutex_lock(&joinmtx);
     int count = atomic_exchange_explicit(&outstanding, 0, memory_order_relaxed);
     while (count--) {
         sem_wait(&complete_sem);
     }
+    pthread_mutex_unlock(&joinmtx);
 }
 
 
