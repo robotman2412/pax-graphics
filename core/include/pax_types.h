@@ -177,6 +177,8 @@ enum pax_task_type {
     PAX_TASK_TEXT,
     // Background fill.
     PAX_TASK_BACKGROUND,
+    // Scaled image.
+    PAX_TASK_SCALED_IMAGE,
 };
 
 // Distinguishes between ways to draw fonts.
@@ -517,6 +519,13 @@ struct pax_task {
             // String to draw.
             pax_task_str_t    str;
         } text;
+        struct {
+            pax_buf_t const  *top;
+            pax_recti         base_pos;
+            pax_orientation_t top_orientation;
+            pax_rectf         top_pos;
+            bool              assume_opaque;
+        } scaled_image;
         // Rectangles.
         struct {
             pax_rectf shape;
@@ -673,7 +682,12 @@ struct pax_render_funcs {
 
     // Draw an axis-aligned image with fractional scaling.
     void (*scaled_image)(
-        pax_buf_t *base, pax_buf_t const *top, pax_recti base_pos, pax_orientation_t top_orientation, pax_rectf top_pos
+        pax_buf_t        *base,
+        pax_buf_t const  *top,
+        pax_recti         base_pos,
+        pax_orientation_t top_orientation,
+        pax_rectf         top_pos,
+        bool              assume_opaque
     );
     // Draw a sprite; like a blit, but use color blending if applicable.
     void (*sprite)(

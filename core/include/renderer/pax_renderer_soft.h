@@ -34,7 +34,12 @@ void pax_swr_shaded_tri(pax_buf_t *buf, pax_col_t color, pax_trif shape, pax_sha
 
 // Draw an axis-aligned image with fractional scaling.
 void pax_swr_scaled_image(
-    pax_buf_t *base, pax_buf_t const *top, pax_recti base_pos, pax_orientation_t top_orientation, pax_rectf top_pos
+    pax_buf_t        *base,
+    pax_buf_t const  *top,
+    pax_recti         base_pos,
+    pax_orientation_t top_orientation,
+    pax_rectf         top_pos,
+    bool              assume_opaque
 );
 // Draw a sprite; like a blit, but use color blending if applicable.
 void pax_swr_sprite(

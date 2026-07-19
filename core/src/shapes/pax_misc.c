@@ -6,9 +6,10 @@
 #include "pax_matrix.h"
 #include "pax_orientation.h"
 #include "pax_renderer.h"
+#include "pax_types.h"
 #include "shapes/pax_rects.h"
 
-#include <stdatomic.h>
+#include <math.h>
 
 
 
@@ -309,6 +310,145 @@ void pax_blit_raw_rot_sized(
 
 
 
+// Detect relative orientation and scale from transformation matrix.
+// Scale output given is before orientation is applied, and always positive.
+static bool try_detect_orientation(matrix_2d_t const *mtx, pax_orientation_t *rot_out, pax_vec2f *scale_out) {
+    for (size_t i = 0; i < 6; i++) {
+        if (!isfinite(mtx->arr[i])) {
+            return false;
+        }
+    }
+    bool a0_zero = fabsf(mtx->a0) < 0.000001f;
+    bool a1_zero = fabsf(mtx->a1) < 0.000001f;
+    bool b0_zero = fabsf(mtx->b0) < 0.000001f;
+    bool b1_zero = fabsf(mtx->b1) < 0.000001f;
+
+    bool swap_xy, flip_h, flip_v;
+    if (a0_zero && !a1_zero && !b0_zero && b1_zero) {
+        // Swap x/y.
+        swap_xy      = true;
+        scale_out->x = fabsf(mtx->b0);
+        scale_out->y = fabsf(mtx->a1);
+        flip_h       = mtx->a1 < 0;
+        flip_v       = mtx->b0 < 0;
+
+    } else if (!a0_zero && a1_zero && b0_zero && !b1_zero) {
+        // Normal x/y.
+        swap_xy      = false;
+        scale_out->x = fabsf(mtx->a0);
+        scale_out->y = fabsf(mtx->b1);
+        flip_h       = mtx->b1 < 0;
+        flip_v       = mtx->a0 < 0;
+
+    } else {
+        // Is not a rotation, or not in 90-degree increments.
+        return false;
+    }
+
+    switch (flip_h * 0b100 + flip_v * 0b010 + swap_xy * 0b001) {
+        default: // Unreachable.
+        case 0b000: *rot_out = PAX_O_UPRIGHT; break;
+        case 0b001: *rot_out = PAX_O_ROT_CW_FLIP_H; break;
+        case 0b010: *rot_out = PAX_O_ROT_HALF_FLIP_H; break;
+        case 0b011: *rot_out = PAX_O_ROT_CCW; break;
+        case 0b100: *rot_out = PAX_O_FLIP_H; break;
+        case 0b101: *rot_out = PAX_O_ROT_CW; break;
+        case 0b110: *rot_out = PAX_O_ROT_HALF; break;
+        case 0b111: *rot_out = PAX_O_ROT_CCW_FLIP_H; break;
+    }
+
+    return true;
+}
+
+// Optimized draw path for images whose transform is an exact 90-degree orientation
+// (rotation and/or flip), at any scale.
+// Composes the orientation requested by the matrix with the top image's own storage
+// orientation and the base buffer's physical storage orientation, then dispatches
+// directly instead of going through the generic shader-based rasterizer.
+static void draw_image_oriented(
+    pax_buf_t        *base,
+    pax_buf_t const  *top,
+    float             x,
+    float             y,
+    float             width,
+    float             height,
+    pax_orientation_t orientation,
+    bool              assume_opaque
+) {
+    // Orientation requested by the matrix, composed with the top image's own storage
+    // orientation (same composition rule as pax_draw_sprite_rot_sized/pax_blit_rot_sized).
+    pax_orientation_t rot = orientation;
+#if CONFIG_PAX_COMPILE_ORIENTATION
+    if (rot & 4) {
+        rot = ((rot - top->orientation) & 3) | 4;
+    } else {
+        rot = (rot + top->orientation) & 3;
+    }
+#endif
+
+    // Source rectangle: the whole image, transposed if the composed orientation reads
+    // it rotated 90 degrees relative to how it is actually stored.
+    pax_rectf top_pos = {0, 0, (float)top->width, (float)top->height};
+#if CONFIG_PAX_COMPILE_ORIENTATION
+    if ((rot ^ top->orientation) & 1) {
+        float tmp = top_pos.w;
+        top_pos.w = top_pos.h;
+        top_pos.h = tmp;
+    }
+#endif
+
+    // Destination rectangle: transform the local (pre-matrix) shape corners through the
+    // current 2D matrix to get the on-screen axis-aligned rect; matrix_2d_transform maps
+    // corners to corners for any 90-degree-increment orientation, so no separate
+    // scale/flip bookkeeping is needed here.
+    float x0 = x, y0 = y;
+    float x1 = x + width, y1 = y + height;
+    matrix_2d_transform(base->stack_2d.value, &x0, &y0);
+    matrix_2d_transform(base->stack_2d.value, &x1, &y1);
+    pax_rectf screen_pos = pax_rectf_abs((pax_rectf){x0, y0, x1 - x0, y1 - y0});
+
+#if CONFIG_PAX_COMPILE_ORIENTATION
+    // Account for the base buffer's own physical storage orientation.
+    screen_pos = pax_rectf_abs(pax_orient_det_rectf(base, screen_pos));
+    rot        = (rot + base->orientation) & 3;
+#endif
+
+    pax_recti base_pos = {
+        (int)roundf(screen_pos.x),
+        (int)roundf(screen_pos.y),
+        (int)roundf(screen_pos.w),
+        (int)roundf(screen_pos.h),
+    };
+
+    pax_dispatch_scaled_image(base, top, base_pos, rot, top_pos, assume_opaque);
+}
+
+// Draw an axis-aligned image with scaling (if you want to draw 1:1, try blit and sprite).
+void pax_scaled_image(pax_buf_t *base, pax_buf_t const *top, int x, int y, float width, float height) {
+    draw_image_oriented(base, top, x, y, width, height, PAX_O_UPRIGHT, false);
+}
+
+// Draw an axis-aligned image with scaling (if you want to draw 1:1, try blit and sprite).
+// Relative orientation is applied after the size/position, i.e. a landscape image rotated will become portrait.
+void pax_scaled_image_rot(
+    pax_buf_t *base, pax_buf_t const *top, int x, int y, float width, float height, pax_orientation_t rot
+) {
+    draw_image_oriented(base, top, x, y, width, height, rot, false);
+}
+
+// Draw an axis-aligned image with scaling (if you want to draw 1:1, try sprite).
+void pax_scaled_image_op(pax_buf_t *base, pax_buf_t const *top, int x, int y, float width, float height) {
+    draw_image_oriented(base, top, x, y, width, height, PAX_O_UPRIGHT, true);
+}
+
+// Draw an axis-aligned image with scaling (if you want to draw 1:1, try sprite).
+// Relative orientation is applied after the size/position, i.e. a landscape image rotated will become portrait.
+void pax_scaled_image_rot_op(
+    pax_buf_t *base, pax_buf_t const *top, int x, int y, float width, float height, pax_orientation_t rot
+) {
+    draw_image_oriented(base, top, x, y, width, height, rot, true);
+}
+
 // Draw an image with a prespecified size.
 static void draw_image_impl(
     pax_buf_t *base, pax_buf_t const *top, float x, float y, float width, float height, bool assume_opaque
@@ -331,11 +471,25 @@ static void draw_image_impl(
     if (width == top->width && height == top->height && matrix_2d_is_identity1(base->stack_2d.value)) {
         matrix_2d_transform(base->stack_2d.value, &x, &y);
         if (has_alpha) {
+            // Image drawn 1:1 (with transparency).
             pax_draw_sprite(base, top, x, y);
         } else {
+            // Image drawn 1:1 (no transparency).
             pax_blit(base, top, x, y);
         }
-    } else if (has_alpha) {
+        return;
+    }
+
+    // Fast path: transform is an exact 90-degree orientation (rotation and/or flip), any scale.
+    pax_orientation_t orientation;
+    pax_vec2f         scale;
+    if (try_detect_orientation(&base->stack_2d.value, &orientation, &scale)) {
+        draw_image_oriented(base, top, x, y, width, height, orientation, !has_alpha || assume_opaque);
+        return;
+    }
+
+    // Fallback: have to render as transformed rectangles (images that are not axis-aligned).
+    if (has_alpha) {
         pax_shade_rect(base, -1, &PAX_SHADER_TEXTURE(top), NULL, x, y, width, height);
     } else {
         pax_shade_rect(base, -1, &PAX_SHADER_TEXTURE_OP(top), NULL, x, y, width, height);

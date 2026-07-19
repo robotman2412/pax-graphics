@@ -128,27 +128,6 @@ pax_col_t pax_shader_font_bmp_aa(pax_col_t tint, pax_col_t existing, int x, int 
 
 
 
-static inline __attribute__((always_inline)) int tx_calc_px_index(pax_buf_t const *buf, int x, int y) {
-#if CONFIG_PAX_COMPILE_ORIENTATION
-    pax_vec2i tmp = pax_orient_det_vec2i(buf, (pax_vec2i){x, y});
-    x             = tmp.x;
-    y             = tmp.y;
-#endif
-
-    if (x < 0) {
-        x = 0;
-    } else if (x > buf->width) {
-        x = buf->width;
-    }
-    if (y < 0) {
-        y = 0;
-    } else if (y > buf->height) {
-        y = buf->height;
-    }
-
-    return x + y * buf->width;
-}
-
 // Texture shader without interpolation.
 pax_col_t pax_shader_texture(pax_col_t tint, pax_col_t existing, int x, int y, float u, float v, void *args) {
     (void)x;
@@ -169,7 +148,7 @@ pax_col_t pax_shader_texture(pax_col_t tint, pax_col_t existing, int x, int y, f
     }
 
     // Simply get a pixel.
-    int       index = tx_calc_px_index(image, u, v);
+    int       index = pax_clamped_index(image, u, v);
     pax_col_t color = image->buf2col(image, image->getter(image, index));
     // And return it.
     if ((color >> 24) != 255) {
@@ -218,10 +197,10 @@ pax_col_t pax_shader_texture_aa(pax_col_t tint, pax_col_t existing, int x, int y
     float dy    = pax_interp_value(v - tex_y);
 
     // Get four pixels.
-    int                idx0 = tx_calc_px_index(image, tex_x, tex_y);
-    int                idx1 = tx_calc_px_index(image, tex_x + 1, tex_y);
-    int                idx2 = tx_calc_px_index(image, tex_x + 1, tex_y + 1);
-    int                idx3 = tx_calc_px_index(image, tex_x, tex_y + 1);
+    int                idx0 = pax_clamped_index(image, tex_x, tex_y);
+    int                idx1 = pax_clamped_index(image, tex_x + 1, tex_y);
+    int                idx2 = pax_clamped_index(image, tex_x + 1, tex_y + 1);
+    int                idx3 = pax_clamped_index(image, tex_x, tex_y + 1);
     pax_index_getter_t get  = image->getter;
     pax_col_conv_t     conv = image->buf2col;
     uint32_t           raw0 = get(image, idx0);

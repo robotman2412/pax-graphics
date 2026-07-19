@@ -3,11 +3,12 @@
 
 #include "renderer/pax_renderer_soft.h"
 
-#include "endian.h"
 #include "helpers/pax_drawing_helpers.h"
 #include "pax_internal.h"
 #include "pax_orientation.h"
 #include "pax_types.h"
+
+#include <math.h>
 
 
 
@@ -98,10 +99,149 @@ void pax_swr_shaded_tri(pax_buf_t *buf, pax_col_t color, pax_trif shape, pax_sha
 
 
 
+// Image reading helper for `pax_swr_scaled_image`.
+static inline __attribute__((always_inline)) pax_col_t
+    scaled_image_get_pixel(pax_buf_t const *buf, pax_vec2f pos, pax_index_getter_t get, pax_col_conv_t conv) {
+    int tex_x = floorf(pos.x);
+    int tex_y = floorf(pos.y);
+
+    int       idx0 = pax_clamped_index(buf, tex_x, tex_y);
+    int       idx1 = pax_clamped_index(buf, tex_x + 1, tex_y);
+    int       idx2 = pax_clamped_index(buf, tex_x + 1, tex_y + 1);
+    int       idx3 = pax_clamped_index(buf, tex_x, tex_y + 1);
+    uint32_t  raw0 = get(buf, idx0);
+    uint32_t  raw1 = get(buf, idx1);
+    uint32_t  raw2 = get(buf, idx2);
+    uint32_t  raw3 = get(buf, idx3);
+    pax_col_t col0 = conv(buf, raw0);
+    pax_col_t col1 = conv(buf, raw1);
+    pax_col_t col2 = conv(buf, raw2);
+    pax_col_t col3 = conv(buf, raw3);
+
+    uint32_t coeffx = (pos.x - tex_x) * 255;
+    uint32_t coeffy = (pos.y - tex_y) * 255;
+
+    pax_col_t col01_a = pax_lerp_mask(0xff00ff00, coeffx, col0, col1);
+    pax_col_t col32_a = pax_lerp_mask(0xff00ff00, coeffx, col3, col2);
+    pax_col_t color_a = pax_lerp_mask(0xff00ff00, coeffy, col01_a, col32_a);
+    pax_col_t col01_b = pax_lerp_mask(0x00ff00ff, coeffx, col0, col1);
+    pax_col_t col32_b = pax_lerp_mask(0x00ff00ff, coeffx, col3, col2);
+    pax_col_t color_b = pax_lerp_mask(0x00ff00ff, coeffy, col01_b, col32_b);
+
+    return color_a | color_b;
+}
+
 // Draw an axis-aligned image with fractional scaling.
 void pax_swr_scaled_image(
-    pax_buf_t *base, pax_buf_t const *top, pax_recti base_pos, pax_orientation_t top_orientation, pax_rectf top_pos
+    pax_buf_t        *base,
+    pax_buf_t const  *top,
+    pax_recti         base_pos,
+    pax_orientation_t top_orientation,
+    pax_rectf         top_pos,
+    bool              assume_opaque
 ) {
+    pax_index_getter_t tget     = top->getter;
+    pax_col_conv_t     tbuf2col = top->buf2col;
+    pax_index_getter_t bget     = base->getter;
+    pax_index_setter_t bset     = base->setter;
+    pax_col_conv_t     bcol2buf = base->col2buf;
+    pax_col_conv_t     bbuf2col = base->buf2col;
+
+    pax_vec2f tex_start, tex_end;
+    bool      swap_xy;
+
+    switch (top_orientation & 3) {
+        case PAX_O_UPRIGHT:
+            tex_start = (pax_vec2f){0, 0};
+            tex_end   = (pax_vec2f){1, 1};
+            swap_xy   = false;
+            break;
+        case PAX_O_ROT_CCW:
+            tex_start = (pax_vec2f){1, 0};
+            tex_end   = (pax_vec2f){0, 1};
+            swap_xy   = true;
+            break;
+        case PAX_O_ROT_HALF:
+            tex_start = (pax_vec2f){1, 1};
+            tex_end   = (pax_vec2f){0, 0};
+            swap_xy   = false;
+            break;
+        case PAX_O_ROT_CW:
+            tex_start = (pax_vec2f){0, 1};
+            tex_end   = (pax_vec2f){1, 0};
+            swap_xy   = true;
+            break;
+    }
+    if (top_orientation & 4) {
+        tex_start = (pax_vec2f){1 - tex_start.x, tex_start.y};
+        tex_end   = (pax_vec2f){1 - tex_end.x, tex_end.y};
+    }
+    tex_start.x *= top->width;
+    tex_start.y *= top->height;
+    tex_end.x   *= top->width;
+    tex_end.y   *= top->height;
+
+    {
+        float dx = (tex_end.x - tex_start.x) / base_pos.w;
+        float dy = (tex_end.y - tex_start.y) / base_pos.h;
+
+        if (base_pos.x < base->clip.x) {
+            int diff     = base->clip.x - base_pos.x;
+            tex_start.x += diff * dx;
+            base_pos.w  += diff;
+            base_pos.x  += diff;
+        }
+        if (base_pos.x + base_pos.w > base->clip.x + base->clip.w) {
+            int diff    = (base_pos.x + base_pos.w) - (base->clip.x + base->clip.w);
+            tex_end.x  -= diff * dx;
+            base_pos.w -= diff;
+        }
+        if (base_pos.y < base->clip.y) {
+            int diff     = base->clip.y - base_pos.y;
+            tex_start.y += diff * dy;
+            base_pos.w  += diff;
+            base_pos.y  += diff;
+        }
+        if (base_pos.y + base_pos.h > base->clip.y + base->clip.h) {
+            int diff    = (base_pos.y + base_pos.h) - (base->clip.y + base->clip.h);
+            tex_end.y  -= diff * dy;
+            base_pos.h -= diff;
+        }
+        if (base_pos.w < 0 || base_pos.h < 0) {
+            return;
+        }
+    }
+
+    pax_vec2f tex_dx = {0};
+    pax_vec2f tex_dy = {0};
+    if (!swap_xy) {
+        tex_dx.x = (tex_end.x - tex_start.x) / base_pos.w;
+        tex_dy.y = (tex_end.y - tex_start.y) / base_pos.h;
+    } else {
+        tex_dy.x = (tex_end.x - tex_start.x) / base_pos.h;
+        tex_dx.y = (tex_end.y - tex_start.y) / base_pos.w;
+    }
+    tex_dy.x -= base_pos.w * tex_dx.x;
+    tex_dy.y -= base_pos.w * tex_dx.y;
+
+    int       bindex  = base_pos.x + base->width * base_pos.y;
+    pax_vec2f tex_pos = tex_start;
+    for (int y = base_pos.y; y < base_pos.y + base_pos.h; y++) {
+        for (int x = base_pos.x; x < base_pos.x + base_pos.w; x++) {
+            pax_col_t col = scaled_image_get_pixel(top, tex_pos, tget, tbuf2col);
+            if (!assume_opaque) {
+                col = pax_col_merge_inlined(bbuf2col(base, bget(base, bindex)), col);
+            }
+            bset(base, bcol2buf(base, col), bindex);
+            bindex++;
+
+            tex_pos.x += tex_dx.x;
+            tex_pos.y += tex_dx.y;
+        }
+        bindex    += base->width - base_pos.w;
+        tex_pos.x += tex_dy.x;
+        tex_pos.y += tex_dy.y;
+    }
 }
 
 // Read a single pixel from a raw buffer type by index.
@@ -229,7 +369,7 @@ __attribute__((always_inline)) static inline void swr_blit_impl(
         for (int x = base_pos.x; x < base_pos.x + base_pos.w; x++) {
             if (is_merge) {
                 pax_buf_t const *_top     = top;
-                pax_col_t        base_col = base->buf2col(base, base->getter(base, base_index));
+                pax_col_t        base_col = base->buf2col(base, base->getter(base, x + y * base->width));
                 pax_col_t        top_col  = _top->buf2col(_top, _top->getter(_top, top_index));
                 base->setter(base, base->col2buf(base, pax_col_merge(base_col, top_col)), base_index);
             } else if (is_raw_buf) {
@@ -463,6 +603,7 @@ pax_render_funcs_t const pax_render_funcs_soft = {
     .shaded_rect   = pax_swr_shaded_rect,
     .shaded_quad   = pax_swr_shaded_quad,
     .shaded_tri    = pax_swr_shaded_tri,
+    .scaled_image  = pax_swr_scaled_image,
     .sprite        = pax_swr_sprite,
     .blit          = pax_swr_blit,
     .blit_raw      = pax_swr_blit_raw,

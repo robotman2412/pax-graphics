@@ -42,6 +42,15 @@ void pax_dispatch_shaded_quad(
 // Draw a triangle with a shader.
 void pax_dispatch_shaded_tri(pax_buf_t *buf, pax_col_t color, pax_trif shape, pax_shader_t const *shader, pax_trif uv);
 
+// Draw an axis-aligned image with fractional scaling.
+void pax_dispatch_scaled_image(
+    pax_buf_t        *base,
+    pax_buf_t const  *top,
+    pax_recti         base_pos,
+    pax_orientation_t top_orientation,
+    pax_rectf         top_pos,
+    bool              assume_opaque
+);
 // Draw a sprite; like a blit, but use color blending if applicable.
 void pax_dispatch_sprite(
     pax_buf_t *base, pax_buf_t const *top, pax_recti base_pos, pax_orientation_t top_orientation, pax_vec2i top_pos

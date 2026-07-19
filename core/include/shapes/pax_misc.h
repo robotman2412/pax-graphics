@@ -84,6 +84,21 @@ void pax_blit_raw_rot_sized(
     int               top_h
 );
 
+// Draw an axis-aligned image with scaling (if you want to draw 1:1, try  sprite).
+void pax_scaled_image(pax_buf_t *base, pax_buf_t const *top, int x, int y, float width, float height);
+// Draw an axis-aligned image with scaling (if you want to draw 1:1, try  sprite).
+// Relative orientation is applied after the size/position, i.e. a landscape image rotated will become portrait.
+void pax_scaled_image_rot(
+    pax_buf_t *base, pax_buf_t const *top, int x, int y, float width, float height, pax_orientation_t rot
+);
+// Draw an axis-aligned image with scaling (if you want to draw 1:1, try sprite).
+void pax_scaled_image_op(pax_buf_t *base, pax_buf_t const *top, int x, int y, float width, float height);
+// Draw an axis-aligned image with scaling (if you want to draw 1:1, try sprite).
+// Relative orientation is applied after the size/position, i.e. a landscape image rotated will become portrait.
+void pax_scaled_image_rot_op(
+    pax_buf_t *base, pax_buf_t const *top, int x, int y, float width, float height, pax_orientation_t rot
+);
+
 // Draws an image at the image's normal size.
 void pax_draw_image(pax_buf_t *buf, pax_buf_t const *image, float x, float y);
 // Draw an image with a prespecified size.
