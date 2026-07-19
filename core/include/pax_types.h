@@ -8,7 +8,13 @@
 #include "pax_matrix.h"
 
 #include <math.h>
+
+#ifdef __cplusplus
+#include <atomic>
+using atomic_int = std::atomic<int>;
+#else
 #include <stdatomic.h>
+#endif //__cplusplus
 
 #ifdef __cplusplus
 extern "C" {
