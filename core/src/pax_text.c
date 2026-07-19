@@ -132,8 +132,8 @@ static void pixel_aligned_render(
     float               height
 ) {
     // Offset and pixel-align co-ordinates.
-    x = floorf(0.5 + x + ctx->buf->stack_2d.value.a2);
-    y = floorf(0.5 + y + ctx->buf->stack_2d.value.b2);
+    x = floorf(0.5 + x + ctx->matrix.a2);
+    y = floorf(0.5 + y + ctx->matrix.b2);
     pax_mark_dirty2(ctx->buf, x, y, width, height);
 
 #if CONFIG_PAX_COMPILE_ORIENTATION
@@ -191,7 +191,12 @@ static void dispatch_glyph(
     if (ctx->matrix.a0 > 0 && fabsf(ctx->matrix.a0 - ctx->matrix.b1) < 0.01 && fabsf(mat_scale - (int)mat_scale) < 0.01
         && matrix_2d_is_identity2(ctx->matrix)) {
         // This can be optimized to the special text blitting function.
-        ctx->renderfuncs->blit_char(ctx->buf, ctx->color, (pax_vec2i){pos.x, pos.y}, floorf(mat_scale + 0.5), rsdata);
+        // Apply the matrix's scale and translation to the glyph position (no rotation/shear possible here).
+        pax_vec2i blit_pos = {
+            (int)floorf(ctx->matrix.a0 * pos.x + ctx->matrix.a2 + 0.5f),
+            (int)floorf(ctx->matrix.a0 * pos.y + ctx->matrix.b2 + 0.5f),
+        };
+        ctx->renderfuncs->blit_char(ctx->buf, ctx->color, blit_pos, floorf(mat_scale + 0.5), rsdata);
         return;
     }
 
@@ -231,7 +236,7 @@ static void dispatch_glyph(
     };
 
     // Start drawing, boy!
-    if (matrix_2d_is_identity2(ctx->buf->stack_2d.value)) {
+    if (matrix_2d_is_identity2(ctx->matrix)) {
         // Pixel-aligned optimisation.
         pixel_aligned_render(ctx, &shader, &uvs, pos.x, pos.y, scale * rsdata.w, scale * rsdata.h);
     } else {

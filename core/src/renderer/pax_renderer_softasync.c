@@ -233,7 +233,7 @@ static void *pax_sasr_worker(void *_args)
                 task.text.cursorpos
             );
             if (task.text.str.len > PAX_SSO_BUF_LEN) {
-                if (atomic_fetch_sub(&task.text.str.ptr->refcount, memory_order_relaxed) == 1) {
+                if (atomic_fetch_sub_explicit(&task.text.str.ptr->refcount, 1, memory_order_relaxed) == 1) {
                     free(task.text.str.ptr);
                 }
             }
