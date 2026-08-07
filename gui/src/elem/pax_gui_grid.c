@@ -300,44 +300,82 @@ static pgui_resp_t
     ptrdiff_t x0 = elem->selected % grid->cells.x;
     ptrdiff_t y0 = elem->selected / grid->cells.x;
 
-    // Current position.
-    ptrdiff_t x = (x0 + dx + grid->cells.x) % grid->cells.x;
-    ptrdiff_t y = (y0 + dy + grid->cells.y) % grid->cells.y;
-    while (x != x0 || y != y0) {
-        ptrdiff_t i = x + y * grid->cells.x;
-        if ((size_t)i < elem->children_len && elem->children[i]
-            && (elem->children[i]->type->attr & PGUI_ATTR_SELECTABLE)) {
-            if (elem->selected >= 0) {
-                // Unmark previous selection.
-                elem->children[elem->selected]->flags &= ~PGUI_FLAG_HIGHLIGHT;
-                elem->children[elem->selected]->flags |= PGUI_FLAG_DIRTY;
+    ptrdiff_t sel_x = -1;
+    ptrdiff_t sel_y = -1;
+
+    if (dx == 0 && dy != 0) {
+        // Vertical movement. Rows can be ragged (e.g. a trailing row that
+        // isn't fully populated), so don't just keep walking the same
+        // column looking for a match - if the next row over doesn't have
+        // this column filled, land on whichever of its cells is closest
+        // instead of skipping past it to a same-column match further away.
+        ptrdiff_t y = (y0 + dy + grid->cells.y) % grid->cells.y;
+        while (y != y0) {
+            ptrdiff_t best_x    = -1;
+            ptrdiff_t best_dist = 0;
+            for (ptrdiff_t x = 0; x < grid->cells.x; x++) {
+                ptrdiff_t i = x + y * grid->cells.x;
+                if ((size_t)i < elem->children_len && elem->children[i]
+                    && (elem->children[i]->type->attr & PGUI_ATTR_SELECTABLE)) {
+                    ptrdiff_t dist = x > x0 ? x - x0 : x0 - x;
+                    if (best_x < 0 || dist < best_dist) {
+                        best_x    = x;
+                        best_dist = dist;
+                    }
+                }
             }
-
-            // Mark new selection.
-            elem->selected            = i;
-            elem->children[i]->flags |= PGUI_FLAG_HIGHLIGHT | PGUI_FLAG_DIRTY;
-
-            // Update scroll position.
-            elem->scroll = pgui_adjust_scroll_2d(
-                (pax_recti){
-                    elem->children[i]->pos.x,
-                    elem->children[i]->pos.y,
-                    elem->children[i]->size.x,
-                    elem->children[i]->size.y,
-                },
-                padding.left + padding.right + padding.top + padding.bottom,
-                elem->size,
-                elem->scroll,
-                elem->content_size
-            );
-            elem->flags |= PGUI_FLAG_DIRTY;
-            return PGUI_RESP_CAPTURED;
+            if (best_x >= 0) {
+                sel_x = best_x;
+                sel_y = y;
+                break;
+            }
+            y = (y + dy + grid->cells.y) % grid->cells.y;
         }
-        x = (x + dx + grid->cells.x) % grid->cells.x;
-        y = (y + dy + grid->cells.y) % grid->cells.y;
+    } else {
+        // Horizontal movement: walk along the row as before.
+        ptrdiff_t x = (x0 + dx + grid->cells.x) % grid->cells.x;
+        while (x != x0) {
+            ptrdiff_t i = x + y0 * grid->cells.x;
+            if ((size_t)i < elem->children_len && elem->children[i]
+                && (elem->children[i]->type->attr & PGUI_ATTR_SELECTABLE)) {
+                sel_x = x;
+                sel_y = y0;
+                break;
+            }
+            x = (x + dx + grid->cells.x) % grid->cells.x;
+        }
     }
 
-    return PGUI_RESP_CAPTURED_ERR;
+    if (sel_x < 0) {
+        return PGUI_RESP_CAPTURED_ERR;
+    }
+
+    ptrdiff_t i = sel_x + sel_y * grid->cells.x;
+    if (elem->selected >= 0) {
+        // Unmark previous selection.
+        elem->children[elem->selected]->flags &= ~PGUI_FLAG_HIGHLIGHT;
+        elem->children[elem->selected]->flags |= PGUI_FLAG_DIRTY;
+    }
+
+    // Mark new selection.
+    elem->selected            = i;
+    elem->children[i]->flags |= PGUI_FLAG_HIGHLIGHT | PGUI_FLAG_DIRTY;
+
+    // Update scroll position.
+    elem->scroll = pgui_adjust_scroll_2d(
+        (pax_recti){
+            elem->children[i]->pos.x,
+            elem->children[i]->pos.y,
+            elem->children[i]->size.x,
+            elem->children[i]->size.y,
+        },
+        padding.left + padding.right + padding.top + padding.bottom,
+        elem->size,
+        elem->scroll,
+        elem->content_size
+    );
+    elem->flags |= PGUI_FLAG_DIRTY;
+    return PGUI_RESP_CAPTURED;
 }
 
 // Send an event to a grid.
