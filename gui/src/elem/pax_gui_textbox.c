@@ -268,6 +268,7 @@ pgui_resp_t pgui_event_textbox(
                 // Start typing.
                 elem->flags |= PGUI_FLAG_ACTIVE;
                 elem->flags |= PGUI_FLAG_DIRTY;
+                text->cursor = text->text_len;
             }
             return PGUI_RESP_CAPTURED;
         }
